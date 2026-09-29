@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ Thống Quản Lý Kho & Bán Hàng</title>
+  <link rel="stylesheet" href="index.css">
+  <!-- Supabase Client Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <!-- 1. FORM ĐĂNG NHẬP -->
+  <div id="login-screen" class="screen">
+    <div class="login-card">
+      <h2>Đăng Nhập Hệ Thống</h2>
+      <form id="login-form">
+        <div class="form-group">
+          <label>Tên đăng nhập</label>
+          <input type="text" id="login-username" required placeholder="Nhập username...">
+        </div>
+        <div class="form-group">
+          <label>Mật khẩu</label>
+          <input type="password" id="login-password" required placeholder="Nhập mật khẩu...">
+        </div>
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="remember-me">
+          <label for="remember-me">Ghi nhớ đăng nhập</label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Đăng nhập</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. GIAO DIỆN CHÍNH (Gồm Header, Navigation & Tab Nội dung) -->
+  <div id="app-screen" class="screen hidden">
+    <!-- Header / Navbar -->
+    <header class="navbar">
+      <div class="logo">KHO & BÁN HÀNG</div>
+      <div class="user-info">
+        <span id="user-display-name">Xin chào!</span>
+        <button id="btn-logout" class="btn btn-danger btn-sm">Đăng xuất</button>
+      </div>
+    </header>
+
+    <div class="main-layout">
+      <!-- Sidebar / Menu điều hướng -->
+      <nav class="sidebar">
+        <ul>
+          <li data-tab="dashboard" class="active">Dashboard</li>
+          <li data-tab="dmvt">Danh mục Vật tư</li>
+          <li data-tab="dmkho">Danh mục Kho</li>
+          <li data-tab="dmkh">Danh mục Khách hàng</li>
+          <li data-tab="bbg">Bảng Báo giá</li>
+          <li data-tab="dhb">Đơn hàng Bán</li>
+          <li data-tab="dthb">Đổi trả Hàng bán</li>
+          <li data-tab="pnk">Phiếu Nhập kho</li>
+          <li data-tab="reports">Báo cáo</li>
+        </ul>
+      </nav>
+
+      <!-- Nội dung các Màn hình -->
+      <main class="content">
+        
+        <!-- TAB DASHBOARD -->
+        <section id="tab-dashboard" class="tab-content active">
+          <h2>Dashboard Thống Kê</h2>
+          <div class="dashboard-grid">
+            <div class="card">
+              <h3>Top 5 Sản Phẩm Nhập Hàng Nhiều Nhất</h3>
+              <div class="filter-box">
+                <p>Nhập mã VT để theo dõi riêng (phân tách dấu phẩy):</p>
+                <input type="text" id="filter-nhap-vt" placeholder="Ví dụ: VT01, VT02, VT03...">
+              </div>
+              <ul id="list-top-nhap" class="stat-list"></ul>
+            </div>
+
+            <div class="card">
+              <h3>Top 5 Sản Phẩm Xuất Bán Nhiều Nhất</h3>
+              <div class="filter-box">
+                <p>Nhập mã VT để theo dõi riêng (phân tách dấu phẩy):</p>
+                <input type="text" id="filter-xuat-vt" placeholder="Ví dụ: VT01, VT02, VT03...">
+              </div>
+              <ul id="list-top-xuat" class="stat-list"></ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB DANH MỤC VẬT TƯ -->
+        <section id="tab-dmvt" class="tab-content">
+          <h2>Danh Mục Vật Tư (dmvt)</h2>
+          <form id="form-dmvt" class="inline-form card">
+            <input type="text" id="vt-ma" placeholder="Mã VT (*)" required>
+            <input type="text" id="vt-ten" placeholder="Tên VT (*)" required>
+            <input type="text" id="vt-dvt" placeholder="Đơn vị tính">
+            <input type="number" id="vt-gia" placeholder="Giá chuẩn">
+            <button type="submit" class="btn btn-success">Thêm/Lưu</button>
+          </form>
+          <div class="table-container card">
+            <table id="table-dmvt">
+              <thead>
+                <tr><th>Mã VT</th><th>Tên VT</th><th>ĐVT</th><th>Giá Chuẩn</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB DANH MỤC KHO -->
+        <section id="tab-dmkho" class="tab-content">
+          <h2>Danh Mục Kho Hàng (dmkho)</h2>
+          <form id="form-dmkho" class="inline-form card">
+            <input type="text" id="kho-ma" placeholder="Mã Kho (*)" required>
+            <input type="text" id="kho-ten" placeholder="Tên Kho (*)" required>
+            <input type="text" id="kho-diachi" placeholder="Địa chỉ">
+            <button type="submit" class="btn btn-success">Thêm/Lưu</button>
+          </form>
+          <div class="table-container card">
+            <table id="table-dmkho">
+              <thead>
+                <tr><th>Mã Kho</th><th>Tên Kho</th><th>Địa chỉ</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB DANH MỤC KHÁCH HÀNG -->
+        <section id="tab-dmkh" class="tab-content">
+          <h2>Danh Mục Khách Hàng (dmkh)</h2>
+          <form id="form-dmkh" class="inline-form card">
+            <input type="text" id="kh-ma" placeholder="Mã KH (*)" required>
+            <input type="text" id="kh-ten" placeholder="Tên KH (*)" required>
+            <input type="text" id="kh-phone" placeholder="Điện thoại">
+            <input type="text" id="kh-diachi" placeholder="Địa chỉ">
+            <button type="submit" class="btn btn-success">Thêm/Lưu</button>
+          </form>
+          <div class="table-container card">
+            <table id="table-dmkh">
+              <thead>
+                <tr><th>Mã KH</th><th>Tên KH</th><th>SĐT</th><th>Địa chỉ</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB BẢNG BÁO GIÁ -->
+        <section id="tab-bbg" class="tab-content">
+          <h2>Tạo Bảng Báo Giá (ph_bbg & ct_bbg)</h2>
+          <form id="form-bbg" class="card">
+            <div class="form-row">
+              <input type="text" id="bbg-sophieu" placeholder="Số phiếu báo giá (*)" required>
+              <select id="bbg-makh" required><option value="">-- Chọn Khách Hàng --</option></select>
+              <input type="date" id="bbg-ngay" required>
+            </div>
+            <h4>Chi Tiết Báo Giá</h4>
+            <div id="bbg-items-container"></div>
+            <button type="button" id="btn-add-bbg-item" class="btn btn-secondary btn-sm">+ Thêm dòng vật tư</button>
+            <hr>
+            <button type="submit" class="btn btn-primary">Lưu Bảng Báo Giá</button>
+          </form>
+        </section>
+
+        <!-- TAB ĐƠN HÀNG BÁN -->
+        <section id="tab-dhb" class="tab-content">
+          <h2>Tạo Đơn Hàng Bán (ph_dhb & ct_dhb)</h2>
+          <form id="form-dhb" class="card">
+            <div class="form-row">
+              <input type="text" id="dhb-sodh" placeholder="Số đơn hàng (*)" required>
+              <select id="dhb-makh" required><option value="">-- Chọn Khách Hàng --</option></select>
+              <select id="dhb-makho" required><option value="">-- Chọn Kho Bán --</option></select>
+              <input type="date" id="dhb-ngay" required>
+            </div>
+            <p class="note-text">* Hệ thống tự lấy Báo giá gần nhất của khách hàng khi chọn Khách hàng.</p>
+            <h4>Chi Tiết Đơn Hàng</h4>
+            <div id="dhb-items-container"></div>
+            <button type="button" id="btn-add-dhb-item" class="btn btn-secondary btn-sm">+ Thêm sản phẩm</button>
+            <hr>
+            <button type="submit" class="btn btn-primary">Lưu Đơn Hàng Bán</button>
+          </form>
+        </section>
+
+        <!-- TAB ĐỔI TRẢ HÀNG BÁN -->
+        <section id="tab-dthb" class="tab-content">
+          <h2>Phiếu Đổi Trả Hàng Bán (ph_dthb & ct_dthb)</h2>
+          <form id="form-dthb" class="card">
+            <div class="form-row">
+              <input type="text" id="dthb-sophieu" placeholder="Số phiếu đổi trả (*)" required>
+              <select id="dthb-makh"><option value="">-- Chọn Khách Hàng --</option></select>
+              <input type="text" id="dthb-sodhgoc" placeholder="Nhập Số đơn hàng bán gốc (*)" required>
+              <button type="button" id="btn-load-dhb-goc" class="btn btn-secondary">Tải đơn gốc</button>
+            </div>
+            <h4>Chi Tiết Hàng Đổi Trả</h4>
+            <div id="dthb-items-container"></div>
+            <hr>
+            <button type="submit" class="btn btn-primary">Lưu Phiếu Đổi Trả</button>
+          </form>
+        </section>
+
+        <!-- TAB PHIẾU NHẬP KHO -->
+        <section id="tab-pnk" class="tab-content">
+          <h2>Tạo Phiếu Nhập Kho (ph_pnk & ct_pnk)</h2>
+          <form id="form-pnk" class="card">
+            <div class="form-row">
+              <input type="text" id="pnk-sopnk" placeholder="Số phiếu nhập (*)" required>
+              <select id="pnk-makho" required><option value="">-- Chọn Kho Nhập --</option></select>
+              <input type="date" id="pnk-ngay" required>
+              <input type="text" id="pnk-diengiai" placeholder="Diễn giải">
+            </div>
+            <h4>Chi Tiết Nhập Kho</h4>
+            <div id="pnk-items-container"></div>
+            <button type="button" id="btn-add-pnk-item" class="btn btn-secondary btn-sm">+ Thêm hàng nhập</button>
+            <hr>
+            <button type="submit" class="btn btn-primary">Lưu Phiếu Nhập Kho</button>
+          </form>
+        </section>
+
+        <!-- TAB BÁO CÁO -->
+        <section id="tab-reports" class="tab-content">
+          <h2>Hệ Thống Báo Cáo</h2>
+          <div class="card">
+            <h3>Báo Cáo Tồn Kho hiện tại</h3>
+            <div class="table-container">
+              <table id="table-report-inventory">
+                <thead>
+                  <tr><th>Mã Kho</th><th>Mã Vật Tư</th><th>Tên Vật Tư</th><th>Tồn Kho</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div class="card margin-top">
+            <h3>Báo Cáo Đơn Hàng Bán</h3>
+            <div class="table-container">
+              <table id="table-report-orders">
+                <thead>
+                  <tr><th>Số Đơn</th><th>Ngày Bán</th><th>Mã KH</th><th>Kho</th><th>Tổng Tiền</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+</html>
