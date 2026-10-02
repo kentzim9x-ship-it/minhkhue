@@ -10,6 +10,22 @@ globalStyle.innerHTML = `
     -moz-appearance: textfield;
   }
 
+  /* ==============================================================
+     FIX TRIỆT ĐỂ LỖI HỤT MÀU NỀN (ÁP DỤNG TOÀN CỤC CHO CẢ PC & MOBILE)
+     ============================================================== */
+  html, body {
+    min-height: 100vh !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: #0b0e14 !important; /* Ép cứng màu tối của app cho toàn bộ viền trình duyệt */
+  }
+
+  #login-container, .app-container {
+    min-height: 100vh !important;
+    background-color: #0b0e14 !important;
+  }
+
   /* Layer phủ mờ khi mở Menu Drawer trên Mobile */
   .mobile-overlay {
     display: none;
@@ -249,7 +265,7 @@ globalStyle.innerHTML = `
       justify-content: center !important;
     }
 
-    * 1. Sửa khu vực User & Nút Đăng xuất: Icon to ra, nằm thẳng hàng, thu gọn nút */
+    /* 1. Sửa khu vực User & Nút Đăng xuất: Icon to ra, nằm thẳng hàng, thu gọn nút */
     .sidebar-user, [class*="sidebar-user"] {
       display: flex !important;
       flex-direction: row !important;
