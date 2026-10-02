@@ -1,6 +1,6 @@
-// Thêm CSS ẩn nút tăng giảm (spinner) của các ô input number
-const spinnerStyle = document.createElement('style');
-spinnerStyle.innerHTML = `
+// Bổ sung bộ CSS Mobile Responsive mới (Drawer Menu + Responsive Controls)
+const globalStyle = document.createElement('style');
+globalStyle.innerHTML = `
   input::-webkit-outer-spin-button,
   input::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -9,8 +9,499 @@ spinnerStyle.innerHTML = `
   input[type=number] {
     -moz-appearance: textfield;
   }
+
+  /* Layer phủ mờ khi mở Menu Drawer trên Mobile */
+  .mobile-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .mobile-overlay.active {
+    display: block;
+    opacity: 1;
+  }
+
+  /* ────────── MOBILE RESPONSIVE OPTIMIZATION (< 768px) ────────── */
+  @media (max-width: 768px) {
+    /* 1. Ẩn Ngày tháng ở Header & Ẩn Badge (GIAO DỊCH, DỮ LIỆU DANH MỤC, TỔNG QUAN, BÁO CÁO) */
+    #header-date,
+    #view-tag,
+    .view-tag,
+    [id*="tag"] {
+      display: none !important;
+    }
+
+    /* 2. Cấu hình KHUNG MENU TRƯỢT (Chỉ áp dụng cho khối bao ngoài cùng) */
+    .sidebar, aside {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      height: 100vh !important;
+      width: 280px !important;
+      max-width: 85vw !important;
+      z-index: 9999 !important;
+      transform: translateX(-100%) !important;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.5) !important;
+      background: #0f1218 !important;
+      display: flex !important;
+      flex-direction: column !important; /* Ép layout dọc */
+      padding: 0 !important;
+      margin: 0 !important;
+      overflow: hidden !important; /* Ẩn thanh cuộn tổng, chỉ cuộn phần danh sách */
+    }
+
+    /* Trạng thái mở Menu */
+    body.mobile-menu-open .sidebar,
+    body.mobile-menu-open aside {
+      transform: translateX(0) !important;
+    }
+
+    /* 3. Cấu hình PHẦN GIỮA MENU (Danh sách chức năng - Cho phép cuộn) */
+    .sidebar nav, .sidebar > div:not(.sidebar-user):not(.sidebar-header), 
+    aside nav, aside > div:not(.sidebar-user):not(.sidebar-header) {
+      flex: 1 1 auto !important; /* Tự động chiếm toàn bộ khoảng trống ở giữa */
+      overflow-y: auto !important; /* Bật thanh cuộn nếu danh sách quá dài */
+      display: flex !important;
+      flex-direction: column !important;
+      position: static !important; /* Gỡ bỏ position fixed gây lỗi */
+      height: auto !important;
+      transform: none !important;
+    }
+
+    /* Ép hiển thị lại toàn bộ chữ và icon bị ẩn bên trong menu */
+    .sidebar *, aside * {
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    
+    .sidebar span, aside span, .sidebar p, aside p {
+      display: inline-block !important;
+    }
+
+    .sidebar a, .sidebar button, .nav-btn, aside a, aside button {
+      display: flex !important;
+      align-items: center !important;
+      width: 100% !important;
+    }
+
+    /* 4. Cấu hình PHẦN ĐÁY MENU (Thông tin User & Đăng xuất) */
+    .sidebar-user, .user-profile, [class*="sidebar-user"], [class*="user-profile"] {
+      flex: 0 0 auto !important; /* Cố định kích thước, không co giãn */
+      margin-top: auto !important; /* Lực đẩy Flexbox giúp dính chặt xuống đáy */
+      position: static !important; 
+      width: 100% !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+      padding: 14px 16px !important;
+      background: #0d1015 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      box-sizing: border-box !important;
+    }
+
+    /* Nút Ngôi nhà ở Header */
+    .mobile-home-btn {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--primary);
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    #app-content, .app-main, .main-content {
+      padding: 10px !important;
+      width: 100vw !important;
+      overflow-x: auto !important;
+    }
+
+    /* 3. Logic gom dòng cho các thẻ KPI / Thẻ tổng hợp */
+    /* 4 dòng -> 2 dòng (mỗi dòng 2) */
+    .kpi-grid, 
+    div[style*="grid-template-columns: repeat(4"],
+    div[style*="grid-template-columns: repeat(5"] {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 1px !important;
+      width: 100% !important;
+    }
+
+    /* 5 dòng / 3 dòng -> Dòng trên 3, dưới 2 (hoặc tự sát nhau full độ rộng) */
+    div[style*="grid-template-columns: repeat(5"],
+    div[style*="grid-template-columns: repeat(3"] {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
+      gap: 1px !important;
+      width: 100% !important;
+    }
+
+    .filter-search-container, 
+    div[style*="justify-content: space-between"],
+    div[style*="justify-content: flex-end"] {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 10px !important;
+    }
+
+    div[style*="max-width: 450px"] {
+      max-width: 100% !important;
+      width: 100% !important;
+      flex-direction: column !important;
+    }
+
+    #global-search, 
+    .btn-primary, 
+    div[style*="min-width: 200px"] {
+      width: 100% !important;
+    }
+
+    .btn-primary {
+      justify-content: center !important;
+    }
+
+    /* 4. Tối ưu Form trong Mục 01: Tối đa 2 ô dữ liệu trên 1 hàng ngang đối với các ô nhỏ */
+    .grid-2, .grid-3, .grid-4, .section-body {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 10px !important;
+    }
+
+    /* Các ô lớn/dài hoặc có style span 2, span 3 tự động chiếm full 1 dòng */
+    .grid-2 > div[style*="span"],
+    .grid-3 > div[style*="span"],
+    .grid-4 > div[style*="span"],
+    .section-body > div[style*="span"],
+    .form-group[style*="span"] {
+      grid-column: span 2 !important;
+    }
+
+    .form-input, .form-select, .form-textarea, button {
+      min-height: 40px !important;
+      font-size: 13px !important;
+    }
+
+    /* 5. Tối ưu Mục 02 (Danh mục sản phẩm): Cho cột Tên to ra, Ẩn Mã hàng */
+    /* Ẩn cột Mã Hàng (Cột 1) */
+    div[style*="grid-template-columns"][style*="padding: 8px 24px"] > span:first-child,
+    div[style*="grid-template-columns"][style*="padding: 10px 24px"] > input:first-child,
+    div[style*="grid-template-columns"][style*="padding: 8px 16px"] > span:first-child,
+    div[style*="grid-template-columns"][style*="padding: 10px 16px"] > input:first-child {
+      display: none !important;
+    }
+
+    /* Mở rộng cột Tên hàng */
+    div[style*="grid-template-columns"][style*="padding: 8px 24px"],
+    div[style*="grid-template-columns"][style*="padding: 10px 24px"],
+    div[style*="grid-template-columns"][style*="padding: 8px 16px"],
+    div[style*="grid-template-columns"][style*="padding: 10px 16px"] {
+      grid-template-columns: minmax(180px, 2fr) repeat(auto-fit, minmax(60px, 1fr)) !important;
+      gap: 6px !important;
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+    }
+
+    /* 6. Căn chỉnh mục Tạm tính, Chiết khấu, Tổng thuế, Tổng tiền sang bên phải thẳng hàng với Thành tiền */
+    div[style*="justify-content: flex-end"][style*="padding: 16px 24px"] {
+      padding: 16px 10px !important;
+      justify-content: flex-end !important;
+    }
+
+    div[style*="min-width: 260px"] {
+      width: 100% !important;
+      max-width: 280px !important;
+      margin-left: auto !important;
+      text-align: right !important;
+    }
+
+    div[style*="min-width: 260px"] > div {
+      justify-content: space-between !important;
+    }
+
+    /* Tối ưu lại nút xóa dòng trên mobile */
+    button[onclick*="removeLineItem"] {
+      padding: 0 2px !important;
+    }
+
+    .action-bar {
+      flex-direction: column-reverse !important;
+      gap: 8px !important;
+      align-items: stretch !important;
+    }
+
+    .action-bar > button, .action-bar > div > button {
+      width: 100% !important;
+      justify-content: center !important;
+    }
+
+    * 1. Sửa khu vực User & Nút Đăng xuất: Icon to ra, nằm thẳng hàng, thu gọn nút */
+    .sidebar-user, [class*="sidebar-user"] {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      flex-wrap: nowrap !important;
+      padding: 12px 10px !important;
+      gap: 10px !important;
+    }
+    .user-avatar {
+      width: 42px !important; /* Cho Icon AD to lên một chút */
+      height: 42px !important;
+      font-size: 16px !important;
+      flex-shrink: 0 !important;
+    }
+    .sidebar-user > div:not(.user-avatar) {
+      flex: 1 !important;
+      min-width: 0 !important; /* Ngăn text đẩy vỡ layout */
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: flex-start !important;
+    }
+    .user-name, .user-role {
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      width: 100% !important;
+      text-align: left !important;
+    }
+    #logout-btn {
+      flex-shrink: 0 !important;
+      padding: 6px 10px !important;
+      font-size: 12px !important;
+      width: auto !important; /* Thu gọn vừa đủ chữ */
+      margin-left: 0 !important;
+    }
+
+    /* 2. Sửa lỗi Form: Tạm tính, Chiết khấu, Thuế, Tổng tiền dàn ngang 2 bên */
+    /* Ghi đè lại thuộc tính flex-direction: column bị áp dụng nhầm trước đó */
+    div[style*="min-width: 260px"] > div[style*="justify-content: space-between"] {
+      flex-direction: row !important; 
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding-bottom: 6px !important;
+    }
+    /* Chữ căn trái, Số căn phải thẳng hàng */
+    div[style*="min-width: 260px"] > div > span:first-child {
+      text-align: left !important;
+      flex: 1 !important;
+    }
+    div[style*="min-width: 260px"] > div > span:last-child {
+      text-align: right !important;
+    }
+
+    /* 3. Sửa Báo Cáo & Tổng Quan: Tách biểu đồ và thống kê thành từng dòng riêng biệt */
+    div[style*="grid-template-columns: 2fr 1fr"],
+    #app-content > div > div.grid-2 {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+      gap: 16px !important;
+    }
+
+    /* ==============================================================
+       TỐI ƯU THANH LỌC (FILTER BAR) VÀ KHUNG TỔNG TIỀN TRÊN MOBILE
+       ============================================================== */
+
+    /* 1. Tối ưu thanh Filter: Xóa nền xám thừa, bo góc và thu nhỏ giống nút bấm */
+    div[style*="background: var(--muted)"][style*="overflow-x: auto"] {
+      background: transparent !important; /* Xóa nền xám nhạt */
+      gap: 4px !important; /* Tạo khoảng cách giữa các nút */
+      padding-bottom: 4px !important; /* Lề cuộn ngang */
+    }
+
+    div[style*="background: var(--muted)"][style*="overflow-x: auto"] > button {
+      border-radius: 4px !important; /* Bo góc */
+      border: 1px solid var(--border) !important;
+      font-size: 11px !important; /* Thu nhỏ cỡ chữ */
+      padding: 6px 12px !important; /* Thu nhỏ kích thước nút */
+      white-space: nowrap !important;
+      background-color: var(--card) !important;
+    }
+
+    /* Trạng thái đang chọn của nút Filter */
+    div[style*="background: var(--muted)"][style*="overflow-x: auto"] > button[style*="background: var(--primary)"] {
+      background-color: var(--primary) !important;
+      border-color: var(--primary) !important;
+      color: var(--primary-foreground) !important;
+    }
+
+    /* 2. Tối ưu Khung Tổng Tiền: Đẩy chữ bám sát lề trái, số tiền bám sát lề phải */
+    /* Mở rộng full chiều ngang cho tất cả các khung có min-width: 260px */
+    div[style*="min-width: 260px"] {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+    }
+
+    /* Xử lý cho cả cấu trúc lồng nhau (Báo giá/Đơn bán) và cấu trúc đơn (Đổi trả/Nhập kho) */
+    div[style*="min-width: 260px"] > div,
+    div[style*="min-width: 260px"][style*="justify-content: space-between"] {
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      width: 100% !important;
+    }
+
+    /* Ép chữ (Label - Tạm tính, Tổng cộng...) sang sát lề trái */
+    div[style*="min-width: 260px"] span:first-child,
+    div[style*="min-width: 260px"] > div > span:first-child {
+      text-align: left !important;
+      flex: 1 !important;
+    }
+
+    /* Ép số tiền sang sát lề phải */
+    div[style*="min-width: 260px"] span:last-child,
+    div[style*="min-width: 260px"] > div > span:last-child {
+      text-align: right !important;
+    }
+
+    /* ==============================================================
+       CĂN CHỈNH HEADER MOBILE (KÉO NÚT HOME VÀ TIÊU ĐỀ SANG TRÁI)
+       ============================================================== */
+    
+    .app-header {
+      padding-left: 10px !important;  /* Giảm khoảng cách lề trái của cả thanh header */
+      padding-right: 10px !important; /* Giảm khoảng cách lề phải cho cân đối */
+    }
+
+    .app-header > div:first-child {
+      margin-left: 0 !important; 
+      padding-left: 0 !important;
+    }
+
+    /* ==============================================================
+       1. BO VIỀN ICON MENU (HOME) VÀ AVATAR ADMIN
+       ============================================================== */
+    /* Icon ngôi nhà màu cam trong Menu và Icon AD */
+    .sidebar-header > div:first-child,
+    .sidebar-user .user-avatar,
+    .user-avatar {
+      border-radius: 8px !important;
+    }
+
+    /* ==============================================================
+       1. BO VIỀN (ĐÃ FIX LỖI MẤT THANH CUỘN NGANG)
+       ============================================================== */
+    /* Khối thẻ KPI, Thống kê, Bảng dữ liệu và Form */
+    .kpi-card,
+    div[style*="background: var(--card)"],
+    div[style*="background-color: var(--card)"] {
+      border-radius: 8px !important;
+      margin-bottom: 8px !important; 
+      border: 1px solid var(--border) !important;
+      /* Đã loại bỏ overflow: hidden để giữ lại thanh cuộn ngang */
+    }
+
+    /* Các ô Input, Select, Textarea và Nút bấm */
+    .form-input, .form-select, .form-textarea, button {
+      border-radius: 6px !important;
+    }
+
+    /* Tách lưới KPI dính liền thành các thẻ rời nhau */
+    .kpi-grid, 
+    div[style*="grid-template-columns: repeat(4"],
+    div[style*="grid-template-columns: repeat(5"],
+    div[style*="grid-template-columns: repeat(3"] {
+      gap: 8px !important;
+      background-color: transparent !important;
+    }
+
+    /* ==============================================================
+       2. ÉP ĐỒNG NHẤT 1 MÀU NỀN & BẢO ĐẢM THANH CUỘN DỌC
+       ============================================================== */
+    /* Dùng height: auto để cho phép nội dung dài tự do đẩy khung xuống dưới */
+    html, body, #root, #app {
+      min-height: 100vh !important;
+      height: auto !important; /* Đã sửa: Cho phép giãn chiều cao tự do */
+      overflow-y: auto !important; /* Bật lại thanh cuộn dọc */
+      overflow-x: hidden !important; /* Ngăn cuộn ngang toàn trang gây lag */
+      background-color: var(--background, #0b0e14) !important;
+    }
+
+    /* Khung nội dung chính cũng để auto chiều cao */
+    #app-content, 
+    #app-content > div,
+    main, .main-content {
+      min-height: 100vh !important; 
+      height: auto !important; /* Đã sửa */
+      overflow-y: visible !important; /* Đảm bảo không cắt nội dung con */
+      background-color: var(--background, #0b0e14) !important;
+      padding-bottom: 30px !important; /* Thêm chút lề đáy để dễ nhìn nội dung cuối */
+    }
+
+    /* ==============================================================
+       3. BO VIỀN ĐỒNG NHẤT BÊN TRONG TRANG XEM/THÊM/SỬA (FORM CHI TIẾT)
+       ============================================================== */
+    /* Bo góc khung lớn chứa toàn bộ form và các section (Thông tin, Danh mục) */
+    form, 
+    form > div[style*="border"], 
+    #app-content > div > div[style*="border"] {
+      border-radius: 8px !important;
+    }
+
+    /* Đảm bảo các hàng hoặc khung chứa danh sách sản phẩm không bị vuông góc ở viền ngoài */
+    form > div {
+      border-radius: 8px !important;
+    }
+    
+    /* Gỡ bỏ các góc vuông của phần gộp nhóm (nếu có) */
+    form > div:first-child {
+      border-top-left-radius: 8px !important;
+      border-top-right-radius: 8px !important;
+    }
+    form > div:last-child {
+      border-bottom-left-radius: 8px !important;
+      border-bottom-right-radius: 8px !important;
+    }
+
+    /* Đảm bảo toàn bộ các ô nhập liệu (input, select) nằm bên trong bảng danh mục sản phẩm đều được bo viền mềm mại */
+    table input, table select, table textarea,
+    .table-responsive input, .table-responsive select,
+    div[style*="border-bottom"] > input,
+    div[style*="border-bottom"] > select {
+      border-radius: 6px !important;
+    }
+  }
+
+  @media (min-width: 769px) {
+    .mobile-home-btn, .mobile-overlay {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .kpi-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
 `;
-document.head.appendChild(spinnerStyle);
+document.head.appendChild(globalStyle);
+
+// Tạo lớp Overlay để bấm ra ngoài đóng Menu
+const overlayEl = document.createElement('div');
+overlayEl.className = 'mobile-overlay';
+overlayEl.onclick = toggleMobileMenu;
+document.body.appendChild(overlayEl);
+
+function toggleMobileMenu() {
+  document.body.classList.toggle('mobile-menu-open');
+  overlayEl.classList.toggle('active');
+}
 
 // Danh sách tài khoản cấp riêng
 const USERS = [
@@ -144,7 +635,6 @@ async function fetchDataFromSupabase() {
   }
 }
 
-// Hàm hỗ trợ đồng bộ ngầm ton_thuc_te vào Supabase không gây trễ UI
 function syncRealtimeStockToSupabase(sku, warehouseCode, realStock) {
   if (!sku || !warehouseCode) return;
   setTimeout(async () => {
@@ -242,7 +732,6 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
 
   const realtimeStock = Number((initialStock + totalGRN - totalOrders - totalReturns).toFixed(2));
 
-  // Tự động đồng bộ số lượng vừa tính được vào cột ton_thuc_te trong bảng inventory (ngầm)
   if (warehouseCode) {
     syncRealtimeStockToSupabase(sku, warehouseCode, realtimeStock);
   }
@@ -255,6 +744,7 @@ function getStockQty(sku, warehouseCode) {
 }
 
 const Icons = {
+  home: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
   view: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="3"/><path d="M1 7s2.5-4.5 6-4.5S13 7 13 7s-2.5 4.5-6 4.5S1 7 1 7z"/></svg>`,
   edit: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z" /></svg>`,
   trash: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M5 4V2h4v2M6 7v4M8 7v4M3 4l1 8h6l1-8" /></svg>`,
@@ -321,7 +811,7 @@ function getFilterBar(options) {
   `).join('');
 
   return `
-    <div style="display: flex; gap: 1px; background: var(--muted); width: fit-content;">
+    <div style="display: flex; gap: 1px; background: var(--muted); width: fit-content; max-width: 100%; overflow-x: auto;">
       ${buttonsHtml}
     </div>
   `;
@@ -358,7 +848,7 @@ function navigate(view, mode = 'list', itemId = null) {
   const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
   const tagEl = document.getElementById('view-tag');
   const titleEl = document.getElementById('view-title');
-  
+
   if (tagEl) tagEl.innerText = meta.tag;
   if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
 
@@ -375,6 +865,11 @@ function navigate(view, mode = 'list', itemId = null) {
 
   if (window.location.hash !== targetHash) {
     window.location.hash = targetHash;
+  }
+
+  // Đóng Drawer Menu trên Mobile nếu đang mở
+  if (document.body.classList.contains('mobile-menu-open')) {
+    toggleMobileMenu();
   }
 
   render();
@@ -401,7 +896,7 @@ function handleHashChange() {
     const meta = viewMeta[view];
     const tagEl = document.getElementById('view-tag');
     const titleEl = document.getElementById('view-title');
-    
+
     if (tagEl) tagEl.innerText = meta.tag;
     if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
 
@@ -504,7 +999,7 @@ function addLineItem(module, focusNewName = false) {
   }
   if (module === 'returns') state.formData.lineItems.push({ ...base, qtyReturned: 1, unitPrice: 0 });
   if (module === 'grn') state.formData.lineItems.push({ ...base, receivedQty: 1, unitCost: 0 });
-  
+
   render();
 
   if (focusNewName) {
@@ -693,7 +1188,6 @@ async function saveForm(module) {
       db[targetKey].sort(sortDescById);
     }
 
-    // Tải lại dữ liệu ở chế độ ngầm để tránh đơ UI
     fetchDataFromSupabase();
     navigate(module, 'list');
   } catch (error) {
@@ -730,7 +1224,7 @@ async function deleteItem(module, id) {
   }
 }
 
-// ─── GIAO DIỆN ĐĂNG NHẬP SANG TRỌNG & THANH LỊCH (DARK ELEGANT CONCEPT) ─────────
+// GIAO DIỆN ĐĂNG NHẬP SANG TRỌNG
 function renderLoginForm(container) {
   const savedCreds = JSON.parse(localStorage.getItem('remembered_user') || '{}');
 
@@ -858,6 +1352,28 @@ function updateUserInfoUI() {
       sidebarUserEl.appendChild(logoutBtn);
     }
   }
+
+  // Thêm nút Nút Icon Ngôi nhà vào Header cho Mobile nếu chưa có
+  const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header');
+  if (headerLeft && !document.getElementById('mobile-home-trigger')) {
+    const homeBtn = document.createElement('button');
+    homeBtn.id = 'mobile-home-trigger';
+    homeBtn.className = 'mobile-home-btn';
+    homeBtn.innerHTML = Icons.home;
+    homeBtn.onclick = toggleMobileMenu;
+    headerLeft.insertBefore(homeBtn, headerLeft.firstChild);
+  }
+
+  // Gán sự kiện click vào Logo Ngôi nhà trên đầu Sidebar để đóng Drawer Menu
+  const logoBrand = document.querySelector('.logo-brand, .app-brand, .sidebar-header');
+  if (logoBrand) {
+    logoBrand.style.cursor = 'pointer';
+    logoBrand.onclick = () => {
+      if (window.innerWidth <= 768 && document.body.classList.contains('mobile-menu-open')) {
+        toggleMobileMenu();
+      }
+    };
+  }
 }
 
 function render() {
@@ -923,12 +1439,10 @@ function render() {
   }
 }
 
-// ─── HÀM HỖ TRỢ TÍNH TOÁN DOANH SỐ THỰC TẾ TỪ DATABASE ────────────────────────
 function getSalesAnalyticsData() {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
 
-  // 1. Lấy dữ liệu 9 tháng gần nhất (hoặc 9 tháng của năm hiện tại)
   const monthLabels = [];
   const monthlyMap = {};
 
@@ -942,7 +1456,6 @@ function getSalesAnalyticsData() {
     monthlyMap[key] = { month: label, revenue: 0, orders: 0, returns: 0 };
   }
 
-  // 2. Tổng hợp Đơn hàng bán (chỉ lấy đơn hoàn thành hoặc đang xử lý)
   let currentMonthRevenue = 0;
   let currentMonthOrders = 0;
 
@@ -950,7 +1463,7 @@ function getSalesAnalyticsData() {
     const status = (o.status || '').toLowerCase();
     if (['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) {
       const dateStr = o.date || '';
-      const key = dateStr.substring(0, 7); // YYYY-MM
+      const key = dateStr.substring(0, 7);
       const total = Number(o.total || 0);
 
       if (monthlyMap[key]) {
@@ -966,7 +1479,6 @@ function getSalesAnalyticsData() {
     }
   });
 
-  // 3. Tổng hợp Đổi trả hàng bán
   (db.returns || []).forEach(r => {
     const status = (r.status || '').toLowerCase();
     if (['processed', 'approved', 'đã xử lý', 'đã duyệt'].includes(status)) {
@@ -980,7 +1492,6 @@ function getSalesAnalyticsData() {
 
   const salesDataReal = monthLabels.map(m => monthlyMap[m.key]);
 
-  // 4. Doanh số lũy kế YTD (Từ đầu năm đến nay)
   let ytdRevenue = 0;
   let ytdOrders = 0;
   (db.orders || []).forEach(o => {
@@ -993,7 +1504,6 @@ function getSalesAnalyticsData() {
     }
   });
 
-  // 5. Thống kê theo Khách hàng
   const customerMap = {};
   (db.orders || []).forEach(o => {
     const status = (o.status || '').toLowerCase();
@@ -1007,7 +1517,6 @@ function getSalesAnalyticsData() {
 
   const topCustomersReal = Object.values(customerMap).sort((a, b) => b.revenue - a.revenue);
 
-  // 6. Hoạt động gần đây (Recent Activity) từ CSDL
   const recentActivityReal = [];
   (db.grns || []).slice(0, 2).forEach(g => {
     recentActivityReal.push({
@@ -1046,10 +1555,8 @@ function renderDashboard(c) {
     recentActivityReal
   } = getSalesAnalyticsData();
 
-  // Báo giá chưa khóa (nháp hoặc đã chấp nhận)
   const openQuotationsCount = (db.quotations || []).filter(q => ['draft', 'accepted', 'bản nháp', 'đã chấp nhận'].includes((q.status || '').toLowerCase())).length;
 
-  // Tính tỷ lệ đơn hoàn thành
   const totalOrdersCount = (db.orders || []).length;
   const completedOrdersCount = (db.orders || []).filter(o => ['completed', 'hoàn thành'].includes((o.status || '').toLowerCase())).length;
   const completionRate = totalOrdersCount > 0 ? ((completedOrdersCount / totalOrdersCount) * 100).toFixed(1) : '100.0';
@@ -1071,7 +1578,7 @@ function renderDashboard(c) {
         <div class="kpi-card"><span class="kpi-label">Báo giá chưa khóa</span><div class="kpi-value-row"><span class="kpi-value">${openQuotationsCount}</span></div><span class="kpi-sub">nháp + chấp nhận</span></div>
         <div class="kpi-card"><span class="kpi-label">Tỷ lệ hoàn thành</span><div class="kpi-value-row"><span class="kpi-value">${completionRate}%</span></div><span class="kpi-sub">giao đúng hạn</span></div>
       </div>
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="grid-2">
         <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
           <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Doanh Thu Hàng Tháng</div>
           <div style="height: 200px;"><canvas id="chart-rev"></canvas></div>
@@ -1136,7 +1643,7 @@ function renderMaterialsList(c) {
   ].map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tồn Kho Ban Đầu' || h === 'Đơn Giá' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`).join('');
 
   const rowsHtml = filtered.map(m => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', 'view', '${m.id}')">
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', 'view', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
       <td style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
@@ -1146,19 +1653,19 @@ function renderMaterialsList(c) {
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
       <td style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'CÒN HÀNG' : m.status.toUpperCase()}</span></td>
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-        <button class="btn-action" onclick="navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>
-        <button class="btn-action" onclick="navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>
-        <button class="btn-action btn-action-del" onclick="deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>
+        <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>
       </td>
     </tr>
   `).join('');
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px;">
+      <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['ok', 'Đủ hàng'], ['low', 'Sắp hết'], ['critical', 'Nguy cấp'], ['out', 'Hết hàng']])}
-        <div style="display: flex; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; width: 280px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã hàng hoặc tên hàng..." value="${state.search}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
@@ -1166,7 +1673,7 @@ function renderMaterialsList(c) {
         </div>
       </div>
       
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
 
@@ -1220,7 +1727,7 @@ function renderCustomersList(c) {
   `).join('');
 
   const rowsHtml = filtered.map(c => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('customers', 'view', '${c.id}')">
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('customers', 'view', '${c.id}')" onclick="navigate('customers', 'view', '${c.id}')">
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); text-align: left;">${c.id || '—'}</td>
       <td style="padding: 11px 16px; font-size: 13px; font-weight: 500; text-align: left;">${c.name || '—'}</td>
       <td style="padding: 11px 16px; font-size: 13px; text-align: left;">${c.contact || '—'}</td>
@@ -1229,9 +1736,9 @@ function renderCustomersList(c) {
       <td style="padding: 11px 16px; font-size: 13px; text-align: left;">${c.address || c.diachi || '—'}</td>
       <td style="padding: 11px 16px; text-align: left;"><span class="badge ${getBadgeClass(c.status)}">${c.status === 'active' ? 'hoạt động' : (c.status === 'suspended' ? 'tạm khóa' : (c.status || 'hoạt động'))}</span></td>
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-        <button class="btn-action" onclick="navigate('customers', 'view', '${c.id}')">${Icons.view} Xem</button>
-        <button class="btn-action" onclick="navigate('customers', 'edit', '${c.id}')">${Icons.edit} Sửa</button>
-        <button class="btn-action btn-action-del" onclick="deleteItem('customers', '${c.id}')">${Icons.trash} Xóa</button>
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'view', '${c.id}')">${Icons.view} Xem</button>
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'edit', '${c.id}')">${Icons.edit} Sửa</button>
+        <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('customers', '${c.id}')">${Icons.trash} Xóa</button>
       </td>
     </tr>
   `).join('');
@@ -1239,8 +1746,8 @@ function renderCustomersList(c) {
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
       <div style="display: flex; justify-content: flex-end; align-items: center;">
-        <div style="display: flex; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; width: 280px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo tên, ID, liên hệ, địa chỉ..." value="${state.search}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
@@ -1248,7 +1755,7 @@ function renderCustomersList(c) {
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background-color: var(--border);">
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
 
@@ -1274,7 +1781,7 @@ function renderWarehousesList(c) {
     const pct = Math.round((w.used / w.capacity) * 100);
     const barColor = pct > 90 ? '#f87171' : pct > 75 ? '#fbbf24' : 'var(--primary)';
     return `
-      <div style="border: 1px solid var(--border); background: var(--card); position: relative; cursor: pointer;" ondblclick="navigate('warehouses', 'view', '${w.id}')">
+      <div style="border: 1px solid var(--border); background: var(--card); position: relative; cursor: pointer;" ondblclick="navigate('warehouses', 'view', '${w.id}')" onclick="navigate('warehouses', 'view', '${w.id}')">
         <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 10px;">
             <span style="color: var(--primary); font-family: var(--font-dm-mono); font-size: 14px; font-weight: 500;">${w.code || w.id}</span>
@@ -1294,9 +1801,9 @@ function renderWarehousesList(c) {
           </div>
         </div>
         <div style="padding: 10px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;">
-          <button class="btn-action" onclick="navigate('warehouses', 'view', '${w.id}')">${Icons.view} Xem</button>
-          <button class="btn-action" onclick="navigate('warehouses', 'edit', '${w.id}')">${Icons.edit} Sửa</button>
-          <button class="btn-action btn-action-del" onclick="deleteItem('warehouses', '${w.id}')">${Icons.trash} Xóa</button>
+          <button class="btn-action" onclick="event.stopPropagation(); navigate('warehouses', 'view', '${w.id}')">${Icons.view} Xem</button>
+          <button class="btn-action" onclick="event.stopPropagation(); navigate('warehouses', 'edit', '${w.id}')">${Icons.edit} Sửa</button>
+          <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('warehouses', '${w.id}')">${Icons.trash} Xóa</button>
         </div>
       </div>
     `;
@@ -1317,15 +1824,15 @@ function renderWarehousesList(c) {
 function renderQuotationsList(c) {
   const filtered = db.quotations.filter(q => {
     const matchStatus = (state.filter === 'all' || q.status === state.filter);
-    
+
     const searchKey = (state.search || '').trim().toLowerCase();
     const custId = (q.customerId || q.customerid || '').toLowerCase();
     const custName = (q.customer || '').toLowerCase();
     const qId = (q.id || '').toLowerCase();
 
-    const matchSearch = !searchKey || 
-      custName.includes(searchKey) || 
-      custId.includes(searchKey) || 
+    const matchSearch = !searchKey ||
+      custName.includes(searchKey) ||
+      custId.includes(searchKey) ||
       qId.includes(searchKey);
 
     return matchStatus && matchSearch;
@@ -1352,7 +1859,7 @@ function renderQuotationsList(c) {
     .join('');
 
   const rowsHtml = filtered.map(q => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('quotations', 'view', '${q.id}')">
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('quotations', 'view', '${q.id}')" onclick="navigate('quotations', 'view', '${q.id}')">
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${q.id}</td>
       <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${q.customer}</td>
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.date || '—'}</td>
@@ -1362,24 +1869,24 @@ function renderQuotationsList(c) {
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(q.total)}</td>
       <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(q.status)}">${getStatusLabel(q.status)}</span></td>
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-        <button class="btn-action" onclick="navigate('quotations', 'view', '${q.id}')">${Icons.view} Xem</button>
-        <button class="btn-action" onclick="navigate('quotations', 'edit', '${q.id}')">${Icons.edit} Sửa</button>
-        <button class="btn-action btn-action-del" onclick="deleteItem('quotations', '${q.id}')">${Icons.trash} Xóa</button>
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('quotations', 'view', '${q.id}')">${Icons.view} Xem</button>
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('quotations', 'edit', '${q.id}')">${Icons.edit} Sửa</button>
+        <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('quotations', '${q.id}')">${Icons.trash} Xóa</button>
       </td>
     </tr>
   `).join('');
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Đã chấp nhận'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
         
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; width: 280px;">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo tên, mã KH..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
@@ -1407,15 +1914,15 @@ function renderQuotationsList(c) {
 function renderOrdersList(c) {
   const filtered = db.orders.filter(o => {
     const matchStatus = (state.filter === 'all' || o.status === state.filter);
-    
+
     const searchKey = (state.search || '').trim().toLowerCase();
     const custId = (o.customerId || o.customerid || '').toLowerCase();
     const custName = (o.customer || '').toLowerCase();
     const orderId = (o.id || '').toLowerCase();
 
-    const matchSearch = !searchKey || 
-      custName.includes(searchKey) || 
-      custId.includes(searchKey) || 
+    const matchSearch = !searchKey ||
+      custName.includes(searchKey) ||
+      custId.includes(searchKey) ||
       orderId.includes(searchKey);
 
     return matchStatus && matchSearch;
@@ -1439,7 +1946,7 @@ function renderOrdersList(c) {
     .join('');
 
   const rowsHtml = filtered.map(o => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', 'view', '${o.id}')">
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', 'view', '${o.id}')" onclick="navigate('sales-orders', 'view', '${o.id}')">
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${o.id}</td>
       <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${o.customer}</td>
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${o.date}</td>
@@ -1448,24 +1955,24 @@ function renderOrdersList(c) {
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(o.total)}</td>
       <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(o.status)}">${getStatusLabel(o.status)}</span></td>
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-        <button class="btn-action" onclick="navigate('sales-orders', 'view', '${o.id}')">${Icons.view} Xem</button>
-        <button class="btn-action" onclick="navigate('sales-orders', 'edit', '${o.id}')">${Icons.edit} Sửa</button>
-        <button class="btn-action btn-action-del" onclick="deleteItem('sales-orders', '${o.id}')">${Icons.trash} Xóa</button>
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'view', '${o.id}')">${Icons.view} Xem</button>
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'edit', '${o.id}')">${Icons.edit} Sửa</button>
+        <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('sales-orders', '${o.id}')">${Icons.trash} Xóa</button>
       </td>
     </tr>
   `).join('');
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background-color: var(--border);">
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['completed', 'Hoàn thành'], ['processing', 'Đang xử lý'], ['pending', 'Chờ xử lý'], ['cancelled', 'Đã hủy']])}
         
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; width: 280px;">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo tên, mã KH..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
@@ -1512,7 +2019,7 @@ function renderReturnsList(c) {
   const rowsHtml = filtered.map(r => {
     const totalLines = (r.lineItems || r.lineitems || []).length;
     return `
-      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('returns', 'view', '${r.id}')">
+      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('returns', 'view', '${r.id}')" onclick="navigate('returns', 'view', '${r.id}')">
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${r.id}</td>
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${r.orderId || '—'}</td>
         <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${r.customer}</td>
@@ -1522,9 +2029,9 @@ function renderReturnsList(c) {
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; color: #f87171; text-align: right;">${fmtUSD(r.total)}</td>
         <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(r.status)}">${getStatusLabel(r.status)}</span></td>
         <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-          <button class="btn-action" onclick="navigate('returns', 'view', '${r.id}')">${Icons.view} Xem</button>
-          <button class="btn-action" onclick="navigate('returns', 'edit', '${r.id}')">${Icons.edit} Sửa</button>
-          <button class="btn-action btn-action-del" onclick="deleteItem('returns', '${r.id}')">${Icons.trash} Xóa</button>
+          <button class="btn-action" onclick="event.stopPropagation(); navigate('returns', 'view', '${r.id}')">${Icons.view} Xem</button>
+          <button class="btn-action" onclick="event.stopPropagation(); navigate('returns', 'edit', '${r.id}')">${Icons.edit} Sửa</button>
+          <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('returns', '${r.id}')">${Icons.trash} Xóa</button>
         </td>
       </tr>
     `;
@@ -1532,11 +2039,11 @@ function renderReturnsList(c) {
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['processed', 'Đã xử lý'], ['approved', 'Đã duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối']])}
         <button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Tạo Phiếu Đổi Trả</button>
       </div>
@@ -1580,7 +2087,7 @@ function renderGRNList(c) {
     const totalLines = (g.lineItems || []).length;
     const wCode = g.warehouseCode || g.warehouse_code || '—';
     return `
-      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('grn', 'view', '${g.id}')">
+      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('grn', 'view', '${g.id}')" onclick="navigate('grn', 'view', '${g.id}')">
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${g.id}</td>
         <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${g.supplier || '—'}</td>      
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${g.date}</td>
@@ -1589,9 +2096,9 @@ function renderGRNList(c) {
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(g.totalValue)}</td>
         <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(g.status)}">${getStatusLabel(g.status)}</span></td>
         <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-          <button class="btn-action" onclick="navigate('grn', 'view', '${g.id}')">${Icons.view} Xem</button>
-          <button class="btn-action" onclick="navigate('grn', 'edit', '${g.id}')">${Icons.edit} Sửa</button>
-          <button class="btn-action btn-action-del" onclick="deleteItem('grn', '${g.id}')">${Icons.trash} Xóa</button>
+          <button class="btn-action" onclick="event.stopPropagation(); navigate('grn', 'view', '${g.id}')">${Icons.view} Xem</button>
+          <button class="btn-action" onclick="event.stopPropagation(); navigate('grn', 'edit', '${g.id}')">${Icons.edit} Sửa</button>
+          <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('grn', '${g.id}')">${Icons.trash} Xóa</button>
         </td>
       </tr>
     `;
@@ -1599,11 +2106,11 @@ function renderGRNList(c) {
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background-color: var(--border);">
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['Bản nháp', 'Bản nháp'], ['Đã nhận', 'Đã nhận'], ['Đã xác minh', 'Đã xác minh']])}
         <button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Nhập Kho Mới</button>
       </div>
@@ -1654,7 +2161,7 @@ function parseDateParts(dateStr) {
 
 function getCustomerAddress(customerNameOrId) {
   if (!customerNameOrId) return '—';
-  const cust = (db.customers || []).find(c => 
+  const cust = (db.customers || []).find(c =>
     (c.name && c.name.trim().toLowerCase() === customerNameOrId.trim().toLowerCase()) ||
     (c.id && c.id.trim().toLowerCase() === customerNameOrId.trim().toLowerCase())
   );
@@ -1996,7 +2503,7 @@ function exportSalesOrderToExcel() {
   document.body.removeChild(a);
 }
 
-// ─── FORMS ────────────────────────────────────────────────────────────────────
+// FORMS
 function renderMaterialForm(c) {
   const d = state.formData || {};
   const isView = state.mode === 'view';
@@ -2041,15 +2548,15 @@ function renderMaterialForm(c) {
             </div>
             <div class="form-group">
               <label class="form-label">Tồn kho ban đầu</label>
-              <input type="number" step="any" class="form-input" value="${d.stock ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'stock\', this.value, \'number\'); d.status = this.value==0?\'out\':(this.value<=(d.reorder||0)?\'low\':\'ok\');"'} >
+              <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.stock ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'stock\', this.value, \'number\'); d.status = this.value==0?\'out\':(this.value<=(d.reorder||0)?\'low\':\'ok\');"'} >
             </div>
             <div class="form-group">
               <label class="form-label">Mức định mức</label>
-              <input type="number" step="any" class="form-input" value="${d.reorder ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'reorder\', this.value, \'number\')"'} >
+              <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.reorder ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'reorder\', this.value, \'number\')"'} >
             </div>
             <div class="form-group">
               <label class="form-label">Đơn giá (VNĐ)</label>
-              <input type="number" step="any" class="form-input" value="${d.cost ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'cost\', this.value, \'number\')"'} >
+              <input type="number" step="any" inputmode="numeric" class="form-input" value="${d.cost ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'cost\', this.value, \'number\')"'} >
             </div>
           </div>
         </div>
@@ -2098,7 +2605,7 @@ function renderCustomerForm(c) {
             </div>
             <div class="form-group">
               <label class="form-label">Số điện thoại</label>
-              <input type="text" class="form-input" value="${d.phone || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'phone\', this.value)"'} placeholder="090x xxx xxx">
+              <input type="tel" inputmode="tel" class="form-input" value="${d.phone || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'phone\', this.value)"'} placeholder="090x xxx xxx">
             </div>
             <div class="form-group" style="grid-column: span 3;">
               <label class="form-label">Địa chỉ</label>
@@ -2115,7 +2622,7 @@ function renderCustomerForm(c) {
           <div class="section-body grid-3">
             <div class="form-group">
               <label class="form-label">Hạn mức tín dụng (VNĐ)</label>
-              <input type="number" step="any" class="form-input" value="${d.creditLimit ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'creditLimit\', this.value, \'number\')"'} >
+              <input type="number" step="any" inputmode="numeric" class="form-input" value="${d.creditLimit ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'creditLimit\', this.value, \'number\')"'} >
             </div>
             <div class="form-group">
               <label class="form-label">Điều khoản thanh toán</label>
@@ -2182,11 +2689,11 @@ function renderWarehouseForm(c) {
           <div class="section-body grid-4">
             <div class="form-group">
               <label class="form-label">Sức chứa (Đơn vị)</label>
-              <input type="number" step="any" class="form-input" value="${d.capacity ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'capacity\', this.value, \'number\')"'} >
+              <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.capacity ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'capacity\', this.value, \'number\')"'} >
             </div>
             <div class="form-group">
               <label class="form-label">Đã sử dụng</label>
-              <input type="number" step="any" class="form-input" value="${d.used ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'used\', this.value, \'number\')"'} >
+              <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.used ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'used\', this.value, \'number\')"'} >
             </div>
             <div class="form-group">
               <label class="form-label">Quản lý kho</label>
@@ -2408,11 +2915,12 @@ function renderQuotationForm(c) {
       
       <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính từ danh mục hàng">
       
-      <input type="number" id="line-item-${l.lineId}-qty" step="any" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
+      <input type="number" id="line-item-${l.lineId}-qty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
       
       <input 
         type="text" 
         id="line-item-${l.lineId}-unitPrice"
+        inputmode="numeric"
         class="form-input" 
         style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
         value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
@@ -2424,9 +2932,9 @@ function renderQuotationForm(c) {
         `}
       >
       
-      <input type="number" id="line-item-${l.lineId}-discount" step="any" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
+      <input type="number" id="line-item-${l.lineId}-discount" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
       
-      <input type="number" id="line-item-${l.lineId}-tax" step="any" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
+      <input type="number" id="line-item-${l.lineId}-tax" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
       
       <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500;">${fmtUSD(lineTotal)}</div>
       ${!isView ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
@@ -2495,19 +3003,23 @@ function renderQuotationForm(c) {
             ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('quotations')">${Icons.plus} Thêm dòng</button>` : ''}
           </div>
           
-          <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 8px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center;">
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Đơn Giá</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-            ${!isView ? `<span></span>` : ''}
-          </div>
+          <div style="overflow-x: auto;">
+            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 8px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 800px;">
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Đơn Giá</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+              ${!isView ? `<span></span>` : ''}
+            </div>
 
-          ${linesHtml}
+            <div style="min-width: 800px;">
+              ${linesHtml}
+            </div>
+          </div>
 
           <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
             <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
@@ -2591,13 +3103,14 @@ function renderSalesOrderForm(c) {
       
       <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01">
       
-      <input type="number" id="line-item-${l.lineId}-qty" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
+      <input type="number" id="line-item-${l.lineId}-qty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
       
       <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
       
       <input 
         type="text" 
         id="line-item-${l.lineId}-unitPrice"
+        inputmode="numeric"
         class="form-input" 
         style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
         value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
@@ -2609,9 +3122,9 @@ function renderSalesOrderForm(c) {
         `}
       >
       
-      <input type="number" id="line-item-${l.lineId}-discount" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
+      <input type="number" id="line-item-${l.lineId}-discount" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
       
-      <input type="number" id="line-item-${l.lineId}-tax" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
+      <input type="number" id="line-item-${l.lineId}-tax" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
       
       <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500; font-size: 12px;">${fmtUSD(lineTotal)}</div>
       ${!isView ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
@@ -2679,21 +3192,25 @@ function renderSalesOrderForm(c) {
             ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('sales-orders')">${Icons.plus} Thêm dòng</button>` : ''}
           </div>
           
-          <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center;">
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tồn</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Đơn giá</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-            ${!isView ? `<span></span>` : ''}
-          </div>
+          <div style="overflow-x: auto;">
+            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 900px;">
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tồn</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Đơn giá</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+              ${!isView ? `<span></span>` : ''}
+            </div>
 
-          ${linesHtml}
+            <div style="min-width: 900px;">
+              ${linesHtml}
+            </div>
+          </div>
 
           <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
             <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
@@ -2767,13 +3284,14 @@ function renderReturnForm(c) {
         
         <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho lấy từ mục 01 xuống">
         
-        <input type="number" id="line-item-${l.lineId}-qtyReturned" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qtyReturned ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'qtyReturned')" onchange="updateLine('${l.lineId}', 'qtyReturned', this.value, 'number')"`}>
+        <input type="number" id="line-item-${l.lineId}-qtyReturned" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qtyReturned ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'qtyReturned')" onchange="updateLine('${l.lineId}', 'qtyReturned', this.value, 'number')"`}>
         
         <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
         
         <input 
           type="text" 
           id="line-item-${l.lineId}-unitPrice"
+          inputmode="numeric"
           class="form-input" 
           style="padding: 6px 6px; text-align: right; ${(isView || hasOrder) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
           value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
@@ -2853,19 +3371,23 @@ function renderReturnForm(c) {
             <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng đổi trả</span></div>
             ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('returns')">${Icons.plus} Thêm dòng</button>` : ''}
           </div>
-          <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center;">
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">SL Trả Lại</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tồn</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Đơn giá</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-            ${!isView ? `<span></span>` : ''}
-          </div>
+          <div style="overflow-x: auto;">
+            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">SL Trả Lại</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tồn</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Đơn giá</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+              ${!isView ? `<span></span>` : ''}
+            </div>
 
-          ${linesHtml}
+            <div style="min-width: 850px;">
+              ${linesHtml}
+            </div>
+          </div>
 
           <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
             <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px;"><span class="form-label" style="font-weight: 600;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
@@ -2926,13 +3448,14 @@ function renderGRNForm(c) {
         
         <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01 xuống">
         
-        <input type="number" id="line-item-${l.lineId}-receivedQty" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${qtyVal}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'receivedQty')" onchange="updateLine('${l.lineId}', 'receivedQty', this.value, 'number'); updateLine('${l.lineId}', 'qtyImport', this.value, 'number');"`}>
+        <input type="number" id="line-item-${l.lineId}-receivedQty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${qtyVal}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'receivedQty')" onchange="updateLine('${l.lineId}', 'receivedQty', this.value, 'number'); updateLine('${l.lineId}', 'qtyImport', this.value, 'number');"`}>
         
         <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế tính tự động">
         
         <input 
           type="text" 
           id="line-item-${l.lineId}-unitCost"
+          inputmode="numeric"
           class="form-input" 
           style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
           value="${(l.unitCost ?? 0).toLocaleString('vi-VN')}" 
@@ -2995,19 +3518,23 @@ function renderGRNForm(c) {
             <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng thực nhận</span></div>
             ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('grn')">${Icons.plus} Thêm dòng</button>` : ''}
           </div>
-          <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center;">
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">SL Nhập</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tồn</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Giá nhập</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-            ${!isView ? `<span></span>` : ''}
-          </div>
+          <div style="overflow-x: auto;">
+            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">SL Nhập</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tồn</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Giá nhập</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+              ${!isView ? `<span></span>` : ''}
+            </div>
 
-          ${linesHtml}
+            <div style="min-width: 850px;">
+              ${linesHtml}
+            </div>
+          </div>
 
           <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
             <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px;"><span class="form-label" style="font-weight: 600;">Tổng giá trị</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.totalValue)}</span></div>
@@ -3024,7 +3551,6 @@ function renderReportInventory(c) {
   const materials = db.materials;
   const filtered = materials.filter(m => state.filter === 'all' || m.category === state.filter);
 
-  // Helper hỗ trợ lấy số tồn từ cột ton_thuc_te trong bản inventory
   const getActualStock = (m) => {
     const invList = (db.inventory || []).filter(i => i.sku === m.id || i.material_id === m.id);
     if (invList.length > 0) {
@@ -3083,7 +3609,7 @@ function renderReportInventory(c) {
     const coTheBan = tonThucTe - tamGiu;
 
     return `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', 'edit', '${m.id}')">
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', 'edit', '${m.id}')" onclick="navigate('materials', 'edit', '${m.id}')">
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
       <td style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
@@ -3097,8 +3623,8 @@ function renderReportInventory(c) {
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
       <td style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'Đủ hàng' : m.status}</span></td>
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-        <button class="btn-action" onclick="navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>
-        <button class="btn-action btn-action-del" onclick="deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>
+        <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>
       </td>
     </tr>
   `;
@@ -3106,10 +3632,10 @@ function renderReportInventory(c) {
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 24px;">
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
-      <div style="display: grid; grid-template-columns: 1fr 320px; gap: 16px;">
+      <div style="display: grid; grid-template-columns: 1fr 320px; gap: 16px;" class="grid-2">
         <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
           <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Giá Trị Tồn Kho Theo Danh Mục</div>
           <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -3123,10 +3649,10 @@ function renderReportInventory(c) {
           </div>
         </div>
       </div>
-      <div style="border: 1px solid var(--border); background: var(--card);">
-        <div style="padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
+        <div style="padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Báo Cáo Tồn Kho Chi Tiết & Định Giá</span>
-          <div style="display: flex; gap: 1px;">
+          <div style="display: flex; gap: 1px; overflow-x: auto;">
             ${['all', ...categories].map(cat => `
               <button onclick="state.filter='${cat}'; render();" style="padding: 4px 12px; font-family: var(--font-dm-mono); font-size: 10px; text-transform: uppercase; background: ${state.filter === cat ? 'var(--primary)' : 'var(--muted)'}; color: ${state.filter === cat ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer;">${cat === 'all' ? 'Tất cả' : cat}</button>
             `).join('')}
@@ -3150,7 +3676,6 @@ function renderReportInventory(c) {
   `;
 }
 
-// ─── BÁO CÁO DOANH SỐ (ĐÃ BỔ SUNG KPI GIÁ TRỊ ĐƠN TRUNG BÌNH LẤP Ô TRỐNG) ─────────
 function renderReportSales(c) {
   const {
     salesDataReal,
@@ -3159,11 +3684,9 @@ function renderReportSales(c) {
     topCustomersReal
   } = getSalesAnalyticsData();
 
-  // Tính tổng đổi trả thực tế
   const totalReturnsCount = (db.returns || []).filter(r => ['processed', 'approved', 'đã xử lý', 'đã duyệt'].includes((r.status || '').toLowerCase())).length;
   const returnRatePercent = ytdOrders > 0 ? ((totalReturnsCount / ytdOrders) * 100).toFixed(1) : '0.0';
 
-  // Tính Giá trị đơn trung bình (AOV - Average Order Value)
   const avgOrderValue = ytdOrders > 0 ? (ytdRevenue / ytdOrders) : 0;
 
   const customersHtml = topCustomersReal.slice(0, 6).map((cus, i) => `
@@ -3196,7 +3719,7 @@ function renderReportSales(c) {
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         <div class="kpi-card"><span class="kpi-label">Doanh Thu Lũy Kế Trong Năm</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(ytdRevenue)}</span></div><span class="kpi-sub">Năm ${new Date().getFullYear()}</span></div>
         <div class="kpi-card"><span class="kpi-label">Tổng Đơn Bán</span><div class="kpi-value-row"><span class="kpi-value">${fmt(ytdOrders)}</span></div><span class="kpi-sub">Năm ${new Date().getFullYear()}</span></div>
         <div class="kpi-card"><span class="kpi-label">Tỷ Lệ Trả Hàng</span><div class="kpi-value-row"><span class="kpi-value">${returnRatePercent}%</span></div><span class="kpi-sub">theo số lượt đổi trả</span></div>
@@ -3211,7 +3734,7 @@ function renderReportSales(c) {
           <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Đơn Bán Hàng & Đổi Trả</div>
           <div style="height: 180px;"><canvas id="chart-returns"></canvas></div>
         </div>
-        <div style="border: 1px solid var(--border); background: var(--card);">
+        <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
           <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng Khai Thác</div>
           <table style="width: 100%; border-collapse: collapse;">
             <tbody>
@@ -3220,7 +3743,7 @@ function renderReportSales(c) {
           </table>
         </div>
       </div>
-      <div style="border: 1px solid var(--border); background: var(--card);">
+      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
         <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Thống Kê Chi Tiết Hàng Tháng</div>
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
@@ -3482,7 +4005,7 @@ function initFormData(module, id) {
 function formatDateVN(dateStr) {
   if (!dateStr) return '';
   if (dateStr.includes('/')) return dateStr;
-  
+
   const parts = dateStr.split('-');
   if (parts.length === 3) {
     const [year, month, day] = parts;

@@ -594,3 +594,34 @@ tr:hover {
 .bell-btn:hover {
   opacity: 0.8;
 }
+
+/* Responsive cho Màn hình Di Động (< 768px) */
+@media (max-width: 768px) {
+  /* Chuyển Grid KPI thành 2 cột hoặc 1 cột */
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  /* Tối ưu khung Form nhập liệu */
+  .grid-2, .grid-3, .grid-4, .section-body {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Điều chỉnh khoảng cách lề trên di động */
+  .app-content {
+    padding: 12px !important;
+  }
+
+  /* Tối ưu ô nhập liệu cho ngón tay chạm */
+  .form-input, .form-select, .form-textarea, button {
+    min-height: 44px !important;
+    font-size: 14px !important;
+  }
+
+  /* Cho phép cuộn ngang mượt mà cho các bảng */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
