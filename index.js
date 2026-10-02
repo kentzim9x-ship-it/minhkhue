@@ -12,6 +12,41 @@ spinnerStyle.innerHTML = `
 `;
 document.head.appendChild(spinnerStyle);
 
+// Danh sách tài khoản cấp riêng
+const USERS = [
+  { id: 'USR-001', username: 'admin', password: '123', name: 'Quản Trị Viên', role: 'ADMIN' },
+  { id: 'USR-002', username: 'nhambc', password: '123', name: 'Bùi Cao Nhâm', role: 'MANAGER' },
+  { id: 'USR-003', username: 'minhkhue', password: '123', name: 'Minh Khuê', role: 'USER' }
+];
+
+function getAuthSession() {
+  const saved = localStorage.getItem('app_session');
+  return saved ? JSON.parse(saved) : { isLoggedIn: false, currentUser: null, remember: false };
+}
+
+function getTodayDateStr() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getFirstDayOfMonthStr() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}-01`;
+}
+
+function getCurrentTimeStr() {
+  const d = new Date();
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
 // Supabase Client Initialization
 const SUPABASE_URL = 'https://gzmczqeczlrujhzleaoa.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_oBZ4Z1bekEMIjq_wmPFsyg_V68Y3dWE';
@@ -29,7 +64,6 @@ let db = {
   inventory: []
 };
 
-// Hàm hỗ trợ so sánh sắp xếp giảm dần theo ID (mới nhất lên trên cùng)
 function sortDescById(a, b) {
   return String(b.id || '').localeCompare(String(a.id || ''), undefined, { numeric: true, sensitivity: 'base' });
 }
@@ -52,10 +86,10 @@ async function fetchDataFromSupabase() {
     db.warehouses = whRes.data || [];
     db.inventory = invRes.data || [];
 
-    // Sắp xếp các danh sách theo ID giảm dần
     db.quotations = (quoRes.data || []).map(q => ({
       ...q,
       date: q.date ? String(q.date).split('T')[0] : '',
+      validbegin: (q.validbegin || q.validBegin) ? String(q.validbegin || q.validBegin).split('T')[0] : '',
       validUntil: (q.validUntil || q.validuntil) ? String(q.validUntil || q.validuntil).split('T')[0] : '',
       lineItems: Array.isArray(q.lineItems || q.lineitems) ? (q.lineItems || q.lineitems) : []
     })).sort(sortDescById);
@@ -110,11 +144,43 @@ async function fetchDataFromSupabase() {
   }
 }
 
-// 📌 HÀM TÍNH TỒN THỰC TẾ TỚI THỜI ĐIỂM HIỆN TẠI TỰ ĐỘNG
+// Hàm hỗ trợ đồng bộ ngầm ton_thuc_te vào Supabase không gây trễ UI
+function syncRealtimeStockToSupabase(sku, warehouseCode, realStock) {
+  if (!sku || !warehouseCode) return;
+  setTimeout(async () => {
+    try {
+      const invIndex = (db.inventory || []).findIndex(i =>
+        (i.sku === sku || i.material_id === sku) &&
+        (i.warehouse_code === warehouseCode || i.warehouse_id === warehouseCode || i.warehouseCode === warehouseCode)
+      );
+
+      if (invIndex !== -1) {
+        db.inventory[invIndex].ton_thuc_te = realStock;
+        await supabaseClient
+          .from('inventory')
+          .update({ ton_thuc_te: realStock })
+          .eq('id', db.inventory[invIndex].id);
+      } else {
+        const newRecord = {
+          sku: sku,
+          warehouse_code: warehouseCode,
+          ton_thuc_te: realStock,
+          stock: 0
+        };
+        const { data, error } = await supabaseClient.from('inventory').insert([newRecord]).select();
+        if (!error && data && data.length > 0) {
+          db.inventory.push(data[0]);
+        }
+      }
+    } catch (err) {
+      console.error('Lỗi cập nhật ton_thuc_te:', err);
+    }
+  }, 0);
+}
+
 function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
   if (!sku) return 0;
 
-  // 1. Tồn đầu kỳ
   let initialStock = 0;
   if (warehouseCode && db.inventory && db.inventory.length > 0) {
     const inv = db.inventory.find(i =>
@@ -129,7 +195,6 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
     if (mat) initialStock = Number(mat.stock || 0);
   }
 
-  // 2. Cộng Phiếu Nhập Kho (GRN)
   let totalGRN = 0;
   (db.grns || []).forEach(g => {
     if (currentDocId && String(g.id) === String(currentDocId)) return;
@@ -145,7 +210,6 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
     }
   });
 
-  // 3. Trừ Đơn Bán Hàng (Orders)
   let totalOrders = 0;
   (db.orders || []).forEach(o => {
     if (currentDocId && String(o.id) === String(currentDocId)) return;
@@ -161,7 +225,6 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
     }
   });
 
-  // 4. Trừ Đổi Trả Hàng Bán (Returns)
   let totalReturns = 0;
   (db.returns || []).forEach(r => {
     if (currentDocId && String(r.id) === String(currentDocId)) return;
@@ -177,15 +240,20 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
     }
   });
 
-  const realtimeStock = initialStock + totalGRN - totalOrders - totalReturns;
-  return Number(realtimeStock.toFixed(2));
+  const realtimeStock = Number((initialStock + totalGRN - totalOrders - totalReturns).toFixed(2));
+
+  // Tự động đồng bộ số lượng vừa tính được vào cột ton_thuc_te trong bảng inventory (ngầm)
+  if (warehouseCode) {
+    syncRealtimeStockToSupabase(sku, warehouseCode, realtimeStock);
+  }
+
+  return realtimeStock;
 }
 
 function getStockQty(sku, warehouseCode) {
   return calculateRealtimeStock(sku, warehouseCode);
 }
 
-// ─── ICONS ────────────────────────────────────────────────────────────────────
 const Icons = {
   view: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="3"/><path d="M1 7s2.5-4.5 6-4.5S13 7 13 7s-2.5 4.5-6 4.5S1 7 1 7z"/></svg>`,
   edit: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z" /></svg>`,
@@ -195,122 +263,43 @@ const Icons = {
   search: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5" /><line x1="10" y1="10" x2="14" y2="14" /></svg>`
 };
 
-const salesData = [
-  { month: 'Tháng 1', revenue: 142000, orders: 384, returns: 12 }, { month: 'Tháng 2', revenue: 168000, orders: 421, returns: 18 },
-  { month: 'Tháng 3', revenue: 155000, orders: 398, returns: 9 }, { month: 'Tháng 4', revenue: 201000, orders: 512, returns: 22 },
-  { month: 'Tháng 5', revenue: 189000, orders: 478, returns: 15 }, { month: 'Tháng 6', revenue: 224000, orders: 561, returns: 19 },
-  { month: 'Tháng 7', revenue: 248000, orders: 603, returns: 27 }, { month: 'Tháng 8', revenue: 231000, orders: 579, returns: 21 },
-  { month: 'Tháng 9', revenue: 267000, orders: 648, returns: 24 }
-];
-
-const recentActivity = [
-  { time: '09:41', event: 'Nhập kho', detail: 'GRN-00052 — 300 đơn vị từ Apex Components', type: 'in' },
-  { time: '09:18', event: 'Giao hàng thành công', detail: 'ORD-24091 → Giải pháp DataStream', type: 'out' },
-  { time: '08:55', event: 'Cảnh báo tồn kho thấp', detail: 'SKU-00218 dưới mức định mức', type: 'alert' },
-  { time: '08:30', event: 'Chấp nhận báo giá', detail: 'QUO-00040 — Alpine Systems GmbH', type: 'new' }
-];
-
 function fmt(n) { return new Intl.NumberFormat('en-US').format(n); }
 function fmtUSD(n) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
 }
 
-// 1. Hàm map lớp CSS màu sắc cho badge
 function getBadgeClass(status) {
   const s = String(status || '').toLowerCase().trim();
   const map = {
-    // Trạng thái thành công / Hoàn thành (Xanh lá - emerald)
-    'completed': 'badge-emerald',
-    'hoàn thành': 'badge-emerald',
-    'approved': 'badge-emerald',
-    'đã duyệt': 'badge-emerald',
-    'processed': 'badge-emerald',
-    'đã xử lý': 'badge-emerald',
-    'accepted': 'badge-emerald',
-    'đã chấp nhận': 'badge-emerald',
-    'verified': 'badge-emerald',
-    'đã xác minh': 'badge-emerald',
-    'active': 'badge-emerald',
-    'hoạt động': 'badge-emerald',
-    'ok': 'badge-emerald',
-    'đủ hàng': 'badge-emerald',
-
-    // Trạng thái đang xử lý / Chờ (Vàng - amber)
-    'processing': 'badge-amber',
-    'đang xử lý': 'badge-amber',
-    'received': 'badge-amber',
-    'đã nhận': 'badge-amber',
-    'maintenance': 'badge-amber',
-    'bảo trì': 'badge-amber',
-    'low': 'badge-amber',
-    'sắp hết': 'badge-amber',
-
-    // Trạng thái đang giao / Vận chuyển (Xanh dương - blue)
-    'shipped': 'badge-blue',
-    'delivered': 'badge-blue',
-
-    // Trạng thái nháp / Chờ duyệt (Mờ - zinc)
-    'pending': 'badge-zinc',
-    'chờ xử lý': 'badge-zinc',
-    'chờ duyệt': 'badge-zinc',
-    'draft': 'badge-zinc',
-    'bản nháp': 'badge-zinc',
-    'inactive': 'badge-zinc',
-    'ngừng hoạt động': 'badge-zinc',
-
-    // Trạng thái đã hủy / Nguy cấp / Hết hạn (Đỏ - red)
-    'expired': 'badge-red',
-    'hết hạn': 'badge-red',
-    'cancelled': 'badge-red',
-    'đã hủy': 'badge-red',
-    'rejected': 'badge-red',
-    'từ chối': 'badge-red',
-    'suspended': 'badge-red',
-    'tạm khóa': 'badge-red',
-    'closed': 'badge-red',
-    'đóng cửa': 'badge-red',
-    'critical': 'badge-red',
-    'out': 'badge-red',
-    'hết hàng': 'badge-red'
+    'completed': 'badge-emerald', 'hoàn thành': 'badge-emerald', 'approved': 'badge-emerald', 'đã duyệt': 'badge-emerald',
+    'processed': 'badge-emerald', 'đã xử lý': 'badge-emerald', 'accepted': 'badge-emerald', 'đã chấp nhận': 'badge-emerald',
+    'verified': 'badge-emerald', 'đã xác minh': 'badge-emerald', 'active': 'badge-emerald', 'hoạt động': 'badge-emerald',
+    'ok': 'badge-emerald', 'đủ hàng': 'badge-emerald', 'processing': 'badge-amber', 'đang xử lý': 'badge-amber',
+    'received': 'badge-amber', 'đã nhận': 'badge-amber', 'maintenance': 'badge-amber', 'bảo trì': 'badge-amber',
+    'low': 'badge-amber', 'sắp hết': 'badge-amber', 'shipped': 'badge-blue', 'delivered': 'badge-blue',
+    'pending': 'badge-zinc', 'chờ xử lý': 'badge-zinc', 'chờ duyệt': 'badge-zinc', 'draft': 'badge-zinc',
+    'bản nháp': 'badge-zinc', 'inactive': 'badge-zinc', 'ngừng hoạt động': 'badge-zinc', 'expired': 'badge-red',
+    'hết hạn': 'badge-red', 'cancelled': 'badge-red', 'đã hủy': 'badge-red', 'rejected': 'badge-red',
+    'từ chối': 'badge-red', 'suspended': 'badge-red', 'tạm khóa': 'badge-red', 'closed': 'badge-red',
+    'đóng cửa': 'badge-red', 'critical': 'badge-red', 'out': 'badge-red', 'hết hàng': 'badge-red'
   };
   return map[s] || 'badge-zinc';
 }
 
-// 2. Hàm chuyển đổi mã trạng thái tiếng Anh/gốc sang Tiếng Việt chuẩn
 function getStatusLabel(status) {
   const s = String(status || '').toLowerCase().trim();
   const map = {
-    'approved': 'Đã duyệt',
-    'processed': 'Đã xử lý',
-    'processing': 'Đang xử lý',
-    'completed': 'Hoàn thành',
-    'pending': 'Chờ xử lý',
-    'accepted': 'Đã chấp nhận',
-    'draft': 'Bản nháp',
-    'expired': 'Hết hạn',
-    'verified': 'Đã xác minh',
-    'received': 'Đã nhận',
-    'active': 'Hoạt động',
-    'inactive': 'Ngừng hoạt động',
-    'suspended': 'Tạm khóa',
-    'maintenance': 'Bảo trì',
-    'closed': 'Đóng cửa',
-    'cancelled': 'Đã hủy',
-    'rejected': 'Từ chối',
-    'ok': 'Đủ hàng',
-    'low': 'Sắp hết',
-    'critical': 'Nguy cấp',
-    'out': 'Hết hàng'
+    'approved': 'Đã duyệt', 'processed': 'Đã xử lý', 'processing': 'Đang xử lý', 'completed': 'Hoàn thành',
+    'pending': 'Chờ xử lý', 'accepted': 'Đã chấp nhận', 'draft': 'Bản nháp', 'expired': 'Hết hạn',
+    'verified': 'Đã xác minh', 'received': 'Đã nhận', 'active': 'Hoạt động', 'inactive': 'Ngừng hoạt động',
+    'suspended': 'Tạm khóa', 'maintenance': 'Bảo trì', 'closed': 'Đóng cửa', 'cancelled': 'Đã hủy',
+    'rejected': 'Từ chối', 'ok': 'Đủ hàng', 'low': 'Sắp hết', 'critical': 'Nguy cấp', 'out': 'Hết hàng'
   };
   return map[s] || (status ? String(status).toUpperCase() : '—');
 }
 
 function getWarehouseStatusLabel(status) {
-  const map = {
-    'active': 'HOẠT ĐỘNG',
-    'maintenance': 'BẢO TRÌ',
-    'closed': 'ĐÓNG CỬA'
-  };
+  const map = { 'active': 'HOẠT ĐỘNG', 'maintenance': 'BẢO TRÌ', 'closed': 'ĐÓNG CỬA' };
   return map[status?.toLowerCase()] || (status ? status.toUpperCase() : 'HOẠT ĐỘNG');
 }
 
@@ -367,8 +356,11 @@ function navigate(view, mode = 'list', itemId = null) {
   state.search = '';
 
   const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
-  document.getElementById('view-tag').innerText = meta.tag;
-  document.getElementById('view-title').innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
+  const tagEl = document.getElementById('view-tag');
+  const titleEl = document.getElementById('view-title');
+  
+  if (tagEl) tagEl.innerText = meta.tag;
+  if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
 
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-view') === view);
@@ -407,8 +399,11 @@ function handleHashChange() {
     state.search = '';
 
     const meta = viewMeta[view];
-    document.getElementById('view-tag').innerText = meta.tag;
-    document.getElementById('view-title').innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
+    const tagEl = document.getElementById('view-tag');
+    const titleEl = document.getElementById('view-title');
+    
+    if (tagEl) tagEl.innerText = meta.tag;
+    if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
 
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-view') === view);
@@ -447,10 +442,51 @@ function updateLine(lineId, field, value, type = 'text') {
   }
 }
 
-function addLineItem(module) {
+function handleLineItemKeyDown(e, module, lineIndex, fieldName) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const targetInput = e.target;
+    if (targetInput && state.formData && Array.isArray(state.formData.lineItems)) {
+      const currentLine = state.formData.lineItems[lineIndex];
+      if (currentLine && fieldName) {
+        if (fieldName === 'unitPrice' || fieldName === 'unitCost') {
+          currentLine[fieldName] = parseNumberInput(targetInput.value);
+        } else if (['qty', 'qtyReturned', 'receivedQty', 'discount', 'tax'].includes(fieldName)) {
+          currentLine[fieldName] = Number(targetInput.value) || 0;
+        } else {
+          currentLine[fieldName] = targetInput.value;
+        }
+      }
+    }
+
+    const lineItems = state.formData?.lineItems || [];
+    const isLastRow = lineIndex === lineItems.length - 1;
+    const isUnitPriceField = (fieldName === 'unitPrice' || fieldName === 'unitCost');
+
+    if (isLastRow && isUnitPriceField) {
+      addLineItem(module, true);
+    } else if (!isLastRow) {
+      const nextLineId = lineItems[lineIndex + 1].lineId;
+      setTimeout(() => {
+        const nextInput = document.getElementById(`line-item-${nextLineId}-${fieldName}`);
+        if (nextInput) {
+          nextInput.focus();
+          if (typeof nextInput.select === 'function') nextInput.select();
+        }
+      }, 50);
+    } else {
+      render();
+    }
+  }
+}
+
+function addLineItem(module, focusNewName = false) {
   if (!state.formData) return;
   if (!Array.isArray(state.formData.lineItems)) state.formData.lineItems = [];
-  const base = { lineId: Date.now().toString(), sku: '', name: '' };
+  const newLineId = Date.now().toString();
+  const base = { lineId: newLineId, sku: '', name: '' };
 
   if (module === 'quotations') {
     state.formData.lineItems.push({ ...base, qty: 1, unitPrice: 0, discount: 0, tax: 0 });
@@ -468,7 +504,18 @@ function addLineItem(module) {
   }
   if (module === 'returns') state.formData.lineItems.push({ ...base, qtyReturned: 1, unitPrice: 0 });
   if (module === 'grn') state.formData.lineItems.push({ ...base, receivedQty: 1, unitCost: 0 });
+  
   render();
+
+  if (focusNewName) {
+    setTimeout(() => {
+      const nameInput = document.getElementById(`line-item-${newLineId}-name`);
+      if (nameInput) {
+        nameInput.focus();
+        if (typeof nameInput.select === 'function') nameInput.select();
+      }
+    }, 50);
+  }
 }
 
 function removeLineItem(lineId) {
@@ -477,8 +524,25 @@ function removeLineItem(lineId) {
   render();
 }
 
-// LƯU DỮ LIỆU
 async function saveForm(module) {
+  if (['quotations', 'sales-orders', 'returns', 'grn'].includes(module)) {
+    const lineItems = state.formData?.lineItems || [];
+    for (let i = 0; i < lineItems.length; i++) {
+      const item = lineItems[i];
+      if (!item.name || !item.name.trim()) {
+        alert('Tên Hàng không được để trống.');
+        setTimeout(() => {
+          const nameInput = document.getElementById(`line-item-${item.lineId}-name`);
+          if (nameInput) {
+            nameInput.focus();
+            if (typeof nameInput.select === 'function') nameInput.select();
+          }
+        }, 50);
+        return;
+      }
+    }
+  }
+
   const tableMap = {
     'materials': 'materials',
     'customers': 'customers',
@@ -493,6 +557,36 @@ async function saveForm(module) {
 
   let rawData = JSON.parse(JSON.stringify(state.formData));
 
+  const session = getAuthSession();
+  const currentUserId = session.currentUser ? session.currentUser.id : 'USR-001';
+  const currentDate = getTodayDateStr();
+  const currentTime = getCurrentTimeStr();
+
+  if (state.mode === 'add') {
+    rawData.user_id0 = currentUserId;
+    rawData.date0 = currentDate;
+    rawData.time0 = currentTime;
+
+    rawData.user_id2 = currentUserId;
+    rawData.date2 = currentDate;
+    rawData.time2 = currentTime;
+  } else if (state.mode === 'edit') {
+    const existing = db[targetKey].find(item => String(item.id) === String(rawData.id));
+    if (existing) {
+      rawData.user_id0 = existing.user_id0 || currentUserId;
+      rawData.date0 = existing.date0 || currentDate;
+      rawData.time0 = existing.time0 || currentTime;
+    } else {
+      rawData.user_id0 = currentUserId;
+      rawData.date0 = currentDate;
+      rawData.time0 = currentTime;
+    }
+
+    rawData.user_id2 = currentUserId;
+    rawData.date2 = currentDate;
+    rawData.time2 = currentTime;
+  }
+
   if (module === 'customers') {
     if (rawData.paymentTerms !== undefined) rawData.paymentterms = rawData.paymentTerms;
     if (rawData.creditLimit !== undefined) rawData.creditlimit = rawData.creditLimit;
@@ -506,8 +600,9 @@ async function saveForm(module) {
       await supabaseClient.from('quotations').update({ status: 'expired' }).eq('customer', rawData.customer).neq('status', 'expired');
     }
     rawData.validuntil = rawData.validUntil;
+    rawData.validbegin = rawData.validbegin || rawData.validBegin || rawData.date;
     rawData.lineitems = rawData.lineItems;
-    delete rawData.discountTotal; delete rawData.discounttotal; delete rawData.subtotal; delete rawData.validUntil; delete rawData.lineItems;
+    delete rawData.discountTotal; delete rawData.discounttotal; delete rawData.subtotal; delete rawData.validUntil; delete rawData.validBegin; delete rawData.lineItems;
   }
 
   let dbPayload = { ...rawData };
@@ -598,7 +693,8 @@ async function saveForm(module) {
       db[targetKey].sort(sortDescById);
     }
 
-    await fetchDataFromSupabase();
+    // Tải lại dữ liệu ở chế độ ngầm để tránh đơ UI
+    fetchDataFromSupabase();
     navigate(module, 'list');
   } catch (error) {
     console.error('Lỗi lưu Supabase:', error);
@@ -606,7 +702,6 @@ async function saveForm(module) {
   }
 }
 
-// XÓA DỮ LIỆU
 async function deleteItem(module, id) {
   if (confirm(`Bạn có chắc chắn muốn xóa phiếu ${id}?`)) {
     const tableMap = {
@@ -635,9 +730,158 @@ async function deleteItem(module, id) {
   }
 }
 
-// ─── RENDER ENGINE ────────────────────────────────────────────────────────────
+// ─── GIAO DIỆN ĐĂNG NHẬP SANG TRỌNG & THANH LỊCH (DARK ELEGANT CONCEPT) ─────────
+function renderLoginForm(container) {
+  const savedCreds = JSON.parse(localStorage.getItem('remembered_user') || '{}');
+
+  container.innerHTML = `
+    <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 30%, #1a1e26 0%, #0c0e12 100%); padding: 20px; font-family: var(--font-jost);">
+      <div style="width: 100%; max-width: 420px; padding: 40px 36px; background: rgba(20, 24, 33, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 1px rgba(240, 160, 48, 0.25);">
+        
+        <div style="text-align: center; margin-bottom: 32px;">
+          <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: rgba(240, 160, 48, 0.12); border: 1px solid rgba(240, 160, 48, 0.3); border-radius: 10px; margin-bottom: 16px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f0a030" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <h2 style="font-family: var(--font-jost); font-size: 22px; font-weight: 600; color: #ffffff; letter-spacing: 0.06em; margin: 0 0 6px 0;">
+            MINH KHUÊ LMS
+          </h2>
+          <p style="font-size: 12px; color: #8a94a6; font-family: var(--font-dm-mono); letter-spacing: 0.05em; text-transform: uppercase;">Hệ Thống Quản Lý Kho & Bán Hàng</p>
+        </div>
+
+        <form onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 20px;">
+          <div>
+            <label style="display: block; font-size: 11px; font-family: var(--font-dm-mono); color: #8a94a6; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em;">
+              Tên tài khoản
+            </label>
+            <input 
+              type="text" 
+              id="login-username" 
+              required 
+              value="${savedCreds.username || ''}"
+              placeholder="Nhập tên tài khoản..." 
+              style="width: 100%; padding: 12px 14px; background: rgba(13, 16, 22, 0.7); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px; color: #ffffff; outline: none; font-size: 13px; transition: all 0.2s;"
+              onfocus="this.style.borderColor='#f0a030'; this.style.boxShadow='0 0 0 3px rgba(240,160,48,0.15)';"
+              onblur="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.boxShadow='none';"
+            >
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 11px; font-family: var(--font-dm-mono); color: #8a94a6; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em;">
+              Mật khẩu
+            </label>
+            <input 
+              type="password" 
+              id="login-password" 
+              required 
+              value="${savedCreds.password || ''}"
+              placeholder="Nhập mật khẩu..." 
+              style="width: 100%; padding: 12px 14px; background: rgba(13, 16, 22, 0.7); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 6px; color: #ffffff; outline: none; font-size: 13px; transition: all 0.2s;"
+              onfocus="this.style.borderColor='#f0a030'; this.style.boxShadow='0 0 0 3px rgba(240,160,48,0.15)';"
+              onblur="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.boxShadow='none';"
+            >
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #a0aec0; cursor: pointer; user-select: none;">
+              <input type="checkbox" id="login-remember" ${savedCreds.remember ? 'checked' : ''} style="cursor: pointer; accent-color: #f0a030; width: 15px; height: 15px;">
+              Ghi nhớ đăng nhập
+            </label>
+          </div>
+
+          <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.2); padding: 8px 12px; border-radius: 6px; text-align: center;">
+            Tài khoản hoặc mật khẩu không chính xác!
+          </div>
+
+          <button type="submit" style="width: 100%; padding: 12px; margin-top: 6px; background: linear-gradient(135deg, #f0a030 0%, #d98818 100%); border: none; border-radius: 6px; color: #000000; font-family: var(--font-jost); font-size: 13px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(240, 160, 48, 0.25);"
+            onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(240, 160, 48, 0.4)';"
+            onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 15px rgba(240, 160, 48, 0.25)';"
+          >
+            Đăng Nhập
+          </button>
+        </form>
+
+      </div>
+    </div>
+  `;
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  const un = document.getElementById('login-username').value.trim();
+  const pw = document.getElementById('login-password').value;
+  const remember = document.getElementById('login-remember').checked;
+
+  const found = USERS.find(u => u.username === un && u.password === pw);
+
+  if (found) {
+    const session = { isLoggedIn: true, currentUser: found, remember };
+    localStorage.setItem('app_session', JSON.stringify(session));
+
+    if (remember) {
+      localStorage.setItem('remembered_user', JSON.stringify({ username: un, password: pw, remember: true }));
+    } else {
+      localStorage.removeItem('remembered_user');
+    }
+
+    document.querySelector('.app-container').style.display = 'flex';
+    updateUserInfoUI();
+    render();
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+function handleLogout() {
+  localStorage.removeItem('app_session');
+  location.reload();
+}
+
+function updateUserInfoUI() {
+  const session = getAuthSession();
+  if (session.isLoggedIn && session.currentUser) {
+    const user = session.currentUser;
+    const userAvatarEl = document.querySelector('.user-avatar');
+    const userNameEl = document.querySelector('.user-name');
+    const userRoleEl = document.querySelector('.user-role');
+    const sidebarUserEl = document.querySelector('.sidebar-user');
+
+    if (userAvatarEl) userAvatarEl.innerText = user.username.substring(0, 2).toUpperCase();
+    if (userNameEl) userNameEl.innerText = user.name;
+    if (userRoleEl) userRoleEl.innerText = user.role;
+
+    if (sidebarUserEl && !document.getElementById('logout-btn')) {
+      const logoutBtn = document.createElement('button');
+      logoutBtn.id = 'logout-btn';
+      logoutBtn.innerText = 'Đăng xuất';
+      logoutBtn.onclick = handleLogout;
+      logoutBtn.style.cssText = "margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--muted-foreground); font-size: 10px; padding: 3px 6px; cursor: pointer;";
+      sidebarUserEl.appendChild(logoutBtn);
+    }
+  }
+}
+
 function render() {
+  const appContainer = document.querySelector('.app-container');
   const c = document.getElementById('app-content');
+  const session = getAuthSession();
+
+  if (!session.isLoggedIn) {
+    if (appContainer) appContainer.style.display = 'none';
+    let loginBox = document.getElementById('login-container');
+    if (!loginBox) {
+      loginBox = document.createElement('div');
+      loginBox.id = 'login-container';
+      document.body.appendChild(loginBox);
+    }
+    renderLoginForm(loginBox);
+    return;
+  } else {
+    const loginBox = document.getElementById('login-container');
+    if (loginBox) loginBox.remove();
+    if (appContainer) appContainer.style.display = 'flex';
+    updateUserInfoUI();
+  }
+
   const activeId = document.activeElement ? document.activeElement.id : null;
 
   c.innerHTML = '';
@@ -679,22 +923,153 @@ function render() {
   }
 }
 
-// ─── LIST VIEWS ───────────────────────────────────────────────────────────────
+// ─── HÀM HỖ TRỢ TÍNH TOÁN DOANH SỐ THỰC TẾ TỪ DATABASE ────────────────────────
+function getSalesAnalyticsData() {
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+
+  // 1. Lấy dữ liệu 9 tháng gần nhất (hoặc 9 tháng của năm hiện tại)
+  const monthLabels = [];
+  const monthlyMap = {};
+
+  for (let i = 8; i >= 0; i--) {
+    let d = new Date(currentYear, currentMonth - 1 - i, 1);
+    let y = d.getFullYear();
+    let m = d.getMonth() + 1;
+    let key = `${y}-${String(m).padStart(2, '0')}`;
+    let label = `Tháng ${m}`;
+    monthLabels.push({ key, label, year: y, month: m });
+    monthlyMap[key] = { month: label, revenue: 0, orders: 0, returns: 0 };
+  }
+
+  // 2. Tổng hợp Đơn hàng bán (chỉ lấy đơn hoàn thành hoặc đang xử lý)
+  let currentMonthRevenue = 0;
+  let currentMonthOrders = 0;
+
+  (db.orders || []).forEach(o => {
+    const status = (o.status || '').toLowerCase();
+    if (['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) {
+      const dateStr = o.date || '';
+      const key = dateStr.substring(0, 7); // YYYY-MM
+      const total = Number(o.total || 0);
+
+      if (monthlyMap[key]) {
+        monthlyMap[key].revenue += total;
+        monthlyMap[key].orders += 1;
+      }
+
+      const currentKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      if (key === currentKey) {
+        currentMonthRevenue += total;
+        currentMonthOrders += 1;
+      }
+    }
+  });
+
+  // 3. Tổng hợp Đổi trả hàng bán
+  (db.returns || []).forEach(r => {
+    const status = (r.status || '').toLowerCase();
+    if (['processed', 'approved', 'đã xử lý', 'đã duyệt'].includes(status)) {
+      const dateStr = r.date || '';
+      const key = dateStr.substring(0, 7);
+      if (monthlyMap[key]) {
+        monthlyMap[key].returns += 1;
+      }
+    }
+  });
+
+  const salesDataReal = monthLabels.map(m => monthlyMap[m.key]);
+
+  // 4. Doanh số lũy kế YTD (Từ đầu năm đến nay)
+  let ytdRevenue = 0;
+  let ytdOrders = 0;
+  (db.orders || []).forEach(o => {
+    const status = (o.status || '').toLowerCase();
+    if (['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) {
+      if (o.date && o.date.startsWith(String(currentYear))) {
+        ytdRevenue += Number(o.total || 0);
+        ytdOrders += 1;
+      }
+    }
+  });
+
+  // 5. Thống kê theo Khách hàng
+  const customerMap = {};
+  (db.orders || []).forEach(o => {
+    const status = (o.status || '').toLowerCase();
+    if (['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) {
+      const cName = o.customer || 'Khách lẻ';
+      if (!customerMap[cName]) customerMap[cName] = { name: cName, revenue: 0, orders: 0 };
+      customerMap[cName].revenue += Number(o.total || 0);
+      customerMap[cName].orders += 1;
+    }
+  });
+
+  const topCustomersReal = Object.values(customerMap).sort((a, b) => b.revenue - a.revenue);
+
+  // 6. Hoạt động gần đây (Recent Activity) từ CSDL
+  const recentActivityReal = [];
+  (db.grns || []).slice(0, 2).forEach(g => {
+    recentActivityReal.push({
+      time: g.time0 ? g.time0.substring(0, 5) : 'Hôm nay',
+      event: 'Nhập kho',
+      detail: `${g.id} — ${g.supplier || 'Nhà cung cấp'}`,
+      type: 'in'
+    });
+  });
+
+  (db.orders || []).slice(0, 2).forEach(o => {
+    recentActivityReal.push({
+      time: o.time0 ? o.time0.substring(0, 5) : 'Hôm nay',
+      event: 'Đơn bán hàng',
+      detail: `${o.id} → ${o.customer || 'Khách hàng'}`,
+      type: 'out'
+    });
+  });
+
+  return {
+    salesDataReal,
+    currentMonthRevenue,
+    currentMonthOrders,
+    ytdRevenue,
+    ytdOrders,
+    topCustomersReal,
+    recentActivityReal
+  };
+}
+
 function renderDashboard(c) {
-  const activityHtml = recentActivity.map(a => `
+  const {
+    salesDataReal,
+    currentMonthRevenue,
+    currentMonthOrders,
+    recentActivityReal
+  } = getSalesAnalyticsData();
+
+  // Báo giá chưa khóa (nháp hoặc đã chấp nhận)
+  const openQuotationsCount = (db.quotations || []).filter(q => ['draft', 'accepted', 'bản nháp', 'đã chấp nhận'].includes((q.status || '').toLowerCase())).length;
+
+  // Tính tỷ lệ đơn hoàn thành
+  const totalOrdersCount = (db.orders || []).length;
+  const completedOrdersCount = (db.orders || []).filter(o => ['completed', 'hoàn thành'].includes((o.status || '').toLowerCase())).length;
+  const completionRate = totalOrdersCount > 0 ? ((completedOrdersCount / totalOrdersCount) * 100).toFixed(1) : '100.0';
+
+  const activityHtml = recentActivityReal.map(a => `
     <div style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start;">
       <div style="font-size: 13px; font-weight: 500; flex: 1;"><div>${a.event}</div><div style="font-size: 12px; color: var(--muted-foreground);">${a.detail}</div></div>
       <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${a.time}</span>
     </div>
   `).join('');
 
+  const currentMonthStr = `Tháng ${new Date().getMonth() + 1}/${new Date().getFullYear()}`;
+
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 24px;">
       <div class="kpi-grid">
-        <div class="kpi-card"><span class="kpi-label">Doanh thu tháng này</span><div class="kpi-value-row"><span class="kpi-value">267.420.000 ₫</span><span class="kpi-delta up">↑ 12.4%</span></div><span class="kpi-sub">Tháng 9/2026</span></div>
-        <div class="kpi-card"><span class="kpi-label">Đơn hàng</span><div class="kpi-value-row"><span class="kpi-value">648</span><span class="kpi-delta up">↑ 8.7%</span></div><span class="kpi-sub">Tháng 9/2026</span></div>
-        <div class="kpi-card"><span class="kpi-label">Báo giá chưa khóa</span><div class="kpi-value-row"><span class="kpi-value">12</span><span class="kpi-delta down">↓ 3 sắp hết hạn</span></div><span class="kpi-sub">nháp + chấp nhận</span></div>
-        <div class="kpi-card"><span class="kpi-label">Tỷ lệ hoàn thành</span><div class="kpi-value-row"><span class="kpi-value">96.3%</span><span class="kpi-delta down">↓ 0.4%</span></div><span class="kpi-sub">giao đúng hạn</span></div>
+        <div class="kpi-card"><span class="kpi-label">Doanh thu tháng này</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(currentMonthRevenue)}</span></div><span class="kpi-sub">${currentMonthStr}</span></div>
+        <div class="kpi-card"><span class="kpi-label">Đơn hàng tháng này</span><div class="kpi-value-row"><span class="kpi-value">${fmt(currentMonthOrders)}</span></div><span class="kpi-sub">${currentMonthStr}</span></div>
+        <div class="kpi-card"><span class="kpi-label">Báo giá chưa khóa</span><div class="kpi-value-row"><span class="kpi-value">${openQuotationsCount}</span></div><span class="kpi-sub">nháp + chấp nhận</span></div>
+        <div class="kpi-card"><span class="kpi-label">Tỷ lệ hoàn thành</span><div class="kpi-value-row"><span class="kpi-value">${completionRate}%</span></div><span class="kpi-sub">giao đúng hạn</span></div>
       </div>
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
         <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
@@ -702,16 +1077,39 @@ function renderDashboard(c) {
           <div style="height: 200px;"><canvas id="chart-rev"></canvas></div>
         </div>
         <div style="border: 1px solid var(--border); background: var(--card);">
-          <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Hoạt Động Trực Tiếp</div>
+          <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Hoạt Động Mới Nhất</div>
           <div>
-            ${activityHtml}
+            ${activityHtml || '<div style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có hoạt động gần đây</div>'}
           </div>
         </div>
       </div>
     </div>
   `;
+
   const ctx = document.getElementById('chart-rev').getContext('2d');
-  new Chart(ctx, { type: 'line', data: { labels: salesData.map(d => d.month), datasets: [{ label: 'Doanh thu', data: salesData.map(d => d.revenue), borderColor: '#f0a030', backgroundColor: 'rgba(240,160,48,0.15)', fill: true, tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#252a33' }, ticks: { color: '#6b7585' } }, y: { grid: { color: '#252a33' }, ticks: { color: '#6b7585' } } } } });
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: salesDataReal.map(d => d.month),
+      datasets: [{
+        label: 'Doanh thu',
+        data: salesDataReal.map(d => d.revenue),
+        borderColor: '#f0a030',
+        backgroundColor: 'rgba(240,160,48,0.15)',
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#252a33' }, ticks: { color: '#6b7585' } },
+        y: { grid: { color: '#252a33' }, ticks: { color: '#6b7585' } }
+      }
+    }
+  });
 }
 
 function renderMaterialsList(c) {
@@ -813,7 +1211,6 @@ function renderCustomersList(c) {
     </div>
   `).join('');
 
-  // Đã bỏ Loại, Điều Khoản, Hạn Mức Tín Dụng & Thêm Địa Chỉ sau SĐT
   const headersHtml = [
     'Mã KH', 'Tên Công Ty / KH', 'Người Liên Hệ', 'Email', 'SĐT', 'Địa Chỉ', 'Trạng Thái', 'Hành Động'
   ].map(h => `
@@ -841,7 +1238,6 @@ function renderCustomersList(c) {
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <!-- 1. Thanh Tìm Kiếm & Nút Thêm Mới -->
       <div style="display: flex; justify-content: flex-end; align-items: center;">
         <div style="display: flex; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; width: 280px;">
@@ -852,12 +1248,10 @@ function renderCustomersList(c) {
         </div>
       </div>
 
-      <!-- 2. Thống kê KPI -->
       <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background-color: var(--border);">
         ${kpiHtml}
       </div>
 
-      <!-- 3. Bảng dữ liệu Khách hàng -->
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
@@ -920,9 +1314,7 @@ function renderWarehousesList(c) {
   `;
 }
 
-// 📌 RENDER BÁO GIÁ: Đã bỏ trạng thái Đã gửi (sent) và Từ chối (rejected)
 function renderQuotationsList(c) {
-  // Lọc kết hợp: theo Trạng thái AND (Mã Khách Hàng OR Tên Khách Hàng)
   const filtered = db.quotations.filter(q => {
     const matchStatus = (state.filter === 'all' || q.status === state.filter);
     
@@ -955,7 +1347,7 @@ function renderQuotationsList(c) {
     `;
   }).join('');
 
-  const headersHtml = ['Mã Báo Giá', 'Khách Hàng', 'Ngày Phát Hành', 'Hiệu Lực Đến', 'Số Dòng', 'Tổng Tiền', 'Trạng Thái', 'Hành Động']
+  const headersHtml = ['Mã Báo Giá', 'Khách Hàng', 'Ngày Lập', 'Phát Hành', 'Hiệu Lực Đến', 'Số Dòng', 'Tổng Tiền', 'Trạng Thái', 'Hành Động']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
@@ -963,7 +1355,8 @@ function renderQuotationsList(c) {
     <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('quotations', 'view', '${q.id}')">
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${q.id}</td>
       <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${q.customer}</td>
-      <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.date}</td>
+      <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.date || '—'}</td>
+      <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.validbegin || q.validBegin || '—'}</td>
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.validUntil}</td>
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${(q.lineItems || []).length}</td>
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(q.total)}</td>
@@ -985,7 +1378,6 @@ function renderQuotationsList(c) {
       <div style="display: flex; justify-content: space-between; align-items: center;">
         ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Đã chấp nhận'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
         
-        <!-- Ô Tìm Kiếm + Nút Tạo Mới đặt sát nhau -->
         <div style="display: flex; gap: 8px; align-items: center;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; width: 280px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
@@ -1013,7 +1405,6 @@ function renderQuotationsList(c) {
 }
 
 function renderOrdersList(c) {
-  // Lọc kết hợp: theo Trạng thái AND (Mã Khách Hàng OR Tên Khách Hàng)
   const filtered = db.orders.filter(o => {
     const matchStatus = (state.filter === 'all' || o.status === state.filter);
     
@@ -1043,12 +1434,10 @@ function renderOrdersList(c) {
     </div>
   `).join('');
 
-  // Sửa text-align: right cho cột 'Số Dòng' ở phần Header
   const headersHtml = ['Mã Đơn Hàng', 'Khách Hàng', 'Ngày Tạo', 'Mã Kho', 'Số Dòng', 'Tổng Tiền', 'Trạng Thái', 'Hành Động']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
-  // Sửa text-align: right cho cột 'Số Dòng' ở phần Body
   const rowsHtml = filtered.map(o => `
     <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', 'view', '${o.id}')">
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${o.id}</td>
@@ -1075,7 +1464,6 @@ function renderOrdersList(c) {
       <div style="display: flex; justify-content: space-between; align-items: center;">
         ${getFilterBar([['all', 'Tất cả'], ['completed', 'Hoàn thành'], ['processing', 'Đang xử lý'], ['pending', 'Chờ xử lý'], ['cancelled', 'Đã hủy']])}
         
-        <!-- Ô Tìm Kiếm + Nút Tạo Mới đặt sát nhau -->
         <div style="display: flex; gap: 8px; align-items: center;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; width: 280px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
@@ -1117,12 +1505,10 @@ function renderReturnsList(c) {
     </div>
   `).join('');
 
-  // Thêm 'Số Dòng' đằng sau 'Lý Do' & cài đặt text-align: right cho 'Số Dòng' và 'Tổng Hoàn Tiền'
   const headersHtml = ['Mã Đổi Trả', 'Tham Chiếu Đơn', 'Khách Hàng', 'Ngày Tạo', 'Lý Do', 'Số Dòng', 'Tổng Hoàn Tiền', 'Trạng Thái', 'Hành Động']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Hoàn Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
-  // Thêm cột dữ liệu Số Dòng đằng sau Lý Do
   const rowsHtml = filtered.map(r => {
     const totalLines = (r.lineItems || r.lineitems || []).length;
     return `
@@ -1239,7 +1625,6 @@ function renderGRNList(c) {
   `;
 }
 
-// Hàm hỗ trợ bóc tách Ngày / Tháng / Năm từ ngày lập phiếu
 function parseDateParts(dateStr) {
   let dayStr = '02', monthStr = '10', yearStr = '2026';
   if (dateStr) {
@@ -1267,7 +1652,6 @@ function parseDateParts(dateStr) {
   return { dayStr, monthStr, yearStr };
 }
 
-// Hàm lấy địa chỉ khách hàng từ danh mục Khách hàng (db.customers)
 function getCustomerAddress(customerNameOrId) {
   if (!customerNameOrId) return '—';
   const cust = (db.customers || []).find(c => 
@@ -1277,7 +1661,6 @@ function getCustomerAddress(customerNameOrId) {
   return cust ? (cust.address || cust.diachi || '—') : '—';
 }
 
-// 1. Hàm xuất Excel cho Bảng Báo Giá (Đã cập nhật theo yêu cầu A4, 8 cột, Header to)
 function exportQuotationToExcel() {
   const d = state.formData;
   if (!d) return;
@@ -1285,8 +1668,7 @@ function exportQuotationToExcel() {
   const custAddress = getCustomerAddress(d.customer);
   const { dayStr, monthStr, yearStr } = parseDateParts(d.date);
 
-  // Chuyển đổi Ngày lập / Ngày hiệu lực sang định dạng DD/MM/YYYY
-  const fromDateVN = formatDateVN(d.date);
+  const fromDateVN = formatDateVN(d.validbegin || d.validBegin || d.date);
   const toDateVN = formatDateVN(d.validUntil || d.validuntil);
 
   let totalQty = 0;
@@ -1342,7 +1724,6 @@ function exportQuotationToExcel() {
           <col style="width: 115px;">
         </colgroup>
 
-        <!-- Header Công Ty -->
         <tr style="height: 45px;">
           <td colspan="3" style="font-size: 10pt; text-align: center; vertical-align: middle;">
             ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
@@ -1357,7 +1738,6 @@ function exportQuotationToExcel() {
           </td>
         </tr>
 
-        <!-- Tên Công Ty -->
         <tr style="height: 32px;">
           <td colspan="8" style="font-size: 18pt; font-weight: bold; text-align: center; vertical-align: middle;">
             CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
@@ -1366,7 +1746,6 @@ function exportQuotationToExcel() {
 
         <tr style="height: 10px;"><td colspan="8"></td></tr>
 
-        <!-- Bảng báo giá & Ngày hiệu lực đã định dạng DD/MM/YYYY -->
         <tr style="height: 24px;">
           <td colspan="4" style="font-size: 12pt; text-align: left;">
             <strong>Bảng báo giá:</strong> ${d.id || ''}
@@ -1376,14 +1755,12 @@ function exportQuotationToExcel() {
           </td>
         </tr>
 
-        <!-- Khách hàng -->
         <tr style="height: 24px;">
           <td colspan="8" style="font-size: 12pt; text-align: left;">
             <strong>Khách hàng:</strong> ${d.customer || ''}
           </td>
         </tr>
 
-        <!-- Địa chỉ -->
         <tr style="height: 24px;">
           <td colspan="8" style="font-size: 12pt; text-align: left;">
             <strong>Địa chỉ:</strong> ${custAddress}
@@ -1392,7 +1769,6 @@ function exportQuotationToExcel() {
 
         <tr style="height: 12px;"><td colspan="8"></td></tr>
 
-        <!-- Tiêu đề Bảng 8 cột -->
         <tr style="height: 26px; font-weight: bold; font-size: 11pt; text-align: center; background-color: #f2f2f2;">
           <td style="border: 1px solid #000;">STT</td>
           <td style="border: 1px solid #000;">Tên Hàng</td>
@@ -1404,10 +1780,8 @@ function exportQuotationToExcel() {
           <td style="border: 1px solid #000;">Thành Tiền</td>
         </tr>
 
-        <!-- Chi tiết hàng hóa -->
         ${rowsHtml}
 
-        <!-- Tổng cộng -->
         <tr style="height: 26px; font-weight: bold; font-size: 12pt;">
           <td colspan="4" style="border: 1px solid #000; text-align: center;">Tổng Cộng</td>
           <td style="border: 1px solid #000; text-align: right; padding-right: 4px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
@@ -1418,7 +1792,6 @@ function exportQuotationToExcel() {
 
         <tr style="height: 18px;"><td colspan="8"></td></tr>
 
-        <!-- Khối Chữ Ký -->
         <tr style="height: 22px;">
           <td colspan="4"></td>
           <td colspan="4" style="font-size: 11pt; text-align: center;">
@@ -1457,8 +1830,6 @@ function exportQuotationToExcel() {
   document.body.removeChild(a);
 }
 
-
-// 2. Hàm xuất Excel cho Đơn Hàng Bán (Đã cập nhật theo yêu cầu A4, 8 cột, Header to)
 function exportSalesOrderToExcel() {
   const d = state.formData;
   if (!d) return;
@@ -1519,7 +1890,6 @@ function exportSalesOrderToExcel() {
           <col style="width: 115px;">
         </colgroup>
 
-        <!-- Header Công Ty -->
         <tr style="height: 45px;">
           <td colspan="3" style="font-size: 10pt; text-align: center; vertical-align: middle;">
             ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
@@ -1534,7 +1904,6 @@ function exportSalesOrderToExcel() {
           </td>
         </tr>
 
-        <!-- Tên Công Ty (To lên 18pt) -->
         <tr style="height: 32px;">
           <td colspan="8" style="font-size: 18pt; font-weight: bold; text-align: center; vertical-align: middle;">
             CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
@@ -1543,7 +1912,6 @@ function exportSalesOrderToExcel() {
 
         <tr style="height: 10px;"><td colspan="8"></td></tr>
 
-        <!-- Khách hàng & Số đơn hàng (Cỡ chữ 12pt) -->
         <tr style="height: 24px;">
           <td colspan="4" style="font-size: 12pt; text-align: left;">
             <strong>Khách hàng:</strong> ${d.customer || ''}
@@ -1553,14 +1921,12 @@ function exportSalesOrderToExcel() {
           </td>
         </tr>
 
-        <!-- Địa chỉ -->
         <tr style="height: 24px;">
           <td colspan="8" style="font-size: 12pt; text-align: left;">
             <strong>Địa chỉ:</strong> ${custAddress}
           </td>
         </tr>
 
-        <!-- Ghi chú -->
         <tr style="height: 24px;">
           <td colspan="8" style="font-size: 12pt; text-align: left;">
             <strong>Ghi chú:</strong> ${d.notes || ''}
@@ -1569,7 +1935,6 @@ function exportSalesOrderToExcel() {
 
         <tr style="height: 12px;"><td colspan="8"></td></tr>
 
-        <!-- Tiêu đề Bảng 8 cột -->
         <tr style="height: 26px; font-weight: bold; font-size: 11pt; text-align: center; background-color: #f2f2f2;">
           <td style="border: 1px solid #000;">STT</td>
           <td style="border: 1px solid #000;">Tên Hàng</td>
@@ -1581,10 +1946,8 @@ function exportSalesOrderToExcel() {
           <td style="border: 1px solid #000;">Thành Tiền</td>
         </tr>
 
-        <!-- Chi tiết hàng hóa -->
         ${rowsHtml}
 
-        <!-- Tổng cộng -->
         <tr style="height: 26px; font-weight: bold; font-size: 12pt;">
           <td colspan="4" style="border: 1px solid #000; text-align: center;">Tổng Cộng</td>
           <td style="border: 1px solid #000; text-align: right; padding-right: 4px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
@@ -1595,7 +1958,6 @@ function exportSalesOrderToExcel() {
 
         <tr style="height: 18px;"><td colspan="8"></td></tr>
 
-        <!-- Khối Chữ Ký Căn Giữa -->
         <tr style="height: 22px;">
           <td colspan="4"></td>
           <td colspan="4" style="font-size: 11pt; text-align: center;">
@@ -1789,7 +2151,6 @@ function renderWarehouseForm(c) {
     <div style="max-width: 900px;">
       ${getBreadcrumb('Kho hàng', isView ? `Xem ${d.code || ''}` : (state.mode === 'edit' ? `Chỉnh sửa ${d.code || ''}` : 'Thêm mới kho hàng'), 'warehouses')}
       <form onsubmit="event.preventDefault(); saveForm('warehouses');">
-        
         <input type="hidden" value="${d.id || ''}">
 
         <div class="section-panel">
@@ -2005,7 +2366,6 @@ function handleCustomerSelectInOrder(customerName) {
   render();
 }
 
-// 📌 FORM BÁO GIÁ: Mặc định Đã chấp nhận (accepted) & bỏ trạng thái Đã gửi, Từ chối
 function renderQuotationForm(c) {
   const d = state.formData || {};
   const isView = state.mode === 'view';
@@ -2034,7 +2394,7 @@ function renderQuotationForm(c) {
     ? "110px 1fr 60px 70px 110px 70px 70px 120px"
     : "110px 1fr 60px 70px 110px 70px 70px 120px 32px";
 
-  const linesHtml = d.lineItems.map(l => {
+  const linesHtml = d.lineItems.map((l, idx) => {
     const lineSub = (l.qty || 0) * (l.unitPrice || 0) * (1 - (l.discount || 0) / 100);
     const lineTotal = lineSub * (1 + (l.tax || 0) / 100);
     const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
@@ -2042,26 +2402,32 @@ function renderQuotationForm(c) {
 
     return `
     <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; border-bottom: 1px solid var(--border); align-items: center;">
-      <input type="text" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
-      <input type="text" ${isView ? '' : 'list="materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : 'onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="Chọn/nhập tên hàng..." required>
+      <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
       
-      <!-- CỘT ĐVT (Read-only) -->
-      <input type="text" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính từ danh mục hàng">
+      <input type="text" id="line-item-${l.lineId}-name" ${isView ? '' : 'list="materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'name')" onchange="handleMaterialSelectInLine('${l.lineId}', this.value)"`} placeholder="Chọn/nhập tên hàng..." required>
       
-      <input type="number" step="any" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${isView ? 'readonly' : 'onchange="updateLine(\'' + l.lineId + '\', \'qty\', this.value, \'number\')"'}>
+      <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính từ danh mục hàng">
+      
+      <input type="number" id="line-item-${l.lineId}-qty" step="any" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
+      
       <input 
-  type="text" 
-  class="form-input" 
-  style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
-  value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
-  ${isView ? 'readonly' : `
-    onfocus="this.value = parseNumberInput(this.value) || ''" 
-    onblur="this.value = formatVNDInput(this.value)" 
-    onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
-  `}
->
-      <input type="number" step="any" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${isView ? 'readonly' : 'onchange="updateLine(\'' + l.lineId + '\', \'discount\', this.value, \'number\')"'}>
-      <input type="number" step="any" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${isView ? 'readonly' : 'onchange="updateLine(\'' + l.lineId + '\', \'tax\', this.value, \'number\')"'}>
+        type="text" 
+        id="line-item-${l.lineId}-unitPrice"
+        class="form-input" 
+        style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
+        value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
+        ${isView ? 'readonly' : `
+          onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'unitPrice')"
+          onfocus="this.value = parseNumberInput(this.value) || ''" 
+          onblur="this.value = formatVNDInput(this.value)" 
+          onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
+        `}
+      >
+      
+      <input type="number" id="line-item-${l.lineId}-discount" step="any" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
+      
+      <input type="number" id="line-item-${l.lineId}-tax" step="any" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
+      
       <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500;">${fmtUSD(lineTotal)}</div>
       ${!isView ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
     </div>
@@ -2101,12 +2467,16 @@ function renderQuotationForm(c) {
               </select>
             </div>
             <div class="form-group">
+              <label class="form-label">Ngày lập phiếu *</label>
+              <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+            </div>
+            <div class="form-group">
               <label class="form-label">Ngày phát hành *</label>
-              <input type="date" class="form-input" value="${d.date}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+              <input type="date" class="form-input" value="${d.validbegin || d.validBegin || getFirstDayOfMonthStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validbegin\', this.value)"'} required>
             </div>
             <div class="form-group">
               <label class="form-label">Hiệu lực đến *</label>
-              <input type="date" class="form-input" value="${d.validUntil}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validUntil\', this.value)"'} required>
+              <input type="date" class="form-input" value="${d.validUntil || d.validuntil || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validUntil\', this.value)"'} required>
             </div>
 
             <div class="form-group" style="grid-column: span 3; margin-top: 6px;">
@@ -2126,16 +2496,16 @@ function renderQuotationForm(c) {
           </div>
           
           <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 8px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center;">
-          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
-          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
-          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Đơn Giá</span>
-          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
-          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
-          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-          ${!isView ? `<span></span>` : ''}
-        </div>
+            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
+            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
+            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Đơn Giá</span>
+            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
+            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
+            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+            ${!isView ? `<span></span>` : ''}
+          </div>
 
           ${linesHtml}
 
@@ -2152,7 +2522,7 @@ function renderQuotationForm(c) {
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
           <button type="button" class="btn-cancel" onclick="navigate('quotations')">${isView ? 'Quay lại' : 'Hủy'}</button>
           <div style="display: flex; gap: 8px;">
-            ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToExcel()" color: #ffffff; border: 1px solid var(--border); padding: 8px 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">Xuất Excel</button>` : ''}
+            ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToExcel()" style="color: #ffffff; border: 1px solid var(--border); padding: 8px 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">Xuất Excel</button>` : ''}
             ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo báo giá' : 'Cập nhật'}</button>` : ''}
           </div>
         </div>
@@ -2203,39 +2573,46 @@ function renderSalesOrderForm(c) {
     ? "90px 1fr 60px 80px 65px 65px 90px 70px 60px 110px"
     : "90px 1fr 60px 80px 65px 65px 90px 70px 60px 110px 32px";
 
-  const linesHtml = d.lineItems.map(l => {
+  const linesHtml = d.lineItems.map((l, idx) => {
     const lineSub = (l.qty || 0) * (l.unitPrice || 0) * (1 - (l.discount || 0) / 100);
     const lineTotal = lineSub * (1 + (l.tax || 0) / 100);
 
-    // Lấy đơn vị tính từ Danh mục hàng hóa
     const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
     const unitName = mat ? (mat.unit || '—') : '—';
     const stockQty = calculateRealtimeStock(l.sku, d.warehouseCode, d.id);
 
     return `
     <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center;">
-      <input type="text" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
-      <input type="text" ${isView ? '' : 'list="materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : 'onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="Chọn/nhập tên hàng..." required>
+      <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
       
-      <!-- CỘT ĐVT (Read-only) -->
-      <input type="text" class="form-input" style="padding: 6px 6px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính từ danh mục hàng">
+      <input type="text" id="line-item-${l.lineId}-name" ${isView ? '' : 'list="materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'name')" onchange="handleMaterialSelectInLine('${l.lineId}', this.value)"`} placeholder="Chọn/nhập tên hàng..." required>
       
-      <input type="text" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01">
-      <input type="number" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${isView ? 'readonly' : 'onchange="updateLine(\'' + l.lineId + '\', \'qty\', this.value, \'number\')"'}>
-      <input type="text" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
+      <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 6px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính từ danh mục hàng">
+      
+      <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01">
+      
+      <input type="number" id="line-item-${l.lineId}-qty" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
+      
+      <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
+      
       <input 
-  type="text" 
-  class="form-input" 
-  style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
-  value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
-  ${isView ? 'readonly' : `
-    onfocus="this.value = parseNumberInput(this.value) || ''" 
-    onblur="this.value = formatVNDInput(this.value)" 
-    onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
-  `}
->
-      <input type="number" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${isView ? 'readonly' : 'onchange="updateLine(\'' + l.lineId + '\', \'discount\', this.value, \'number\')"'}>
-      <input type="number" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${isView ? 'readonly' : 'onchange="updateLine(\'' + l.lineId + '\', \'tax\', this.value, \'number\')"'}>
+        type="text" 
+        id="line-item-${l.lineId}-unitPrice"
+        class="form-input" 
+        style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
+        value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
+        ${isView ? 'readonly' : `
+          onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'unitPrice')"
+          onfocus="this.value = parseNumberInput(this.value) || ''" 
+          onblur="this.value = formatVNDInput(this.value)" 
+          onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
+        `}
+      >
+      
+      <input type="number" id="line-item-${l.lineId}-discount" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
+      
+      <input type="number" id="line-item-${l.lineId}-tax" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
+      
       <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500; font-size: 12px;">${fmtUSD(lineTotal)}</div>
       ${!isView ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
     </div>
@@ -2284,7 +2661,7 @@ function renderSalesOrderForm(c) {
             </div>
             <div class="form-group">
               <label class="form-label">Ngày tạo đơn *</label>
-              <input type="date" class="form-input" value="${d.date || new Date().toISOString().slice(0, 10)}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+              <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
             </div>
             <div class="form-group" style="grid-column: span 3;">
               <label class="form-label">Ghi chú</label>
@@ -2331,7 +2708,7 @@ function renderSalesOrderForm(c) {
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
           <button type="button" class="btn-cancel" onclick="navigate('sales-orders')">${isView ? 'Quay lại' : 'Hủy'}</button>
           <div style="display: flex; gap: 8px;">
-            ${isView ? `<button type="button" class="btn-primary" onclick="exportSalesOrderToExcel()" color: #ffffff; border: 1px solid var(--border); padding: 8px 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">Xuất Excel</button>` : ''}
+            ${isView ? `<button type="button" class="btn-primary" onclick="exportSalesOrderToExcel()" style="color: #ffffff; border: 1px solid var(--border); padding: 8px 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">Xuất Excel</button>` : ''}
             ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo đơn hàng' : 'Cập nhật'}</button>` : ''}
           </div>
         </div>
@@ -2375,30 +2752,39 @@ function renderReturnForm(c) {
 
   const gridLayout = isView ? "90px 1fr 65px 75px 65px 65px 100px 110px" : "90px 1fr 65px 75px 65px 65px 100px 110px 32px";
 
-  const linesHtml = d.lineItems.map(l => {
+  const linesHtml = d.lineItems.map((l, idx) => {
     const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
     const unitName = mat ? (mat.unit || '—') : '—';
     const stockQty = calculateRealtimeStock(l.sku, d.warehouseCode, d.id);
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center;">
-        <input type="text" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng không cho sửa">
-        <input type="text" ${isView ? '' : 'list="materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : 'onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="Chọn/nhập tên hàng..." required>
-        <input type="text" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ Material">
-        <input type="text" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho lấy từ mục 01 xuống">
-        <input type="number" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qtyReturned ?? 1}" ${isView ? 'readonly' : 'onchange="updateLine(\'' + l.lineId + '\', \'qtyReturned\', this.value, \'number\')"'}>
-        <input type="text" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
+        <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng không cho sửa">
+        
+        <input type="text" id="line-item-${l.lineId}-name" ${isView ? '' : 'list="materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'name')" onchange="handleMaterialSelectInLine('${l.lineId}', this.value)"`} placeholder="Chọn/nhập tên hàng..." required>
+        
+        <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ Material">
+        
+        <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho lấy từ mục 01 xuống">
+        
+        <input type="number" id="line-item-${l.lineId}-qtyReturned" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qtyReturned ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'qtyReturned')" onchange="updateLine('${l.lineId}', 'qtyReturned', this.value, 'number')"`}>
+        
+        <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
+        
         <input 
-  type="text" 
-  class="form-input" 
-  style="padding: 6px 6px; text-align: right; ${(isView || hasOrder) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
-  value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
-  ${(isView || hasOrder) ? 'readonly' : `
-    onfocus="this.value = parseNumberInput(this.value) || ''" 
-    onblur="this.value = formatVNDInput(this.value)" 
-    onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
-  `}
->
+          type="text" 
+          id="line-item-${l.lineId}-unitPrice"
+          class="form-input" 
+          style="padding: 6px 6px; text-align: right; ${(isView || hasOrder) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
+          value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
+          ${(isView || hasOrder) ? 'readonly' : `
+            onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'unitPrice')"
+            onfocus="this.value = parseNumberInput(this.value) || ''" 
+            onblur="this.value = formatVNDInput(this.value)" 
+            onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
+          `}
+        >
+        
         <div style="font-family: var(--font-dm-mono); text-align: right; color: #f87171; font-weight: 500; font-size: 12px;">${fmtUSD((l.qtyReturned || 0) * (l.unitPrice || 0))}</div>
         ${!isView ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
       </div>
@@ -2444,7 +2830,7 @@ function renderReturnForm(c) {
             </div>
             <div class="form-group">
               <label class="form-label">Ngày đổi trả *</label>
-              <input type="date" class="form-input" value="${d.date || new Date().toISOString().slice(0, 10)}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+              <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
             </div>
             <div class="form-group">
               <label class="form-label">Trạng thái</label>
@@ -2524,7 +2910,7 @@ function renderGRNForm(c) {
 
   const gridLayout = isView ? "90px 1fr 65px 75px 65px 65px 100px 110px" : "90px 1fr 65px 75px 65px 65px 100px 110px 32px";
 
-  const linesHtml = d.lineItems.map(l => {
+  const linesHtml = d.lineItems.map((l, idx) => {
     const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
     const unitName = mat ? (mat.unit || '—') : '—';
     const stockQty = calculateRealtimeStock(l.sku, d.warehouseCode, d.id);
@@ -2532,23 +2918,32 @@ function renderGRNForm(c) {
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center;">
-        <input type="text" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động điền theo tên hàng">
-        <input type="text" ${isView ? '' : 'list="materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : 'onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="Chọn/nhập tên hàng..." required>
-        <input type="text" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ danh mục">
-        <input type="text" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01 xuống">
-        <input type="number" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${qtyVal}" ${isView ? 'readonly' : 'onchange="updateLine(\'' + l.lineId + '\', \'receivedQty\', this.value, \'number\'); updateLine(\'' + l.lineId + '\', \'qtyImport\', this.value, \'number\');"'}>
-        <input type="text" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế tính tự động">
+        <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động điền theo tên hàng">
+        
+        <input type="text" id="line-item-${l.lineId}-name" ${isView ? '' : 'list="materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'name')" onchange="handleMaterialSelectInLine('${l.lineId}', this.value)"`} placeholder="Chọn/nhập tên hàng..." required>
+        
+        <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ danh mục">
+        
+        <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01 xuống">
+        
+        <input type="number" id="line-item-${l.lineId}-receivedQty" step="any" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${qtyVal}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'receivedQty')" onchange="updateLine('${l.lineId}', 'receivedQty', this.value, 'number'); updateLine('${l.lineId}', 'qtyImport', this.value, 'number');"`}>
+        
+        <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế tính tự động">
+        
         <input 
-  type="text" 
-  class="form-input" 
-  style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
-  value="${(l.unitCost ?? 0).toLocaleString('vi-VN')}" 
-  ${isView ? 'readonly' : `
-    onfocus="this.value = parseNumberInput(this.value) || ''" 
-    onblur="this.value = formatVNDInput(this.value)" 
-    onchange="updateLine('${l.lineId}', 'unitCost', parseNumberInput(this.value), 'number')"
-  `}
->
+          type="text" 
+          id="line-item-${l.lineId}-unitCost"
+          class="form-input" 
+          style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
+          value="${(l.unitCost ?? 0).toLocaleString('vi-VN')}" 
+          ${isView ? 'readonly' : `
+            onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'unitCost')"
+            onfocus="this.value = parseNumberInput(this.value) || ''" 
+            onblur="this.value = formatVNDInput(this.value)" 
+            onchange="updateLine('${l.lineId}', 'unitCost', parseNumberInput(this.value), 'number')"
+          `}
+        >
+        
         <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500; font-size: 12px;">${fmtUSD((qtyVal) * (l.unitCost || 0))}</div>
         ${!isView ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
       </div>
@@ -2578,7 +2973,7 @@ function renderGRNForm(c) {
             </div>
             <div class="form-group">
               <label class="form-label">Ngày nhập kho *</label>
-              <input type="date" class="form-input" value="${d.date || new Date().toISOString().slice(0, 10)}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+              <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
             </div>
             <div class="form-group">
               <label class="form-label">Trạng thái</label>
@@ -2625,25 +3020,34 @@ function renderGRNForm(c) {
   `;
 }
 
-// ─── REPORTS ──────────────────────────────────────────────────────────────────
 function renderReportInventory(c) {
   const materials = db.materials;
   const filtered = materials.filter(m => state.filter === 'all' || m.category === state.filter);
-  const totalVal = filtered.reduce((s, m) => s + m.stock * m.cost, 0);
-  const reservedVal = filtered.reduce((s, m) => s + m.reserved * m.cost, 0);
+
+  // Helper hỗ trợ lấy số tồn từ cột ton_thuc_te trong bản inventory
+  const getActualStock = (m) => {
+    const invList = (db.inventory || []).filter(i => i.sku === m.id || i.material_id === m.id);
+    if (invList.length > 0) {
+      return invList.reduce((sum, inv) => sum + Number(inv.ton_thuc_te ?? inv.stock ?? 0), 0);
+    }
+    return m.stock ?? 0;
+  };
+
+  const totalVal = filtered.reduce((s, m) => s + getActualStock(m) * (m.cost || 0), 0);
+  const reservedVal = filtered.reduce((s, m) => s + (m.reserved || 0) * (m.cost || 0), 0);
   const alertCount = filtered.filter(m => ['low', 'critical', 'out'].includes(m.status)).length;
 
   const categories = Array.from(new Set(materials.map(m => m.category)));
   const catBreakdown = categories.map(cat => {
     const items = materials.filter(m => m.category === cat);
-    return { category: cat, count: items.length, value: items.reduce((s, m) => s + m.stock * m.cost, 0) };
+    return { category: cat, count: items.length, value: items.reduce((s, m) => s + getActualStock(m) * (m.cost || 0), 0) };
   }).sort((a, b) => b.value - a.value);
   const maxVal = catBreakdown[0]?.value || 1;
 
   const kpiHtml = [
     { label: 'Tổng số SKU', value: fmt(materials.length), sub: 'đang hoạt động' },
-    { label: 'Giá trị tồn kho', value: fmtUSD(materials.reduce((s, m) => s + m.stock * m.cost, 0)), sub: 'theo giá vốn' },
-    { label: 'Giá trị đã giữ', value: fmtUSD(materials.reduce((s, m) => s + m.reserved * m.cost, 0)), sub: 'cam kết đơn hàng' },
+    { label: 'Giá trị tồn thực tế', value: fmtUSD(materials.reduce((s, m) => s + getActualStock(m) * (m.cost || 0), 0)), sub: 'theo giá vốn' },
+    { label: 'Giá trị đã giữ', value: fmtUSD(materials.reduce((s, m) => s + (m.reserved || 0) * (m.cost || 0), 0)), sub: 'cam kết đơn hàng' },
     { label: 'Sản phẩm cảnh báo', value: fmt(materials.filter(m => ['low', 'critical', 'out'].includes(m.status)).length), sub: 'dưới mức định mức' },
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
@@ -2664,33 +3068,41 @@ function renderReportInventory(c) {
   const alertsHtml = materials.filter(m => ['low', 'critical', 'out'].includes(m.status)).map(m => `
     <div style="padding: 8px 12px; border: 1px solid var(--border); background: var(--secondary);">
       <div style="font-size: 12px; font-weight: 500;">${m.name}</div>
-      <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${m.id} · ${m.stock} / ${m.reorder} đơn vị</div>
+      <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${m.id} · ${getActualStock(m)} / ${m.reorder ?? 0} đơn vị</div>
     </div>
   `).join('');
 
-  const headersHtml = ['Mã Hàng (SKU)', 'Tên Sản Phẩm', 'ĐVT', 'Danh Mục', 'Vị Trí', 'Thực Tồn', 'Tạm Giữ', 'Có Thể Bán', 'Mức Cảnh Báo', 'Giá Vốn', 'Trạng Thái', 'Hành Động']
+  const headersHtml = ['Mã Hàng (SKU)', 'Tên Sản Phẩm', 'ĐVT', 'Danh Mục', 'Vị Trí', 'Tồn Đầu Kỳ', 'Tồn Thực Tế', 'Tạm Giữ', 'Có Thể Bán', 'Mức Cảnh Báo', 'Giá Vốn', 'Trạng Thái', 'Hành Động']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
-  const rowsHtml = filtered.map(m => `
-  <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', 'edit', '${m.id}')">
-    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
-    <td style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
-    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
-    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${m.category || '—'}</td>
-    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px;">${m.location || '—'}</td>
-    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${m.stock ?? 0}</td>
-    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${m.reserved ?? 0}</td>
-    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${(m.stock || 0) - (m.reserved || 0)}</td>
-    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${m.reorder ?? 0}</td>
-    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
-    <td style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'Đủ hàng' : m.status}</span></td>
-    <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-      <button class="btn-action" onclick="navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>
-      <button class="btn-action btn-action-del" onclick="deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>
-    </td>
-  </tr>
-`).join('');
+  const rowsHtml = filtered.map(m => {
+    const tonThucTe = getActualStock(m);
+    const tonDauKy = m.stock ?? 0;
+    const tamGiu = m.reserved ?? 0;
+    const coTheBan = tonThucTe - tamGiu;
+
+    return `
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', 'edit', '${m.id}')">
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
+      <td style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${m.category || '—'}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px;">${m.location || '—'}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${tonDauKy}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; font-weight: 600; color: var(--primary);">${tonThucTe}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${tamGiu}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${coTheBan}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${m.reorder ?? 0}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
+      <td style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'Đủ hàng' : m.status}</span></td>
+      <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
+        <button class="btn-action" onclick="navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>
+        <button class="btn-action btn-action-del" onclick="deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>
+      </td>
+    </tr>
+  `;
+  }).join('');
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 24px;">
@@ -2738,14 +3150,23 @@ function renderReportInventory(c) {
   `;
 }
 
+// ─── BÁO CÁO DOANH SỐ (ĐÃ BỔ SUNG KPI GIÁ TRỊ ĐƠN TRUNG BÌNH LẤP Ô TRỐNG) ─────────
 function renderReportSales(c) {
-  const topCustomers = [
-    { name: 'RedLine Logistics', revenue: 842000000, orders: 31 }, { name: 'Vortex Manufacturing', revenue: 678000000, orders: 18 },
-    { name: 'DataStream Solutions', revenue: 524000000, orders: 14 }, { name: 'Pacific Tech Ventures', revenue: 419000000, orders: 9 },
-    { name: 'Clearwater Analytics', revenue: 387000000, orders: 11 }, { name: 'Ironclad Infrastructure', revenue: 293000000, orders: 7 }
-  ];
+  const {
+    salesDataReal,
+    ytdRevenue,
+    ytdOrders,
+    topCustomersReal
+  } = getSalesAnalyticsData();
 
-  const customersHtml = topCustomers.map((cus, i) => `
+  // Tính tổng đổi trả thực tế
+  const totalReturnsCount = (db.returns || []).filter(r => ['processed', 'approved', 'đã xử lý', 'đã duyệt'].includes((r.status || '').toLowerCase())).length;
+  const returnRatePercent = ytdOrders > 0 ? ((totalReturnsCount / ytdOrders) * 100).toFixed(1) : '0.0';
+
+  // Tính Giá trị đơn trung bình (AOV - Average Order Value)
+  const avgOrderValue = ytdOrders > 0 ? (ytdRevenue / ytdOrders) : 0;
+
+  const customersHtml = topCustomersReal.slice(0, 6).map((cus, i) => `
     <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
       <td style="padding: 10px 20px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); width: 28px;">${String(i + 1).padStart(2, '0')}</td>
       <td style="padding: 10px 20px; font-size: 13px;">${cus.name}</td>
@@ -2758,23 +3179,28 @@ function renderReportSales(c) {
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Tháng' ? 'left' : 'right'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
-  const breakdownRows = [...salesData].reverse().map(d => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
-      <td style="padding: 10px 16px; font-family: var(--font-dm-mono); font-size: 12px;">${d.month} 2026</td>
-      <td style="padding: 10px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 500; text-align: right;">${fmtUSD(d.revenue)}</td>
-      <td style="padding: 10px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(d.orders)}</td>
-      <td style="padding: 10px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: #f87171;">${d.returns}</td>
-      <td style="padding: 10px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${((d.returns / d.orders) * 100).toFixed(1)}%</td>
-      <td style="padding: 10px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--primary);">${fmtUSD(d.revenue / d.orders)}</td>
-    </tr>
-  `).join('');
+  const breakdownRows = [...salesDataReal].reverse().map(d => {
+    const avgVal = d.orders > 0 ? (d.revenue / d.orders) : 0;
+    const retPct = d.orders > 0 ? ((d.returns / d.orders) * 100).toFixed(1) : '0.0';
+    return `
+      <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
+        <td style="padding: 10px 16px; font-family: var(--font-dm-mono); font-size: 12px;">${d.month}</td>
+        <td style="padding: 10px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 500; text-align: right;">${fmtUSD(d.revenue)}</td>
+        <td style="padding: 10px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(d.orders)}</td>
+        <td style="padding: 10px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: #f87171;">${d.returns}</td>
+        <td style="padding: 10px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${retPct}%</td>
+        <td style="padding: 10px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--primary);">${fmtUSD(avgVal)}</td>
+      </tr>
+    `;
+  }).join('');
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div class="kpi-grid">
-        <div class="kpi-card"><span class="kpi-label">Doanh Thu Lũy Kế Đầu Năm</span><div class="kpi-value-row"><span class="kpi-value">18.400.000.000 ₫</span><span class="kpi-delta up">↑ 18.3%</span></div><span class="kpi-sub">Tháng 1 – Tháng 9/2026</span></div>
-        <div class="kpi-card"><span class="kpi-label">Tổng Đơn Bán</span><div class="kpi-value-row"><span class="kpi-value">4,184</span><span class="kpi-delta up">↑ 15.6%</span></div><span class="kpi-sub">Tháng 1 – Tháng 9/2026</span></div>
-        <div class="kpi-card"><span class="kpi-label">Tỷ Lệ Trả Hàng</span><div class="kpi-value-row"><span class="kpi-value">3.4%</span><span class="kpi-delta up">↑ 0.8%</span></div><span class="kpi-sub">so với 4.2% năm ngoái</span></div>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);">
+        <div class="kpi-card"><span class="kpi-label">Doanh Thu Lũy Kế Trong Năm</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(ytdRevenue)}</span></div><span class="kpi-sub">Năm ${new Date().getFullYear()}</span></div>
+        <div class="kpi-card"><span class="kpi-label">Tổng Đơn Bán</span><div class="kpi-value-row"><span class="kpi-value">${fmt(ytdOrders)}</span></div><span class="kpi-sub">Năm ${new Date().getFullYear()}</span></div>
+        <div class="kpi-card"><span class="kpi-label">Tỷ Lệ Trả Hàng</span><div class="kpi-value-row"><span class="kpi-value">${returnRatePercent}%</span></div><span class="kpi-sub">theo số lượt đổi trả</span></div>
+        <div class="kpi-card"><span class="kpi-label">Giá Trị Đơn Trung Bình</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(avgOrderValue)}</span></div><span class="kpi-sub">AOV trong năm ${new Date().getFullYear()}</span></div>
       </div>
       <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
         <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Biểu Đồ Doanh Thu & Sản Lượng Đơn Bán</div>
@@ -2789,7 +3215,7 @@ function renderReportSales(c) {
           <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng Khai Thác</div>
           <table style="width: 100%; border-collapse: collapse;">
             <tbody>
-              ${customersHtml}
+              ${customersHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có dữ liệu khách hàng</td></tr>'}
             </tbody>
           </table>
         </div>
@@ -2811,13 +3237,44 @@ function renderReportSales(c) {
   `;
 
   new Chart(document.getElementById('chart-sales').getContext('2d'), {
-    type: 'line', data: { labels: salesData.map(d => d.month), datasets: [{ yAxisID: 'yRev', label: 'Doanh thu', data: salesData.map(d => d.revenue), borderColor: '#f0a030', tension: 0.3 }, { yAxisID: 'yOrd', label: 'Đơn hàng', data: salesData.map(d => d.orders), borderColor: '#60a5fa', tension: 0.3 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { yRev: { position: 'left', grid: { color: '#252a33' } }, yOrd: { position: 'right', grid: { drawOnChartArea: false } }, x: { grid: { color: '#252a33' } } } }
+    type: 'line',
+    data: {
+      labels: salesDataReal.map(d => d.month),
+      datasets: [
+        { yAxisID: 'yRev', label: 'Doanh thu', data: salesDataReal.map(d => d.revenue), borderColor: '#f0a030', tension: 0.3 },
+        { yAxisID: 'yOrd', label: 'Đơn hàng', data: salesDataReal.map(d => d.orders), borderColor: '#60a5fa', tension: 0.3 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        yRev: { position: 'left', grid: { color: '#252a33' } },
+        yOrd: { position: 'right', grid: { drawOnChartArea: false } },
+        x: { grid: { color: '#252a33' } }
+      }
+    }
   });
 
   new Chart(document.getElementById('chart-returns').getContext('2d'), {
-    type: 'bar', data: { labels: salesData.map(d => d.month), datasets: [{ label: 'Đơn bán', data: salesData.map(d => d.orders), backgroundColor: '#f0a030' }, { label: 'Đổi trả', data: salesData.map(d => d.returns), backgroundColor: '#f87171' }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#252a33' } }, x: { grid: { color: '#252a33' } } } }
+    type: 'bar',
+    data: {
+      labels: salesDataReal.map(d => d.month),
+      datasets: [
+        { label: 'Đơn bán', data: salesDataReal.map(d => d.orders), backgroundColor: '#f0a030' },
+        { label: 'Đổi trả', data: salesDataReal.map(d => d.returns), backgroundColor: '#f87171' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { grid: { color: '#252a33' } },
+        x: { grid: { color: '#252a33' } }
+      }
+    }
   });
 }
 
@@ -2935,7 +3392,6 @@ function getMonthRange() {
   return { firstDay, lastDay };
 }
 
-// 📌 CẤU HÌNH TRẠNG THÁI MẶC ĐỊNH KHI TẠO MỚI PHIẾU
 function initFormData(module, id) {
   const keyMap = { 'sales-orders': 'orders', 'grn': 'grns' };
   const targetKey = keyMap[module] || module;
@@ -2964,9 +3420,11 @@ function initFormData(module, id) {
     }
 
     if (module === 'quotations') {
-      const { firstDay, lastDay } = getMonthRange();
+      const today = getTodayDateStr();
+      const firstDay = getFirstDayOfMonthStr();
+      const { lastDay } = getMonthRange();
       state.formData = {
-        id: autoId, customer: '', date: firstDay, validUntil: lastDay, status: 'accepted', notes: '',
+        id: autoId, customer: '', date: today, validbegin: firstDay, validUntil: lastDay, status: 'accepted', notes: '',
         lineItems: [{ lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0 }]
       };
     }
@@ -2978,7 +3436,7 @@ function initFormData(module, id) {
         customer: '',
         warehouseCode: defaultWh,
         quotationId: null,
-        date: new Date().toISOString().slice(0, 10),
+        date: getTodayDateStr(),
         status: 'completed',
         notes: '',
         tax: 0,
@@ -3001,7 +3459,7 @@ function initFormData(module, id) {
     if (module === 'returns') {
       const defaultWh = db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '';
       state.formData = {
-        id: autoId, warehouseCode: defaultWh, orderId: '', customer: '', date: new Date().toISOString().slice(0, 10), reason: 'Hàng lỗi/hỏng', notes: '', status: 'processed',
+        id: autoId, warehouseCode: defaultWh, orderId: '', customer: '', date: getTodayDateStr(), reason: 'Hàng lỗi/hỏng', notes: '', status: 'processed',
         lineItems: [{ lineId: Date.now().toString(), sku: '', name: '', qtyReturned: 1, unitPrice: 0 }]
       };
     }
@@ -3013,7 +3471,7 @@ function initFormData(module, id) {
         supplier: '',
         warehouseCode: defaultWh,
         notes: '',
-        date: new Date().toISOString().slice(0, 10),
+        date: getTodayDateStr(),
         status: 'Đã nhận',
         lineItems: [{ lineId: Date.now().toString(), sku: '', name: '', receivedQty: 1, unitCost: 0 }]
       };
@@ -3021,10 +3479,8 @@ function initFormData(module, id) {
   }
 }
 
-// Hàm chuyển đổi định dạng chuỗi ngày YYYY-MM-DD sang DD/MM/YYYY
 function formatDateVN(dateStr) {
   if (!dateStr) return '';
-  // Nếu đã đúng dạng DD/MM/YYYY rồi thì giữ nguyên
   if (dateStr.includes('/')) return dateStr;
   
   const parts = dateStr.split('-');
@@ -3035,17 +3491,13 @@ function formatDateVN(dateStr) {
   return dateStr;
 }
 
-// Hàm chuyển đổi chuỗi định dạng hiển thị thành số nguyên thuần túy
 function parseNumberInput(val) {
   if (val === null || val === undefined || val === '') return 0;
-  // Chuẩn hóa: nếu là số thì lấy luôn, nếu là chuỗi thì xóa tất cả dấu chấm, phẩy, khoảng trắng
   const str = String(val).trim();
-  // Xóa tất cả các ký tự không phải là số hoặc dấu trừ (-)
   const cleanStr = str.replace(/[^0-9-]/g, '');
   return cleanStr ? Number(cleanStr) : 0;
 }
 
-// Hàm định dạng số nguyên thành chuỗi có dấu chấm phân cách hàng nghìn tiếng Việt
 function formatVNDInput(val) {
   const num = parseNumberInput(val);
   return num ? num.toLocaleString('vi-VN') : '0';
@@ -3056,12 +3508,10 @@ function updateHeaderDate() {
   if (!dateElement) return;
 
   const now = new Date();
-
-  // Định dạng Tiếng Việt
   const options = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
   const formattedDate = now.toLocaleDateString('vi-VN', options);
 
-  dateElement.innerText = formattedDate; // Kết quả: "Thứ Tư, 30/09/2026"
+  dateElement.innerText = formattedDate;
 }
 
 // INIT
@@ -3071,6 +3521,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   await fetchDataFromSupabase();
+  render();
   handleHashChange();
   updateHeaderDate();
 });
