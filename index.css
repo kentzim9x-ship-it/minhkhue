@@ -1,241 +1,596 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --background: #0c0e11;
+  --foreground: #edf0f4;
+  --card: #13161a;
+  --card-foreground: #edf0f4;
+  --primary: #f0a030;
+  --primary-foreground: #0c0e11;
+  --secondary: #1c2028;
+  --secondary-foreground: #c4cad4;
+  --muted: #1c2028;
+  --muted-foreground: #6b7585;
+  --border: #252a33;
+  
+  /* Đổi phông chữ mới: Inter thanh thoát, hiện đại & Plus Jakarta Sans gọn gàng */
+  --font-jost: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-dm-mono: 'Plus Jakarta Sans', SFMono-Regular, Consolas, monospace;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 body {
-  background-color: #f4f6f9;
-  color: #333;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* Form đăng nhập */
-.screen {
-  min-height: 100vh;
-}
-
-#login-screen {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #e9ecef;
-}
-
-.login-card {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  width: 100%;
-  max-width: 380px;
-}
-
-.login-card h2 {
-  margin-bottom: 20px;
-  text-align: center;
-  color: #007bff;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-jost);
   font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.form-group input[type="text"],
-.form-group input[type="password"],
-.form-group input[type="date"],
-.form-group input[type="number"],
-select {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.checkbox-group {
+.app-container {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  height: 100vh;
+  overflow: hidden;
 }
 
-.checkbox-group input {
-  width: auto;
-}
-
-/* Layout chính */
-.navbar {
-  background-color: #007bff;
-  color: white;
-  padding: 12px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.main-layout {
-  display: flex;
-  min-height: calc(100vh - 50px);
-}
-
+/* Sidebar */
 .sidebar {
-  width: 220px;
-  background-color: #343a40;
-  color: white;
-}
-
-.sidebar ul {
-  list-style: none;
-}
-
-.sidebar li {
-  padding: 15px 20px;
-  cursor: pointer;
-  border-bottom: 1px solid #454d55;
-  font-size: 14px;
-}
-
-.sidebar li:hover, .sidebar li.active {
-  background-color: #007bff;
-}
-
-.content {
-  flex: 1;
-  padding: 20px;
+  width: 224px;
+  flex-shrink: 0;
+  background: var(--card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
 }
 
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-/* Card & Table Component */
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 6px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  margin-bottom: 20px;
-}
-
-.inline-form {
+.sidebar-header {
+  padding: 18px 18px 14px;
+  border-bottom: 1px solid var(--border);
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.inline-form input {
-  flex: 1;
-  min-width: 120px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin-bottom: 15px;
-}
-
-.item-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
   align-items: center;
+  gap: 10px;
 }
 
-.item-row select, .item-row input {
+.brand-logo {
+  width: 26px;
+  height: 26px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.brand-title {
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.brand-subtitle {
+  font-family: var(--font-dm-mono);
+  font-size: 9px;
+  color: var(--muted-foreground);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.nav-menu {
   flex: 1;
+  padding: 8px 0;
 }
 
-.table-container {
-  overflow-x: auto;
+.nav-section {
+  padding-bottom: 4px;
 }
 
-table {
+.nav-section-title {
+  padding: 10px 18px 5px;
+  font-family: var(--font-dm-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--border);
+  user-select: none;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-th, td {
-  border: 1px solid #dee2e6;
-  padding: 10px;
-  text-align: left;
-  font-size: 14px;
-}
-
-th {
-  background-color: #f8f9fa;
-}
-
-/* Buttons */
-.btn {
-  padding: 8px 14px;
+  padding: 9px 18px;
+  background: transparent;
   border: none;
-  border-radius: 4px;
+  border-left: 2px solid transparent;
+  color: var(--muted-foreground);
   cursor: pointer;
+  text-align: left;
+  font-size: 13px;
+  font-family: var(--font-jost);
+  transition: all 0.12s;
+}
+
+.nav-btn:hover {
+  color: var(--foreground);
+}
+
+.nav-btn.active {
+  background: var(--secondary);
+  border-left-color: var(--primary);
+  color: var(--foreground);
+}
+
+.sidebar-user {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 28px;
+  height: 28px;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.user-name {
+  font-size: 12px;
   font-weight: 500;
 }
 
-.btn-primary { background: #007bff; color: white; }
-.btn-success { background: #28a745; color: white; }
-.btn-danger { background: #dc3545; color: white; }
-.btn-secondary { background: #6c757d; color: white; }
-.btn-sm { padding: 4px 8px; font-size: 12px; }
-.btn-block { width: 100%; }
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 20px;
+.user-role {
+  font-family: var(--font-dm-mono);
+  font-size: 9px;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-.stat-list {
-  list-style: none;
-  margin-top: 10px;
-}
-
-.stat-list li {
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
+/* App Wrapper */
+.main-wrapper {
+  flex: 1;
   display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.app-header {
+  height: 50px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
   justify-content: space-between;
+  padding: 0 28px;
+  flex-shrink: 0;
 }
 
-.note-text {
+.header-title-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.view-tag {
+  font-family: var(--font-dm-mono);
+  font-size: 9px;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  background: var(--secondary);
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+}
+
+.view-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-date {
+  font-family: var(--font-dm-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
+.bell-btn {
+  position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted-foreground);
+  padding: 4px;
+}
+
+.bell-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f87171;
+  border: 1.5px solid var(--background);
+}
+
+.main-content {
+  flex: 1;
+  overflow: auto;
+  padding: 24px 28px;
+}
+
+/* Grid, Card, Layout Components */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.grid-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--border);
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+}
+
+.kpi-card {
+  background: var(--card);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kpi-label {
+  font-family: var(--font-dm-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.kpi-value-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kpi-value {
+  font-family: var(--font-dm-mono);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.kpi-delta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
-  color: #6c757d;
-  margin-bottom: 10px;
+  font-weight: 500;
 }
 
-/* Reponsive cho di động */
-@media (max-width: 768px) {
-  .main-layout {
-    flex-direction: column;
-  }
-  .sidebar {
-    width: 100%;
-  }
-  .sidebar ul {
-    display: flex;
-    overflow-x: auto;
-  }
-  .sidebar li {
-    white-space: nowrap;
-    padding: 10px 15px;
-  }
+.kpi-delta.up {
+  color: #34d399;
+}
+
+.kpi-delta.down {
+  color: #f87171;
+}
+
+.kpi-sub {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+/* Form Control & Section Panel */
+.section-panel {
+  border: 1px solid var(--border);
+  background: var(--card);
+  margin-bottom: -1px;
+}
+
+.section-header {
+  padding: 13px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-num {
+  font-family: var(--font-dm-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.section-title {
+  font-family: var(--font-dm-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  font-weight: 600;
+}
+
+.section-body {
+  padding: 20px 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-family: var(--font-dm-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  font-family: var(--font-jost);
+  font-size: 13px;
+  padding: 9px 12px;
+  outline: none;
+  width: 100%;
+  border-radius: 2px;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  border-color: var(--primary);
+}
+
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-cancel {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-family: var(--font-jost);
+  font-size: 13px;
+  padding: 10px 24px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-cancel:hover {
+  border-color: var(--foreground);
+  color: var(--foreground);
+}
+
+.btn-submit {
+  background: var(--primary);
+  border: none;
+  color: var(--primary-foreground);
+  font-family: var(--font-jost);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 28px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btn-submit:hover {
+  opacity: 0.88;
+}
+
+/* Table Components */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  padding: 9px 16px;
+  text-align: left;
+  font-family: var(--font-dm-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  font-weight: 500;
+  background: var(--secondary);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+/* Thêm thuộc tính trỏ chuột cursor cho dòng dữ liệu hỗ trợ thao tác double click */
+tr.hover-row {
+  cursor: pointer;
+  transition: background-color 0.12s;
+}
+
+tr:hover {
+  background-color: var(--secondary);
+}
+
+.badge {
+  font-family: var(--font-dm-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  display: inline-block;
+  border-radius: 2px;
+}
+
+.badge-emerald {
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+}
+
+.badge-blue {
+  background: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+}
+
+.badge-amber {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+}
+
+.badge-zinc {
+  background: rgba(113, 113, 122, 0.1);
+  color: #a1a1aa;
+}
+
+.badge-red {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+}
+
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-family: var(--font-dm-mono);
+  font-size: 10px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-action:hover {
+  color: var(--foreground);
+  border-color: var(--primary);
+}
+
+.btn-action-del:hover {
+  color: #f87171;
+  border-color: #f87171;
+}
+
+.btn-primary {
+  background: var(--primary);
+  border: none;
+  color: var(--primary-foreground);
+  font-family: var(--font-jost);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 18px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: opacity 0.15s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.search-bar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  font-family: var(--font-jost);
+  font-size: 13px;
+  padding: 8px 12px;
+  outline: none;
+  width: 260px;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* Tăng cỡ chữ, độ đậm và độ sáng màu cho phần Ngày tháng */
+.header-date {
+  font-family: var(--font-dm-mono);
+  font-size: 13px;            /* Tăng từ 11px lên 13px */
+  font-weight: 600;           /* Tăng độ đậm */
+  color: var(--foreground);   /* Đổi từ màu xám mờ sang màu trắng sáng */
+  letter-spacing: 0.02em;     /* Giúp khoảng cách chữ thoáng hơn */
+}
+
+/* Căn chỉnh biểu tượng chuông thông báo to hơn và rõ nét hơn */
+.bell-btn {
+  color: var(--foreground);   /* Đổi màu chuông từ xám sang màu sáng */
+  transform: scale(1.15);     /* Phóng to chuông thêm 15% */
+  transition: opacity 0.15s;
+}
+
+.bell-btn:hover {
+  opacity: 0.8;
 }
