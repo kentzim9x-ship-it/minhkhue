@@ -910,6 +910,6 @@ table {
     max-height: 100dvh; /* Chiều cao động chuẩn xác trên iOS Safari */
     overflow-y: auto !important; /* Cho phép cuộn dọc nội dung bên trong menu */
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 80px; /* Tạo khoảng trống phía dưới để không bị thanh công cụ Safari che khuất */
+    padding-bottom: 40px; /* Tạo khoảng trống phía dưới để không bị thanh công cụ Safari che khuất */
   }
 }
