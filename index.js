@@ -1,513 +1,3 @@
-// Bổ sung bộ CSS Mobile Responsive mới (Drawer Menu + Responsive Controls)
-const globalStyle = document.createElement('style');
-globalStyle.innerHTML = `
-  input::-webkit-outer-spin-button,
-  input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  input[type=number] {
-    -moz-appearance: textfield;
-  }
-
-  /* ==============================================================
-     FIX TRIỆT ĐỂ LỖI HỤT MÀU NỀN (ÁP DỤNG TOÀN CỤC CHO CẢ PC & MOBILE)
-     ============================================================== */
-  html, body {
-    min-height: 100vh !important;
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background-color: #0b0e14 !important; /* Ép cứng màu tối của app cho toàn bộ viền trình duyệt */
-  }
-
-  #login-container, .app-container {
-    min-height: 100vh !important;
-    background-color: #0b0e14 !important;
-  }
-
-  /* Layer phủ mờ khi mở Menu Drawer trên Mobile */
-  .mobile-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    z-index: 998;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .mobile-overlay.active {
-    display: block;
-    opacity: 1;
-  }
-
-  /* ────────── MOBILE RESPONSIVE OPTIMIZATION (< 768px) ────────── */
-  @media (max-width: 768px) {
-    /* 1. Ẩn Ngày tháng ở Header & Ẩn Badge (GIAO DỊCH, DỮ LIỆU DANH MỤC, TỔNG QUAN, BÁO CÁO) */
-    #header-date,
-    #view-tag,
-    .view-tag,
-    [id*="tag"] {
-      display: none !important;
-    }
-
-    /* 2. Cấu hình KHUNG MENU TRƯỢT (Chỉ áp dụng cho khối bao ngoài cùng) */
-    .sidebar, aside {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      height: 100vh !important;
-      width: 280px !important;
-      max-width: 85vw !important;
-      z-index: 9999 !important;
-      transform: translateX(-100%) !important;
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.5) !important;
-      background: #0f1218 !important;
-      display: flex !important;
-      flex-direction: column !important; /* Ép layout dọc */
-      padding: 0 !important;
-      margin: 0 !important;
-      overflow: hidden !important; /* Ẩn thanh cuộn tổng, chỉ cuộn phần danh sách */
-    }
-
-    /* Trạng thái mở Menu */
-    body.mobile-menu-open .sidebar,
-    body.mobile-menu-open aside {
-      transform: translateX(0) !important;
-    }
-
-    /* 3. Cấu hình PHẦN GIỮA MENU (Danh sách chức năng - Cho phép cuộn) */
-    .sidebar nav, .sidebar > div:not(.sidebar-user):not(.sidebar-header), 
-    aside nav, aside > div:not(.sidebar-user):not(.sidebar-header) {
-      flex: 1 1 auto !important; /* Tự động chiếm toàn bộ khoảng trống ở giữa */
-      overflow-y: auto !important; /* Bật thanh cuộn nếu danh sách quá dài */
-      display: flex !important;
-      flex-direction: column !important;
-      position: static !important; /* Gỡ bỏ position fixed gây lỗi */
-      height: auto !important;
-      transform: none !important;
-    }
-
-    /* Ép hiển thị lại toàn bộ chữ và icon bị ẩn bên trong menu */
-    .sidebar *, aside * {
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-    
-    .sidebar span, aside span, .sidebar p, aside p {
-      display: inline-block !important;
-    }
-
-    .sidebar a, .sidebar button, .nav-btn, aside a, aside button {
-      display: flex !important;
-      align-items: center !important;
-      width: 100% !important;
-    }
-
-    /* 4. Cấu hình PHẦN ĐÁY MENU (Thông tin User & Đăng xuất) */
-    .sidebar-user, .user-profile, [class*="sidebar-user"], [class*="user-profile"] {
-      flex: 0 0 auto !important; /* Cố định kích thước, không co giãn */
-      margin-top: auto !important; /* Lực đẩy Flexbox giúp dính chặt xuống đáy */
-      position: static !important; 
-      width: 100% !important;
-      border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-      padding: 14px 16px !important;
-      background: #0d1015 !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: space-between !important;
-      box-sizing: border-box !important;
-    }
-
-    /* Nút Ngôi nhà ở Header */
-    .mobile-home-btn {
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-      width: 38px;
-      height: 38px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--primary);
-      cursor: pointer;
-      margin-right: 10px;
-    }
-
-    #app-content, .app-main, .main-content {
-      padding: 10px !important;
-      width: 100vw !important;
-      overflow-x: auto !important;
-    }
-
-    /* 3. Logic gom dòng cho các thẻ KPI / Thẻ tổng hợp */
-    /* 4 dòng -> 2 dòng (mỗi dòng 2) */
-    .kpi-grid, 
-    div[style*="grid-template-columns: repeat(4"],
-    div[style*="grid-template-columns: repeat(5"] {
-      display: grid !important;
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: 1px !important;
-      width: 100% !important;
-    }
-
-    /* 5 dòng / 3 dòng -> Dòng trên 3, dưới 2 (hoặc tự sát nhau full độ rộng) */
-    div[style*="grid-template-columns: repeat(5"],
-    div[style*="grid-template-columns: repeat(3"] {
-      display: grid !important;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important;
-      gap: 1px !important;
-      width: 100% !important;
-    }
-
-    .filter-search-container, 
-    div[style*="justify-content: space-between"],
-    div[style*="justify-content: flex-end"] {
-      flex-direction: column !important;
-      align-items: stretch !important;
-      gap: 10px !important;
-    }
-
-    div[style*="max-width: 450px"] {
-      max-width: 100% !important;
-      width: 100% !important;
-      flex-direction: column !important;
-    }
-
-    #global-search, 
-    .btn-primary, 
-    div[style*="min-width: 200px"] {
-      width: 100% !important;
-    }
-
-    .btn-primary {
-      justify-content: center !important;
-    }
-
-    /* 4. Tối ưu Form trong Mục 01: Tối đa 2 ô dữ liệu trên 1 hàng ngang đối với các ô nhỏ */
-    .grid-2, .grid-3, .grid-4, .section-body {
-      display: grid !important;
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: 10px !important;
-    }
-
-    /* Các ô lớn/dài hoặc có style span 2, span 3 tự động chiếm full 1 dòng */
-    .grid-2 > div[style*="span"],
-    .grid-3 > div[style*="span"],
-    .grid-4 > div[style*="span"],
-    .section-body > div[style*="span"],
-    .form-group[style*="span"] {
-      grid-column: span 2 !important;
-    }
-
-    .form-input, .form-select, .form-textarea, button {
-      min-height: 40px !important;
-      font-size: 13px !important;
-    }
-
-    /* 5. Tối ưu Mục 02 (Danh mục sản phẩm): Cho cột Tên to ra, Ẩn Mã hàng */
-    /* Ẩn cột Mã Hàng (Cột 1) */
-    div[style*="grid-template-columns"][style*="padding: 8px 24px"] > span:first-child,
-    div[style*="grid-template-columns"][style*="padding: 10px 24px"] > input:first-child,
-    div[style*="grid-template-columns"][style*="padding: 8px 16px"] > span:first-child,
-    div[style*="grid-template-columns"][style*="padding: 10px 16px"] > input:first-child {
-      display: none !important;
-    }
-
-    /* Mở rộng cột Tên hàng */
-    div[style*="grid-template-columns"][style*="padding: 8px 24px"],
-    div[style*="grid-template-columns"][style*="padding: 10px 24px"],
-    div[style*="grid-template-columns"][style*="padding: 8px 16px"],
-    div[style*="grid-template-columns"][style*="padding: 10px 16px"] {
-      grid-template-columns: minmax(180px, 2fr) repeat(auto-fit, minmax(60px, 1fr)) !important;
-      gap: 6px !important;
-      padding-left: 10px !important;
-      padding-right: 10px !important;
-    }
-
-    /* 6. Căn chỉnh mục Tạm tính, Chiết khấu, Tổng thuế, Tổng tiền sang bên phải thẳng hàng với Thành tiền */
-    div[style*="justify-content: flex-end"][style*="padding: 16px 24px"] {
-      padding: 16px 10px !important;
-      justify-content: flex-end !important;
-    }
-
-    div[style*="min-width: 260px"] {
-      width: 100% !important;
-      max-width: 280px !important;
-      margin-left: auto !important;
-      text-align: right !important;
-    }
-
-    div[style*="min-width: 260px"] > div {
-      justify-content: space-between !important;
-    }
-
-    /* Tối ưu lại nút xóa dòng trên mobile */
-    button[onclick*="removeLineItem"] {
-      padding: 0 2px !important;
-    }
-
-    .action-bar {
-      flex-direction: column-reverse !important;
-      gap: 8px !important;
-      align-items: stretch !important;
-    }
-
-    .action-bar > button, .action-bar > div > button {
-      width: 100% !important;
-      justify-content: center !important;
-    }
-
-    /* 1. Sửa khu vực User & Nút Đăng xuất: Icon to ra, nằm thẳng hàng, thu gọn nút */
-    .sidebar-user, [class*="sidebar-user"] {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      flex-wrap: nowrap !important;
-      padding: 12px 10px !important;
-      gap: 10px !important;
-    }
-    .user-avatar {
-      width: 42px !important; /* Cho Icon AD to lên một chút */
-      height: 42px !important;
-      font-size: 16px !important;
-      flex-shrink: 0 !important;
-    }
-    .sidebar-user > div:not(.user-avatar) {
-      flex: 1 !important;
-      min-width: 0 !important; /* Ngăn text đẩy vỡ layout */
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: flex-start !important;
-    }
-    .user-name, .user-role {
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-      width: 100% !important;
-      text-align: left !important;
-    }
-    #logout-btn {
-      flex-shrink: 0 !important;
-      padding: 6px 10px !important;
-      font-size: 12px !important;
-      width: auto !important; /* Thu gọn vừa đủ chữ */
-      margin-left: 0 !important;
-    }
-
-    /* 2. Sửa lỗi Form: Tạm tính, Chiết khấu, Thuế, Tổng tiền dàn ngang 2 bên */
-    /* Ghi đè lại thuộc tính flex-direction: column bị áp dụng nhầm trước đó */
-    div[style*="min-width: 260px"] > div[style*="justify-content: space-between"] {
-      flex-direction: row !important; 
-      align-items: center !important;
-      justify-content: space-between !important;
-      padding-bottom: 6px !important;
-    }
-    /* Chữ căn trái, Số căn phải thẳng hàng */
-    div[style*="min-width: 260px"] > div > span:first-child {
-      text-align: left !important;
-      flex: 1 !important;
-    }
-    div[style*="min-width: 260px"] > div > span:last-child {
-      text-align: right !important;
-    }
-
-    /* 3. Sửa Báo Cáo & Tổng Quan: Tách biểu đồ và thống kê thành từng dòng riêng biệt */
-    div[style*="grid-template-columns: 2fr 1fr"],
-    #app-content > div > div.grid-2 {
-      display: flex !important;
-      flex-direction: column !important;
-      width: 100% !important;
-      gap: 16px !important;
-    }
-
-    /* ==============================================================
-       TỐI ƯU THANH LỌC (FILTER BAR) VÀ KHUNG TỔNG TIỀN TRÊN MOBILE
-       ============================================================== */
-
-    /* 1. Tối ưu thanh Filter: Xóa nền xám thừa, bo góc và thu nhỏ giống nút bấm */
-    div[style*="background: var(--muted)"][style*="overflow-x: auto"] {
-      background: transparent !important; /* Xóa nền xám nhạt */
-      gap: 4px !important; /* Tạo khoảng cách giữa các nút */
-      padding-bottom: 4px !important; /* Lề cuộn ngang */
-    }
-
-    div[style*="background: var(--muted)"][style*="overflow-x: auto"] > button {
-      border-radius: 4px !important; /* Bo góc */
-      border: 1px solid var(--border) !important;
-      font-size: 11px !important; /* Thu nhỏ cỡ chữ */
-      padding: 6px 12px !important; /* Thu nhỏ kích thước nút */
-      white-space: nowrap !important;
-      background-color: var(--card) !important;
-    }
-
-    /* Trạng thái đang chọn của nút Filter */
-    div[style*="background: var(--muted)"][style*="overflow-x: auto"] > button[style*="background: var(--primary)"] {
-      background-color: var(--primary) !important;
-      border-color: var(--primary) !important;
-      color: var(--primary-foreground) !important;
-    }
-
-    /* 2. Tối ưu Khung Tổng Tiền: Đẩy chữ bám sát lề trái, số tiền bám sát lề phải */
-    /* Mở rộng full chiều ngang cho tất cả các khung có min-width: 260px */
-    div[style*="min-width: 260px"] {
-      width: 100% !important;
-      max-width: 100% !important;
-      margin: 0 !important;
-    }
-
-    /* Xử lý cho cả cấu trúc lồng nhau (Báo giá/Đơn bán) và cấu trúc đơn (Đổi trả/Nhập kho) */
-    div[style*="min-width: 260px"] > div,
-    div[style*="min-width: 260px"][style*="justify-content: space-between"] {
-      display: flex !important;
-      flex-direction: row !important;
-      justify-content: space-between !important;
-      align-items: center !important;
-      width: 100% !important;
-    }
-
-    /* Ép chữ (Label - Tạm tính, Tổng cộng...) sang sát lề trái */
-    div[style*="min-width: 260px"] span:first-child,
-    div[style*="min-width: 260px"] > div > span:first-child {
-      text-align: left !important;
-      flex: 1 !important;
-    }
-
-    /* Ép số tiền sang sát lề phải */
-    div[style*="min-width: 260px"] span:last-child,
-    div[style*="min-width: 260px"] > div > span:last-child {
-      text-align: right !important;
-    }
-
-    /* ==============================================================
-       CĂN CHỈNH HEADER MOBILE (KÉO NÚT HOME VÀ TIÊU ĐỀ SANG TRÁI)
-       ============================================================== */
-    
-    .app-header {
-      padding-left: 10px !important;  /* Giảm khoảng cách lề trái của cả thanh header */
-      padding-right: 10px !important; /* Giảm khoảng cách lề phải cho cân đối */
-    }
-
-    .app-header > div:first-child {
-      margin-left: 0 !important; 
-      padding-left: 0 !important;
-    }
-
-    /* ==============================================================
-       1. BO VIỀN ICON MENU (HOME) VÀ AVATAR ADMIN
-       ============================================================== */
-    /* Icon ngôi nhà màu cam trong Menu và Icon AD */
-    .sidebar-header > div:first-child,
-    .sidebar-user .user-avatar,
-    .user-avatar {
-      border-radius: 8px !important;
-    }
-
-    /* ==============================================================
-       1. BO VIỀN (ĐÃ FIX LỖI MẤT THANH CUỘN NGANG)
-       ============================================================== */
-    /* Khối thẻ KPI, Thống kê, Bảng dữ liệu và Form */
-    .kpi-card,
-    div[style*="background: var(--card)"],
-    div[style*="background-color: var(--card)"] {
-      border-radius: 8px !important;
-      margin-bottom: 8px !important; 
-      border: 1px solid var(--border) !important;
-      /* Đã loại bỏ overflow: hidden để giữ lại thanh cuộn ngang */
-    }
-
-    /* Các ô Input, Select, Textarea và Nút bấm */
-    .form-input, .form-select, .form-textarea, button {
-      border-radius: 6px !important;
-    }
-
-    /* Tách lưới KPI dính liền thành các thẻ rời nhau */
-    .kpi-grid, 
-    div[style*="grid-template-columns: repeat(4"],
-    div[style*="grid-template-columns: repeat(5"],
-    div[style*="grid-template-columns: repeat(3"] {
-      gap: 8px !important;
-      background-color: transparent !important;
-    }
-
-    /* ==============================================================
-       2. ÉP ĐỒNG NHẤT 1 MÀU NỀN & BẢO ĐẢM THANH CUỘN DỌC
-       ============================================================== */
-    /* Dùng height: auto để cho phép nội dung dài tự do đẩy khung xuống dưới */
-    html, body, #root, #app {
-      min-height: 100vh !important;
-      height: auto !important; /* Đã sửa: Cho phép giãn chiều cao tự do */
-      overflow-y: auto !important; /* Bật lại thanh cuộn dọc */
-      overflow-x: hidden !important; /* Ngăn cuộn ngang toàn trang gây lag */
-      background-color: var(--background, #0b0e14) !important;
-    }
-
-    /* Khung nội dung chính cũng để auto chiều cao */
-    #app-content, 
-    #app-content > div,
-    main, .main-content {
-      min-height: 100vh !important; 
-      height: auto !important; /* Đã sửa */
-      overflow-y: visible !important; /* Đảm bảo không cắt nội dung con */
-      background-color: var(--background, #0b0e14) !important;
-      padding-bottom: 30px !important; /* Thêm chút lề đáy để dễ nhìn nội dung cuối */
-    }
-
-    /* ==============================================================
-       3. BO VIỀN ĐỒNG NHẤT BÊN TRONG TRANG XEM/THÊM/SỬA (FORM CHI TIẾT)
-       ============================================================== */
-    /* Bo góc khung lớn chứa toàn bộ form và các section (Thông tin, Danh mục) */
-    form, 
-    form > div[style*="border"], 
-    #app-content > div > div[style*="border"] {
-      border-radius: 8px !important;
-    }
-
-    /* Đảm bảo các hàng hoặc khung chứa danh sách sản phẩm không bị vuông góc ở viền ngoài */
-    form > div {
-      border-radius: 8px !important;
-    }
-    
-    /* Gỡ bỏ các góc vuông của phần gộp nhóm (nếu có) */
-    form > div:first-child {
-      border-top-left-radius: 8px !important;
-      border-top-right-radius: 8px !important;
-    }
-    form > div:last-child {
-      border-bottom-left-radius: 8px !important;
-      border-bottom-right-radius: 8px !important;
-    }
-
-    /* Đảm bảo toàn bộ các ô nhập liệu (input, select) nằm bên trong bảng danh mục sản phẩm đều được bo viền mềm mại */
-    table input, table select, table textarea,
-    .table-responsive input, .table-responsive select,
-    div[style*="border-bottom"] > input,
-    div[style*="border-bottom"] > select {
-      border-radius: 6px !important;
-    }
-  }
-
-  @media (min-width: 769px) {
-    .mobile-home-btn, .mobile-overlay {
-      display: none !important;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .kpi-grid {
-      grid-template-columns: 1fr !important;
-    }
-  }
-`;
-document.head.appendChild(globalStyle);
-
 // Tạo lớp Overlay để bấm ra ngoài đóng Menu
 const overlayEl = document.createElement('div');
 overlayEl.className = 'mobile-overlay';
@@ -518,13 +8,6 @@ function toggleMobileMenu() {
   document.body.classList.toggle('mobile-menu-open');
   overlayEl.classList.toggle('active');
 }
-
-// Danh sách tài khoản cấp riêng
-const USERS = [
-  { id: 'USR-001', username: 'admin', password: '123', name: 'Quản Trị Viên', role: 'ADMIN' },
-  { id: 'USR-002', username: 'nhambc', password: '123', name: 'Bùi Cao Nhâm', role: 'MANAGER' },
-  { id: 'USR-003', username: 'minhkhue', password: '123', name: 'Minh Khuê', role: 'USER' }
-];
 
 function getAuthSession() {
   const saved = localStorage.getItem('app_session');
@@ -844,15 +327,15 @@ let state = {
 
 const viewMeta = {
   dashboard: { tag: 'TỔNG QUAN', title: 'Tổng Quan' },
-  materials: { tag: 'DỮ LIỆU DANH MỤC', title: 'Sản Phẩm & Vật Tư' },
+  materials: { tag: 'DỮ LIỆU DANH MỤC', title: 'Danh Mục Hàng Hóa' },
   customers: { tag: 'DỮ LIỆU DANH MỤC', title: 'Danh Sách Khách Hàng' },
   warehouses: { tag: 'DỮ LIỆU DANH MỤC', title: 'Danh Sách Kho Hàng' },
-  quotations: { tag: 'GIAO DỊCH', title: 'Báo Giá Ban Đầu' },
+  quotations: { tag: 'GIAO DỊCH', title: 'Bảng Báo Giá' },
   'sales-orders': { tag: 'GIAO DỊCH', title: 'Đơn Bán Hàng' },
   returns: { tag: 'GIAO DỊCH', title: 'Đổi Trả Hàng Bán' },
   grn: { tag: 'GIAO DỊCH', title: 'Phiếu Nhập Kho' },
   'report-inventory': { tag: 'BÁO CÁO', title: 'Báo Cáo Tồn Kho' },
-  'report-sales': { tag: 'BÁO CÁO', title: 'Báo Cáo Doanh Số' },
+  'report-sales': { tag: 'BÁO CÁO', title: 'Báo Cáo Bán Hàng' },
 };
 
 function navigate(view, mode = 'list', itemId = null) {
@@ -879,16 +362,21 @@ function navigate(view, mode = 'list', itemId = null) {
   if (mode === 'edit' && itemId) targetHash += `/edit/${itemId}`;
   if (mode === 'view' && itemId) targetHash += `/view/${itemId}`;
 
-  if (window.location.hash !== targetHash) {
-    window.location.hash = targetHash;
-  }
-
   // Đóng Drawer Menu trên Mobile nếu đang mở
   if (document.body.classList.contains('mobile-menu-open')) {
     toggleMobileMenu();
   }
 
-  render();
+  if (window.location.hash !== targetHash) {
+    window.location.hash = targetHash;
+    // Bỏ render() ở đây vì khi hash thay đổi, window tự động gọi hàm handleHashChange -> render()
+  } else {
+    render(); // Chỉ render thủ công nếu hash không hề thay đổi
+
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const contentBox = document.getElementById('app-content');
+    if (contentBox) contentBox.scrollTop = 0;
+  }
 }
 
 function handleHashChange() {
@@ -925,6 +413,10 @@ function handleHashChange() {
     }
 
     render();
+
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const contentBox = document.getElementById('app-content');
+    if (contentBox) contentBox.scrollTop = 0;
   } else {
     navigate('dashboard', 'list');
   }
@@ -947,11 +439,72 @@ function updateField(field, value, type = 'text') {
 function updateLine(lineId, field, value, type = 'text') {
   if (!state.formData || !Array.isArray(state.formData.lineItems)) return;
   const line = state.formData.lineItems.find(l => l.lineId === lineId);
-  if (line) {
-    line[field] = (type === 'number') ? Number(value) : value;
-    render();
+  if (!line) return;
+
+  line[field] = (type === 'number') ? Number(value) : value;
+
+  let subtotal = 0, discountTotal = 0, taxTotal = 0, total = 0;
+
+  state.formData.lineItems.forEach(l => {
+    let lineTotal = 0;
+
+    if (state.view === 'quotations' || state.view === 'sales-orders') {
+      const qty = Number(l.qty) || 0;
+      const price = Number(l.unitPrice) || 0;
+      const disc = Number(l.discount) || 0;
+      const tax = Number(l.tax) || 0;
+      const lineSub = qty * price * (1 - disc / 100);
+      lineTotal = lineSub * (1 + tax / 100);
+
+      subtotal += qty * price;
+      discountTotal += qty * price * (disc / 100);
+      taxTotal += lineSub * (tax / 100);
+    } else if (state.view === 'returns') {
+      const qty = Number(l.qtyReturned) || 0;
+      const price = Number(l.unitPrice) || 0;
+      lineTotal = qty * price;
+      total += lineTotal;
+    } else if (state.view === 'grn') {
+      const qty = Number(l.receivedQty ?? l.qtyImport ?? 1) || 0;
+      const price = Number(l.unitCost) || 0;
+      lineTotal = qty * price;
+      total += lineTotal;
+    }
+
+    // Cập nhật text "Thành Tiền" ở từng dòng đang nhập
+    const skuInput = document.getElementById(`line-item-${l.lineId}-sku`);
+    if (skuInput && skuInput.parentElement) {
+      const divs = skuInput.parentElement.querySelectorAll('div');
+      if (divs.length > 0) divs[0].innerText = fmtUSD(lineTotal);
+    }
+  });
+
+  if (state.view === 'quotations' || state.view === 'sales-orders') {
+    total = subtotal - discountTotal + taxTotal;
+    state.formData.subtotal = subtotal; state.formData.discountTotal = discountTotal; state.formData.tax = taxTotal; state.formData.total = total;
+  } else if (state.view === 'returns') {
+    state.formData.total = total;
+  } else if (state.view === 'grn') {
+    state.formData.totalValue = total;
   }
-}
+
+  // 2. CẬP NHẬT KHUNG TỔNG TIỀN (BẮT CHUẨN 100%)
+  const summaryDivs = document.querySelectorAll('div[style*="justify-content: space-between"]');
+  summaryDivs.forEach(div => {
+    const spans = div.querySelectorAll('span');
+    if (spans.length >= 2) {
+      const lbl = spans[0].innerText.trim().toLowerCase(); // Đưa về chữ thường để so sánh
+      const valSpan = spans[spans.length - 1]; // Lấy giá trị ở cuối
+
+      if (lbl === 'tạm tính') valSpan.innerText = fmtUSD(subtotal);
+      else if (lbl === 'chiết khấu') valSpan.innerText = '-' + fmtUSD(discountTotal);
+      else if (lbl === 'tổng thuế') valSpan.innerText = fmtUSD(taxTotal);
+      else if (lbl === 'tổng cộng' || lbl === 'tổng hoàn tiền' || lbl === 'tổng giá trị') {
+        valSpan.innerText = fmtUSD(total);
+      }
+    }
+  });
+} // Kết thúc hàm updateLine()
 
 function handleLineItemKeyDown(e, module, lineIndex, fieldName) {
   if (e.key === 'Enter') {
@@ -987,8 +540,6 @@ function handleLineItemKeyDown(e, module, lineIndex, fieldName) {
           if (typeof nextInput.select === 'function') nextInput.select();
         }
       }, 50);
-    } else {
-      render();
     }
   }
 }
@@ -1069,7 +620,7 @@ async function saveForm(module) {
   let rawData = JSON.parse(JSON.stringify(state.formData));
 
   const session = getAuthSession();
-  const currentUserId = session.currentUser ? session.currentUser.id : 'USR-001';
+  const currentUserId = session.currentUser ? (session.currentUser.id) : 'Hệ Thống';
   const currentDate = getTodayDateStr();
   const currentTime = getCurrentTimeStr();
 
@@ -1315,29 +866,42 @@ function renderLoginForm(container) {
   `;
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
   e.preventDefault();
   const un = document.getElementById('login-username').value.trim();
   const pw = document.getElementById('login-password').value;
   const remember = document.getElementById('login-remember').checked;
 
-  const found = USERS.find(u => u.username === un && u.password === pw);
+  try {
+    // Truy vấn tới bảng userinfo trên Supabase
+    const { data, error } = await supabaseClient
+      .from('userinfo')
+      .select('*')
+      .eq('username', un)
+      .eq('password', pw);
 
-  if (found) {
-    const session = { isLoggedIn: true, currentUser: found, remember };
-    localStorage.setItem('app_session', JSON.stringify(session));
+    if (error) throw error;
 
-    if (remember) {
-      localStorage.setItem('remembered_user', JSON.stringify({ username: un, password: pw, remember: true }));
+    if (data && data.length > 0) {
+      const foundUser = data[0]; // Chứa id, username, fullname, role, created_at
+      const session = { isLoggedIn: true, currentUser: foundUser, remember };
+      localStorage.setItem('app_session', JSON.stringify(session));
+
+      if (remember) {
+        localStorage.setItem('remembered_user', JSON.stringify({ username: un, password: pw, remember: true }));
+      } else {
+        localStorage.removeItem('remembered_user');
+      }
+
+      document.querySelector('.app-container').style.display = 'flex';
+      updateUserInfoUI();
+      render();
     } else {
-      localStorage.removeItem('remembered_user');
+      document.getElementById('login-error').style.display = 'block';
     }
-
-    document.querySelector('.app-container').style.display = 'flex';
-    updateUserInfoUI();
-    render();
-  } else {
-    document.getElementById('login-error').style.display = 'block';
+  } catch (err) {
+    console.error('Lỗi truy vấn đăng nhập:', err);
+    alert('Không thể kết nối đến máy chủ xác thực.');
   }
 }
 
@@ -1355,9 +919,9 @@ function updateUserInfoUI() {
     const userRoleEl = document.querySelector('.user-role');
     const sidebarUserEl = document.querySelector('.sidebar-user');
 
-    if (userAvatarEl) userAvatarEl.innerText = user.username.substring(0, 2).toUpperCase();
-    if (userNameEl) userNameEl.innerText = user.name;
-    if (userRoleEl) userRoleEl.innerText = user.role;
+    if (userAvatarEl) userAvatarEl.innerText = (user.fullname || user.username || 'U').substring(0, 2).toUpperCase();
+    if (userNameEl) userNameEl.innerText = user.fullname || user.username; // Dùng cột fullname từ DB
+    if (userRoleEl) userRoleEl.innerText = user.role || 'USER';
 
     if (sidebarUserEl && !document.getElementById('logout-btn')) {
       const logoutBtn = document.createElement('button');
@@ -1443,17 +1007,23 @@ function render() {
     }
   }
 
+  // ĐOẠN CODE MỚI ĐỂ ĐẶT CUỐI HÀM render()
   if (activeId) {
     const el = document.getElementById(activeId);
     if (el) {
       el.focus();
-      if (typeof el.selectionStart !== 'undefined') {
-        const len = el.value.length;
-        el.setSelectionRange(len, len);
+      try {
+        // Trình duyệt không cho phép setSelectionRange trên ô type="number"
+        if (typeof el.selectionStart !== 'undefined' && el.type !== 'number' && el.type !== 'email') {
+          const len = el.value ? el.value.length : 0;
+          el.setSelectionRange(len, len);
+        }
+      } catch (err) {
+        // Bỏ qua lỗi êm đẹp nếu thiết bị không hỗ trợ
       }
     }
   }
-}
+} // <--- Kết thúc hàm render()
 
 function getSalesAnalyticsData() {
   const currentYear = new Date().getFullYear();
@@ -1643,14 +1213,14 @@ function renderMaterialsList(c) {
   });
 
   const kpiHtml = [
-    { label: 'Tổng số SKU', value: fmt(db.materials.length) },
-    { label: 'Tổng tồn kho', value: fmt(db.materials.reduce((a, i) => a + i.stock, 0)) },
-    { label: 'Đang tạm giữ', value: fmt(db.materials.reduce((a, i) => a + i.reserved, 0)) },
-    { label: 'Thấp/Cảnh báo', value: fmt(db.materials.filter(i => ['low', 'critical', 'out'].includes(i.status)).length) }
+    { label: 'Tổng số SKU', value: fmt(db.materials.length), color: 'var(--foreground)' },
+    { label: 'Tổng tồn kho', value: fmt(db.materials.reduce((a, i) => a + i.stock, 0)), color: '#f0a030' },
+    { label: 'Đang tạm giữ', value: fmt(db.materials.reduce((a, i) => a + i.reserved, 0)), color: '#60a5fa' },
+    { label: 'Thấp/Cảnh báo', value: fmt(db.materials.filter(i => ['low', 'critical', 'out'].includes(i.status)).length), color: '#f87171' }
   ].map(s => `
-    <div style="background-color: var(--card); padding: 16px 20px; display: flex; align-items: center; gap: 16px;">
-      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em;">${s.label}</span>
-      <span style="font-family: var(--font-dm-mono); font-size: 18px; font-weight: 300;">${s.value}</span>
+    <div style="background-color: var(--card); padding: 16px 20px;">
+      <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
+      <div style="font-family: var(--font-dm-mono); font-size: 24px; font-weight: 300; color: ${s.color};">${s.value}</div>
     </div>
   `).join('');
 
@@ -1678,20 +1248,21 @@ function renderMaterialsList(c) {
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
+        ${kpiHtml}
+      </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px;">
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['ok', 'Đủ hàng'], ['low', 'Sắp hết'], ['critical', 'Nguy cấp'], ['out', 'Hết hàng']])}
         <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã hàng hoặc tên hàng..." value="${state.search}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+            <input type="text" id="global-search" placeholder="Tìm theo mã, tên hàng..." value="${state.search}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
           <button class="btn-primary" onclick="navigate('materials', 'add')">${Icons.plus} Thêm Mới Hàng Hóa</button>
         </div>
-      </div>
-      
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
-        ${kpiHtml}
-      </div>
+      </div>     
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
         <table style="width: 100%; border-collapse: collapse;">
@@ -1711,26 +1282,34 @@ function renderMaterialsList(c) {
 }
 
 function renderCustomersList(c) {
-  const filtered = db.customers.filter(c =>
-    !state.search ||
-    (c.name && c.name.toLowerCase().includes(state.search.toLowerCase())) ||
-    (c.id && c.id.toLowerCase().includes(state.search.toLowerCase())) ||
-    (c.contact && c.contact.toLowerCase().includes(state.search.toLowerCase())) ||
-    (c.address && c.address.toLowerCase().includes(state.search.toLowerCase()))
-  );
+  const filtered = db.customers.filter(c => {
+    // 1. Kiểm tra điều kiện lọc theo trạng thái (Filter)
+    const matchStatus = (state.filter === 'all' || c.status === state.filter);
+
+    // 2. Kiểm tra điều kiện tìm kiếm (Search)
+    const searchKey = (state.search || '').trim().toLowerCase();
+    const matchSearch = !searchKey ||
+      (c.name && c.name.toLowerCase().includes(searchKey)) ||
+      (c.id && c.id.toLowerCase().includes(searchKey)) ||
+      (c.contact && c.contact.toLowerCase().includes(searchKey)) ||
+      (c.address && c.address.toLowerCase().includes(searchKey));
+
+    // Phải thỏa mãn cả 2 điều kiện thì mới hiển thị
+    return matchStatus && matchSearch;
+  });
 
   const totalCount = db.customers.length;
   const activeCount = db.customers.filter(c => c.status === 'active').length;
   const suspendedCount = db.customers.filter(c => c.status === 'suspended' || c.status === 'inactive').length;
 
   const kpiHtml = [
-    { label: 'TỔNG KHÁCH HÀNG', value: fmt(totalCount) },
-    { label: 'ĐANG HOẠT ĐỘNG', value: fmt(activeCount) },
-    { label: 'TẠM KHÓA / NGỪNG', value: fmt(suspendedCount) }
+    { label: 'TỔNG KHÁCH HÀNG', value: fmt(totalCount), color: 'var(--foreground)' },
+    { label: 'ĐANG HOẠT ĐỘNG', value: fmt(activeCount), color: '#34d399' },
+    { label: 'TẠM KHÓA / NGỪNG', value: fmt(suspendedCount), color: '#f87171' }
   ].map(s => `
-    <div style="background-color: var(--card); padding: 16px 20px; display: flex; align-items: center; gap: 16px;">
-      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em;">${s.label}</span>
-      <span style="font-family: var(--font-dm-mono); font-size: 18px; font-weight: 300;">${s.value}</span>
+    <div style="background-color: var(--card); padding: 16px 20px;">
+      <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
+      <div style="font-family: var(--font-dm-mono); font-size: 24px; font-weight: 300; color: ${s.color};">${s.value}</div>
     </div>
   `).join('');
 
@@ -1761,19 +1340,21 @@ function renderCustomersList(c) {
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: flex; justify-content: flex-end; align-items: center;">
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
-            <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo tên, ID, liên hệ, địa chỉ..." value="${state.search}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
-          </div>
-          <button class="btn-primary" onclick="navigate('customers', 'add')">${Icons.plus} Thêm Mới Khách Hàng</button>
-        </div>
-      </div>
-
       <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
+    
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+        ${getFilterBar([['all', 'Tất cả'], ['active', 'Đang Hoạt Động'], ['inactive', 'Ngừng Hoạt Động'], ['suspended', 'Tạm Khóa']])}
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
+            <span style="color: var(--muted-foreground);">${Icons.search}</span>
+            <input type="text" id="global-search" placeholder="Tìm theo mã, tên, liên hệ, địa chỉ..." value="${state.search}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+          </div>
+          <button class="btn-primary" onclick="navigate('customers', 'add')">${Icons.plus} Thêm Mới Khách Hàng</button>
+        </div>
+      </div>     
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
         <table style="width: 100%; border-collapse: collapse;">
@@ -1904,7 +1485,7 @@ function renderQuotationsList(c) {
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo tên, mã KH..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+            <input type="text" id="global-search" placeholder="Tìm theo mã, tên khách hàng..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
           <button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Tạo Báo Giá Mới</button>
         </div>
@@ -1990,7 +1571,7 @@ function renderOrdersList(c) {
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo tên, mã KH..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+            <input type="text" id="global-search" placeholder="Tìm theo mã, tên khách hàng..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
           <button class="btn-primary" onclick="navigate('sales-orders', 'add')">${Icons.plus} Tạo Đơn Hàng Mới</button>
         </div>
@@ -2014,7 +1595,23 @@ function renderOrdersList(c) {
 }
 
 function renderReturnsList(c) {
-  const filtered = db.returns.filter(r => state.filter === 'all' || r.status === state.filter);
+  const filtered = db.returns.filter(r => {
+    const matchStatus = (state.filter === 'all' || r.status === state.filter);
+    const searchKey = (state.search || '').trim().toLowerCase();
+    
+    const rId = (r.id || '').toLowerCase();
+    const orderId = (r.orderId || '').toLowerCase();
+    const customer = (r.customer || '').toLowerCase();
+    const reason = (r.reason || '').toLowerCase();
+
+    const matchSearch = !searchKey ||
+      rId.includes(searchKey) ||
+      orderId.includes(searchKey) ||
+      customer.includes(searchKey) ||
+      reason.includes(searchKey);
+
+    return matchStatus && matchSearch;
+  });
 
   const kpiHtml = [
     { label: 'Tổng số lượt đổi trả', val: db.returns.length, color: 'var(--foreground)' },
@@ -2061,7 +1658,14 @@ function renderReturnsList(c) {
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['processed', 'Đã xử lý'], ['approved', 'Đã duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối']])}
-        <button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Tạo Phiếu Đổi Trả</button>
+        
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
+            <span style="color: var(--muted-foreground);">${Icons.search}</span>
+            <input type="text" id="global-search" placeholder="Tìm theo mã, khách hàng, lý do..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+          </div>
+          <button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Tạo Phiếu Đổi Trả</button>
+        </div>
       </div>
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
@@ -2082,7 +1686,21 @@ function renderReturnsList(c) {
 }
 
 function renderGRNList(c) {
-  const filtered = db.grns.filter(g => state.filter === 'all' || g.status === state.filter);
+  const filtered = db.grns.filter(g => {
+    const matchStatus = (state.filter === 'all' || g.status === state.filter);
+    const searchKey = (state.search || '').trim().toLowerCase();
+
+    const gId = (g.id || '').toLowerCase();
+    const supplier = (g.supplier || '').toLowerCase();
+    const wCode = (g.warehouseCode || g.warehouse_code || '').toLowerCase();
+
+    const matchSearch = !searchKey ||
+      gId.includes(searchKey) ||
+      supplier.includes(searchKey) ||
+      wCode.includes(searchKey);
+
+    return matchStatus && matchSearch;
+  });
 
   const kpiHtml = [
     { label: 'Tổng số phiếu nhập', val: db.grns.length, color: 'var(--foreground)' },
@@ -2128,7 +1746,14 @@ function renderGRNList(c) {
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['Bản nháp', 'Bản nháp'], ['Đã nhận', 'Đã nhận'], ['Đã xác minh', 'Đã xác minh']])}
-        <button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Nhập Kho Mới</button>
+        
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
+            <span style="color: var(--muted-foreground);">${Icons.search}</span>
+            <input type="text" id="global-search" placeholder="Tìm theo mã phiếu, nhà cung cấp..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+          </div>
+          <button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Nhập Kho Mới</button>
+        </div>
       </div>
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
@@ -2343,14 +1968,24 @@ function exportQuotationToExcel() {
     </html>
   `;
 
-  const blob = new Blob(['\ufeff' + tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `BaoGia_${d.id || 'Export'}.xls`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  // Tạo khung HTML ẩn để thư viện đọc dữ liệu
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = tableHtml;
+  const table = tempDiv.querySelector('table');
+
+  // Chuyển đổi sang chuẩn file Excel .xlsx thực thụ
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.table_to_sheet(table);
+
+  // Tùy chỉnh độ rộng các cột cho đẹp
+  worksheet['!cols'] = [
+    { wch: 5 }, { wch: 25 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 18 }
+  ];
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "BaoGia");
+
+  // Lưu file với đuôi .xlsx chuẩn
+  XLSX.writeFile(workbook, `BaoGia_${d.id || 'Export'}.xlsx`);
 }
 
 function exportSalesOrderToExcel() {
@@ -2509,14 +2144,24 @@ function exportSalesOrderToExcel() {
     </html>
   `;
 
-  const blob = new Blob(['\ufeff' + tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `DonHang_${d.id || 'Export'}.xls`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+  // Tạo khung HTML ẩn để thư viện đọc dữ liệu
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = tableHtml;
+  const table = tempDiv.querySelector('table');
+
+  // Chuyển đổi sang chuẩn file Excel .xlsx thực thụ
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.table_to_sheet(table);
+
+  // Tùy chỉnh độ rộng các cột cho đẹp
+  worksheet['!cols'] = [
+    { wch: 5 }, { wch: 25 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 10 }, { wch: 10 }, { wch: 18 }
+  ];
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, "DonHang");
+
+  // Lưu file với đuôi .xlsx chuẩn
+  XLSX.writeFile(workbook, `DonHang_${d.id || 'Export'}.xlsx`);
 }
 
 // FORMS
@@ -2909,13 +2554,15 @@ function renderQuotationForm(c) {
     `<option value="${cust.name}" ${d.customer === cust.name ? 'selected' : ''}>${cust.name}</option>`
   ).join('');
 
+  const listId = 'mat-list-' + Date.now(); // Thêm dòng này để tạo ID độc nhất
   const materialOptions = (db.materials || []).map(m =>
     `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(m.cost)})</option>`
   ).join('');
 
+  // Tăng độ rộng cột Tên sản phẩm và đồng bộ header với các cột còn lại
   const gridLayout = isView
-    ? "110px 1fr 60px 70px 110px 70px 70px 120px"
-    : "110px 1fr 60px 70px 110px 70px 70px 120px 32px";
+    ? "90px minmax(180px, 1.5fr) 65px 80px 100px 70px 70px 120px"
+    : "90px minmax(180px, 1.5fr) 65px 80px 100px 70px 70px 120px 32px";
 
   const linesHtml = d.lineItems.map((l, idx) => {
     const lineSub = (l.qty || 0) * (l.unitPrice || 0) * (1 - (l.discount || 0) / 100);
@@ -2927,9 +2574,9 @@ function renderQuotationForm(c) {
     <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; border-bottom: 1px solid var(--border); align-items: center;">
       <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
       
-      <input type="text" id="line-item-${l.lineId}-name" ${isView ? '' : 'list="materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'name')" onchange="handleMaterialSelectInLine('${l.lineId}', this.value)"`} placeholder="Chọn/nhập tên hàng..." required>
+      <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${isView ? '' : 'list="' + listId + '"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'quotations\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="Chọn/nhập tên hàng..." required>
       
-      <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính từ danh mục hàng">
+      <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính">
       
       <input type="number" id="line-item-${l.lineId}-qty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
       
@@ -2959,11 +2606,11 @@ function renderQuotationForm(c) {
   }).join('');
 
   c.innerHTML = `
-    <datalist id="materials-list">
+    <datalist id="${listId}">
       ${materialOptions}
     </datalist>
 
-    <div style="max-width: 1000px;">
+    <div style="max-width: 1050px;">
       ${getBreadcrumb('Báo giá', isView ? `Xem ${d.id || ''}` : (isEdit ? `Chỉnh sửa ${d.id || ''}` : 'Tạo báo giá mới'), 'quotations')}
       <form onsubmit="event.preventDefault(); saveForm('quotations');">
         
@@ -3020,7 +2667,7 @@ function renderQuotationForm(c) {
           </div>
           
           <div style="overflow-x: auto;">
-            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 8px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 800px;">
+            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 8px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 900px;">
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
@@ -3032,7 +2679,7 @@ function renderQuotationForm(c) {
               ${!isView ? `<span></span>` : ''}
             </div>
 
-            <div style="min-width: 800px;">
+            <div style="min-width: 850px;">
               ${linesHtml}
             </div>
           </div>
@@ -3090,6 +2737,7 @@ function renderSalesOrderForm(c) {
     return `<option value="${wCode}" ${d.warehouseCode === wCode ? 'selected' : ''}>${wCode} - ${w.name}</option>`;
   }).join('');
 
+  
   const materialOptions = (db.materials || []).map(m => {
     const safeName = m.name || '';
     const safeId = m.id || '';
@@ -3098,8 +2746,8 @@ function renderSalesOrderForm(c) {
   }).join('');
 
   const gridLayout = isView
-    ? "90px 1fr 60px 80px 65px 65px 90px 70px 60px 110px"
-    : "90px 1fr 60px 80px 65px 65px 90px 70px 60px 110px 32px";
+    ? "90px minmax(180px, 1.5fr) 60px 80px 65px 65px 90px 70px 60px 120px"
+    : "90px minmax(180px, 1.5fr) 60px 80px 65px 65px 90px 70px 60px 120px 32px";
 
   const linesHtml = d.lineItems.map((l, idx) => {
     const lineSub = (l.qty || 0) * (l.unitPrice || 0) * (1 - (l.discount || 0) / 100);
@@ -3209,7 +2857,7 @@ function renderSalesOrderForm(c) {
           </div>
           
           <div style="overflow-x: auto;">
-            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 900px;">
+            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 1000px;">
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
@@ -3276,6 +2924,7 @@ function renderReturnForm(c) {
     `<option value="${o.id}" ${d.orderId === o.id ? 'selected' : ''}>${o.id} - ${o.customer || 'Khách không tên'}</option>`
   ).join('');
 
+  const listId = 'mat-list-' + Date.now(); // Thêm dòng này
   const materialOptions = (db.materials || []).map(m => {
     const safeName = m.name || '';
     const safeId = m.id || '';
@@ -3294,7 +2943,7 @@ function renderReturnForm(c) {
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center;">
         <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng không cho sửa">
         
-        <input type="text" id="line-item-${l.lineId}-name" ${isView ? '' : 'list="materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'name')" onchange="handleMaterialSelectInLine('${l.lineId}', this.value)"`} placeholder="Chọn/nhập tên hàng..." required>
+        <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${isView ? '' : 'list="' + listId + '"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'returns\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="Chọn/nhập tên hàng..." required>
         
         <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ Material">
         
@@ -3326,7 +2975,7 @@ function renderReturnForm(c) {
   }).join('');
 
   c.innerHTML = `
-    <datalist id="materials-list">
+    <datalist id="${listId}">
       ${materialOptions}
     </datalist>
 
@@ -3458,7 +3107,7 @@ function renderGRNForm(c) {
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center;">
         <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động điền theo tên hàng">
         
-        <input type="text" id="line-item-${l.lineId}-name" ${isView ? '' : 'list="materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'name')" onchange="handleMaterialSelectInLine('${l.lineId}', this.value)"`} placeholder="Chọn/nhập tên hàng..." required>
+        <input type="text" id="line-item-${l.lineId}-name" ${isView ? '' : 'list="materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'name')" onchange="handleMaterialSelectInLine('${l.lineId}', this.value)"`} placeholder="Chọn/nhập tên hàng..." required>
         
         <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ danh mục">
         
