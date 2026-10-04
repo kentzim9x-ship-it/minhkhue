@@ -888,18 +888,32 @@ input[type=number] {
   appearance: textfield !important;
 }
 
-/* --- KHẮC PHỤC LỖI KHỰNG CUỘN TRÊN SAFARI MOBILE (IPHONE) --- */
+/* --- SỬA LỖI KHỰNG CUỘN SAFARI MOBILE BẰNG GPU --- */
+
+/* 1. Ngăn hiệu ứng "kéo chun" toàn trang gây nhiễu thao tác cuộn bên trong */
 html, body {
-  -webkit-overflow-scrolling: touch; /* Kích hoạt cuộn mượt mà bằng phần cứng trên iOS */
-  overflow-x: hidden;
+  overscroll-behavior: none; 
+  /* Tùy chọn: Nếu thiết kế của bạn app-content là phần cuộn chính, hãy khóa cuộn ở body */
+  height: 100%;
 }
 
-/* Tối ưu hóa các vùng chứa cuộn ngang (bảng dữ liệu, menu...) */
+/* 2. Ép khung nội dung chính dùng GPU (Hardware Acceleration) để cuộn mượt */
+#app-content, 
+.app-content,
 div[style*="overflow-x: auto"], 
 div[style*="overflow: auto"], 
-.table-responsive, 
-table {
+.table-responsive {
   -webkit-overflow-scrolling: touch;
+  
+  /* 3 thuộc tính ma thuật ép Safari dùng GPU render trước lớp cuộn */
+  transform: translateZ(0); 
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+
+  overscroll-behavior: auto; /* Trả lại khả năng cuộn mượt cho các khối này */
 }
 
 /* --- CHO PHÉP CUỘN NỘI DUNG THANH MENU TRÊN MOBILE --- */
