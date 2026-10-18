@@ -4218,8 +4218,8 @@ function renderNotificationList() {
 
   dropdown.innerHTML = `
     <div style="padding: 14px 18px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
-      <span style="font-family: var(--font-dm-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">THÔNG BÁO GẦN ĐÂY (2 NGÀY)</span>
-      ${recentList.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; cursor: pointer; text-transform: uppercase; font-weight: 500;">Đã đọc hết</button>` : ''}
+      <span style="font-family: var(--font-dm-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">THÔNG BÁO</span>
+      ${recentList.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; cursor: pointer; text-transform: uppercase; font-weight: 500;">ĐÁNH DẤU ĐỌC HẾT</button>` : ''}
     </div>
     <div style="overflow-y: auto; max-height: 380px;">
       ${itemsHtml}
@@ -4230,6 +4230,29 @@ function renderNotificationList() {
       </button>
     </div>
   `;
+
+  // Thêm thao tác vuốt từ trái vào phải để đóng Form Thông báo trên Mobile
+  if (!dropdown.dataset.swipeBound) {
+    let dropStartX = 0, dropStartY = 0;
+    dropdown.addEventListener('touchstart', (e) => {
+      dropStartX = e.touches[0].clientX;
+      dropStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    dropdown.addEventListener('touchend', (e) => {
+      const dropEndX = e.changedTouches[0].clientX;
+      const dropEndY = e.changedTouches[0].clientY;
+      const diffX = dropEndX - dropStartX;
+      const diffY = dropEndY - dropStartY;
+
+      // Vuốt từ trái sang phải > 50px
+      if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+        dropdown.classList.remove('open');
+      }
+    }, { passive: true });
+
+    dropdown.dataset.swipeBound = 'true';
+  }
 }
 
 function initNotificationHistoryDrawer() {
@@ -4243,6 +4266,25 @@ function initNotificationHistoryDrawer() {
   const drawer = document.createElement('div');
   drawer.id = 'notif-history-drawer';
   drawer.className = 'notif-history-drawer';
+
+  // Gắn sự kiện vuốt từ trái sang phải để đóng Form Lịch sử
+  let drawerStartX = 0, drawerStartY = 0;
+  drawer.addEventListener('touchstart', (e) => {
+    drawerStartX = e.touches[0].clientX;
+    drawerStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  drawer.addEventListener('touchend', (e) => {
+    const drawerEndX = e.changedTouches[0].clientX;
+    const drawerEndY = e.changedTouches[0].clientY;
+    const diffX = drawerEndX - drawerStartX;
+    const diffY = drawerEndY - drawerStartY;
+
+    // Vuốt từ trái sang phải > 50px
+    if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+      closeNotificationHistory();
+    }
+  }, { passive: true });
 
   document.body.appendChild(overlay);
   document.body.appendChild(drawer);
@@ -4487,13 +4529,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.addEventListener('click', () => navigate(btn.getAttribute('data-view')));
   });
 
-  // -------------------------------------------------------------
-  // 1. VUỐT SANG TRÁI ĐỂ ĐÓNG MENU (MOBILE)
-  // -------------------------------------------------------------
+  // VUỐT SANG TRÁI ĐỂ ĐÓNG MENU (MOBILE SIDEBAR)
   const sidebar = document.querySelector('.sidebar') || document.getElementById('sidebar');
   if (sidebar) {
-    let startX = 0;
-    let startY = 0;
+    let startX = 0, startY = 0;
 
     sidebar.addEventListener('touchstart', (e) => {
       startX = e.touches[0].clientX;
@@ -4506,13 +4545,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const diffX = endX - startX;
       const diffY = endY - startY;
 
-      // Nếu vuốt sang trái > 50px và đường vuốt theo chiều ngang rõ hơn chiều dọc
       if (diffX < -50 && Math.abs(diffX) > Math.abs(diffY)) {
-        // Đóng menu (Gọi hàm đóng sidebar/menu sẵn có trong dự án của bạn)
-        if (typeof closeSidebar === 'function') {
-          closeSidebar();
-        } else if (typeof toggleSidebar === 'function') {
-          toggleSidebar();
+        if (typeof toggleMobileMenu === 'function' && document.body.classList.contains('mobile-menu-open')) {
+          toggleMobileMenu();
         } else {
           sidebar.classList.remove('open', 'active', 'show');
           document.body.classList.remove('sidebar-open');
@@ -4521,77 +4556,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, { passive: true });
   }
 
-  // -------------------------------------------------------------
-  // 2. FORM TRƯỢT LỊCH SỬ THÔNG BÁO
-  // -------------------------------------------------------------
-  const historyDrawer = document.querySelector('.notification-drawer') ||
-    document.getElementById('notification-history-drawer') ||
-    document.querySelector('.history-drawer');
-
-  // Hàm hỗ trợ đóng Drawer Lịch Sử
-  function closeHistoryDrawer() {
-    if (typeof closeNotificationHistory === 'function') {
-      closeNotificationHistory();
-    } else if (historyDrawer) {
-      historyDrawer.classList.remove('open', 'active', 'show');
-      historyDrawer.style.display = 'none';
-    }
-  }
-
-  if (historyDrawer) {
-    // a. Mobile: Vuốt sang phải để đóng form lịch sử
-    let drawerStartX = 0;
-    let drawerStartY = 0;
-
-    historyDrawer.addEventListener('touchstart', (e) => {
-      drawerStartX = e.touches[0].clientX;
-      drawerStartY = e.touches[0].clientY;
-    }, { passive: true });
-
-    historyDrawer.addEventListener('touchend', (e) => {
-      const drawerEndX = e.changedTouches[0].clientX;
-      const drawerEndY = e.changedTouches[0].clientY;
-      const diffX = drawerEndX - drawerStartX;
-      const diffY = drawerEndY - drawerStartY;
-
-      // Nếu vuốt sang phải > 50px
-      if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY)) {
-        closeHistoryDrawer();
-      }
-    }, { passive: true });
-  }
-
   await fetchDataFromSupabase();
   render();
-  handleRouteChange(); // <--- Đổi từ handleHashChange() sang handleRouteChange()
+  handleRouteChange();
   updateHeaderDate();
   initNotificationUI();
 });
 
 // --- CHẶN TỰ ĐỘNG SUBMIT FORM KHI ẤN ENTER TRÊN TOÀN HỆ THỐNG ---
 document.addEventListener('keydown', function (e) {
-  if (e.key === 'Enter' || e.key === 'Esc') {
-    // 1. Vẫn cho phép ấn Enter để đăng nhập nhanh ở màn hình Login
-    if (document.getElementById('login-container')) return;
-
-    // 2. Vẫn cho phép ấn Enter để xuống dòng khi đang viết Ghi chú (Textarea)
-    if (e.target.tagName === 'TEXTAREA') return;
-
-    // 3. Chặn đứng hành vi tự động Submit (Lưu phiếu/Xuất Excel) khi ấn Enter ở các ô Input/Select
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
-      // Lưu ý: Các ô nhập liệu ở phần "Danh mục sản phẩm" (Lưới chi tiết) đã có hàm handleLineItemKeyDown 
-      // xử lý riêng việc nhảy dòng/chuyển ô nên sẽ không bị ảnh hưởng bởi lệnh chặn form này.
-      e.preventDefault();
+  // 1. Thao tác bấm ESC để đóng Form Thông báo / Form Lịch sử
+  if (e.key === 'Escape' || e.key === 'Esc') {
+    const dropdown = document.getElementById('notif-dropdown');
+    if (dropdown && dropdown.classList.contains('open')) {
+      dropdown.classList.remove('open');
     }
 
-    // Kiểm tra nếu Drawer Lịch Sử đang mở thì tiến hành đóng
-    if (historyDrawer && (
-      historyDrawer.classList.contains('open') ||
-      historyDrawer.classList.contains('active') ||
-      historyDrawer.style.display === 'block' ||
-      historyDrawer.style.display === 'flex'
-    )) {
-      closeHistoryDrawer();
+    if (typeof closeNotificationHistory === 'function') {
+      closeNotificationHistory();
+    }
+    return;
+  }
+
+  // 2. Chặn tự động Submit Form khi bấm Enter trên các ô input/select
+  if (e.key === 'Enter') {
+    if (document.getElementById('login-container')) return;
+    if (e.target.tagName === 'TEXTAREA') return;
+
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+      e.preventDefault();
     }
   }
 });
