@@ -709,6 +709,8 @@ function removeLineItem(lineId) {
 }
 
 async function saveForm(module) {
+  const session = getAuthSession();
+  const currentUserId = session.currentUser ? (session.currentUser.id) : 'Hệ Thống';
   if (!checkModulePermission(module)) {
     alert('Tài khoản của bạn chỉ có quyền xem, không thể thực hiện thao tác lưu!');
     return;
@@ -746,8 +748,6 @@ async function saveForm(module) {
 
   let rawData = JSON.parse(JSON.stringify(state.formData));
 
-  const session = getAuthSession();
-  const currentUserId = session.currentUser ? (session.currentUser.id) : 'Hệ Thống';
   const currentDate = getTodayDateStr();
   const currentTime = getCurrentTimeStr();
 
@@ -871,9 +871,6 @@ async function saveForm(module) {
       const { error } = await supabaseClient.from(tableName).insert([supabasePayload]);
       if (error) throw error;
       db[targetKey].unshift(dbPayload);
-
-      const session = getAuthSession();
-      const currentUserFullname = session.currentUser ? (session.currentUser.fullname || session.currentUser.username) : 'Hệ thống';
 
       // --- BỔ SUNG: KÍCH HOẠT THÔNG BÁO KHI THÊM MỚI BÁO GIÁ ---
       if (module === 'quotations') {
@@ -4338,9 +4335,14 @@ function renderNotificationHistoryContent() {
 function handleNotificationClick(notifId, targetView, itemId) {
   markNotifIdAsRead(notifId);
 
+  // Đóng Popup nhỏ
   const dropdown = document.getElementById('notif-dropdown');
   if (dropdown) dropdown.classList.remove('open');
 
+  // Đóng Drawer Lịch sử
+  closeNotificationHistory();
+
+  // Điều hướng
   if (targetView && itemId && targetView !== 'null' && itemId !== 'null') {
     navigate(targetView, 'view', itemId);
   }
