@@ -1152,6 +1152,12 @@ div[style*="overflow: auto"],
     letter-spacing: -0.02em !important;   /* Khoảng cách chữ thu hẹp nhẹ để tránh vỡ dòng */
     white-space: nowrap !important;        /* Giữ chữ trên cùng 1 hàng */
   }
+
+  #notif-dropdown button[onclick*="openNotificationHistory"] {
+    font-size: 11px !important;            /* Thu nhỏ kích thước chữ trên mobile */
+    letter-spacing: -0.02em !important;   /* Khoảng cách chữ thu hẹp nhẹ để tránh vỡ dòng */
+    white-space: nowrap !important;        /* Giữ chữ trên cùng 1 hàng */
+  }
 }
 
 /* Đồng nhất kích thước Nút Ngôi Nhà & Nút Chuông Thông Báo */
