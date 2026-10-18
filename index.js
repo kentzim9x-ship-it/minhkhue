@@ -3,7 +3,8 @@
 // ==========================================
 const SUPABASE_URL = 'https://your-supabase-url.supabase.co';
 const SUPABASE_ANON_KEY = 'your-anon-key';
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+// Đổi tên biến 'supabase' thành 'supabaseClient' để tránh đụng độ tên với CDN
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 // ==========================================
 // 2. TRẠNG THÁI ỨNG DỤNG (GLOBAL STATE & DB)
