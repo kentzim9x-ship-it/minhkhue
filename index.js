@@ -4082,20 +4082,22 @@ function initNotificationUI() {
     } else {
       bellBtn = document.createElement('button');
       bellBtn.id = 'notif-bell-btn';
-      bellBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
       headerRight.appendChild(bellBtn);
     }
   }
 
-  // Gán class đồng nhất kích thước với nút Ngôi nhà
+  // 1. Đồng nhất class kích thước
   bellBtn.className = 'header-icon-btn notif-bell-btn';
 
-  if (!document.getElementById('notif-badge-dot')) {
-    const dot = document.createElement('div');
-    dot.id = 'notif-badge-dot';
-    dot.className = 'notif-badge-dot';
-    bellBtn.appendChild(dot);
-  }
+  // 2. Gán lại SVG Chuông chuẩn (SẠCH, KHÔNG CÓ CHẤM ĐỎ VẼ SẴN)
+  // Loại bỏ các thẻ span/div chấm đỏ tĩnh cũ trong nút (nếu có)
+  bellBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+
+  // 3. Tạo duy nhất 1 thẻ chấm đỏ động do JavaScript kiểm soát
+  const dot = document.createElement('div');
+  dot.id = 'notif-badge-dot';
+  dot.className = 'notif-badge-dot';
+  bellBtn.appendChild(dot);
 
   if (!document.getElementById('notif-dropdown')) {
     const dropdown = document.createElement('div');
