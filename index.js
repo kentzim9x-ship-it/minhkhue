@@ -14,6 +14,37 @@ function getAuthSession() {
   return saved ? JSON.parse(saved) : { isLoggedIn: false, currentUser: null, remember: false };
 }
 
+// Hàm kiểm tra quyền thao tác (thêm mới, sửa, xóa) dựa theo tài khoản đăng nhập
+function checkModulePermission(module) {
+  const session = getAuthSession();
+  const user = session.currentUser || {};
+
+  // Tổng quan và 2 báo cáo chỉ có xem -> không có quyền Thêm/Sửa/Xóa
+  if (['dashboard', 'report-inventory', 'report-sales'].includes(module)) {
+    return false;
+  }
+
+  const permissionMap = {
+    'materials': ['material_yn', 'materials_yn', 'material'],
+    'customers': ['customers_yn', 'customer_yn', 'customers'],
+    'warehouses': ['warehouses_yn', 'warehouse_yn', 'warehouses'],
+    'quotations': ['quotations_yn', 'quotation_yn', 'quotations'],
+    'sales-orders': ['order_yn', 'sales_orders_yn', 'orders_yn', 'sales_orders'],
+    'returns': ['return_yn', 'returns_yn', 'returns'],
+    'grn': ['grn_yn', 'grns_yn', 'grn']
+  };
+
+  const keys = permissionMap[module] || [];
+  for (const key of keys) {
+    if (user[key] !== undefined && user[key] !== null) {
+      return user[key] === true || user[key] === 'true' || user[key] === 1 || user[key] === '1';
+    }
+  }
+
+  // Nếu không khai báo riêng hoặc không tìm thấy cột thì mặc định không được Thêm/Sửa/Xóa
+  return false;
+}
+
 function getTodayDateStr() {
   const d = new Date();
   const year = d.getFullYear();
@@ -50,8 +81,7 @@ let db = {
   quotations: [],
   orders: [],
   returns: [],
-  grns: [],
-  inventory: []
+  grns: []
 };
 
 function sortDescById(a, b) {
@@ -339,6 +369,12 @@ const viewMeta = {
 };
 
 function navigate(view, mode = 'list', itemId = null) {
+  // Kiểm tra quyền truy cập chế độ Thêm mới / Chỉnh sửa
+  if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
+    alert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!');
+    mode = 'list';
+  }
+
   state.view = view;
   state.mode = mode;
   state.filter = 'all';
@@ -388,10 +424,15 @@ function handleHashChange() {
 
   const parts = hash.split('/');
   const view = parts[0];
-  const mode = parts[1] || 'list';
+  let mode = parts[1] || 'list';
   const itemId = parts[2] || null;
 
   if (viewMeta[view]) {
+    if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
+      alert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!');
+      mode = 'list';
+    }
+
     state.view = view;
     state.mode = mode;
     state.filter = 'all';
@@ -587,6 +628,11 @@ function removeLineItem(lineId) {
 }
 
 async function saveForm(module) {
+  if (!checkModulePermission(module)) {
+    alert('Tài khoản của bạn chỉ có quyền xem, không thể thực hiện thao tác lưu!');
+    return;
+  }
+
   if (['quotations', 'sales-orders', 'returns', 'grn'].includes(module)) {
     const lineItems = state.formData?.lineItems || [];
     for (let i = 0; i < lineItems.length; i++) {
@@ -764,6 +810,11 @@ async function saveForm(module) {
 }
 
 async function deleteItem(module, id) {
+  if (!checkModulePermission(module)) {
+    alert('Tài khoản của bạn chỉ có quyền xem, không được phép xóa!');
+    return;
+  }
+
   if (confirm(`Bạn có chắc chắn muốn xóa phiếu ${id}?`)) {
     const tableMap = {
       'materials': 'materials',
@@ -883,7 +934,7 @@ async function handleLogin(e) {
     if (error) throw error;
 
     if (data && data.length > 0) {
-      const foundUser = data[0]; // Chứa id, username, fullname, role, created_at
+      const foundUser = data[0]; // Chứa id, username, fullname, role, các cột _yn...
       const session = { isLoggedIn: true, currentUser: foundUser, remember };
       localStorage.setItem('app_session', JSON.stringify(session));
 
@@ -1222,6 +1273,8 @@ function renderDashboard(c) {
 }
 
 function renderMaterialsList(c) {
+  const hasPermission = checkModulePermission('materials');
+
   const filtered = db.materials.filter(m => {
     if (state.filter !== 'all' && m.status !== state.filter) return false;
     if (state.search && !m.name.toLowerCase().includes(state.search.toLowerCase()) && !m.id.toLowerCase().includes(state.search.toLowerCase())) return false;
@@ -1245,7 +1298,7 @@ function renderMaterialsList(c) {
   ].map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tồn Kho Ban Đầu' || h === 'Đơn Giá' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`).join('');
 
   const rowsHtml = filtered.map(m => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', 'view', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
       <td style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
@@ -1256,8 +1309,8 @@ function renderMaterialsList(c) {
       <td style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'CÒN HÀNG' : m.status.toUpperCase()}</span></td>
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
         <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>
-        <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>
-        <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>
+        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : ''}
+        ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''}
       </td>
     </tr>
   `).join('');
@@ -1276,7 +1329,7 @@ function renderMaterialsList(c) {
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã, tên hàng..." value="${state.search}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
-          <button class="btn-primary" onclick="navigate('materials', 'add')">${Icons.plus} Thêm Mới Hàng Hóa</button>
+          ${hasPermission ? `<button class="btn-primary" onclick="navigate('materials', 'add')">${Icons.plus} Thêm Mới Hàng Hóa</button>` : ''}
         </div>
       </div>     
 
@@ -1298,6 +1351,8 @@ function renderMaterialsList(c) {
 }
 
 function renderCustomersList(c) {
+  const hasPermission = checkModulePermission('customers');
+
   const filtered = db.customers.filter(c => {
     // 1. Kiểm tra điều kiện lọc theo trạng thái (Filter)
     const matchStatus = (state.filter === 'all' || c.status === state.filter);
@@ -1338,7 +1393,7 @@ function renderCustomersList(c) {
   `).join('');
 
   const rowsHtml = filtered.map(c => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('customers', 'view', '${c.id}')" onclick="navigate('customers', 'view', '${c.id}')">
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('customers', '${hasPermission ? 'edit' : 'view'}', '${c.id}')" onclick="navigate('customers', 'view', '${c.id}')">
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); text-align: left;">${c.id || '—'}</td>
       <td style="padding: 11px 16px; font-size: 13px; font-weight: 500; text-align: left;">${c.name || '—'}</td>
       <td style="padding: 11px 16px; font-size: 13px; text-align: left;">${c.contact || '—'}</td>
@@ -1348,8 +1403,8 @@ function renderCustomersList(c) {
       <td style="padding: 11px 16px; text-align: left;"><span class="badge ${getBadgeClass(c.status)}">${c.status === 'active' ? 'hoạt động' : (c.status === 'suspended' ? 'tạm khóa' : (c.status || 'hoạt động'))}</span></td>
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
         <button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'view', '${c.id}')">${Icons.view} Xem</button>
-        <button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'edit', '${c.id}')">${Icons.edit} Sửa</button>
-        <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('customers', '${c.id}')">${Icons.trash} Xóa</button>
+        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'edit', '${c.id}')">${Icons.edit} Sửa</button>` : ''}
+        ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('customers', '${c.id}')">${Icons.trash} Xóa</button>` : ''}
       </td>
     </tr>
   `).join('');
@@ -1368,7 +1423,7 @@ function renderCustomersList(c) {
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã, tên, liên hệ, địa chỉ..." value="${state.search}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
-          <button class="btn-primary" onclick="navigate('customers', 'add')">${Icons.plus} Thêm Mới Khách Hàng</button>
+          ${hasPermission ? `<button class="btn-primary" onclick="navigate('customers', 'add')">${Icons.plus} Thêm Mới Khách Hàng</button>` : ''}
         </div>
       </div>     
 
@@ -1390,11 +1445,13 @@ function renderCustomersList(c) {
 }
 
 function renderWarehousesList(c) {
+  const hasPermission = checkModulePermission('warehouses');
+
   const cardsHtml = db.warehouses.map(w => {
     const pct = Math.round((w.used / w.capacity) * 100);
     const barColor = pct > 90 ? '#f87171' : pct > 75 ? '#fbbf24' : 'var(--primary)';
     return `
-      <div style="border: 1px solid var(--border); background: var(--card); position: relative; cursor: pointer;" ondblclick="navigate('warehouses', 'view', '${w.id}')" onclick="navigate('warehouses', 'view', '${w.id}')">
+      <div style="border: 1px solid var(--border); background: var(--card); position: relative; cursor: pointer;" ondblclick="navigate('warehouses', '${hasPermission ? 'edit' : 'view'}', '${w.id}')" onclick="navigate('warehouses', 'view', '${w.id}')">
         <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 10px;">
             <span style="color: var(--primary); font-family: var(--font-dm-mono); font-size: 14px; font-weight: 500;">${w.code || w.id}</span>
@@ -1415,8 +1472,8 @@ function renderWarehousesList(c) {
         </div>
         <div style="padding: 10px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;">
           <button class="btn-action" onclick="event.stopPropagation(); navigate('warehouses', 'view', '${w.id}')">${Icons.view} Xem</button>
-          <button class="btn-action" onclick="event.stopPropagation(); navigate('warehouses', 'edit', '${w.id}')">${Icons.edit} Sửa</button>
-          <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('warehouses', '${w.id}')">${Icons.trash} Xóa</button>
+          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('warehouses', 'edit', '${w.id}')">${Icons.edit} Sửa</button>` : ''}
+          ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('warehouses', '${w.id}')">${Icons.trash} Xóa</button>` : ''}
         </div>
       </div>
     `;
@@ -1425,7 +1482,7 @@ function renderWarehousesList(c) {
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
       <div style="display: flex; justify-content: flex-end;">
-        <button class="btn-primary" onclick="navigate('warehouses', 'add')">${Icons.plus} Thêm Mới Kho</button>
+        ${hasPermission ? `<button class="btn-primary" onclick="navigate('warehouses', 'add')">${Icons.plus} Thêm Mới Kho</button>` : ''}
       </div>
       <div class="grid-2">
         ${cardsHtml}
@@ -1435,6 +1492,8 @@ function renderWarehousesList(c) {
 }
 
 function renderQuotationsList(c) {
+  const hasPermission = checkModulePermission('quotations');
+
   const filtered = db.quotations.filter(q => {
     const matchStatus = (state.filter === 'all' || q.status === state.filter);
 
@@ -1472,7 +1531,7 @@ function renderQuotationsList(c) {
     .join('');
 
   const rowsHtml = filtered.map(q => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('quotations', 'view', '${q.id}')" onclick="navigate('quotations', 'view', '${q.id}')">
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('quotations', '${hasPermission ? 'edit' : 'view'}', '${q.id}')" onclick="navigate('quotations', 'view', '${q.id}')">
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${q.id}</td>
       <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${q.customer}</td>
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.date || '—'}</td>
@@ -1483,8 +1542,8 @@ function renderQuotationsList(c) {
       <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(q.status)}">${getStatusLabel(q.status)}</span></td>
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
         <button class="btn-action" onclick="event.stopPropagation(); navigate('quotations', 'view', '${q.id}')">${Icons.view} Xem</button>
-        <button class="btn-action" onclick="event.stopPropagation(); navigate('quotations', 'edit', '${q.id}')">${Icons.edit} Sửa</button>
-        <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('quotations', '${q.id}')">${Icons.trash} Xóa</button>
+        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('quotations', 'edit', '${q.id}')">${Icons.edit} Sửa</button>` : ''}
+        ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('quotations', '${q.id}')">${Icons.trash} Xóa</button>` : ''}
       </td>
     </tr>
   `).join('');
@@ -1503,7 +1562,7 @@ function renderQuotationsList(c) {
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã, tên khách hàng..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
-          <button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Tạo Báo Giá Mới</button>
+          ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Tạo Báo Giá Mới</button>` : ''}
         </div>
       </div>
 
@@ -1525,6 +1584,8 @@ function renderQuotationsList(c) {
 }
 
 function renderOrdersList(c) {
+  const hasPermission = checkModulePermission('sales-orders');
+
   const filtered = db.orders.filter(o => {
     const matchStatus = (state.filter === 'all' || o.status === state.filter);
 
@@ -1559,7 +1620,7 @@ function renderOrdersList(c) {
     .join('');
 
   const rowsHtml = filtered.map(o => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', 'view', '${o.id}')" onclick="navigate('sales-orders', 'view', '${o.id}')">
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', '${hasPermission ? 'edit' : 'view'}', '${o.id}')" onclick="navigate('sales-orders', 'view', '${o.id}')">
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${o.id}</td>
       <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${o.customer}</td>
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${o.date}</td>
@@ -1569,8 +1630,8 @@ function renderOrdersList(c) {
       <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(o.status)}">${getStatusLabel(o.status)}</span></td>
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
         <button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'view', '${o.id}')">${Icons.view} Xem</button>
-        <button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'edit', '${o.id}')">${Icons.edit} Sửa</button>
-        <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('sales-orders', '${o.id}')">${Icons.trash} Xóa</button>
+        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'edit', '${o.id}')">${Icons.edit} Sửa</button>` : ''}
+        ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('sales-orders', '${o.id}')">${Icons.trash} Xóa</button>` : ''}
       </td>
     </tr>
   `).join('');
@@ -1589,7 +1650,7 @@ function renderOrdersList(c) {
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã, tên khách hàng..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
-          <button class="btn-primary" onclick="navigate('sales-orders', 'add')">${Icons.plus} Tạo Đơn Hàng Mới</button>
+          ${hasPermission ? `<button class="btn-primary" onclick="navigate('sales-orders', 'add')">${Icons.plus} Tạo Đơn Hàng Mới</button>` : ''}
         </div>
       </div>
 
@@ -1611,6 +1672,8 @@ function renderOrdersList(c) {
 }
 
 function renderReturnsList(c) {
+  const hasPermission = checkModulePermission('returns');
+
   const filtered = db.returns.filter(r => {
     const matchStatus = (state.filter === 'all' || r.status === state.filter);
     const searchKey = (state.search || '').trim().toLowerCase();
@@ -1648,7 +1711,7 @@ function renderReturnsList(c) {
   const rowsHtml = filtered.map(r => {
     const totalLines = (r.lineItems || r.lineitems || []).length;
     return `
-      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('returns', 'view', '${r.id}')" onclick="navigate('returns', 'view', '${r.id}')">
+      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('returns', '${hasPermission ? 'edit' : 'view'}', '${r.id}')" onclick="navigate('returns', 'view', '${r.id}')">
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${r.id}</td>
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${r.orderId || '—'}</td>
         <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${r.customer}</td>
@@ -1659,8 +1722,8 @@ function renderReturnsList(c) {
         <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(r.status)}">${getStatusLabel(r.status)}</span></td>
         <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
           <button class="btn-action" onclick="event.stopPropagation(); navigate('returns', 'view', '${r.id}')">${Icons.view} Xem</button>
-          <button class="btn-action" onclick="event.stopPropagation(); navigate('returns', 'edit', '${r.id}')">${Icons.edit} Sửa</button>
-          <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('returns', '${r.id}')">${Icons.trash} Xóa</button>
+          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('returns', 'edit', '${r.id}')">${Icons.edit} Sửa</button>` : ''}
+          ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('returns', '${r.id}')">${Icons.trash} Xóa</button>` : ''}
         </td>
       </tr>
     `;
@@ -1680,7 +1743,7 @@ function renderReturnsList(c) {
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã, khách hàng, lý do..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
-          <button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Tạo Phiếu Đổi Trả</button>
+          ${hasPermission ? `<button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Tạo Phiếu Đổi Trả</button>` : ''}
         </div>
       </div>
 
@@ -1702,6 +1765,8 @@ function renderReturnsList(c) {
 }
 
 function renderGRNList(c) {
+  const hasPermission = checkModulePermission('grn');
+
   const filtered = db.grns.filter(g => {
     const matchStatus = (state.filter === 'all' || g.status === state.filter);
     const searchKey = (state.search || '').trim().toLowerCase();
@@ -1737,7 +1802,7 @@ function renderGRNList(c) {
     const totalLines = (g.lineItems || []).length;
     const wCode = g.warehouseCode || g.warehouse_code || '—';
     return `
-      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('grn', 'view', '${g.id}')" onclick="navigate('grn', 'view', '${g.id}')">
+      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('grn', '${hasPermission ? 'edit' : 'view'}', '${g.id}')" onclick="navigate('grn', 'view', '${g.id}')">
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${g.id}</td>
         <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${g.supplier || '—'}</td>      
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${g.date}</td>
@@ -1747,8 +1812,8 @@ function renderGRNList(c) {
         <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(g.status)}">${getStatusLabel(g.status)}</span></td>
         <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
           <button class="btn-action" onclick="event.stopPropagation(); navigate('grn', 'view', '${g.id}')">${Icons.view} Xem</button>
-          <button class="btn-action" onclick="event.stopPropagation(); navigate('grn', 'edit', '${g.id}')">${Icons.edit} Sửa</button>
-          <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('grn', '${g.id}')">${Icons.trash} Xóa</button>
+          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('grn', 'edit', '${g.id}')">${Icons.edit} Sửa</button>` : ''}
+          ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('grn', '${g.id}')">${Icons.trash} Xóa</button>` : ''}
         </td>
       </tr>
     `;
@@ -1768,7 +1833,7 @@ function renderGRNList(c) {
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã phiếu, nhà cung cấp..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
-          <button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Nhập Kho Mới</button>
+          ${hasPermission ? `<button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Nhập Kho Mới</button>` : ''}
         </div>
       </div>
 
@@ -3218,6 +3283,7 @@ function renderGRNForm(c) {
 function renderReportInventory(c) {
   const materials = db.materials;
   const filtered = materials.filter(m => state.filter === 'all' || m.category === state.filter);
+  const hasPermission = checkModulePermission('materials');
 
   const getActualStock = (m) => {
     const invList = (db.inventory || []).filter(i => i.sku === m.id || i.material_id === m.id);
@@ -3277,7 +3343,7 @@ function renderReportInventory(c) {
     const coTheBan = tonThucTe - tamGiu;
 
     return `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', 'edit', '${m.id}')" onclick="navigate('materials', 'edit', '${m.id}')">
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
       <td style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
@@ -3291,8 +3357,8 @@ function renderReportInventory(c) {
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
       <td style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'Đủ hàng' : m.status}</span></td>
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-        <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>
-        <button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>
+        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>`}
+        ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''}
       </td>
     </tr>
   `;
