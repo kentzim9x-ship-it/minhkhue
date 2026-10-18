@@ -872,6 +872,9 @@ async function saveForm(module) {
       if (error) throw error;
       db[targetKey].unshift(dbPayload);
 
+      const session = getAuthSession();
+      const currentUserFullname = session.currentUser ? (session.currentUser.fullname || session.currentUser.username) : 'Hệ thống';
+
       // --- BỔ SUNG: KÍCH HOẠT THÔNG BÁO KHI THÊM MỚI BÁO GIÁ ---
       if (module === 'quotations') {
         addNotification(
@@ -4117,12 +4120,44 @@ function initNotificationUI() {
   subscribeRealtimeNotifications();
 }
 
+// --- HÀM HỖ TRỢ XỬ LÝ NGÀY THÁNG ---
+function isWithinDays(dateStr, days) {
+  if (!dateStr) return false;
+  const itemDate = new Date(dateStr);
+  if (isNaN(itemDate.getTime())) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const diffTime = today.getTime() - itemDate.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays >= 0 && diffDays < days;
+}
+
+function getDayLabel(dateStr) {
+  if (!dateStr) return 'Khác';
+  const itemDate = new Date(dateStr);
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+  const targetDate = new Date(dateStr);
+  targetDate.setHours(0, 0, 0, 0);
+
+  const diffTime = today.getTime() - targetDate.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Hôm nay';
+  if (diffDays === 1) return 'Hôm qua';
+  return fmtDateStr(dateStr); // Trả về định dạng DD/MM/YYYY
+}
+
 function updateNotificationUI() {
-  const list = db.notifications || [];
+  const allList = db.notifications || [];
+  // Lọc lấy danh sách thông báo trong 2 ngày gần đây (0 = Hôm nay, 1 = Hôm qua)
+  const recentList = allList.filter(n => isWithinDays(n.date || n.created_at, 2));
   const readIds = getReadNotifIds();
 
-  // Chỉ coi là có chưa đọc khi mảng > 0 và có id chưa nằm trong danh sách đã đọc
-  const hasUnread = list.length > 0 && list.some(n => !readIds.includes(n.id));
+  const hasUnread = recentList.length > 0 && recentList.some(n => !readIds.includes(n.id));
 
   const bellBtn = document.getElementById('notif-bell-btn');
   const dot = document.getElementById('notif-badge-dot');
@@ -4146,22 +4181,20 @@ function renderNotificationList() {
   const dropdown = document.getElementById('notif-dropdown');
   if (!dropdown) return;
 
-  const list = db.notifications || [];
+  const allList = db.notifications || [];
+  // Chỉ lấy thông báo trong 2 ngày gần nhất
+  const recentList = allList.filter(n => isWithinDays(n.date || n.created_at, 2));
   const readIds = getReadNotifIds();
 
   let itemsHtml = '';
-  if (list.length === 0) {
-    itemsHtml = `<div style="padding: 32px; text-align: center; color: var(--muted-foreground, #8a94a6); font-size: 13px; font-family: var(--font-dm-mono);">Không có thông báo mới</div>`;
+  if (recentList.length === 0) {
+    itemsHtml = `<div style="padding: 32px; text-align: center; color: var(--muted-foreground, #8a94a6); font-size: 13px; font-family: var(--font-dm-mono);">Không có thông báo trong 2 ngày gần đây</div>`;
   } else {
-    itemsHtml = list.map(item => {
+    itemsHtml = recentList.map(item => {
       const isRead = readIds.includes(item.id);
-
-      // Định dạng ngày dạng DD/MM/YYYY
       const formattedDate = fmtDateStr(item.date || item.created_at);
       const timeStr = item.time ? item.time.substring(0, 5) : '';
       const fullTimeDisplay = `${formattedDate} ${timeStr}`.trim();
-
-      // Lấy thông tin người tạo/sửa
       const actorDisplay = item.actor || item.user_fullname || 'Hệ thống';
 
       return `
@@ -4182,11 +4215,122 @@ function renderNotificationList() {
 
   dropdown.innerHTML = `
     <div style="padding: 14px 18px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
-      <span style="font-family: var(--font-dm-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">TRUNG TÂM THÔNG BÁO</span>
-      ${list.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; cursor: pointer; text-transform: uppercase; font-weight: 500;">Đánh dấu đã đọc</button>` : ''}
+      <span style="font-family: var(--font-dm-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">THÔNG BÁO GẦN ĐÂY (2 NGÀY)</span>
+      ${recentList.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; cursor: pointer; text-transform: uppercase; font-weight: 500;">Đã đọc hết</button>` : ''}
     </div>
-    <div style="overflow-y: auto; max-height: 420px;">
+    <div style="overflow-y: auto; max-height: 380px;">
       ${itemsHtml}
+    </div>
+    <div style="padding: 10px; border-top: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--card, #141821); text-align: center;">
+      <button onclick="openNotificationHistory()" style="width: 100%; padding: 8px; background: rgba(240, 160, 48, 0.12); border: 1px solid rgba(240, 160, 48, 0.3); border-radius: 6px; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(240, 160, 48, 0.25)'" onmouseout="this.style.background='rgba(240, 160, 48, 0.12)'">
+        Xem lịch sử thông báo ➔
+      </button>
+    </div>
+  `;
+}
+
+function initNotificationHistoryDrawer() {
+  if (document.getElementById('notif-history-drawer')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'notif-history-overlay';
+  overlay.className = 'notif-history-overlay';
+  overlay.onclick = closeNotificationHistory;
+
+  const drawer = document.createElement('div');
+  drawer.id = 'notif-history-drawer';
+  drawer.className = 'notif-history-drawer';
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(drawer);
+}
+
+// Mở Tab Lịch sử thông báo (Trượt từ bên phải)
+function openNotificationHistory() {
+  initNotificationHistoryDrawer();
+
+  // Đóng dropdown nhỏ nếu đang mở
+  const dropdown = document.getElementById('notif-dropdown');
+  if (dropdown) dropdown.classList.remove('open');
+
+  const drawer = document.getElementById('notif-history-drawer');
+  const overlay = document.getElementById('notif-history-overlay');
+
+  renderNotificationHistoryContent();
+
+  drawer.classList.add('open');
+  overlay.classList.add('active');
+}
+
+function closeNotificationHistory() {
+  const drawer = document.getElementById('notif-history-drawer');
+  const overlay = document.getElementById('notif-history-overlay');
+  if (drawer) drawer.classList.remove('open');
+  if (overlay) overlay.classList.remove('active');
+}
+
+// Render toàn bộ thông báo trong 1 tháng (Gom nhóm theo ngày)
+function renderNotificationHistoryContent() {
+  const drawer = document.getElementById('notif-history-drawer');
+  if (!drawer) return;
+
+  const allList = db.notifications || [];
+  // Lọc lấy thông báo trong vòng 30 ngày gần đây
+  const monthlyList = allList.filter(n => isWithinDays(n.date || n.created_at, 30));
+  const readIds = getReadNotifIds();
+
+  // Gom nhóm thông báo theo ngày (Group by Date)
+  const grouped = {};
+  monthlyList.forEach(item => {
+    const label = getDayLabel(item.date || item.created_at);
+    if (!grouped[label]) grouped[label] = [];
+    grouped[label].push(item);
+  });
+
+  let historyHtml = '';
+  const groupKeys = Object.keys(grouped);
+
+  if (groupKeys.length === 0) {
+    historyHtml = `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-size: 13px; font-family: var(--font-dm-mono);">Không có lịch sử thông báo trong 30 ngày qua</div>`;
+  } else {
+    groupKeys.forEach(dateLabel => {
+      const items = grouped[dateLabel];
+      historyHtml += `<div class="notif-date-group-title">${dateLabel} (${items.length})</div>`;
+
+      items.forEach(item => {
+        const isRead = readIds.includes(item.id);
+        const timeStr = item.time ? item.time.substring(0, 5) : '';
+        const actorDisplay = item.actor || item.user_fullname || 'Hệ thống';
+
+        historyHtml += `
+          <div class="notif-item ${isRead ? '' : 'unread'}" style="padding: 14px 18px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.06)); cursor: pointer;" onclick="handleNotificationClick('${item.id}', '${item.targetview}', '${item.itemid}')">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 4px;">
+              <span style="font-size: 13.5px; font-weight: 600; color: #ffffff;">${item.title}</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); white-space: nowrap;">${timeStr}</span>
+            </div>
+            <div style="font-size: 12.5px; color: var(--foreground, #e2e8f0); line-height: 1.4;">${item.detail}</div>
+            <div style="font-size: 11px; color: #f0a030; font-family: var(--font-dm-mono); margin-top: 6px; display: flex; align-items: center; gap: 4px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Thực hiện: <strong>${actorDisplay}</strong></span>
+            </div>
+          </div>
+        `;
+      });
+    });
+  }
+
+  drawer.innerHTML = `
+    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-family: var(--font-dm-mono); font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">LỊCH SỬ THÔNG BÁO</span>
+      </div>
+      <button onclick="closeNotificationHistory()" style="background: none; border: none; color: var(--muted-foreground); cursor: pointer; padding: 4px; display: flex; align-items: center;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--muted-foreground)'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div style="flex: 1; overflow-y: auto;">
+      ${historyHtml}
     </div>
   `;
 }
