@@ -1284,23 +1284,19 @@ function getSalesAnalyticsData() {
 
   const topCustomersReal = Object.values(customerMap).sort((a, b) => b.revenue - a.revenue);
 
-  const recentActivityReal = [];
-  (db.grns || []).slice(0, 2).forEach(g => {
-    recentActivityReal.push({
-      time: g.time0 ? g.time0.substring(0, 5) : 'Hôm nay',
-      event: 'Nhập kho',
-      detail: `${g.id} — ${g.supplier || 'Nhà cung cấp'}`,
-      type: 'in'
-    });
-  });
+  // --- LẤY HOẠT ĐỘNG MỚI NHẤT TỪ THÔNG BÁO VÀ CHUẨN HÓA NGÀY THÁNG GIỜ PHÚT ---
+  const notifList = db.notifications || [];
+  const recentActivityReal = notifList.slice(0, 6).map(n => {
+    const formattedDate = fmtDateStr(n.date || n.created_at);
+    const timeStr = n.time ? n.time.substring(0, 5) : '';
+    const fullDateTime = `${formattedDate} ${timeStr}`.trim();
 
-  (db.orders || []).slice(0, 2).forEach(o => {
-    recentActivityReal.push({
-      time: o.time0 ? o.time0.substring(0, 5) : 'Hôm nay',
-      event: 'Đơn bán hàng',
-      detail: `${o.id} → ${o.customer || 'Khách hàng'}`,
-      type: 'out'
-    });
+    return {
+      time: fullDateTime || '—',
+      event: n.title || 'Thông báo',
+      detail: n.detail || '',
+      actor: n.actor || n.user_fullname || ''
+    };
   });
 
   return {
@@ -1329,9 +1325,13 @@ function renderDashboard(c) {
   const completionRate = totalOrdersCount > 0 ? ((completedOrdersCount / totalOrdersCount) * 100).toFixed(1) : '100.0';
 
   const activityHtml = recentActivityReal.map(a => `
-    <div style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start;">
-      <div style="font-size: 13px; font-weight: 500; flex: 1;"><div>${a.event}</div><div style="font-size: 12px; color: var(--muted-foreground);">${a.detail}</div></div>
-      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${a.time}</span>
+    <div style="padding: 12px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; justify-content: space-between;">
+      <div style="font-size: 13px; font-weight: 500; flex: 1;">
+        <div style="color: var(--foreground); font-weight: 600;">${a.event}</div>
+        <div style="font-size: 12px; color: var(--muted-foreground); margin-top: 2px;">${a.detail}</div>
+        ${a.actor ? `<div style="font-size: 11px; color: #f0a030; font-family: var(--font-dm-mono); margin-top: 4px;">Thực hiện: ${a.actor}</div>` : ''}
+      </div>
+      <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); white-space: nowrap; margin-left: 12px;">${a.time}</span>
     </div>
   `).join('');
 
@@ -2545,12 +2545,15 @@ function renderCustomerForm(c) {
             <div class="form-group">
               <label class="form-label">Loại khách hàng</label>
               <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'type\', this.value)"'}>
-                ${['B2B', 'B2C', 'Government'].map(t => `<option value="${t}" ${d.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                ${['Khách vãng lai', 'Khách hàng tiềm năng', 'Khách hàng trung thành', 'Khách hàng cũ', 'Khách hàng tiêu cực'].map(t => `<option value="${t}" ${d.type === t ? 'selected' : ''}>${t}</option>`).join('')}
               </select>
             </div>
             <div class="form-group">
               <label class="form-label">Người liên hệ</label>
-              <input type="text" class="form-input" value="${d.contact || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'contact\', this.value)"'} placeholder="Tên người đại diện...">
+              <input type="text" class="form-input" value="${d.contact || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+    oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
+    onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
+  `} placeholder="Tên người đại diện...">
             </div>
             <div class="form-group">
               <label class="form-label">Email</label>
@@ -2580,7 +2583,7 @@ function renderCustomerForm(c) {
             <div class="form-group">
               <label class="form-label">Điều khoản thanh toán</label>
               <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'paymentTerms\', this.value)"'}>
-                ${['Prepaid', 'Net 15', 'Net 30', 'Net 45', 'Net 60'].map(t => `<option value="${t}" ${d.paymentTerms === t ? 'selected' : ''}>${t}</option>`).join('')}
+                ${['Thanh toán ngay', 'Thanh toán gối đầu', 'Net 15', 'Net 30', 'Net 60'].map(t => `<option value="${t}" ${d.paymentTerms === t ? 'selected' : ''}>${t}</option>`).join('')}
               </select>
             </div>
             <div class="form-group">
