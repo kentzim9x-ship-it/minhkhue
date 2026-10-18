@@ -710,7 +710,13 @@ function removeLineItem(lineId) {
 
 async function saveForm(module) {
   const session = getAuthSession();
-  const currentUserId = session.currentUser ? (session.currentUser.id) : 'Hệ Thống';
+  const currentUserId = session.currentUser ? session.currentUser.id : 'Hệ Thống';
+
+  // Khai báo chuẩn biến tên đầy đủ người dùng để truyền vào Thông báo
+  const currentUserFullname = session.currentUser
+    ? (session.currentUser.fullname || session.currentUser.username)
+    : 'Hệ Thống';
+
   if (!checkModulePermission(module)) {
     alert('Tài khoản của bạn chỉ có quyền xem, không thể thực hiện thao tác lưu!');
     return;
@@ -872,7 +878,7 @@ async function saveForm(module) {
       if (error) throw error;
       db[targetKey].unshift(dbPayload);
 
-      // --- BỔ SUNG: KÍCH HOẠT THÔNG BÁO KHI THÊM MỚI BÁO GIÁ ---
+      // KÍCH HOẠT THÔNG BÁO KHI THÊM MỚI BÁO GIÁ
       if (module === 'quotations') {
         addNotification(
           'quotation_add',
@@ -890,7 +896,7 @@ async function saveForm(module) {
       const idx = db[targetKey].findIndex(item => item.id === dbPayload.id);
       if (idx !== -1) db[targetKey][idx] = dbPayload;
 
-      // --- BỔ SUNG: KÍCH HOẠT THÔNG BÁO KHI CHỈNH SỬA BÁO GIÁ ---
+      // KÍCH HOẠT THÔNG BÁO KHI CHỈNH SỬA BÁO GIÁ
       if (module === 'quotations') {
         addNotification(
           'quotation_edit',
@@ -4481,6 +4487,80 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.addEventListener('click', () => navigate(btn.getAttribute('data-view')));
   });
 
+  // -------------------------------------------------------------
+  // 1. VUỐT SANG TRÁI ĐỂ ĐÓNG MENU (MOBILE)
+  // -------------------------------------------------------------
+  const sidebar = document.querySelector('.sidebar') || document.getElementById('sidebar');
+  if (sidebar) {
+    let startX = 0;
+    let startY = 0;
+
+    sidebar.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    sidebar.addEventListener('touchend', (e) => {
+      const endX = e.changedTouches[0].clientX;
+      const endY = e.changedTouches[0].clientY;
+      const diffX = endX - startX;
+      const diffY = endY - startY;
+
+      // Nếu vuốt sang trái > 50px và đường vuốt theo chiều ngang rõ hơn chiều dọc
+      if (diffX < -50 && Math.abs(diffX) > Math.abs(diffY)) {
+        // Đóng menu (Gọi hàm đóng sidebar/menu sẵn có trong dự án của bạn)
+        if (typeof closeSidebar === 'function') {
+          closeSidebar();
+        } else if (typeof toggleSidebar === 'function') {
+          toggleSidebar();
+        } else {
+          sidebar.classList.remove('open', 'active', 'show');
+          document.body.classList.remove('sidebar-open');
+        }
+      }
+    }, { passive: true });
+  }
+
+  // -------------------------------------------------------------
+  // 2. FORM TRƯỢT LỊCH SỬ THÔNG BÁO
+  // -------------------------------------------------------------
+  const historyDrawer = document.querySelector('.notification-drawer') ||
+    document.getElementById('notification-history-drawer') ||
+    document.querySelector('.history-drawer');
+
+  // Hàm hỗ trợ đóng Drawer Lịch Sử
+  function closeHistoryDrawer() {
+    if (typeof closeNotificationHistory === 'function') {
+      closeNotificationHistory();
+    } else if (historyDrawer) {
+      historyDrawer.classList.remove('open', 'active', 'show');
+      historyDrawer.style.display = 'none';
+    }
+  }
+
+  if (historyDrawer) {
+    // a. Mobile: Vuốt sang phải để đóng form lịch sử
+    let drawerStartX = 0;
+    let drawerStartY = 0;
+
+    historyDrawer.addEventListener('touchstart', (e) => {
+      drawerStartX = e.touches[0].clientX;
+      drawerStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    historyDrawer.addEventListener('touchend', (e) => {
+      const drawerEndX = e.changedTouches[0].clientX;
+      const drawerEndY = e.changedTouches[0].clientY;
+      const diffX = drawerEndX - drawerStartX;
+      const diffY = drawerEndY - drawerStartY;
+
+      // Nếu vuốt sang phải > 50px
+      if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+        closeHistoryDrawer();
+      }
+    }, { passive: true });
+  }
+
   await fetchDataFromSupabase();
   render();
   handleRouteChange(); // <--- Đổi từ handleHashChange() sang handleRouteChange()
@@ -4490,7 +4570,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // --- CHẶN TỰ ĐỘNG SUBMIT FORM KHI ẤN ENTER TRÊN TOÀN HỆ THỐNG ---
 document.addEventListener('keydown', function (e) {
-  if (e.key === 'Enter') {
+  if (e.key === 'Enter' || e.key === 'Esc') {
     // 1. Vẫn cho phép ấn Enter để đăng nhập nhanh ở màn hình Login
     if (document.getElementById('login-container')) return;
 
@@ -4502,6 +4582,16 @@ document.addEventListener('keydown', function (e) {
       // Lưu ý: Các ô nhập liệu ở phần "Danh mục sản phẩm" (Lưới chi tiết) đã có hàm handleLineItemKeyDown 
       // xử lý riêng việc nhảy dòng/chuyển ô nên sẽ không bị ảnh hưởng bởi lệnh chặn form này.
       e.preventDefault();
+    }
+
+    // Kiểm tra nếu Drawer Lịch Sử đang mở thì tiến hành đóng
+    if (historyDrawer && (
+      historyDrawer.classList.contains('open') ||
+      historyDrawer.classList.contains('active') ||
+      historyDrawer.style.display === 'block' ||
+      historyDrawer.style.display === 'flex'
+    )) {
+      closeHistoryDrawer();
     }
   }
 });
