@@ -879,7 +879,8 @@ async function saveForm(module) {
           'Báo Giá Mới Đã Tạo',
           `Đã tạo thành công báo giá ${dbPayload.id} cho KH: ${dbPayload.customer || 'Khách hàng'}`,
           'quotations',
-          dbPayload.id
+          dbPayload.id,
+          currentUserFullname
         );
       }
 
@@ -896,7 +897,8 @@ async function saveForm(module) {
           'Cập Nhật Báo Giá',
           `Báo giá ${dbPayload.id} (${dbPayload.customer || 'Khách hàng'}) đã được cập nhật`,
           'quotations',
-          dbPayload.id
+          dbPayload.id,
+          currentUserFullname
         );
       }
     }
@@ -4021,12 +4023,19 @@ async function fetchNotificationsFromSupabase() {
 }
 
 // Hàm đẩy thông báo lên Supabase (Tất cả trình duyệt khác sẽ nhận được ngay)
-async function addNotification(type, title, detail, targetView, itemId) {
+async function addNotification(type, title, detail, targetView, itemId, actorName = '') {
+  // Lấy tên người dùng hiện tại nếu không truyền vào
+  if (!actorName) {
+    const session = getAuthSession();
+    actorName = session.currentUser ? (session.currentUser.fullname || session.currentUser.username) : 'Hệ thống';
+  }
+
   const newNotif = {
     id: 'NTF-' + Date.now(),
     type: type,
     title: title,
     detail: detail,
+    actor: actorName, // Thêm trường người tạo/sửa
     targetview: targetView,
     itemid: itemId,
     time: getCurrentTimeStr(),
@@ -4142,28 +4151,41 @@ function renderNotificationList() {
 
   let itemsHtml = '';
   if (list.length === 0) {
-    itemsHtml = `<div style="padding: 24px; text-align: center; color: var(--muted-foreground, #8a94a6); font-size: 12px; font-family: var(--font-dm-mono);">Không có thông báo mới</div>`;
+    itemsHtml = `<div style="padding: 32px; text-align: center; color: var(--muted-foreground, #8a94a6); font-size: 13px; font-family: var(--font-dm-mono);">Không có thông báo mới</div>`;
   } else {
     itemsHtml = list.map(item => {
       const isRead = readIds.includes(item.id);
+
+      // Định dạng ngày dạng DD/MM/YYYY
+      const formattedDate = fmtDateStr(item.date || item.created_at);
+      const timeStr = item.time ? item.time.substring(0, 5) : '';
+      const fullTimeDisplay = `${formattedDate} ${timeStr}`.trim();
+
+      // Lấy thông tin người tạo/sửa
+      const actorDisplay = item.actor || item.user_fullname || 'Hệ thống';
+
       return `
-        <div class="notif-item ${isRead ? '' : 'unread'}" onclick="handleNotificationClick('${item.id}', '${item.targetview}', '${item.itemid}')">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 13px; font-weight: 600; color: #ffffff;">${item.title}</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${item.time}</span>
+        <div class="notif-item ${isRead ? '' : 'unread'}" style="padding: 14px 18px; cursor: pointer;" onclick="handleNotificationClick('${item.id}', '${item.targetview}', '${item.itemid}')">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 4px;">
+            <span style="font-size: 14px; font-weight: 600; color: #ffffff;">${item.title}</span>
+            <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); white-space: nowrap;">${fullTimeDisplay}</span>
           </div>
-          <div style="font-size: 12px; color: var(--muted-foreground);">${item.detail}</div>
+          <div style="font-size: 13px; color: var(--foreground, #e2e8f0); line-height: 1.4;">${item.detail}</div>
+          <div style="font-size: 11px; color: #f0a030; font-family: var(--font-dm-mono); margin-top: 6px; display: flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Thực hiện: <strong>${actorDisplay}</strong></span>
+          </div>
         </div>
       `;
     }).join('');
   }
 
   dropdown.innerHTML = `
-    <div style="padding: 12px 16px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
-      <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">Thông Báo</span>
-      ${list.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 10px; cursor: pointer; text-transform: uppercase;">Đánh dấu đã đọc</button>` : ''}
+    <div style="padding: 14px 18px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
+      <span style="font-family: var(--font-dm-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">TRUNG TÂM THÔNG BÁO</span>
+      ${list.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; cursor: pointer; text-transform: uppercase; font-weight: 500;">Đánh dấu đã đọc</button>` : ''}
     </div>
-    <div style="overflow-y: auto; max-height: 350px;">
+    <div style="overflow-y: auto; max-height: 420px;">
       ${itemsHtml}
     </div>
   `;

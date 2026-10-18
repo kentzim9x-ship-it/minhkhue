@@ -985,8 +985,8 @@ div[style*="overflow: auto"],
   position: absolute;
   top: 55px;
   right: 20px;
-  width: 360px;
-  max-height: 420px;
+  width: 420px; /* Tăng chiều rộng từ 360px -> 420px */
+  max-height: 520px; /* Tăng chiều cao tối đa */
   background: var(--card, #141821);
   border: 1px solid var(--border, rgba(255,255,255,0.12));
   border-radius: 12px;
@@ -996,7 +996,6 @@ div[style*="overflow: auto"],
   flex-direction: column;
   overflow: hidden;
 
-  /* Animation trượt xuống */
   opacity: 0;
   transform: translateY(-12px);
   pointer-events: none;
