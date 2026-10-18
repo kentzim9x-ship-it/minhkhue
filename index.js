@@ -29,7 +29,7 @@ function checkModulePermission(module) {
     'customers': ['customers_yn', 'customer_yn', 'customers'],
     'warehouses': ['warehouses_yn', 'warehouse_yn', 'warehouses'],
     'quotations': ['quotations_yn', 'quotation_yn', 'quotations'],
-    'sales-orders': ['order_yn', 'sales_orders_yn', 'orders_yn', 'sales_orders'],
+    'sales-orders': ['order_yn', 'saleorder_yn', 'orders_yn', 'sales_orders'],
     'returns': ['return_yn', 'returns_yn', 'returns'],
     'grn': ['grn_yn', 'grns_yn', 'grn']
   };
@@ -73,7 +73,7 @@ const SUPABASE_URL = 'https://gzmczqeczlrujhzleaoa.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_oBZ4Z1bekEMIjq_wmPFsyg_V68Y3dWE';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Biến toàn cục lưu trữ dữ liệu
+// Bổ sung users vào db toàn cục
 let db = {
   materials: [],
   customers: [],
@@ -81,7 +81,8 @@ let db = {
   quotations: [],
   orders: [],
   returns: [],
-  grns: []
+  grns: [],
+  users: [] // <--- Thêm mảng users
 };
 
 function sortDescById(a, b) {
@@ -90,7 +91,7 @@ function sortDescById(a, b) {
 
 async function fetchDataFromSupabase() {
   try {
-    const [custRes, matRes, whRes, invRes, quoRes, ordRes, retRes, grnRes] = await Promise.all([
+    const [custRes, matRes, whRes, invRes, quoRes, ordRes, retRes, grnRes, userRes] = await Promise.all([
       supabaseClient.from('customers').select('*'),
       supabaseClient.from('materials').select('*'),
       supabaseClient.from('warehouses').select('*'),
@@ -98,13 +99,15 @@ async function fetchDataFromSupabase() {
       supabaseClient.from('quotations').select('*'),
       supabaseClient.from('orders').select('*'),
       supabaseClient.from('returns').select('*'),
-      supabaseClient.from('grns').select('*')
+      supabaseClient.from('grns').select('*'),
+      supabaseClient.from('userinfo').select('*') // <--- Lấy bảng userinfo
     ]);
 
     db.customers = custRes.data || [];
     db.materials = matRes.data || [];
     db.warehouses = whRes.data || [];
     db.inventory = invRes.data || [];
+    db.users = userRes.data || [];
 
     db.quotations = (quoRes.data || []).map(q => ({
       ...q,
@@ -162,6 +165,28 @@ async function fetchDataFromSupabase() {
   } catch (err) {
     console.error('Lỗi khi tải dữ liệu từ Supabase:', err);
   }
+}
+
+// Hàm chuyển đổi từ user_id sang fullname
+function getUserFullName(userId) {
+  if (!userId) return '—';
+  const user = (db.users || []).find(u => String(u.id) === String(userId) || String(u.username) === String(userId));
+  return user ? (user.fullname || user.username || userId) : userId;
+}
+
+// Hàm hỗ trợ định dạng ngày VN (DD/MM/YYYY) nếu ngày lưu dạng YYYY-MM-DD
+function fmtDateStr(dateStr) {
+  if (!dateStr) return '—';
+  if (dateStr.includes('T')) dateStr = dateStr.split('T')[0];
+  const parts = dateStr.split('-');
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  return dateStr;
+}
+
+// Hàm hỗ trợ cắt bỏ giây nếu cần (HH:mm:ss -> HH:mm)
+function fmtTimeStr(timeStr) {
+  if (!timeStr) return '—';
+  return String(timeStr).substring(0, 5);
 }
 
 function syncRealtimeStockToSupabase(sku, warehouseCode, realStock) {
@@ -1293,27 +1318,40 @@ function renderMaterialsList(c) {
     </div>
   `).join('');
 
+  // 1. Khai báo danh sách Header
   const headersHtml = [
-    'Mã Hàng', 'Tên Hàng', 'Đơn Vị', 'Danh Mục', 'Vị Trí Lưu Kho', 'Tồn Kho Ban Đầu', 'Đơn Giá', 'Trạng Thái', 'Hành Động'
+    'Mã Hàng', 'Tên Hàng', 'Đơn Vị', 'Danh Mục', 'Vị Trí Lưu Kho', 'Tồn Kho Ban Đầu', 'Đơn Giá', 'Trạng Thái',
+    'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', // <--- Bổ sung 6 cột
+    'Hành Động'
   ].map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tồn Kho Ban Đầu' || h === 'Đơn Giá' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`).join('');
 
+  // 2. Render từng dòng trong rowsHtml
   const rowsHtml = filtered.map(m => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
-      <td style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${m.category || '—'}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px;">${m.location || '—'}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${m.stock ?? 0}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
-      <td style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'CÒN HÀNG' : m.status.toUpperCase()}</span></td>
-      <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-        <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>
-        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : ''}
-        ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''}
-      </td>
-    </tr>
-  `).join('');
+  <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
+    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
+    <td style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
+    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
+    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${m.category || '—'}</td>
+    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px;">${m.location || '—'}</td>
+    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${m.stock ?? 0}</td>
+    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
+    <td style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'CÒN HÀNG' : m.status.toUpperCase()}</span></td>
+    
+    <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
+    <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
+    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
+    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
+    <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
+    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
+    <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
+
+    <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
+      <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>
+      ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : ''}
+      ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''}
+    </td>
+  </tr>
+`).join('');
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -1385,7 +1423,7 @@ function renderCustomersList(c) {
   `).join('');
 
   const headersHtml = [
-    'Mã KH', 'Tên Công Ty / KH', 'Người Liên Hệ', 'Email', 'SĐT', 'Địa Chỉ', 'Trạng Thái', 'Hành Động'
+    'Mã KH', 'Tên Công Ty / KH', 'Người Liên Hệ', 'Email', 'SĐT', 'Địa Chỉ', 'Trạng Thái', 'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', 'Hành Động'
   ].map(h => `
     <th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">
       ${h}
@@ -1401,6 +1439,15 @@ function renderCustomersList(c) {
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: left;">${c.phone || '—'}</td>
       <td style="padding: 11px 16px; font-size: 13px; text-align: left;">${c.address || c.diachi || '—'}</td>
       <td style="padding: 11px 16px; text-align: left;"><span class="badge ${getBadgeClass(c.status)}">${c.status === 'active' ? 'hoạt động' : (c.status === 'suspended' ? 'tạm khóa' : (c.status || 'hoạt động'))}</span></td>
+
+      <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
+    
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
         <button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'view', '${c.id}')">${Icons.view} Xem</button>
         ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'edit', '${c.id}')">${Icons.edit} Sửa</button>` : ''}
@@ -1526,7 +1573,7 @@ function renderQuotationsList(c) {
     `;
   }).join('');
 
-  const headersHtml = ['Mã Báo Giá', 'Khách Hàng', 'Ngày Lập', 'Phát Hành', 'Hiệu Lực Đến', 'Số Dòng', 'Tổng Tiền', 'Trạng Thái', 'Hành Động']
+  const headersHtml = ['Mã Báo Giá', 'Khách Hàng', 'Ngày Lập', 'Phát Hành', 'Hiệu Lực Đến', 'Số Dòng', 'Tổng Tiền', 'Trạng Thái', 'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', 'Hành Động']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
@@ -1540,6 +1587,15 @@ function renderQuotationsList(c) {
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${(q.lineItems || []).length}</td>
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(q.total)}</td>
       <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(q.status)}">${getStatusLabel(q.status)}</span></td>
+
+            <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
+
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
         <button class="btn-action" onclick="event.stopPropagation(); navigate('quotations', 'view', '${q.id}')">${Icons.view} Xem</button>
         ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('quotations', 'edit', '${q.id}')">${Icons.edit} Sửa</button>` : ''}
@@ -1615,26 +1671,37 @@ function renderOrdersList(c) {
     </div>
   `).join('');
 
-  const headersHtml = ['Mã Đơn Hàng', 'Khách Hàng', 'Ngày Tạo', 'Mã Kho', 'Số Dòng', 'Tổng Tiền', 'Trạng Thái', 'Hành Động']
-    .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
-    .join('');
+  const headersHtml = [
+    'Mã Đơn Hàng', 'Khách Hàng', 'Ngày Tạo', 'Mã Kho', 'Số Dòng', 'Tổng Tiền', 'Trạng Thái',
+    'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', // <--- Bổ sung 6 cột
+    'Hành Động'
+  ].map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`).join('');
 
   const rowsHtml = filtered.map(o => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', '${hasPermission ? 'edit' : 'view'}', '${o.id}')" onclick="navigate('sales-orders', 'view', '${o.id}')">
-      <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${o.id}</td>
-      <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${o.customer}</td>
-      <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${o.date}</td>
-      <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${o.warehouseCode || o.warehouse_code || '—'}</td>
-      <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${(o.lineItems || o.lineitems || []).length || o.items || 0}</td>
-      <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(o.total)}</td>
-      <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(o.status)}">${getStatusLabel(o.status)}</span></td>
-      <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-        <button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'view', '${o.id}')">${Icons.view} Xem</button>
-        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'edit', '${o.id}')">${Icons.edit} Sửa</button>` : ''}
-        ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('sales-orders', '${o.id}')">${Icons.trash} Xóa</button>` : ''}
-      </td>
-    </tr>
-  `).join('');
+  <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', '${hasPermission ? 'edit' : 'view'}', '${o.id}')" onclick="navigate('sales-orders', 'view', '${o.id}')">
+    <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${o.id}</td>
+    <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${o.customer}</td>
+    <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${o.date}</td>
+    <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${o.warehouseCode || o.warehouse_code || '—'}</td>
+    <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${(o.lineItems || o.lineitems || []).length || o.items || 0}</td>
+    <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(o.total)}</td>
+    <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(o.status)}">${getStatusLabel(o.status)}</span></td>
+
+    <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
+    <td style="padding: 12px 16px; font-size: 12px;">${getUserFullName(o.user_id0)}</td>
+    <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(o.date0)}</td>
+    <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(o.time0)}</td>
+    <td style="padding: 12px 16px; font-size: 12px;">${getUserFullName(o.user_id2)}</td>
+    <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(o.date2)}</td>
+    <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(o.time2)}</td>
+
+    <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
+      <button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'view', '${o.id}')">${Icons.view} Xem</button>
+      ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'edit', '${o.id}')">${Icons.edit} Sửa</button>` : ''}
+      ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('sales-orders', '${o.id}')">${Icons.trash} Xóa</button>` : ''}
+    </td>
+  </tr>
+`).join('');
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -1704,7 +1771,7 @@ function renderReturnsList(c) {
     </div>
   `).join('');
 
-  const headersHtml = ['Mã Đổi Trả', 'Tham Chiếu Đơn', 'Khách Hàng', 'Ngày Tạo', 'Lý Do', 'Số Dòng', 'Tổng Hoàn Tiền', 'Trạng Thái', 'Hành Động']
+  const headersHtml = ['Mã Đổi Trả', 'Tham Chiếu Đơn', 'Khách Hàng', 'Ngày Tạo', 'Lý Do', 'Số Dòng', 'Tổng Hoàn Tiền', 'Trạng Thái', 'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', 'Hành Động']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Hoàn Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
@@ -1720,6 +1787,15 @@ function renderReturnsList(c) {
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${totalLines}</td>
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; color: #f87171; text-align: right;">${fmtUSD(r.total)}</td>
         <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(r.status)}">${getStatusLabel(r.status)}</span></td>
+
+      <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
+
         <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
           <button class="btn-action" onclick="event.stopPropagation(); navigate('returns', 'view', '${r.id}')">${Icons.view} Xem</button>
           ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('returns', 'edit', '${r.id}')">${Icons.edit} Sửa</button>` : ''}
@@ -1794,7 +1870,7 @@ function renderGRNList(c) {
     </div>
   `).join('');
 
-  const headersHtml = ['Mã Nhập Kho', 'Nhà Cung Cấp', 'Ngày Nhập', 'Mã Kho', 'Số Dòng', 'Tổng Giá Trị', 'Trạng Thái', 'Hành Động']
+  const headersHtml = ['Mã Nhập Kho', 'Nhà Cung Cấp', 'Ngày Nhập', 'Mã Kho', 'Số Dòng', 'Tổng Giá Trị', 'Trạng Thái', 'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', 'Hành Động']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Giá Trị' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
@@ -1810,6 +1886,15 @@ function renderGRNList(c) {
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${totalLines}</td>
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(g.totalValue)}</td>
         <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(g.status)}">${getStatusLabel(g.status)}</span></td>
+
+        <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
+
         <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
           <button class="btn-action" onclick="event.stopPropagation(); navigate('grn', 'view', '${g.id}')">${Icons.view} Xem</button>
           ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('grn', 'edit', '${g.id}')">${Icons.edit} Sửa</button>` : ''}
