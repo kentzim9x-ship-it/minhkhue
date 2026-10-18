@@ -927,7 +927,7 @@ async function deleteItem(module, id) {
     return;
   }
 
-  const confirmDelete = await showConfirm(`Bạn có chắc chắn muốn xóa phiếu ${id}?`, 'Xác nhận xóa');
+  const confirmDelete = await showConfirm(`Bạn có chắc chắn muốn xóa thông tin có ID: ${id}?`, 'Xác nhận xóa');
 
   if (confirmDelete) {
     const tableMap = {
@@ -2451,11 +2451,31 @@ function renderMaterialForm(c) {
           <div class="section-body grid-3">
             <div class="form-group" style="grid-column: span 2;">
               <label class="form-label">Tên sản phẩm *</label>
-              <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'name\', this.value)"'} placeholder="Nhập tên sản phẩm..." required>
+              <input 
+  type="text" 
+  class="form-input" 
+  value="${d.name || ''}" 
+  ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+    oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
+    onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
+  `} 
+  placeholder="Nhập tên sản phẩm..." 
+  required
+>
             </div>
             <div class="form-group">
               <label class="form-label">Đơn vị tính *</label>
-              <input type="text" class="form-input" value="${d.unit || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'unit\', this.value)"'} placeholder="Cái, Hộp, Bộ, Kg..." required>
+              <input 
+  type="text" 
+  class="form-input" 
+  value="${d.unit || ''}" 
+  ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+    oninput="this.value = toUpperCaseStr(this.value); updateField('unit', this.value);"
+    onchange="this.value = toUpperCaseStr(this.value); updateField('unit', this.value);"
+  `} 
+  placeholder="CÁI, HỘP, BỘ, KG..." 
+  required
+>
             </div>
             <div class="form-group">
               <label class="form-label">Danh mục</label>
@@ -2517,7 +2537,10 @@ function renderCustomerForm(c) {
           <div class="section-body grid-3">
             <div class="form-group" style="grid-column: span 2;">
               <label class="form-label">Tên công ty / Khách hàng *</label>
-              <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'name\', this.value)"'} placeholder="Nhập tên công ty hoặc tên khách hàng..." required>
+              <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+    oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
+    onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
+  `} placeholder="Nhập tên công ty hoặc tên khách hàng..." required>
             </div>
             <div class="form-group">
               <label class="form-label">Loại khách hàng</label>
@@ -4565,6 +4588,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateHeaderDate();
   initNotificationUI();
 });
+
+// Hàm chuyển đổi chuỗi thành dạng Viết Hoa Mọi Chữ Cái Đầu Mỗi Từ (Title Case)
+function toTitleCase(str) {
+  if (!str) return '';
+  return str.toLowerCase().replace(/(^|\s)\S/g, function (firstLetter) {
+    return firstLetter.toUpperCase();
+  });
+}
+
+// Hàm chuyển đổi chuỗi thành dạng Viết Hoa Tất Cả Các Ký Tự (UPPERCASE)
+function toUpperCaseStr(str) {
+  if (!str) return '';
+  return str.toUpperCase();
+}
 
 // --- CHẶN TỰ ĐỘNG SUBMIT FORM KHI ẤN ENTER TRÊN TOÀN HỆ THỐNG ---
 document.addEventListener('keydown', function (e) {
