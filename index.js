@@ -1441,12 +1441,12 @@ function renderCustomersList(c) {
       <td style="padding: 11px 16px; text-align: left;"><span class="badge ${getBadgeClass(c.status)}">${c.status === 'active' ? 'hoạt động' : (c.status === 'suspended' ? 'tạm khóa' : (c.status || 'hoạt động'))}</span></td>
 
       <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
-      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
-      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(c.user_id0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(c.date0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(c.time0)}</td>
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(c.user_id2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(c.date2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(c.time2)}</td>
     
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
         <button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'view', '${c.id}')">${Icons.view} Xem</button>
@@ -1589,12 +1589,12 @@ function renderQuotationsList(c) {
       <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(q.status)}">${getStatusLabel(q.status)}</span></td>
 
             <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
-      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
-      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(q.user_id0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(q.date0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(q.time0)}</td>
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(q.user_id2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(q.date2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(q.time2)}</td>
 
       <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
         <button class="btn-action" onclick="event.stopPropagation(); navigate('quotations', 'view', '${q.id}')">${Icons.view} Xem</button>
@@ -1789,12 +1789,12 @@ function renderReturnsList(c) {
         <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(r.status)}">${getStatusLabel(r.status)}</span></td>
 
       <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
-      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
-      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(r.user_id0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(r.date0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(r.time0)}</td>
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(r.user_id2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(r.date2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(r.time2)}</td>
 
         <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
           <button class="btn-action" onclick="event.stopPropagation(); navigate('returns', 'view', '${r.id}')">${Icons.view} Xem</button>
@@ -1888,12 +1888,12 @@ function renderGRNList(c) {
         <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(g.status)}">${getStatusLabel(g.status)}</span></td>
 
         <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
-      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
-      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(g.user_id0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(g.date0)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(g.time0)}</td>
+      <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(g.user_id2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(g.date2)}</td>
+      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(g.time2)}</td>
 
         <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
           <button class="btn-action" onclick="event.stopPropagation(); navigate('grn', 'view', '${g.id}')">${Icons.view} Xem</button>
