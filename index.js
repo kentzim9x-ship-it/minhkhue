@@ -393,8 +393,9 @@ const viewMeta = {
   'report-sales': { tag: 'BÁO CÁO', title: 'Báo Cáo Bán Hàng' },
 };
 
+const BASE_PATH = '/minhkhue'; // Đường dẫn gốc trên GitHub Pages
+
 function navigate(view, mode = 'list', itemId = null) {
-  // Kiểm tra quyền truy cập chế độ Thêm mới / Chỉnh sửa
   if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
     showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
     mode = 'list';
@@ -418,18 +419,16 @@ function navigate(view, mode = 'list', itemId = null) {
 
   if (mode !== 'list') initFormData(view, itemId);
 
-  // Xây dựng đường dẫn URL sạch dạng /view/mode/id
-  let targetPath = `/${view}`;
+  // Tạo URL dạng /minhkhue/view/mode/id
+  let targetPath = `${BASE_PATH}/${view}`;
   if (mode === 'add') targetPath += '/add';
   if (mode === 'edit' && itemId) targetPath += `/edit/${itemId}`;
   if (mode === 'view' && itemId) targetPath += `/view/${itemId}`;
 
-  // Đóng Drawer Menu trên Mobile nếu đang mở
   if (document.body.classList.contains('mobile-menu-open')) {
     toggleMobileMenu();
   }
 
-  // Cập nhật thanh địa chỉ URL mà không reload trang
   if (window.location.pathname !== targetPath) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
@@ -442,8 +441,12 @@ function navigate(view, mode = 'list', itemId = null) {
 }
 
 function handleRouteChange() {
-  // Lấy đường dẫn bỏ qua dấu slash ở đầu/cuối
-  const pathname = window.location.pathname.replace(/^\/+|\/+$/g, '');
+  // Bỏ tiền tố /minhkhue/ và các dấu / ở hai đầu
+  let pathname = window.location.pathname;
+  if (pathname.startsWith(BASE_PATH)) {
+    pathname = pathname.substring(BASE_PATH.length);
+  }
+  pathname = pathname.replace(/^\/+|\/+$/g, '');
 
   if (!pathname) {
     navigate('dashboard', 'list');
@@ -491,7 +494,6 @@ function handleRouteChange() {
   }
 }
 
-// Lắng nghe sự kiện Bấm nút Back / Forward trên trình duyệt hoặc vuốt Touchpad
 window.addEventListener('popstate', handleRouteChange);
 
 function handleHashChange() {
@@ -3983,57 +3985,81 @@ function showAlert(message, title = 'Thông báo hệ thống') {
   });
 }
 
-// --- LOGIC TRUNG TÂM THÔNG BÁO (NOTIFICATION CENTER) ---
+// --- LOGIC TRUNG TÂM THÔNG BÁO REALTIME (SUPABASE) ---
 
-function getStoredNotifications() {
-  const saved = localStorage.getItem('app_notifications');
+// Lấy danh sách ID các thông báo đã đọc lưu ở trình duyệt này
+function getReadNotifIds() {
+  const saved = localStorage.getItem('app_read_notif_ids');
   return saved ? JSON.parse(saved) : [];
 }
 
-function saveNotifications(list) {
-  localStorage.setItem('app_notifications', JSON.stringify(list));
-}
-
-// Hàm thêm thông báo mới
-function addNotification(type, title, detail, targetView, itemId) {
-  const list = getStoredNotifications();
-  const newNotif = {
-    id: 'NTF-' + Date.now(),
-    type: type,             // 'quotation_add', 'quotation_edit', ...
-    title: title,           // Tiêu đề ngắn
-    detail: detail,         // Chi tiết (Mã báo giá - Tên KH)
-    targetView: targetView, // 'quotations'
-    itemId: itemId,         // ID bảng báo giá để điều hướng
-    time: getCurrentTimeStr(),
-    date: getTodayDateStr(),
-    read: false
-  };
-
-  list.unshift(newNotif); // Thêm vào đầu danh sách
-  saveNotifications(list);
-  updateNotificationUI();
-}
-
-// Hàm đánh dấu tất cả/1 thông báo là đã đọc
-function markNotificationAsRead(notifId) {
-  const list = getStoredNotifications();
-  const item = list.find(n => n.id === notifId);
-  if (item) {
-    item.read = true;
-    saveNotifications(list);
+function markNotifIdAsRead(notifId) {
+  const readIds = getReadNotifIds();
+  if (!readIds.includes(notifId)) {
+    readIds.push(notifId);
+    localStorage.setItem('app_read_notif_ids', JSON.stringify(readIds));
   }
   updateNotificationUI();
 }
 
-// Hàm khởi tạo UI và Bảng Dropdown
+// Tải 20 thông báo mới nhất từ Supabase
+async function fetchNotificationsFromSupabase() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (!error && data) {
+      db.notifications = data;
+      updateNotificationUI();
+    }
+  } catch (err) {
+    console.error('Lỗi lấy thông báo:', err);
+  }
+}
+
+// Hàm đẩy thông báo lên Supabase (Tất cả trình duyệt khác sẽ nhận được ngay)
+async function addNotification(type, title, detail, targetView, itemId) {
+  const newNotif = {
+    id: 'NTF-' + Date.now(),
+    type: type,
+    title: title,
+    detail: detail,
+    targetview: targetView,
+    itemid: itemId,
+    time: getCurrentTimeStr(),
+    date: getTodayDateStr()
+  };
+
+  try {
+    await supabaseClient.from('notifications').insert([newNotif]);
+  } catch (err) {
+    console.error('Lỗi gửi thông báo:', err);
+  }
+}
+
+// Đăng ký nhận thông báo thời gian thực (Realtime)
+function subscribeRealtimeNotifications() {
+  supabaseClient
+    .channel('public:notifications')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
+      if (payload.new) {
+        if (!Array.isArray(db.notifications)) db.notifications = [];
+        db.notifications.unshift(payload.new);
+        updateNotificationUI();
+      }
+    })
+    .subscribe();
+}
+
 function initNotificationUI() {
   const headerRight = document.querySelector('.app-header > div:last-child') || document.querySelector('.app-header');
   if (!headerRight) return;
 
-  // Lấy hoặc gắn ID cho nút chuông hiện tại
   let bellBtn = document.getElementById('notif-bell-btn');
   if (!bellBtn) {
-    // Tìm nút có chứa icon chuông ở góc phải
     const existingBell = headerRight.querySelector('button, .bell-icon, [class*="bell"]');
     if (existingBell) {
       bellBtn = existingBell;
@@ -4049,7 +4075,6 @@ function initNotificationUI() {
 
   bellBtn.classList.add('notif-bell-btn');
 
-  // Thêm chấm đỏ nếu chưa có
   if (!document.getElementById('notif-badge-dot')) {
     const dot = document.createElement('div');
     dot.id = 'notif-badge-dot';
@@ -4057,7 +4082,6 @@ function initNotificationUI() {
     bellBtn.appendChild(dot);
   }
 
-  // Bổ sung container chứa Dropdown
   if (!document.getElementById('notif-dropdown')) {
     const dropdown = document.createElement('div');
     dropdown.id = 'notif-dropdown';
@@ -4065,7 +4089,6 @@ function initNotificationUI() {
     document.body.appendChild(dropdown);
   }
 
-  // Sự kiện Click vào Nút Chuông -> Đóng/Mở Dropdown
   bellBtn.onclick = (e) => {
     e.stopPropagation();
     const dropdown = document.getElementById('notif-dropdown');
@@ -4073,7 +4096,6 @@ function initNotificationUI() {
     renderNotificationList();
   };
 
-  // Click bên ngoài -> Tự đóng Dropdown
   document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('notif-dropdown');
     const bell = document.getElementById('notif-bell-btn');
@@ -4082,13 +4104,16 @@ function initNotificationUI() {
     }
   });
 
-  updateNotificationUI();
+  fetchNotificationsFromSupabase();
+  subscribeRealtimeNotifications();
 }
 
-// Cập nhật trạng thái Lắc chuông & Chấm đỏ
 function updateNotificationUI() {
-  const list = getStoredNotifications();
-  const hasUnread = list.some(n => !n.read);
+  const list = db.notifications || [];
+  const readIds = getReadNotifIds();
+
+  // Chỉ coi là có chưa đọc khi mảng > 0 và có id chưa nằm trong danh sách đã đọc
+  const hasUnread = list.length > 0 && list.some(n => !readIds.includes(n.id));
 
   const bellBtn = document.getElementById('notif-bell-btn');
   const dot = document.getElementById('notif-badge-dot');
@@ -4108,32 +4133,35 @@ function updateNotificationUI() {
   }
 }
 
-// Render nội dung bên trong Dropdown
 function renderNotificationList() {
   const dropdown = document.getElementById('notif-dropdown');
   if (!dropdown) return;
 
-  const list = getStoredNotifications();
+  const list = db.notifications || [];
+  const readIds = getReadNotifIds();
 
   let itemsHtml = '';
   if (list.length === 0) {
     itemsHtml = `<div style="padding: 24px; text-align: center; color: var(--muted-foreground, #8a94a6); font-size: 12px; font-family: var(--font-dm-mono);">Không có thông báo mới</div>`;
   } else {
-    itemsHtml = list.map(item => `
-      <div class="notif-item ${item.read ? '' : 'unread'}" onclick="handleNotificationClick('${item.id}', '${item.targetView}', '${item.itemId}')">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 13px; font-weight: 600; color: #ffffff;">${item.title}</span>
-          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${item.time}</span>
+    itemsHtml = list.map(item => {
+      const isRead = readIds.includes(item.id);
+      return `
+        <div class="notif-item ${isRead ? '' : 'unread'}" onclick="handleNotificationClick('${item.id}', '${item.targetview}', '${item.itemid}')">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; font-weight: 600; color: #ffffff;">${item.title}</span>
+            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${item.time}</span>
+          </div>
+          <div style="font-size: 12px; color: var(--muted-foreground);">${item.detail}</div>
         </div>
-        <div style="font-size: 12px; color: var(--muted-foreground);">${item.detail}</div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   dropdown.innerHTML = `
     <div style="padding: 12px 16px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
       <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">Thông Báo</span>
-      ${list.length > 0 ? `<button onclick="clearAllNotifications()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 10px; cursor: pointer; text-transform: uppercase;">Xóa tất cả</button>` : ''}
+      ${list.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 10px; cursor: pointer; text-transform: uppercase;">Đánh dấu đã đọc</button>` : ''}
     </div>
     <div style="overflow-y: auto; max-height: 350px;">
       ${itemsHtml}
@@ -4141,24 +4169,20 @@ function renderNotificationList() {
   `;
 }
 
-// Xử lý khi nhấn vào 1 thông báo
 function handleNotificationClick(notifId, targetView, itemId) {
-  markNotificationAsRead(notifId);
+  markNotifIdAsRead(notifId);
 
-  // Đóng dropdown
   const dropdown = document.getElementById('notif-dropdown');
   if (dropdown) dropdown.classList.remove('open');
 
-  // Điều hướng đến View của Bảng báo giá tương ứng
-  if (targetView && itemId) {
+  if (targetView && itemId && targetView !== 'null' && itemId !== 'null') {
     navigate(targetView, 'view', itemId);
   }
 }
 
-// Hàm xóa toàn bộ thông báo
-function clearAllNotifications() {
-  saveNotifications([]);
-  updateNotificationUI();
+function markAllNotificationsAsRead() {
+  const list = db.notifications || [];
+  list.forEach(n => markNotifIdAsRead(n.id));
 }
 
 function initFormData(module, id) {
