@@ -1179,10 +1179,17 @@ div[style*="overflow: auto"],
   height: 20px !important;
 }
 
-/* Tự động rút gọn văn bản dài thành dấu 3 chấm trên cùng 1 dòng cho các ô bảng */
-.hover-row td {
+/* Chỉ áp dụng giới hạn độ rộng và cắt 3 chấm cho các ô nội dung, KHÔNG áp dụng cho cột Hành động cuối cùng */
+.hover-row td:not(:last-child) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 220px; /* Độ rộng tối đa trước khi tự động hiện dấu ... */
+  max-width: 220px;
+}
+
+/* Đảm bảo cột Hành động luôn hiển thị đầy đủ các nút bấm */
+.hover-row td:last-child {
+  white-space: nowrap;
+  max-width: none !important;
+  overflow: visible !important;
 }
