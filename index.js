@@ -396,7 +396,7 @@ const viewMeta = {
 function navigate(view, mode = 'list', itemId = null) {
   // Kiểm tra quyền truy cập chế độ Thêm mới / Chỉnh sửa
   if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
-    alert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!');
+    showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
     mode = 'list';
   }
 
@@ -418,27 +418,81 @@ function navigate(view, mode = 'list', itemId = null) {
 
   if (mode !== 'list') initFormData(view, itemId);
 
-  let targetHash = `#${view}`;
-  if (mode === 'add') targetHash += '/add';
-  if (mode === 'edit' && itemId) targetHash += `/edit/${itemId}`;
-  if (mode === 'view' && itemId) targetHash += `/view/${itemId}`;
+  // Xây dựng đường dẫn URL sạch dạng /view/mode/id
+  let targetPath = `/${view}`;
+  if (mode === 'add') targetPath += '/add';
+  if (mode === 'edit' && itemId) targetPath += `/edit/${itemId}`;
+  if (mode === 'view' && itemId) targetPath += `/view/${itemId}`;
 
   // Đóng Drawer Menu trên Mobile nếu đang mở
   if (document.body.classList.contains('mobile-menu-open')) {
     toggleMobileMenu();
   }
 
-  if (window.location.hash !== targetHash) {
-    window.location.hash = targetHash;
-    // Bỏ render() ở đây vì khi hash thay đổi, window tự động gọi hàm handleHashChange -> render()
-  } else {
-    render(); // Chỉ render thủ công nếu hash không hề thay đổi
+  // Cập nhật thanh địa chỉ URL mà không reload trang
+  if (window.location.pathname !== targetPath) {
+    window.history.pushState({ view, mode, itemId }, '', targetPath);
+  }
+
+  render();
+
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  const contentBox = document.getElementById('app-content');
+  if (contentBox) contentBox.scrollTop = 0;
+}
+
+function handleRouteChange() {
+  // Lấy đường dẫn bỏ qua dấu slash ở đầu/cuối
+  const pathname = window.location.pathname.replace(/^\/+|\/+$/g, '');
+  
+  if (!pathname) {
+    navigate('dashboard', 'list');
+    return;
+  }
+
+  const parts = pathname.split('/');
+  const view = parts[0];
+  let mode = parts[1] || 'list';
+  const itemId = parts[2] || null;
+
+  if (viewMeta[view]) {
+    if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
+      showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
+      mode = 'list';
+    }
+
+    state.view = view;
+    state.mode = mode;
+    state.filter = 'all';
+    state.search = '';
+
+    const meta = viewMeta[view];
+    const tagEl = document.getElementById('view-tag');
+    const titleEl = document.getElementById('view-title');
+
+    if (tagEl) tagEl.innerText = meta.tag;
+    if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-view') === view);
+    });
+
+    if (mode !== 'list') {
+      initFormData(view, itemId);
+    }
+
+    render();
 
     window.scrollTo({ top: 0, behavior: 'instant' });
     const contentBox = document.getElementById('app-content');
     if (contentBox) contentBox.scrollTop = 0;
+  } else {
+    navigate('dashboard', 'list');
   }
 }
+
+// Lắng nghe sự kiện Bấm nút Back / Forward trên trình duyệt hoặc vuốt Touchpad
+window.addEventListener('popstate', handleRouteChange);
 
 function handleHashChange() {
   const hash = window.location.hash.replace('#', '');
@@ -836,11 +890,13 @@ async function saveForm(module) {
 
 async function deleteItem(module, id) {
   if (!checkModulePermission(module)) {
-    alert('Tài khoản của bạn chỉ có quyền xem, không được phép xóa!');
+    await showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép xóa!', 'Cảnh báo quyền');
     return;
   }
 
-  if (confirm(`Bạn có chắc chắn muốn xóa phiếu ${id}?`)) {
+  const confirmDelete = await showConfirm(`Bạn có chắc chắn muốn xóa phiếu ${id}?`, 'Xác nhận xóa');
+
+  if (confirmDelete) {
     const tableMap = {
       'materials': 'materials',
       'customers': 'customers',
@@ -860,7 +916,7 @@ async function deleteItem(module, id) {
 
     const { error } = await supabaseClient.from(tableName).delete().eq('id', id);
     if (error) {
-      alert('Xóa trên CSDL thất bại: ' + error.message);
+      await showAlert('Xóa trên CSDL thất bại: ' + error.message, 'Lỗi kết nối');
       await fetchDataFromSupabase();
       render();
     }
@@ -2664,7 +2720,7 @@ function handleCustomerSelectInQuotation(customerName) {
   render();
 }
 
-function handleCustomerSelectInOrder(customerName) {
+async function handleCustomerSelectInOrder(customerName) {
   if (!state.formData || state.mode === 'view') return;
   const safeCustomer = String(customerName || '').trim();
   state.formData.customer = safeCustomer;
@@ -2702,10 +2758,13 @@ function handleCustomerSelectInOrder(customerName) {
     .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0]; // Nếu có nhiều cái hợp lệ thì lấy cái mới nhất
 
   if (activeQuotation) {
-    const confirmImport = confirm("Bạn có muốn nhập toàn bộ mã hàng, đơn giá theo Bảng báo giá không?");
+    // THAY THẾ confirm() BẰNG showConfirm():
+    const confirmImport = await showConfirm(
+      "Bạn có muốn nhập toàn bộ mã hàng, đơn giá theo Bảng báo giá không?",
+      "Áp dụng báo giá"
+    );
 
     if (confirmImport) {
-      // ẤN CÓ: Gán ID báo giá và copy toàn bộ hàng hóa sang
       state.formData.quotationId = activeQuotation.id || null;
       if (Array.isArray(activeQuotation.lineItems) && activeQuotation.lineItems.length > 0) {
         state.formData.lineItems = activeQuotation.lineItems.map(item => ({
@@ -2720,11 +2779,9 @@ function handleCustomerSelectInOrder(customerName) {
         }));
       }
     } else {
-      // ẤN KHÔNG: Chỉ bỏ link tới Báo giá, TUYỆT ĐỐI KHÔNG xóa lineItems đang nhập
       state.formData.quotationId = null;
     }
   } else {
-    // Nếu khách hàng không có báo giá hợp lệ (Hết hạn, Bản nháp, Bị từ chối...)
     state.formData.quotationId = null;
   }
 
@@ -3734,6 +3791,175 @@ function getMonthRange() {
   return { firstDay, lastDay };
 }
 
+// Khởi tạo Custom Modal Container
+function initCustomModal() {
+  if (document.getElementById('custom-modal-overlay')) return;
+
+  const modalHtml = `
+    <div id="custom-modal-overlay" style="
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-jost, sans-serif);
+    ">
+      <div id="custom-modal-box" style="
+        width: 100%;
+        max-width: 440px;
+        background: var(--card, #141821);
+        border: 1px solid var(--border, rgba(255,255,255,0.1));
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 1px rgba(240,160,48,0.3);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        transform: scale(0.95);
+        transition: transform 0.2s ease, opacity 0.2s ease;
+      ">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div id="modal-icon-container" style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(240, 160, 48, 0.15);
+            border: 1px solid rgba(240, 160, 48, 0.3);
+            color: #f0a030;
+            flex-shrink: 0;
+          ">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h3 id="modal-title" style="
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--foreground, #ffffff);
+            letter-spacing: 0.02em;
+          ">Thông báo</h3>
+        </div>
+
+        <div id="modal-message" style="
+          font-size: 13.5px;
+          line-height: 1.5;
+          color: var(--muted-foreground, #a0aec0);
+        "></div>
+
+        <div id="modal-actions" style="
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          margin-top: 4px;
+        ">
+          <button id="modal-btn-cancel" style="
+            padding: 8px 18px;
+            background: transparent;
+            border: 1px solid var(--border, rgba(255,255,255,0.15));
+            border-radius: 6px;
+            color: var(--foreground, #ffffff);
+            font-family: var(--font-dm-mono, monospace);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.15s;
+          " onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Hủy bỏ</button>
+
+          <button id="modal-btn-confirm" style="
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #f0a030 0%, #d98818 100%);
+            border: none;
+            border-radius: 6px;
+            color: #000000;
+            font-family: var(--font-dm-mono, monospace);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(240, 160, 48, 0.25);
+            transition: all 0.15s;
+          " onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">Xác nhận</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// Hàm hiển thị hộp thoại Xác nhận (Thay thế confirm)
+function showConfirm(message, title = 'Xác nhận thao tác') {
+  initCustomModal();
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('custom-modal-overlay');
+    const titleEl = document.getElementById('modal-title');
+    const msgEl = document.getElementById('modal-message');
+    const btnConfirm = document.getElementById('modal-btn-confirm');
+    const btnCancel = document.getElementById('modal-btn-cancel');
+
+    titleEl.innerText = title;
+    msgEl.innerText = message;
+    btnCancel.style.display = 'inline-block';
+    btnConfirm.innerText = 'ĐỒNG Ý';
+
+    overlay.style.display = 'flex';
+
+    const handleConfirm = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    const cleanup = () => {
+      overlay.style.display = 'none';
+      btnConfirm.removeEventListener('click', handleConfirm);
+      btnCancel.removeEventListener('click', handleCancel);
+    };
+
+    btnConfirm.addEventListener('click', handleConfirm);
+    btnCancel.addEventListener('click', handleCancel);
+  });
+}
+
+// Hàm hiển thị hộp thoại Thông báo (Thay thế alert)
+function showAlert(message, title = 'Thông báo hệ thống') {
+  initCustomModal();
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('custom-modal-overlay');
+    const titleEl = document.getElementById('modal-title');
+    const msgEl = document.getElementById('modal-message');
+    const btnConfirm = document.getElementById('modal-btn-confirm');
+    const btnCancel = document.getElementById('modal-btn-cancel');
+
+    titleEl.innerText = title;
+    msgEl.innerText = message;
+    btnCancel.style.display = 'none'; // Cảnh báo chỉ có nút OK
+    btnConfirm.innerText = 'ĐÃ HỂU';
+
+    overlay.style.display = 'flex';
+
+    const handleConfirm = () => {
+      overlay.style.display = 'none';
+      btnConfirm.removeEventListener('click', handleConfirm);
+      resolve(true);
+    };
+
+    btnConfirm.addEventListener('click', handleConfirm);
+  });
+}
+
 function initFormData(module, id) {
   const keyMap = { 'sales-orders': 'orders', 'grn': 'grns' };
   const targetKey = keyMap[module] || module;
@@ -3864,7 +4090,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await fetchDataFromSupabase();
   render();
-  handleHashChange();
+  handleRouteChange(); // <--- Đổi từ handleHashChange() sang handleRouteChange()
   updateHeaderDate();
 });
 
