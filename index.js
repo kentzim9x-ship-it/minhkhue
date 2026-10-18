@@ -1103,7 +1103,7 @@ function updateUserInfoUI() {
   if (headerLeft && !document.getElementById('mobile-home-trigger')) {
     const homeBtn = document.createElement('button');
     homeBtn.id = 'mobile-home-trigger';
-    homeBtn.className = 'mobile-home-btn';
+    homeBtn.className = 'header-icon-btn mobile-home-btn';
     homeBtn.innerHTML = Icons.home;
     homeBtn.onclick = toggleMobileMenu;
     headerLeft.insertBefore(homeBtn, headerLeft.firstChild);
@@ -4082,13 +4082,13 @@ function initNotificationUI() {
     } else {
       bellBtn = document.createElement('button');
       bellBtn.id = 'notif-bell-btn';
-      bellBtn.className = 'notif-bell-btn';
       bellBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
       headerRight.appendChild(bellBtn);
     }
   }
 
-  bellBtn.classList.add('notif-bell-btn');
+  // Gán class đồng nhất kích thước với nút Ngôi nhà
+  bellBtn.className = 'header-icon-btn notif-bell-btn';
 
   if (!document.getElementById('notif-badge-dot')) {
     const dot = document.createElement('div');
@@ -4156,22 +4156,23 @@ function getDayLabel(dateStr) {
 
 function updateNotificationUI() {
   const allList = db.notifications || [];
-  // Lọc lấy danh sách thông báo trong 2 ngày gần đây (0 = Hôm nay, 1 = Hôm qua)
+  // Lọc thông báo trong 2 ngày gần đây
   const recentList = allList.filter(n => isWithinDays(n.date || n.created_at, 2));
   const readIds = getReadNotifIds();
 
+  // Kiểm tra có thông báo nào chưa đọc hay không
   const hasUnread = recentList.length > 0 && recentList.some(n => !readIds.includes(n.id));
 
   const bellBtn = document.getElementById('notif-bell-btn');
   const dot = document.getElementById('notif-badge-dot');
-  const svgIcon = bellBtn ? bellBtn.querySelector('svg') : null;
 
   if (hasUnread) {
-    if (dot) dot.classList.add('active');
-    if (svgIcon) svgIcon.classList.add('bell-ring-active');
+    if (dot) dot.style.display = 'block';
+    if (bellBtn) bellBtn.classList.add('bell-ring-active');
   } else {
-    if (dot) dot.classList.remove('active');
-    if (svgIcon) svgIcon.classList.remove('bell-ring-active');
+    // ĐÃ ĐỌC HẾT: Ẩn chấm đỏ và tắt hiệu ứng rung chuông
+    if (dot) dot.style.display = 'none';
+    if (bellBtn) bellBtn.classList.remove('bell-ring-active');
   }
 
   const dropdown = document.getElementById('notif-dropdown');
@@ -4219,7 +4220,7 @@ function renderNotificationList() {
   dropdown.innerHTML = `
     <div style="padding: 14px 18px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
       <span style="font-family: var(--font-dm-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">THÔNG BÁO</span>
-      ${recentList.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; cursor: pointer; text-transform: uppercase; font-weight: 500;">ĐÁNH DẤU ĐỌC HẾT</button>` : ''}
+      ${recentList.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 10px; cursor: pointer; text-transform: uppercase; font-weight: 400;">ĐÁNH DẤU ĐỌC HẾT</button>` : ''}
     </div>
     <div style="overflow-y: auto; max-height: 380px;">
       ${itemsHtml}
