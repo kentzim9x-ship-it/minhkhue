@@ -2551,8 +2551,8 @@ function renderCustomerForm(c) {
             <div class="form-group">
               <label class="form-label">Người liên hệ</label>
               <input type="text" class="form-input" value="${d.contact || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-    oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
-    onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
+    oninput="this.value = toTitleCase(this.value); updateField('contact', this.value);"
+    onchange="this.value = toTitleCase(this.value); updateField('contact', this.value);"
   `} placeholder="Tên người đại diện...">
             </div>
             <div class="form-group">
@@ -2583,7 +2583,7 @@ function renderCustomerForm(c) {
             <div class="form-group">
               <label class="form-label">Điều khoản thanh toán</label>
               <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'paymentTerms\', this.value)"'}>
-                ${['Thanh toán ngay', 'Thanh toán gối đầu', 'Net 15', 'Net 30', 'Net 60'].map(t => `<option value="${t}" ${d.paymentTerms === t ? 'selected' : ''}>${t}</option>`).join('')}
+                ${['Thanh toán ngay', 'Thanh toán gối đầu', 'Thanh toán cuối tháng', 'Net 30', 'Net 60'].map(t => `<option value="${t}" ${d.paymentTerms === t ? 'selected' : ''}>${t}</option>`).join('')}
               </select>
             </div>
             <div class="form-group">
@@ -4248,7 +4248,7 @@ function renderNotificationList() {
   dropdown.innerHTML = `
     <div style="padding: 14px 18px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
       <span style="font-family: var(--font-dm-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">THÔNG BÁO</span>
-      ${recentList.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 10px; cursor: pointer; text-transform: uppercase; font-weight: 400;">ĐÁNH DẤU ĐỌC HẾT</button>` : ''}
+      ${recentList.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 9.5px; cursor: pointer; text-transform: uppercase; font-weight: 500; white-space: nowrap;">ĐÁNH DẤU ĐỌC HẾT</button>` : ''}
     </div>
     <div style="overflow-y: auto; max-height: 380px;">
       ${itemsHtml}
