@@ -14,12 +14,12 @@
   --muted-foreground: #6b7585;
   --border: #252a33;
 
-  /* Đổi phông chữ mới: Inter thanh thoát, hiện đại & Plus Jakarta Sans gọn gàng */
+  /* Phông chữ Inter & Plus Jakarta Sans */
   --font-jost: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-dm-mono: 'Plus Jakarta Sans', SFMono-Regular, Consolas, monospace;
 }
 
-/* Giao diện Sáng (Light Mode) khi html[data-theme="light"] */
+/* Giao diện Sáng (Light Mode) */
 [data-theme="light"] {
   --background: #f4f5f7;
   --foreground: #0c0e11;
@@ -41,8 +41,14 @@
 }
 
 html,
-body {
+body,
+#root,
+#app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
   height: 100%;
+  overflow-x: hidden;
   overscroll-behavior: none;
 }
 
@@ -54,6 +60,15 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+#login-container {
+  width: 100vw;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--background, #0c0e12);
 }
 
 .app-container {
@@ -71,16 +86,19 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  box-shadow: none !important;
 }
 
 .sidebar-header {
   height: 50px !important;
-  padding: 0 18px !important;
+  padding: 0 16px !important;
   border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
   gap: 10px;
   flex-shrink: 0;
+  box-sizing: border-box !important;
 }
 
 .brand-logo {
@@ -165,9 +183,7 @@ input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s !important;
 }
 
-/* ==========================================
-   TỐI ƯU CẤU TRÚC VÀ GIAO DIỆN USER PROFILE
-   ========================================== */
+/* User Profile Sidebar */
 .sidebar-user {
   display: flex !important;
   align-items: center !important;
@@ -243,11 +259,16 @@ input:-webkit-autofill:active {
 }
 
 /* App Wrapper */
-.main-wrapper {
+.main-wrapper,
+.dashboard-container,
+#main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  box-shadow: none !important;
+  border-left: none !important;
+  margin-left: 0;
 }
 
 .app-header {
@@ -258,6 +279,7 @@ input:-webkit-autofill:active {
   justify-content: space-between;
   padding: 0 28px;
   flex-shrink: 0;
+  box-shadow: none;
 }
 
 .header-title-container {
@@ -700,7 +722,7 @@ tr:hover {
     padding: 12px !important;
   }
 
-  /* 2. Cố định Sticky Header & Chỉnh lề */
+  /* 2. Cố định Sticky Header - Sửa lỗi dải xám mờ tràn viền */
   .app-header {
     position: fixed !important;
     top: 0 !important;
@@ -710,7 +732,8 @@ tr:hover {
     z-index: 997 !important;
     background-color: var(--background) !important;
     border-bottom: 1px solid var(--border) !important;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+    /* KHẮC PHỤC: Đổi bóng đổ tỏa rộng 2 bên thành bóng mờ nhẹ đổ xuống bên dưới */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
     padding-left: 12px !important;
     padding-right: 12px !important;
   }
@@ -742,7 +765,6 @@ tr:hover {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-shadow: 6px 0 25px rgba(0, 0, 0, 0.6) !important;
     background: var(--card) !important;
-
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
@@ -753,18 +775,7 @@ tr:hover {
     transform: translateX(0) !important;
   }
 
-  /* 1. Header luôn ghim ở trên cùng */
-  .sidebar-header {
-    height: 50px !important;
-    padding: 0 18px !important;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-  }
-
-  /* 2. Phần giữa chứa danh sách menu có thể cuộn dọc */
+  /* Phần giữa chứa danh sách menu có thể cuộn dọc */
   .nav-menu {
     flex: 1 1 auto !important;
     overflow-y: auto !important;
@@ -772,7 +783,7 @@ tr:hover {
     padding: 8px 0 !important;
   }
 
-  /* 3. Footer thông tin user luôn ghim ở dưới cùng */
+  /* Footer thông tin user luôn ghim ở dưới cùng */
   .sidebar-user {
     display: flex !important;
     align-items: center !important;
@@ -786,7 +797,7 @@ tr:hover {
     flex-shrink: 0 !important;
   }
 
-  /* 4. Tối ưu Nút Menu, Nút Bấm, Input (Chống kẹt chạm) */
+  /* Tối ưu Nút Menu, Nút Bấm, Input (Chống kẹt chạm) */
   .form-select,
   .form-input,
   .form-textarea,
@@ -805,7 +816,7 @@ tr:hover {
     padding: 0 !important;
   }
 
-  /* 5. Khung Tổng Tiền, Thanh Lọc & Layout */
+  /* Khung Tổng Tiền, Thanh Lọc & Layout */
   div[style*="background: var(--muted)"][style*="overflow-x: auto"] {
     background: transparent !important;
     gap: 6px !important;
@@ -851,7 +862,7 @@ tr:hover {
     text-align: right !important;
   }
 
-  /* 6. Bo góc toàn bộ Form & Icon */
+  /* Bo góc toàn bộ Form & Icon */
   .kpi-card,
   div[style*="background: var(--card)"] {
     border-radius: 2px !important;
@@ -889,7 +900,7 @@ tr:hover {
     border-radius: 2px !important;
   }
 
-  /* 7. Xử lý Lưới Grid, KPI & Bảng Table có thanh cuộn */
+  /* Xử lý Lưới Grid, KPI & Bảng Table có thanh cuộn */
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
@@ -981,7 +992,7 @@ input[type=number] {
   appearance: textfield !important;
 }
 
-/* --- SỬA LỖI KHỰNG CUỘN SAFARI MOBILE BẰNG GPU --- */
+/* Tối ưu cuộn mượt bằng GPU */
 #app-content,
 .app-content,
 div[style*="overflow-x: auto"],
@@ -997,7 +1008,7 @@ div[style*="overflow: auto"],
   overscroll-behavior: auto;
 }
 
-/* Hiệu ứng rung/lắc cho icon chuông khi có thông báo chưa đọc */
+/* Hiệu ứng rung lắc icon chuông */
 @keyframes bellRing {
   0% {
     transform: rotate(0);
@@ -1037,7 +1048,7 @@ div[style*="overflow: auto"],
   transform-origin: top center;
 }
 
-/* Style cho container nút chuông và dấu chấm đỏ */
+/* Container nút chuông */
 .notif-bell-btn {
   position: relative;
   background: transparent;
@@ -1072,7 +1083,7 @@ div[style*="overflow: auto"],
   display: block;
 }
 
-/* Bảng thông báo trượt từ trên xuống (Dropdown) */
+/* Dropdown thông báo */
 .notif-dropdown {
   position: absolute;
   top: 55px;
@@ -1118,7 +1129,7 @@ div[style*="overflow: auto"],
   border-left: 3px solid #f0a030;
 }
 
-/* Tab Lịch sử thông báo trượt từ bên phải */
+/* Tab Lịch sử thông báo trượt */
 .notif-history-drawer {
   position: fixed;
   top: 0;
@@ -1160,7 +1171,7 @@ div[style*="overflow: auto"],
   pointer-events: auto;
 }
 
-/* Thẻ gom nhóm ngày trong lịch sử */
+/* Thẻ gom nhóm ngày */
 .notif-date-group-title {
   padding: 8px 16px;
   background: var(--secondary);
@@ -1177,7 +1188,7 @@ div[style*="overflow: auto"],
   z-index: 2;
 }
 
-/* Đồng nhất kích thước Nút Ngôi Nhà & Nút Chuông Thông Báo */
+/* Kích thước Nút Ngôi Nhà & Nút Chuông Thông Báo */
 .header-icon-btn {
   position: relative;
   width: 40px !important;
@@ -1202,7 +1213,7 @@ div[style*="overflow: auto"],
   height: 20px !important;
 }
 
-/* Giới hạn độ rộng và cắt 3 chấm cho ô nội dung (không áp dụng cột Hành động) */
+/* Giới hạn độ rộng và cắt 3 chấm cho ô nội dung */
 .hover-row td:not(:last-child) {
   white-space: nowrap;
   overflow: hidden;
@@ -1242,17 +1253,7 @@ div[style*="overflow: auto"],
   background: rgba(0, 0, 0, 0.25);
 }
 
-.sidebar-header {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  padding: 16px !important;
-  box-sizing: border-box !important;
-}
-
-/* ==========================================
-   2. BIẾN CSS CHO FORM LOGIN ĐỒNG BỘ DARK/LIGHT MODE
-   ========================================== */
+/* Form Login đồng bộ Dark/Light Mode */
 [data-theme="light"] .login-split-card {
   background: rgba(255, 255, 255, 0.95) !important;
   border-color: var(--border, #e4e4e7) !important;
@@ -1281,7 +1282,7 @@ div[style*="overflow: auto"],
   -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
 }
 
-/* Nút Home màu vàng */
+/* Nút Home */
 .sidebar-header .logo-icon,
 .sidebar-header .home-logo-btn {
   width: 36px !important;
@@ -1291,7 +1292,7 @@ div[style*="overflow: auto"],
   border-radius: 4px !important;
   display: inline-flex !important;
   align-items: center !important;
-  justify-content: justify-content !important;
+  justify-content: center !important;
   box-sizing: border-box !important;
 }
 
@@ -1319,13 +1320,4 @@ div[style*="overflow: auto"],
 #theme-toggle-btn-sidebar svg {
   width: 18px !important;
   height: 18px !important;
-}
-
-#login-container {
-  width: 100vw;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background-color: var(--background, #0c0e12);
 }
