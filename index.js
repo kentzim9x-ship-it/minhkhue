@@ -3586,6 +3586,10 @@ function renderQuotationForm(c) {
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
           <button type="button" class="btn-cancel" onclick="navigate('quotations')">${isView ? 'Quay lại' : 'Hủy'}</button>
           <div style="display: flex; gap: 8px;">
+          <!-- Nút xuất PDF & Chia sẻ Zalo -->
+${isView ? `<button type="button" class="btn-primary" onclick="exportToPDFAndShare('BaoGia')" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
+  Xuất PDF & Chia sẻ Zalo
+</button>` : ''}
             ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToExcel()" style="color: #ffffff; border: 1px solid var(--border); padding: 8px 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">Xuất Excel</button>` : ''}
             ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo báo giá' : 'Cập nhật'}</button>` : ''}
           </div>
@@ -4436,7 +4440,7 @@ function renderReportSales(c) {
             <div style="display: flex; align-items: center; gap: 6px;">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
               <select class="form-select" style="width: 110px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; render();">
-                ${Array.from({length: 12}, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
+                ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
               </select>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
@@ -4723,6 +4727,166 @@ function exportSalesOrderToExcel() {
   XLSX.utils.book_append_sheet(wb, ws, "DonHang");
 
   downloadOrShareXLSX(wb, `DonHang_${d.id || 'Export'}`);
+}
+
+// ==========================================
+// HÀM XUẤT FILE PDF VÀ CHIA SẺ QUA ZALO
+// ==========================================
+async function exportToPDFAndShare(fileName = 'Bao_Cao') {
+  const d = state.formData;
+  if (!d) return;
+
+  if (typeof html2pdf === 'undefined') {
+    showAlert('Thư viện html2pdf chưa được tải, vui lòng kiểm tra kết nối mạng!', 'Lỗi');
+    return;
+  }
+
+  const custAddress = getCustomerAddress(d.customer);
+  const { dayStr, monthStr, yearStr } = parseDateParts(d.date);
+  const fromDateVN = formatDateVN(d.validbegin || d.validBegin || d.date);
+  const toDateVN = formatDateVN(d.validUntil || d.validuntil);
+  const items = (d.lineItems || d.lineitems || []);
+
+  let totalQty = 0;
+  let totalAmount = 0;
+
+  // Tạo chuỗi HTML render bảng chuẩn viền & font chữ
+  const rowsHtml = items.map((l, idx) => {
+    const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
+    const unitName = mat ? (mat.unit || '—') : (l.unit || '—');
+    const qty = Number(l.qty) || 0;
+    const price = Number(l.unitPrice) || 0;
+    const discount = Number(l.discount) || 0;
+    const tax = Number(l.tax) || 0;
+    const lineSub = qty * price * (1 - discount / 100);
+    const lineTotal = lineSub * (1 + tax / 100);
+
+    totalQty += qty;
+    totalAmount += lineTotal;
+
+    return `
+      <tr>
+        <td style="border: 1px solid #000; text-align: center; padding: 4px;">${idx + 1}</td>
+        <td style="border: 1px solid #000; text-align: left; padding: 4px;">${l.name || ''}</td>
+        <td style="border: 1px solid #000; text-align: center; padding: 4px;">${unitName}</td>
+        <td style="border: 1px solid #000; text-align: right; padding: 4px;">${price ? Math.round(price).toLocaleString('vi-VN') : ''}</td>
+        <td style="border: 1px solid #000; text-align: right; padding: 4px;">${qty ? qty.toLocaleString('vi-VN') : ''}</td>
+        <td style="border: 1px solid #000; text-align: right; padding: 4px;">${discount ? discount + '%' : '0%'}</td>
+        <td style="border: 1px solid #000; text-align: right; padding: 4px;">${tax ? tax + '%' : '0%'}</td>
+        <td style="border: 1px solid #000; text-align: right; padding: 4px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : ''}</td>
+      </tr>
+    `;
+  }).join('');
+
+  // Khung HTML tạo template PDF
+  const pdfContainer = document.createElement('div');
+  pdfContainer.style.padding = '20px';
+  pdfContainer.style.background = '#ffffff';
+  pdfContainer.style.color = '#000000';
+  pdfContainer.style.fontFamily = "'Times New Roman', serif";
+  pdfContainer.style.fontSize = '12pt';
+
+  pdfContainer.innerHTML = `
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+      <tr>
+        <td style="width: 50%; text-align: center; font-size: 10pt; vertical-align: top;">
+          ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
+          Xã Sơn Đồng – TP Hà Nội<br>
+          ĐT: 0936.35.31.37
+        </td>
+        <td style="width: 50%; text-align: center; font-size: 10pt; vertical-align: top;">
+          Giấy phép ĐKKD số: 01U8005300<br>
+          Địa chỉ nhận hóa đơn: nhambc@gmail.com<br>
+          MST: 0110640531
+        </td>
+      </tr>
+    </table>
+
+    <div style="text-align: center; font-weight: bold; font-size: 15pt; margin: 15px 0;">
+      CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
+    </div>
+
+    <table style="width: 100%; margin-bottom: 15px; font-size: 11pt;">
+      <tr>
+        <td style="width: 50%;"><strong>Khách hàng:</strong> ${d.customer || ''}</td>
+        <td style="width: 50%;"><strong>Bảng báo giá/Đơn hàng:</strong> ${d.id || ''}</td>
+      </tr>
+      <tr>
+        <td><strong>Địa chỉ:</strong> ${custAddress}</td>
+        <td><strong>Thời hạn:</strong> từ ${fromDateVN} đến ${toDateVN}</td>
+      </tr>
+    </table>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 11pt; margin-bottom: 10px;">
+      <thead>
+        <tr style="background-color: #8db4e2; font-weight: bold; text-align: center;">
+          <th style="border: 1px solid #000; padding: 6px; width: 5%;">STT</th>
+          <th style="border: 1px solid #000; padding: 6px; width: 35%;">Tên Hàng</th>
+          <th style="border: 1px solid #000; padding: 6px; width: 10%;">ĐVT</th>
+          <th style="border: 1px solid #000; padding: 6px; width: 12%;">Đơn Giá</th>
+          <th style="border: 1px solid #000; padding: 6px; width: 8%;">SL</th>
+          <th style="border: 1px solid #000; padding: 6px; width: 8%;">CK%</th>
+          <th style="border: 1px solid #000; padding: 6px; width: 8%;">Thuế%</th>
+          <th style="border: 1px solid #000; padding: 6px; width: 14%;">Thành Tiền</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+        <tr style="font-weight: bold;">
+          <td colspan="4" style="border: 1px solid #000; text-align: center; padding: 6px;">Tổng Cộng</td>
+          <td style="border: 1px solid #000; text-align: right; padding: 6px;">${totalQty.toLocaleString('vi-VN')}</td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000; text-align: right; padding: 6px;">${Math.round(totalAmount).toLocaleString('vi-VN')}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 20px; text-align: right; font-size: 11pt;">
+      <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
+      <div style="font-weight: bold; margin-top: 5px; margin-bottom: 50px;">Đại diện nhà cung cấp</div>
+      <div style="font-weight: bold;">BÙI CAO NHÂM</div>
+    </div>
+  `;
+
+  // Cấu hình xuất file PDF
+  const fullFileName = `${fileName}_${d.id || ''}.pdf`;
+  const opt = {
+    margin: 10,
+    filename: fullFileName,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  try {
+    // Chuyển HTML thành Blob PDF
+    const worker = html2pdf().set(opt).from(pdfContainer);
+    const pdfBlob = await worker.output('blob');
+
+    const file = new File([pdfBlob], fullFileName, { type: 'application/pdf' });
+
+    // KIỂM TRA VÀ CHIA SẺ QUA ZALO NẾU CHẠY TRÊN DI ĐỘNG
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: fileName,
+          text: `Gửi báo giá ${d.id || ''} qua Zalo`
+        });
+        return;
+      } catch (shareErr) {
+        if (shareErr.name !== 'AbortError') console.warn('Lỗi chia sẻ:', shareErr);
+      }
+    }
+
+    // Tải trực tiếp PDF về máy nếu dùng PC
+    html2pdf().set(opt).from(pdfContainer).save();
+
+  } catch (err) {
+    console.error('Lỗi xuất PDF:', err);
+    showAlert('Có lỗi khi tạo file PDF!', 'Lỗi');
+  }
 }
 
 // ==========================================
