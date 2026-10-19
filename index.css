@@ -164,7 +164,7 @@ input:-webkit-autofill:active {
   border: none !important;
   border-top: 1px solid var(--border) !important;
   /* Chỉ giữ lại đường viền ngăn cách phía trên */
-  border-radius: 0 !important;
+  border-radius: 2px !important;
   flex-shrink: 0 !important;
 }
 
@@ -172,7 +172,7 @@ input:-webkit-autofill:active {
   width: 32px !important;
   height: 32px !important;
   min-width: 32px !important;
-  border-radius: 0 !important;
+  border-radius: 2px !important;
   background: rgba(240, 160, 48, 0.15) !important;
   border: 1px solid rgba(240, 160, 48, 0.3) !important;
   color: var(--primary) !important;
@@ -219,7 +219,7 @@ input:-webkit-autofill:active {
   font-size: 10px !important;
   font-weight: 500 !important;
   padding: 5px 9px !important;
-  border-radius: 0 !important;
+  border-radius: 2px !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
 }
@@ -461,7 +461,7 @@ input:-webkit-autofill:active {
   padding: 9px 12px;
   outline: none;
   width: 100%;
-  border-radius: 1px;
+  border-radius: 2px;
 }
 
 .form-input:focus,
@@ -554,7 +554,7 @@ tr:hover {
   text-transform: uppercase;
   padding: 3px 8px;
   display: inline-block;
-  border-radius: 1px;
+  border-radius: 2px;
 }
 
 .badge-emerald {
@@ -643,7 +643,7 @@ tr:hover {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 1px;
+  border-radius: 2px;
 }
 
 /* ==============================================================
@@ -772,7 +772,7 @@ tr:hover {
     background: rgba(255, 255, 255, 0.03) !important;
     border: none !important;
     border-top: 1px solid var(--border) !important;
-    border-radius: 0 !important;
+    border-radius: 2px !important;
     flex-shrink: 0 !important;
   }
 
@@ -791,7 +791,7 @@ tr:hover {
   .mobile-home-btn {
     background: transparent !important;
     border: none !important;
-    border-radius: 0 !important;
+    border-radius: 2px !important;
     padding: 0 !important;
   }
 
@@ -803,7 +803,7 @@ tr:hover {
   }
 
   div[style*="background: var(--muted)"][style*="overflow-x: auto"]>button {
-    border-radius: 0 !important;
+    border-radius: 2px !important;
     border: 1px solid var(--border) !important;
     font-size: 11px !important;
     padding: 6px 12px !important;
@@ -844,7 +844,7 @@ tr:hover {
   /* 6. Bo góc toàn bộ Form & Icon */
   .kpi-card,
   div[style*="background: var(--card)"] {
-    border-radius: 0 !important;
+    border-radius: 2px !important;
     margin-bottom: 8px !important;
     border: 1px solid var(--border) !important;
   }
@@ -852,7 +852,7 @@ tr:hover {
   form,
   form>div[style*="border"],
   form>div {
-    border-radius: 0 !important;
+    border-radius: 2px !important;
   }
 
   form>div:first-child {
@@ -871,12 +871,12 @@ tr:hover {
   button,
   table input,
   table select {
-    border-radius: 0 !important;
+    border-radius: 2px !important;
   }
 
   .sidebar-header>div:first-child,
   .user-avatar {
-    border-radius: 0 !important;
+    border-radius: 2px !important;
   }
 
   /* 7. Xử lý Lưới Grid, KPI & Bảng Table có thanh cuộn */
@@ -928,7 +928,7 @@ tr:hover {
     bottom: 0 !important;
     width: 100vw !important;
     max-height: calc(100vh - 56px) !important;
-    border-radius: 0 !important;
+    border-radius: 2px !important;
     box-shadow: none !important;
     z-index: 9990 !important;
   }
@@ -1032,7 +1032,7 @@ div[style*="overflow: auto"],
   position: relative;
   background: transparent;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
-  border-radius: 1px;
+  border-radius: 2px;
   padding: 8px;
   color: var(--foreground, #ffffff);
   cursor: pointer;
@@ -1071,7 +1071,7 @@ div[style*="overflow: auto"],
   max-height: 520px;
   background: var(--card, #141821);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
-  border-radius: 1px;
+  border-radius: 2px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 1px rgba(240, 160, 48, 0.3);
   z-index: 999;
   display: flex;
@@ -1180,7 +1180,7 @@ div[style*="overflow: auto"],
   justify-content: center !important;
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.12)) !important;
-  border-radius: 0 !important;
+  border-radius: 2px !important;
   color: var(--foreground, #ffffff) !important;
   cursor: pointer;
   box-sizing: border-box !important;
