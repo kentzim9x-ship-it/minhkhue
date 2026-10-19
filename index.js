@@ -340,51 +340,57 @@ function updateUserInfoUI() {
   const session = getAuthSession();
   if (session.isLoggedIn && session.currentUser) {
     const user = session.currentUser;
-    const userAvatarEl = document.querySelector('.user-avatar');
-    const userNameEl = document.querySelector('.user-name');
-    const userRoleEl = document.querySelector('.user-role');
-    const sidebarUserEl = document.querySelector('.sidebar-user');
+    
+    // Tìm hoặc tạo vùng chứa User Info dưới đáy Sidebar
+    let sidebarUserContainer = document.querySelector('.sidebar-user, .sidebar-footer');
+    const sidebarEl = document.querySelector('.app-sidebar');
 
-    if (userAvatarEl) userAvatarEl.innerText = (user.fullname || user.username || 'U').substring(0, 2).toUpperCase();
-    if (userNameEl) {
-      userNameEl.innerText = user.fullname || user.username;
-      userNameEl.title = user.fullname || user.username; // Hover hiện full tên
-      userNameEl.style.cssText = "white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; display: block;";
-    }
-    if (userRoleEl) userRoleEl.innerText = user.role || 'USER';
+    if (sidebarEl) {
+      if (!sidebarUserContainer) {
+        sidebarUserContainer = document.createElement('div');
+        sidebarUserContainer.className = 'sidebar-user';
+        sidebarEl.appendChild(sidebarUserContainer);
+      }
 
-    if (sidebarUserEl && !document.getElementById('logout-btn')) {
-      // Đảm bảo container không bị vỡ layout
-      sidebarUserEl.style.cssText = "display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px;";
+      const fullname = user.fullname || user.username || 'User';
+      const initials = fullname.substring(0, 2).toUpperCase();
+      const role = user.role || 'ADMIN';
 
-      const logoutBtn = document.createElement('button');
-      logoutBtn.id = 'logout-btn';
-      logoutBtn.innerText = 'Đăng xuất';
-      logoutBtn.onclick = handleLogout;
-      logoutBtn.style.cssText = "flex-shrink: 0; margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--muted-foreground); font-size: 10px; padding: 4px 8px; cursor: pointer; white-space: nowrap;";
-      sidebarUserEl.appendChild(logoutBtn);
+      // Render lại Card User Info chuẩn thẩm mỹ
+      sidebarUserContainer.innerHTML = `
+        <div class="sidebar-user-card">
+          <!-- Avatar Icon Gradient -->
+          <div class="user-avatar-box">${initials}</div>
+          
+          <!-- Thông tin Tên & Quyền -->
+          <div class="user-details-box">
+            <span class="user-details-name" title="${fullname}">${fullname}</span>
+            <span class="user-details-role">${role}</span>
+          </div>
+
+          <!-- Nút Đăng xuất với Icon Logout -->
+          <button class="btn-logout-custom" onclick="handleLogout()" title="Đăng xuất khỏi hệ thống">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Thoát</span>
+          </button>
+        </div>
+      `;
     }
   }
 
-  // Icon Mobile Home Header
+  // Khởi tạo Icon Home Mobile trên Header
   const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header');
   if (headerLeft && !document.getElementById('mobile-home-trigger')) {
     const homeBtn = document.createElement('button');
     homeBtn.id = 'mobile-home-trigger';
     homeBtn.className = 'header-icon-btn mobile-home-btn';
-    homeBtn.innerHTML = Icons.home;
+    homeBtn.innerHTML = typeof Icons !== 'undefined' && Icons.home ? Icons.home : '🏠';
     homeBtn.onclick = toggleMobileMenu;
     headerLeft.insertBefore(homeBtn, headerLeft.firstChild);
-  }
-
-  const logoBrand = document.querySelector('.logo-brand, .app-brand, .sidebar-header');
-  if (logoBrand) {
-    logoBrand.style.cursor = 'pointer';
-    logoBrand.onclick = () => {
-      if (window.innerWidth <= 768 && document.body.classList.contains('mobile-menu-open')) {
-        toggleMobileMenu();
-      }
-    };
   }
 }
 

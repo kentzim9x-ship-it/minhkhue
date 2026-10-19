@@ -1154,3 +1154,96 @@ div[style*="overflow: auto"],
   max-width: none !important;
   overflow: visible !important;
 }
+
+/* Cấu trúc Sidebar chuẩn Flexbox để phần User luôn hiển thị ở đáy */
+.app-sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+}
+
+/* Vùng chứa danh mục Menu cho phép cuộn độc lập */
+.sidebar-menu-wrapper,
+.sidebar-content {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding-bottom: 16px !important;
+}
+
+/* Khai báo Card User Info cố định ở chân Sidebar */
+.sidebar-user-card {
+    flex-shrink: 0 !important;
+    padding: 12px 14px !important;
+    margin: 10px !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+}
+
+.user-avatar-box {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+    background: linear-gradient(135deg, #f0a030 0%, #d98818 100%) !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 2px 8px rgba(240, 160, 48, 0.25) !important;
+}
+
+.user-details-box {
+    flex: 1 !important;
+    min-width: 0 !important; /* Bắt buộc để cắt chữ tên quá dài */
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.user-details-name {
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.3 !important;
+}
+
+.user-details-role {
+    color: #8a94a6 !important;
+    font-size: 10px !important;
+    font-family: var(--font-dm-mono, monospace) !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+}
+
+.btn-logout-custom {
+    flex-shrink: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    padding: 6px 10px !important;
+    background: rgba(248, 113, 113, 0.1) !important;
+    border: 1px solid rgba(248, 113, 113, 0.2) !important;
+    border-radius: 8px !important;
+    color: #f87171 !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+}
+
+.btn-logout-custom:hover {
+    background: rgba(248, 113, 113, 0.2) !important;
+    border-color: rgba(248, 113, 113, 0.4) !important;
+}
