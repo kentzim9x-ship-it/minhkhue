@@ -340,49 +340,41 @@ function updateUserInfoUI() {
   const session = getAuthSession();
   if (session.isLoggedIn && session.currentUser) {
     const user = session.currentUser;
-    
-    // Tìm hoặc tạo vùng chứa User Info dưới đáy Sidebar
-    let sidebarUserContainer = document.querySelector('.sidebar-user, .sidebar-footer');
     const sidebarEl = document.querySelector('.app-sidebar');
 
     if (sidebarEl) {
-      if (!sidebarUserContainer) {
-        sidebarUserContainer = document.createElement('div');
-        sidebarUserContainer.className = 'sidebar-user';
-        sidebarEl.appendChild(sidebarUserContainer);
+      // Tìm hoặc xóa vùng user info cũ nếu có
+      let userBox = sidebarEl.querySelector('.sidebar-user-wrapper');
+      if (!userBox) {
+        userBox = document.createElement('div');
+        userBox.className = 'sidebar-user-wrapper';
+        sidebarEl.appendChild(userBox);
       }
 
       const fullname = user.fullname || user.username || 'User';
       const initials = fullname.substring(0, 2).toUpperCase();
       const role = user.role || 'ADMIN';
 
-      // Render lại Card User Info chuẩn thẩm mỹ
-      sidebarUserContainer.innerHTML = `
-        <div class="sidebar-user-card">
-          <!-- Avatar Icon Gradient -->
-          <div class="user-avatar-box">${initials}</div>
-          
-          <!-- Thông tin Tên & Quyền -->
-          <div class="user-details-box">
-            <span class="user-details-name" title="${fullname}">${fullname}</span>
-            <span class="user-details-role">${role}</span>
-          </div>
-
-          <!-- Nút Đăng xuất với Icon Logout -->
-          <button class="btn-logout-custom" onclick="handleLogout()" title="Đăng xuất khỏi hệ thống">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-            <span>Thoát</span>
-          </button>
+      // Tạo cấu trúc HTML mới
+      userBox.innerHTML = `
+        <div class="user-avatar-pill">${initials}</div>
+        <div class="user-info-meta">
+          <span class="user-info-fullname" title="${fullname}">${fullname}</span>
+          <span class="user-info-role">${role}</span>
         </div>
+        <button class="btn-logout-icon" onclick="handleLogout()" title="Đăng xuất khỏi hệ thống">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Thoát</span>
+        </button>
       `;
     }
   }
 
-  // Khởi tạo Icon Home Mobile trên Header
+  // Tích hợp Trigger Nút Home Mobile Header
   const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header');
   if (headerLeft && !document.getElementById('mobile-home-trigger')) {
     const homeBtn = document.createElement('button');
@@ -2376,7 +2368,7 @@ function render() {
           const len = el.value ? el.value.length : 0;
           el.setSelectionRange(len, len);
         }
-      } catch (err) {}
+      } catch (err) { }
     }
   }
 }

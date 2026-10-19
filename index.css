@@ -1247,3 +1247,103 @@ div[style*="overflow: auto"],
     background: rgba(248, 113, 113, 0.2) !important;
     border-color: rgba(248, 113, 113, 0.4) !important;
 }
+
+/* Ép Sidebar thành Flexbox chuẩn 100vh để User Info không bao giờ bị tràn mất */
+.app-sidebar {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Vùng danh sách Menu cuộn độc lập */
+.sidebar-menu, 
+.sidebar-content,
+.app-sidebar > nav {
+  flex: 1 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Thẻ User Card cố định ở chân Sidebar */
+.sidebar-user-wrapper {
+  flex-shrink: 0 !important;
+  padding: 10px 12px !important;
+  margin: 10px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  box-sizing: border-box !important;
+}
+
+/* Icon Avatar chữ cái */
+.user-avatar-pill {
+  width: 34px !important;
+  height: 34px !important;
+  border-radius: 8px !important;
+  background: linear-gradient(135deg, #f0a030 0%, #d98818 100%) !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+/* Tên & Quyền hạn */
+.user-info-meta {
+  flex: 1 !important;
+  min-width: 0 !important; /* Quan trọng để cắt chữ dài */
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.user-info-fullname {
+  color: #ffffff !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.2 !important;
+}
+
+.user-info-role {
+  color: #8a94a6 !important;
+  font-size: 9.5px !important;
+  font-family: var(--font-dm-mono, monospace) !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  margin-top: 2px !important;
+}
+
+/* Nút Đăng xuất nhỏ gọn có Icon */
+.btn-logout-icon {
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  padding: 5px 8px !important;
+  background: rgba(248, 113, 113, 0.12) !important;
+  border: 1px solid rgba(248, 113, 113, 0.25) !important;
+  border-radius: 6px !important;
+  color: #f87171 !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  white-space: nowrap !important;
+}
+
+.btn-logout-icon:hover {
+  background: rgba(248, 113, 113, 0.25) !important;
+  border-color: rgba(248, 113, 113, 0.5) !important;
+}
