@@ -4514,24 +4514,40 @@ async function generateAndSharePDF(htmlElement, fileName, shareTitle) {
   try {
     const worker = html2pdf().set(opt).from(htmlElement);
     const pdfBlob = await worker.output('blob');
-    const file = new File([pdfBlob], fullFileName, { type: 'application/pdf' });
 
-    // Kiểm tra & Kích hoạt chia sẻ qua Zalo/Ứng dụng trên di động
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({
-          files: [file],
-          title: shareTitle,
-          text: `Gửi ${shareTitle} qua Zalo`
-        });
-        return;
-      } catch (shareErr) {
-        if (shareErr.name !== 'AbortError') console.warn('Lỗi khi chia sẻ:', shareErr);
+    // Kiểm tra xem thiết bị có phải di động (Android / iOS) hay không
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    // 1. DÀNH CHO MOBILE: MỞ BẢNG CHIA SẺ QUA ZALO
+    if (isMobile && navigator.canShare) {
+      const file = new File([pdfBlob], fullFileName, { type: 'application/pdf' });
+      if (navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: shareTitle,
+            text: `Gửi ${shareTitle} qua Zalo`
+          });
+          return;
+        } catch (shareErr) {
+          if (shareErr.name !== 'AbortError') {
+            console.warn('Lỗi khi chia sẻ trên Mobile:', shareErr);
+          }
+          return;
+        }
       }
     }
 
-    // Tải trực tiếp file PDF về máy nếu dùng PC
-    html2pdf().set(opt).from(htmlElement).save();
+    // 2. DÀNH CHO PC: TẢI TRỰC TIẾP FILE PDF VỀ THƯ MỤC MẶC ĐỊNH
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fullFileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
   } catch (err) {
     console.error('Lỗi khi xuất PDF:', err);
     showAlert('Có lỗi xảy ra trong quá trình tạo file PDF!', 'Lỗi');
@@ -4641,7 +4657,7 @@ async function exportQuotationToPDF() {
     </table>
 
     <div style="border: 1.5px solid #000000; box-sizing: border-box;">
-      <table style="width: 100%; border-collapse: 1px solid #000000; font-size: 11pt;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
         <thead>
           <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
             <td style="border: 1px solid #000000; width: 4%;">STT</td>
@@ -4780,7 +4796,7 @@ async function exportSalesOrderToPDF() {
     </table>
 
     <div style="border: 1.5px solid #000000; box-sizing: border-box;">
-      <table style="width: 100%; border-collapse: 1px solid #000000; font-size: 11pt;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
         <thead>
           <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
             <td style="border: 1px solid #000000; width: 4%;">STT</td>
