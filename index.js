@@ -3587,7 +3587,7 @@ function renderQuotationForm(c) {
           <button type="button" class="btn-cancel" onclick="navigate('quotations')">${isView ? 'Quay lại' : 'Hủy'}</button>
           <div style="display: flex; gap: 8px;">
           <!-- Nút xuất PDF & Chia sẻ Zalo -->
-            ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToExcel()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
+            ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
               Xuất PDF
             </button>` : ''}
             ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo báo giá' : 'Cập nhật'}</button>` : ''}
@@ -3769,7 +3769,7 @@ function renderSalesOrderForm(c) {
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
           <button type="button" class="btn-cancel" onclick="navigate('sales-orders')">${isView ? 'Quay lại' : 'Hủy'}</button>
           <div style="display: flex; gap: 8px;">
-            ${isView ? `<button type="button" class="btn-primary" onclick="exportSalesOrderToExcel()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
+            ${isView ? `<button type="button" class="btn-primary" onclick="exportSalesOrderToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
               Xuất PDF
             </button>` : ''}
             ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo đơn hàng' : 'Cập nhật'}</button>` : ''}
@@ -4541,7 +4541,7 @@ async function generateAndSharePDF(htmlElement, fileName, shareTitle) {
 // ==========================================
 // 1. XUẤT PDF BẢNG BÁO GIÁ
 // ==========================================
-async function exportQuotationToExcel() {
+async function exportQuotationToPDF() {
   const d = state.formData;
   if (!d) return;
 
@@ -4680,7 +4680,7 @@ async function exportQuotationToExcel() {
 // ==========================================
 // 2. XUẤT PDF ĐƠN BÁN HÀNG
 // ==========================================
-async function exportSalesOrderToExcel() {
+async function exportSalesOrderToPDF() {
   const d = state.formData;
   if (!d) return;
 
@@ -4812,6 +4812,209 @@ async function exportSalesOrderToExcel() {
   `;
 
   await generateAndSharePDF(container, `DonHang_${d.id || 'Export'}`, `Đơn Bán Hàng ${d.id || ''}`);
+}
+
+// ==========================================
+// 1. Xuất Excel Báo Giá (ĐÃ NÂNG CẤP XUẤT .XLSX & CHIA SẺ ZALO)
+// ==========================================
+function exportQuotationToExcel() {
+  const d = state.formData;
+  if (!d) return;
+
+  if (typeof XLSX === 'undefined') {
+    showAlert('Thư viện XLSX chưa được tải, vui lòng kiểm tra kết nối mạng!', 'Lỗi');
+    return;
+  }
+
+  const custAddress = getCustomerAddress(d.customer);
+  const { dayStr, monthStr, yearStr } = parseDateParts(d.date);
+  const fromDateVN = formatDateVN(d.validbegin || d.validBegin || d.date);
+  const toDateVN = formatDateVN(d.validUntil || d.validuntil);
+
+  // Tạo mảng dữ liệu 2 chiều cho SheetJS
+  const sheetData = [
+    ["ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1", "", "", "", "Giấy phép ĐKKD số: 01U8005300", "", "", ""],
+    ["Xã Sơn Đồng – TP Hà Nội", "", "", "", "Địa chỉ nhận hóa đơn: nhambc@gmail.com", "", "", ""],
+    ["ĐT: 0936.35.31.37", "", "", "", "MST: 0110640531", "", "", ""],
+    ["CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ", "", "", "", "", "", "", ""],
+    [`Khách hàng: ${d.customer || ''}`, "", "", "", `Bảng báo giá: ${d.id || ''}`, "", "", ""],
+    [`Địa chỉ: ${custAddress}`, "", "", "", `Ngày hiệu lực: từ ngày ${fromDateVN} - đến ngày ${toDateVN}`, "", "", ""],
+    [""], // Dòng trống
+    ["STT", "Tên Hàng", "ĐVT", "Đơn Giá", "Số Lượng", "CK%", "Thuế%", "Thành Tiền"]
+  ];
+
+  let totalQty = 0;
+  let totalAmount = 0;
+  const items = (d.lineItems || d.lineitems || []);
+
+  items.forEach((l, idx) => {
+    const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
+    const unitName = mat ? (mat.unit || '—') : (l.unit || '—');
+    const qty = Number(l.qty) || 0;
+    const price = Number(l.unitPrice) || 0;
+    const discount = Number(l.discount) || 0;
+    const tax = Number(l.tax) || 0;
+
+    const lineSub = qty * price * (1 - discount / 100);
+    const lineTotal = lineSub * (1 + tax / 100);
+
+    totalQty += qty;
+    totalAmount += lineTotal;
+
+    sheetData.push([
+      idx + 1,
+      l.name || '',
+      unitName,
+      price,
+      qty,
+      `${discount}%`,
+      `${tax}%`,
+      Math.round(lineTotal)
+    ]);
+  });
+
+  // Thêm dòng Tổng cộng và Chữ ký
+  sheetData.push(
+    ["Tổng Cộng", "", "", "", totalQty, "", "", Math.round(totalAmount)],
+    [""],
+    ["", "", "", "", "", `Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}`, "", ""],
+    ["", "", "", "", "", "Đại diện nhà cung cấp", "", ""],
+    [""],
+    [""],
+    ["", "", "", "", "", "BÙI CAO NHÂM", "", ""]
+  );
+
+  // Tạo Worksheet và thêm Merges ô
+  const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, { s: { r: 0, c: 4 }, e: { r: 0, c: 7 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, { s: { r: 1, c: 4 }, e: { r: 1, c: 7 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } }, { s: { r: 2, c: 4 }, e: { r: 2, c: 7 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 7 } }, // Tiêu đề công ty
+    { s: { r: 4, c: 0 }, e: { r: 4, c: 3 } }, { s: { r: 4, c: 4 }, e: { r: 4, c: 7 } },
+    { s: { r: 5, c: 0 }, e: { r: 5, c: 3 } }, { s: { r: 5, c: 4 }, e: { r: 5, c: 7 } },
+    { s: { r: sheetData.length - 7, c: 0 }, e: { r: sheetData.length - 7, c: 3 } }, // Tổng cộng label
+    { s: { r: sheetData.length - 5, c: 5 }, e: { r: sheetData.length - 5, c: 7 } }, // Ngày tháng
+    { s: { r: sheetData.length - 4, c: 5 }, e: { r: sheetData.length - 4, c: 7 } }, // Chức danh
+    { s: { r: sheetData.length - 1, c: 5 }, e: { r: sheetData.length - 1, c: 7 } }  // Tên người ký
+  ];
+
+  // Căn chỉnh độ rộng cột chuẩn
+  ws['!cols'] = [
+    { wch: 6 },  // STT
+    { wch: 32 }, // Tên Hàng
+    { wch: 10 }, // ĐVT
+    { wch: 14 }, // Đơn Giá
+    { wch: 10 }, // Số Lượng
+    { wch: 8 },  // CK%
+    { wch: 8 },  // Thuế%
+    { wch: 16 }  // Thành Tiền
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "BaoGia");
+
+  // Tiến hành tải xuống hoặc mở bảng Share Zalo
+  downloadOrShareXLSX(wb, `BaoGia_${d.id || 'Export'}`);
+}
+
+// ==========================================
+// 2. Xuất Excel Đơn Bán Hàng (ĐÃ NÂNG CẤP XUẤT .XLSX & CHIA SẺ ZALO)
+// ==========================================
+function exportSalesOrderToExcel() {
+  const d = state.formData;
+  if (!d) return;
+
+  if (typeof XLSX === 'undefined') {
+    showAlert('Thư viện XLSX chưa được tải, vui lòng kiểm tra kết nối mạng!', 'Lỗi');
+    return;
+  }
+
+  const custAddress = getCustomerAddress(d.customer);
+  const { dayStr, monthStr, yearStr } = parseDateParts(d.date);
+
+  const sheetData = [
+    ["ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1", "", "", "", "Giấy phép ĐKKD số: 01U8005300", "", "", ""],
+    ["Xã Sơn Đồng – TP Hà Nội", "", "", "", "Địa chỉ nhận hóa đơn: nhambc@gmail.com", "", "", ""],
+    ["ĐT: 0936.35.31.37", "", "", "", "MST: 0110640531", "", "", ""],
+    ["CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ", "", "", "", "", "", "", ""],
+    [`Khách hàng: ${d.customer || ''}`, "", "", "", `Đơn hàng bán: ${d.id || ''}`, "", "", ""],
+    [`Địa chỉ: ${custAddress}`, "", "", "", `Ghi chú: ${d.notes || ''}`, "", "", ""],
+    [""], // Dòng trống
+    ["STT", "Tên Hàng", "ĐVT", "Đơn Giá", "Số Lượng", "CK%", "Thuế%", "Thành Tiền"]
+  ];
+
+  let totalQty = 0;
+  let totalAmount = 0;
+  const items = (d.lineItems || d.lineitems || []);
+
+  items.forEach((l, idx) => {
+    const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
+    const unitName = mat ? (mat.unit || '—') : (l.unit || '—');
+    const qty = Number(l.qty) || 0;
+    const price = Number(l.unitPrice) || 0;
+    const discount = Number(l.discount) || 0;
+    const tax = Number(l.tax) || 0;
+
+    const lineSub = qty * price * (1 - discount / 100);
+    const lineTotal = lineSub * (1 + tax / 100);
+
+    totalQty += qty;
+    totalAmount += lineTotal;
+
+    sheetData.push([
+      idx + 1,
+      l.name || '',
+      unitName,
+      price,
+      qty,
+      `${discount}%`,
+      `${tax}%`,
+      Math.round(lineTotal)
+    ]);
+  });
+
+  sheetData.push(
+    ["Tổng Cộng", "", "", "", totalQty, "", "", Math.round(totalAmount)],
+    [""],
+    ["", "", "", "", "", `Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}`, "", ""],
+    ["", "", "", "", "", "Đại diện nhà cung cấp", "", ""],
+    [""],
+    [""],
+    ["", "", "", "", "", "BÙI CAO NHÂM", "", ""]
+  );
+
+  const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+  ws['!merges'] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, { s: { r: 0, c: 4 }, e: { r: 0, c: 7 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, { s: { r: 1, c: 4 }, e: { r: 1, c: 7 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 3 } }, { s: { r: 2, c: 4 }, e: { r: 2, c: 7 } },
+    { s: { r: 3, c: 0 }, e: { r: 3, c: 7 } },
+    { s: { r: 4, c: 0 }, e: { r: 4, c: 3 } }, { s: { r: 4, c: 4 }, e: { r: 4, c: 7 } },
+    { s: { r: 5, c: 0 }, e: { r: 5, c: 3 } }, { s: { r: 5, c: 4 }, e: { r: 5, c: 7 } },
+    { s: { r: sheetData.length - 7, c: 0 }, e: { r: sheetData.length - 7, c: 3 } },
+    { s: { r: sheetData.length - 5, c: 5 }, e: { r: sheetData.length - 5, c: 7 } },
+    { s: { r: sheetData.length - 4, c: 5 }, e: { r: sheetData.length - 4, c: 7 } },
+    { s: { r: sheetData.length - 1, c: 5 }, e: { r: sheetData.length - 1, c: 7 } }
+  ];
+
+  ws['!cols'] = [
+    { wch: 6 },
+    { wch: 32 },
+    { wch: 10 },
+    { wch: 14 },
+    { wch: 10 },
+    { wch: 8 },
+    { wch: 8 },
+    { wch: 16 }
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "DonHang");
+
+  downloadOrShareXLSX(wb, `DonHang_${d.id || 'Export'}`);
 }
 
 // ==========================================
