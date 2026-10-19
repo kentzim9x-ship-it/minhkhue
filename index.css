@@ -1122,10 +1122,19 @@ div[style*="overflow: auto"],
   }
 
   .mobile-home-btn {
-    background: transparent !important;
-    border: none !important;
+    background: var(--secondary) !important;
+    border: 1px solid var(--border) !important;
     border-radius: 2px !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
     padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--foreground) !important;
+    cursor: pointer;
   }
 
   /* Khung Tổng Tiền, Thanh Lọc & Layout */
