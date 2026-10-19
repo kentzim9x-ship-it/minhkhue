@@ -4068,8 +4068,24 @@ function renderGRNForm(c) {
 
 function renderReportInventory(c) {
   const materials = db.materials;
-  const filtered = materials.filter(m => state.filter === 'all' || m.category === state.filter);
   const hasPermission = checkModulePermission('materials');
+
+  // Khởi tạo state tìm kiếm & giới hạn lazy loading
+  if (state.reportInvSearch === undefined) state.reportInvSearch = '';
+  if (!state.reportInvLimit) state.reportInvLimit = 20;
+
+  // Lọc theo Danh mục & Ô tìm kiếm Mã hàng / Tên hàng
+  const searchKey = state.reportInvSearch.trim().toLowerCase();
+  const filtered = materials.filter(m => {
+    const matchCat = (state.filter === 'all' || m.category === state.filter);
+    const matchSearch = !searchKey ||
+      (m.id && m.id.toLowerCase().includes(searchKey)) ||
+      (m.name && m.name.toLowerCase().includes(searchKey));
+    return matchCat && matchSearch;
+  });
+
+  // Giới hạn danh sáchLazy Loading
+  const visibleList = filtered.slice(0, state.reportInvLimit);
 
   const getActualStock = (m) => {
     const invList = (db.inventory || []).filter(i => i.sku === m.id || i.material_id === m.id);
@@ -4122,7 +4138,7 @@ function renderReportInventory(c) {
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
-  const rowsHtml = filtered.map(m => {
+  const rowsHtml = visibleList.map(m => {
     const tonThucTe = getActualStock(m);
     const tonDauKy = m.stock ?? 0;
     const tamGiu = m.reserved ?? 0;
@@ -4155,6 +4171,7 @@ function renderReportInventory(c) {
       <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
+
       <div style="display: grid; grid-template-columns: 1fr 320px; gap: 16px;" class="grid-2">
         <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
           <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Giá Trị Tồn Kho Theo Danh Mục</div>
@@ -4169,18 +4186,33 @@ function renderReportInventory(c) {
           </div>
         </div>
       </div>
-      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
-        <div style="padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+
+      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;" id="inventory-report-table-box">
+        
+        <!-- HEADER CÓ TÌM KIẾM MÃ HÀNG/TÊN HÀNG VÀ BỘ LỌC CẢNH BÁO/DANH MỤC -->
+        <div style="padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Báo Cáo Tồn Kho Chi Tiết & Định Giá</span>
-          <div style="display: flex; gap: 1px; overflow-x: auto;">
-            ${['all', ...categories].map(cat => `
-              <button onclick="state.filter='${cat}'; render();" style="padding: 4px 12px; font-family: var(--font-dm-mono); font-size: 10px; text-transform: uppercase; background: ${state.filter === cat ? 'var(--primary)' : 'var(--muted)'}; color: ${state.filter === cat ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer;">${cat === 'all' ? 'Tất cả' : cat}</button>
-            `).join('')}
+          
+          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <!-- Ô TÌM KIẾM BỔ SUNG TRÊN HEADER BÁO CÁO TỒN KHO -->
+            <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 4px; width: 220px;">
+              <span style="color: var(--muted-foreground);">${Icons.search}</span>
+              <input type="text" placeholder="Tìm mã, tên hàng..." value="${state.reportInvSearch}" oninput="state.reportInvSearch=this.value; state.reportInvLimit=20; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; padding: 6px 0;">
+            </div>
+
+            <!-- TẤT CẢ / DANH MỤC BUTTONS -->
+            <div style="display: flex; gap: 1px;">
+              ${['all', ...categories].map(cat => `
+                <button onclick="state.filter='${cat}'; state.reportInvLimit=20; render();" style="padding: 5px 12px; font-family: var(--font-dm-mono); font-size: 10px; text-transform: uppercase; background: ${state.filter === cat ? 'var(--primary)' : 'var(--muted)'}; color: ${state.filter === cat ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer;">${cat === 'all' ? 'Tất cả' : cat}</button>
+              `).join('')}
+            </div>
           </div>
         </div>
+
         <div style="padding: 8px 20px 4px; display: flex; justify-content: flex-end; border-bottom: 1px solid var(--border); background: var(--secondary);">
-          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${filtered.length} mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(totalVal)}</strong> · Đã tạm giữ: ${fmtUSD(reservedVal)} · Cảnh báo: ${alertCount}</span>
+          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">Đang hiển thị <strong>${visibleList.length}/${filtered.length}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(totalVal)}</strong> · Đã tạm giữ: ${fmtUSD(reservedVal)} · Cảnh báo: ${alertCount}</span>
         </div>
+
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
             <tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">
@@ -4191,9 +4223,38 @@ function renderReportInventory(c) {
             ${rowsHtml}
           </tbody>
         </table>
+
+        ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu mặt hàng phù hợp</div>` : ''}
+
+        <!-- CHẾ ĐỘ LAZY LOADING (NÚT TẢI THÊM 10 MÃ HÀNG) -->
+        ${visibleList.length < filtered.length ? `
+          <div style="padding: 16px; text-align: center; border-top: 1px solid var(--border); background: var(--secondary);">
+            <button onclick="state.reportInvLimit += 10; render();" style="padding: 8px 24px; background: var(--primary); color: var(--primary-foreground); border: none; font-family: var(--font-dm-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; border-radius: 4px; transition: opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+              Tải thêm 10 mã hàng ➔
+            </button>
+          </div>
+        ` : ''}
+
       </div>
     </div>
   `;
+
+  // Bắt sự kiện cuộn trang tự động Lazy Loading khi cuộn xuống gần đáy bảng
+  setTimeout(() => {
+    const contentBox = document.getElementById('app-content');
+    if (contentBox && !contentBox.dataset.lazyBound) {
+      contentBox.addEventListener('scroll', () => {
+        if (state.view === 'report-inventory') {
+          const scrollBottom = contentBox.scrollHeight - contentBox.scrollTop - contentBox.clientHeight;
+          if (scrollBottom < 100 && state.reportInvLimit < filtered.length) {
+            state.reportInvLimit += 10;
+            render();
+          }
+        }
+      });
+      contentBox.dataset.lazyBound = 'true';
+    }
+  }, 100);
 }
 
 function renderReportSales(c) {
@@ -4207,7 +4268,7 @@ function renderReportSales(c) {
   const returnRatePercent = ytdOrders > 0 ? ((totalReturnsCount / ytdOrders) * 100).toFixed(1) : '0.0';
   const avgOrderValue = ytdOrders > 0 ? (ytdRevenue / ytdOrders) : 0;
 
-  // Xử lý State lọc Tháng & Khách hàng trên Header Báo cáo Bán hàng
+  // State lọc Tháng & Khách hàng
   if (!state.reportSalesMonth) {
     state.reportSalesMonth = String(new Date().getMonth() + 1);
   }
@@ -4219,7 +4280,7 @@ function renderReportSales(c) {
   const selectedMonthNum = parseInt(state.reportSalesMonth, 10) || (new Date().getMonth() + 1);
   const selectedCustomer = state.reportSalesCustomer;
 
-  // Lọc dữ liệu đơn hàng theo tháng được chọn trên header
+  // Lọc dữ liệu đơn hàng theo tháng
   const filteredOrdersForMonth = (db.orders || []).filter(o => {
     const status = (o.status || '').toLowerCase();
     if (!['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) return false;
@@ -4233,7 +4294,7 @@ function renderReportSales(c) {
     return false;
   });
 
-  // Tính toán top khách hàng khai thác trong tháng/năm hiện tại
+  // Top khách hàng trong tháng
   const customerMap = {};
   filteredOrdersForMonth.forEach(o => {
     const cName = o.customer || 'Khách lẻ';
@@ -4243,7 +4304,7 @@ function renderReportSales(c) {
   });
   const topCustomersReal = Object.values(customerMap).sort((a, b) => b.revenue - a.revenue);
 
-  // Nếu có chọn khách hàng cụ thể -> Tổng hợp chi tiết Mã hàng, Tên hàng, Số lượng, Thành tiền
+  // Tổng hợp mã hàng theo khách hàng
   const itemSummaryMap = {};
   filteredOrdersForMonth.forEach(o => {
     if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
@@ -4269,7 +4330,6 @@ function renderReportSales(c) {
 
   const detailItemsList = Object.values(itemSummaryMap).sort((a, b) => b.totalAmount - a.totalAmount);
 
-  // HTML Top Khách hàng
   const customersHtml = topCustomersReal.slice(0, 5).map((cus, i) => `
     <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
       <td style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); width: 28px;">${String(i + 1).padStart(2, '0')}</td>
@@ -4279,7 +4339,6 @@ function renderReportSales(c) {
     </tr>
   `).join('');
 
-  // HTML Bảng Thống kê chi tiết theo khách hàng
   const detailHeaders = ['Mã Hàng (SKU)', 'Tên Hàng Hóa', 'Tổng Số Lượng', 'Tổng Số Tiền']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Tổng Số Lượng' || h === 'Tổng Số Tiền' ? 'right' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
@@ -4300,28 +4359,6 @@ function renderReportSales(c) {
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
       
-      <!-- HEADER BÁO CÁO: BỘ LỌC THÁNG & KHÁCH HÀNG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--card); border: 1px solid var(--border); padding: 14px 20px; flex-wrap: wrap; gap: 12px;">
-        <div style="font-family: var(--font-dm-mono); font-size: 12px; text-transform: uppercase; font-weight: 600; color: var(--foreground);">
-          Bộ lọc báo cáo bán hàng
-        </div>
-        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
-            <select class="form-select" style="width: 120px; padding: 6px 10px;" onchange="state.reportSalesMonth=this.value; render();">
-              ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
-            </select>
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); text-transform: uppercase;">Khách hàng:</label>
-            <select class="form-select" style="width: 220px; padding: 6px 10px;" onchange="state.reportSalesCustomer=this.value; render();">
-              <option value="">-- Tất cả khách hàng --</option>
-              ${customerSelectOptions}
-            </select>
-          </div>
-        </div>
-      </div>
-
       <!-- KPI CARDS -->
       <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         <div class="kpi-card"><span class="kpi-label">Doanh Thu Lũy Kế Năm</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(ytdRevenue)}</span></div><span class="kpi-sub">Năm ${currentYear}</span></div>
@@ -4330,7 +4367,7 @@ function renderReportSales(c) {
         <div class="kpi-card"><span class="kpi-label">Giá Trị Đơn Trung Bình</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(avgOrderValue)}</span></div><span class="kpi-sub">AOV năm ${currentYear}</span></div>
       </div>
 
-      <!-- BIỂU ĐỒ DOANH SỐ & TOP KHÁCH HÀNG (CÙNG MỘT HÀNG) -->
+      <!-- BIỂU ĐỒ DOANH SỐ & TOP KHÁCH HÀNG -->
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="grid-2">
         <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
           <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Biểu Đồ Doanh Thu & Sản Lượng Đơn Bán</div>
@@ -4343,6 +4380,28 @@ function renderReportSales(c) {
               ${customersHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có dữ liệu khách hàng</td></tr>'}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- BỘ LỌC ĐẶT NGAY PHÍA TRÊN BẢNG THỐNG KÊ CHI TIẾT -->
+      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--card); border: 1px solid var(--border); padding: 12px 20px; flex-wrap: wrap; gap: 12px; margin-top: 8px;">
+        <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--muted-foreground);">
+          Lọc dữ liệu thống kê chi tiết:
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
+            <select class="form-select" style="width: 120px; padding: 6px 10px;" onchange="state.reportSalesMonth=this.value; render();">
+              ${Array.from({length: 12}, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
+            </select>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); text-transform: uppercase;">Khách hàng:</label>
+            <select class="form-select" style="width: 220px; padding: 6px 10px;" onchange="state.reportSalesCustomer=this.value; render();">
+              <option value="">-- Tất cả khách hàng --</option>
+              ${customerSelectOptions}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -4368,7 +4427,6 @@ function renderReportSales(c) {
     </div>
   `;
 
-  // Render lại biểu đồ doanh số
   new Chart(document.getElementById('chart-sales').getContext('2d'), {
     type: 'line',
     data: {
