@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
+  /* Giao diện Mặc định: Tối (Dark Mode) */
   --background: #0c0e11;
   --foreground: #edf0f4;
   --card: #13161a;
@@ -16,6 +17,21 @@
   /* Đổi phông chữ mới: Inter thanh thoát, hiện đại & Plus Jakarta Sans gọn gàng */
   --font-jost: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-dm-mono: 'Plus Jakarta Sans', SFMono-Regular, Consolas, monospace;
+}
+
+/* Giao diện Sáng (Light Mode) khi html[data-theme="light"] */
+[data-theme="light"] {
+  --background: #f4f5f7;
+  --foreground: #0c0e11;
+  --card: #ffffff;
+  --card-foreground: #0c0e11;
+  --primary: #d98818;
+  --primary-foreground: #ffffff;
+  --secondary: #e5e7eb;
+  --secondary-foreground: #374151;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --border: #e5e7eb;
 }
 
 * {
@@ -37,6 +53,7 @@ body {
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 .app-container {
@@ -58,9 +75,7 @@ body {
 
 .sidebar-header {
   height: 50px !important;
-  /* Cố định chiều cao khớp hoàn toàn với app-header (50px) */
   padding: 0 18px !important;
-  /* Bỏ padding trên dưới, chỉ giữ padding trái phải */
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -145,8 +160,8 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-text-fill-color: #ffffff !important;
-  -webkit-box-shadow: 0 0 0px 1000px #1e1f25 inset !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--secondary) inset !important;
   transition: background-color 5000s ease-in-out 0s !important;
 }
 
@@ -158,12 +173,10 @@ input:-webkit-autofill:active {
   align-items: center !important;
   gap: 10px !important;
   padding: 12px 18px !important;
-  /* Đồng nhất padding ngang với các nav-btn (18px) */
   margin: 0 !important;
   background: transparent !important;
   border: none !important;
   border-top: 1px solid var(--border) !important;
-  /* Chỉ giữ lại đường viền ngăn cách phía trên */
   border-radius: 2px !important;
   flex-shrink: 0 !important;
 }
@@ -668,7 +681,7 @@ tr:hover {
     overflow-y: auto !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
-    background-color: var(--background, #0b0e14) !important;
+    background-color: var(--background) !important;
   }
 
   #app-content,
@@ -695,7 +708,7 @@ tr:hover {
     right: 0 !important;
     width: 100% !important;
     z-index: 997 !important;
-    background-color: var(--background, #0b0e14) !important;
+    background-color: var(--background) !important;
     border-bottom: 1px solid var(--border) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
     padding-left: 12px !important;
@@ -728,9 +741,8 @@ tr:hover {
     transform: translateX(-100%) !important;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-shadow: 6px 0 25px rgba(0, 0, 0, 0.6) !important;
-    background: #11141a !important;
+    background: var(--card) !important;
 
-    /* BẮT BUỘC: Sử dụng Flexbox chiều dọc để cố định Header và Footer, giữa cuộn */
     display: flex !important;
     flex-direction: column !important;
     overflow: hidden !important;
@@ -744,9 +756,7 @@ tr:hover {
   /* 1. Header luôn ghim ở trên cùng */
   .sidebar-header {
     height: 50px !important;
-    /* Cố định chiều cao khớp hoàn toàn với app-header (50px) */
     padding: 0 18px !important;
-    /* Bỏ padding trên dưới, chỉ giữ padding trái phải */
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
@@ -769,7 +779,7 @@ tr:hover {
     gap: 10px !important;
     padding: 12px 16px !important;
     margin: 0 !important;
-    background: rgba(255, 255, 255, 0.03) !important;
+    background: var(--secondary) !important;
     border: none !important;
     border-top: 1px solid var(--border) !important;
     border-radius: 2px !important;
@@ -1031,10 +1041,10 @@ div[style*="overflow: auto"],
 .notif-bell-btn {
   position: relative;
   background: transparent;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
+  border: 1px solid var(--border);
   border-radius: 2px;
   padding: 8px;
-  color: var(--foreground, #ffffff);
+  color: var(--foreground);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1043,7 +1053,7 @@ div[style*="overflow: auto"],
 }
 
 .notif-bell-btn:hover {
-  background: var(--muted, rgba(255, 255, 255, 0.05));
+  background: var(--muted);
 }
 
 .notif-badge-dot {
@@ -1054,7 +1064,7 @@ div[style*="overflow: auto"],
   height: 9px;
   background-color: #f87171;
   border-radius: 50%;
-  border: 2px solid #141821;
+  border: 2px solid var(--card);
   display: none;
 }
 
@@ -1069,8 +1079,8 @@ div[style*="overflow: auto"],
   right: 20px;
   width: 420px;
   max-height: 520px;
-  background: var(--card, #141821);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 2px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 1px rgba(240, 160, 48, 0.3);
   z-index: 999;
@@ -1091,7 +1101,7 @@ div[style*="overflow: auto"],
 
 .notif-item {
   padding: 12px 16px;
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-bottom: 1px solid var(--border);
   cursor: pointer;
   transition: background 0.15s;
   display: flex;
@@ -1116,8 +1126,8 @@ div[style*="overflow: auto"],
   width: 25vw;
   min-width: 320px;
   height: 100vh;
-  background: var(--card, #141821);
-  border-left: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  background: var(--card);
+  border-left: 1px solid var(--border);
   box-shadow: -8px 0 24px rgba(0, 0, 0, 0.6);
   z-index: 9999;
   display: flex;
@@ -1153,15 +1163,15 @@ div[style*="overflow: auto"],
 /* Thẻ gom nhóm ngày trong lịch sử */
 .notif-date-group-title {
   padding: 8px 16px;
-  background: var(--secondary, #1a1e26);
+  background: var(--secondary);
   color: #f0a030;
   font-family: var(--font-dm-mono, monospace);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 2;
@@ -1178,10 +1188,10 @@ div[style*="overflow: auto"],
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: rgba(255, 255, 255, 0.04) !important;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.12)) !important;
+  background: var(--secondary) !important;
+  border: 1px solid var(--border) !important;
   border-radius: 2px !important;
-  color: var(--foreground, #ffffff) !important;
+  color: var(--foreground) !important;
   cursor: pointer;
   box-sizing: border-box !important;
   transition: all 0.2s ease;

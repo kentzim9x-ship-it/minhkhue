@@ -33,7 +33,9 @@ const Icons = {
   trash: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M5 4V2h4v2M6 7v4M8 7v4M3 4l1 8h6l1-8" /></svg>`,
   plus: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2"><line x1="6.5" y1="1" x2="6.5" y2="12" /><line x1="1" y1="6.5" x2="12" y2="6.5" /></svg>`,
   back: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2L4 7l5 5" /></svg>`,
-  search: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5" /><line x1="10" y1="10" x2="14" y2="14" /></svg>`
+  search: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5" /><line x1="10" y1="10" x2="14" y2="14" /></svg>`,
+  sun: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
+  moon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
 };
 
 // Tạo lớp Overlay để bấm ra ngoài đóng Menu
@@ -351,7 +353,7 @@ function updateUserInfoUI() {
 
     if (userNameEl) {
       userNameEl.innerText = user.fullname || user.username;
-      userNameEl.title = user.fullname || user.username; // Tooltip khi đè chuột
+      userNameEl.title = user.fullname || user.username;
     }
 
     if (userRoleEl) {
@@ -359,7 +361,6 @@ function updateUserInfoUI() {
     }
 
     if (sidebarUserEl) {
-      // Đảm bảo cấu trúc các thẻ lồng nhau gọn gàng
       let infoTextContainer = sidebarUserEl.querySelector('.user-info-text');
       if (!infoTextContainer && userNameEl && userRoleEl) {
         infoTextContainer = document.createElement('div');
@@ -369,7 +370,6 @@ function updateUserInfoUI() {
         infoTextContainer.appendChild(userRoleEl);
       }
 
-      // Khởi tạo nút Đăng xuất
       if (!document.getElementById('logout-btn')) {
         const logoutBtn = document.createElement('button');
         logoutBtn.id = 'logout-btn';
@@ -380,18 +380,19 @@ function updateUserInfoUI() {
     }
   }
 
-  // Thêm nút Home cho Header trên Mobile
-  const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header');
+  // Chèn nút Home vào trước thẻ Tag/Title ở Header
+  const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header-left') || document.querySelector('.app-header');
   if (headerLeft && !document.getElementById('mobile-home-trigger')) {
     const homeBtn = document.createElement('button');
     homeBtn.id = 'mobile-home-trigger';
     homeBtn.className = 'header-icon-btn mobile-home-btn';
+    homeBtn.style.cssText = 'background: var(--card); border: 1px solid var(--border); padding: 8px; cursor: pointer; color: var(--foreground); display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; border-radius: 2px;';
     homeBtn.innerHTML = Icons.home;
-    homeBtn.onclick = toggleMobileMenu;
+    homeBtn.title = 'Trang chủ';
+    homeBtn.onclick = () => navigate('dashboard', 'list');
     headerLeft.insertBefore(homeBtn, headerLeft.firstChild);
   }
 
-  // Gán sự kiện đóng Mobile Drawer khi bấm Logo/Header
   const logoBrand = document.querySelector('.logo-brand, .app-brand, .sidebar-header');
   if (logoBrand) {
     logoBrand.style.cursor = 'pointer';
@@ -400,6 +401,39 @@ function updateUserInfoUI() {
         toggleMobileMenu();
       }
     };
+  }
+}
+
+// ==========================================
+// CHUYỂN ĐỔI GIAO DIỆN SÁNG - TỐI (THEME SWITCHER)
+// ==========================================
+
+function initTheme() {
+  const savedTheme = localStorage.getItem('app-theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeButtonUI(savedTheme);
+}
+
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('app-theme', newTheme);
+
+  updateThemeButtonUI(newTheme);
+}
+
+function updateThemeButtonUI(theme) {
+  const btn = document.getElementById('theme-toggle-btn');
+  if (!btn) return;
+
+  if (theme === 'light') {
+    btn.innerHTML = Icons.moon;
+    btn.title = 'Chuyển sang Giao diện Tối';
+  } else {
+    btn.innerHTML = Icons.sun;
+    btn.title = 'Chuyển sang Giao diện Sáng';
   }
 }
 
@@ -689,13 +723,24 @@ function fmtUSD(n) {
 
 function updateHeaderDate() {
   const dateElement = document.getElementById('header-date');
-  if (!dateElement) return;
+  const headerRight = document.querySelector('.app-header > div:last-child') || document.querySelector('.app-header');
 
-  const now = new Date();
-  const options = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
-  const formattedDate = now.toLocaleDateString('vi-VN', options);
+  if (headerRight && !document.getElementById('theme-toggle-btn')) {
+    const themeBtn = document.createElement('button');
+    themeBtn.id = 'theme-toggle-btn';
+    themeBtn.className = 'header-icon-btn';
+    themeBtn.onclick = toggleTheme;
+    headerRight.insertBefore(themeBtn, headerRight.firstChild);
 
-  dateElement.innerText = formattedDate;
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    updateThemeButtonUI(currentTheme);
+  }
+
+  if (dateElement) {
+    const now = new Date();
+    const options = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
+    dateElement.innerText = now.toLocaleDateString('vi-VN', options);
+  }
 }
 
 function toTitleCase(str) {
