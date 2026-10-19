@@ -296,7 +296,6 @@ async function handleLogin(e) {
   const remember = document.getElementById('login-remember').checked;
 
   try {
-    // Truy vấn tới bảng userinfo trên Supabase
     const { data, error } = await supabaseClient
       .from('userinfo')
       .select('*')
@@ -306,26 +305,27 @@ async function handleLogin(e) {
     if (error) throw error;
 
     if (data && data.length > 0) {
-      const foundUser = data[0]; // Chứa id, username, fullname, role, các cột _yn...
+      const foundUser = data[0];
       const session = { isLoggedIn: true, currentUser: foundUser, remember };
       localStorage.setItem('app_session', JSON.stringify(session));
 
+      // XỬ LÝ GHI NHỚ ĐĂNG NHẬP:
       if (remember) {
         localStorage.setItem('remembered_user', JSON.stringify({ username: un, password: pw, remember: true }));
       } else {
+        // Bỏ tích -> Xóa sạch dữ liệu đã lưu
         localStorage.removeItem('remembered_user');
       }
 
       document.querySelector('.app-container').style.display = 'flex';
       updateUserInfoUI();
       navigate('dashboard', 'list');
-      render();
     } else {
       document.getElementById('login-error').style.display = 'block';
     }
   } catch (err) {
     console.error('Lỗi truy vấn đăng nhập:', err);
-    alert('Không thể kết nối đến máy chủ xác thực.');
+    showAlert('Không thể kết nối đến máy chủ xác thực.', 'Lỗi kết nối');
   }
 }
 
@@ -346,20 +346,27 @@ function updateUserInfoUI() {
     const sidebarUserEl = document.querySelector('.sidebar-user');
 
     if (userAvatarEl) userAvatarEl.innerText = (user.fullname || user.username || 'U').substring(0, 2).toUpperCase();
-    if (userNameEl) userNameEl.innerText = user.fullname || user.username; // Dùng cột fullname từ DB
+    if (userNameEl) {
+      userNameEl.innerText = user.fullname || user.username;
+      userNameEl.title = user.fullname || user.username; // Hover hiện full tên
+      userNameEl.style.cssText = "white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; display: block;";
+    }
     if (userRoleEl) userRoleEl.innerText = user.role || 'USER';
 
     if (sidebarUserEl && !document.getElementById('logout-btn')) {
+      // Đảm bảo container không bị vỡ layout
+      sidebarUserEl.style.cssText = "display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px;";
+
       const logoutBtn = document.createElement('button');
       logoutBtn.id = 'logout-btn';
       logoutBtn.innerText = 'Đăng xuất';
       logoutBtn.onclick = handleLogout;
-      logoutBtn.style.cssText = "margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--muted-foreground); font-size: 10px; padding: 3px 6px; cursor: pointer;";
+      logoutBtn.style.cssText = "flex-shrink: 0; margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--muted-foreground); font-size: 10px; padding: 4px 8px; cursor: pointer; white-space: nowrap;";
       sidebarUserEl.appendChild(logoutBtn);
     }
   }
 
-  // Thêm nút Nút Icon Ngôi nhà vào Header cho Mobile nếu chưa có
+  // Icon Mobile Home Header
   const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header');
   if (headerLeft && !document.getElementById('mobile-home-trigger')) {
     const homeBtn = document.createElement('button');
@@ -370,7 +377,6 @@ function updateUserInfoUI() {
     headerLeft.insertBefore(homeBtn, headerLeft.firstChild);
   }
 
-  // Gán sự kiện click vào Logo Ngôi nhà trên đầu Sidebar để đóng Drawer Menu
   const logoBrand = document.querySelector('.logo-brand, .app-brand, .sidebar-header');
   if (logoBrand) {
     logoBrand.style.cursor = 'pointer';
@@ -2043,10 +2049,24 @@ function markAllNotificationsAsRead() {
 
 // GIAO DIỆN ĐĂNG NHẬP SANG TRỌNG
 function renderLoginForm(container) {
-  const savedCreds = JSON.parse(localStorage.getItem('remembered_user') || '{}');
+  // Chỉ lấy tài khoản lưu nếu có dữ liệu trong remembered_user
+  const savedCredsRaw = localStorage.getItem('remembered_user');
+  const savedCreds = savedCredsRaw ? JSON.parse(savedCredsRaw) : { username: '', password: '', remember: false };
   const bannerImg = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80';
 
   container.innerHTML = `
+    <style>
+      /* Style ép trình duyệt giữ nền tối khi tự động điền mật khẩu */
+      input:-webkit-autofill,
+      input:-webkit-autofill:hover, 
+      input:-webkit-autofill:focus, 
+      input:-webkit-autofill:active {
+          -webkit-text-fill-color: #ffffff !important;
+          -webkit-box-shadow: 0 0 0px 1000px #1e232d inset !important;
+          transition: background-color 5000s ease-in-out 0s !important;
+      }
+    </style>
+
     <div style="
       min-height: 100vh; 
       display: flex; 
@@ -2059,7 +2079,7 @@ function renderLoginForm(container) {
       background: #0c0e12;
     ">
       
-      <!-- Lớp Ảnh nền toàn trang (Cùng ảnh với banner form, mờ & đen dần về các góc) -->
+      <!-- Background mờ toàn trang -->
       <div style="
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
@@ -2070,7 +2090,7 @@ function renderLoginForm(container) {
         z-index: 0;
       "></div>
 
-      <!-- Card chính chứa 2 cột (Nổi phía trên background) -->
+      <!-- Main Login Card -->
       <div style="
         width: 100%; 
         max-width: 900px; 
@@ -2087,7 +2107,7 @@ function renderLoginForm(container) {
         z-index: 1;
       " class="login-split-card">
 
-        <!-- CỘT TRÁI: Banner thương hiệu (Nền ảnh làm mờ nhẹ, đen dần về góc) -->
+        <!-- Cột trái: Banner -->
         <div style="
           flex: 1; 
           background: radial-gradient(circle at center, rgba(20, 24, 33, 0.6) 0%, rgba(13, 16, 22, 0.95) 100%), 
@@ -2114,7 +2134,7 @@ function renderLoginForm(container) {
           </div>
         </div>
 
-        <!-- CỘT PHẢI: Form đăng nhập (Tông màu vàng cam) -->
+        <!-- Cột phải: Form nhập liệu -->
         <div style="
           flex: 1; 
           padding: 48px 40px; 
@@ -2131,14 +2151,13 @@ function renderLoginForm(container) {
 
           <form onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 20px;">
             
-            <!-- Input Tên tài khoản -->
             <div style="position: relative;">
               <label style="display: block; font-size: 11px; font-family: var(--font-dm-mono, monospace); color: #f0a030; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Tên tài khoản</label>
               <input 
                 type="text" 
                 id="login-username" 
                 required 
-                value="${savedCreds.username || ''}"
+                value="${savedCreds.remember ? (savedCreds.username || '') : ''}"
                 placeholder="Nhập tên tài khoản..." 
                 style="
                   width: 100%; 
@@ -2157,7 +2176,6 @@ function renderLoginForm(container) {
               >
             </div>
 
-            <!-- Input Mật khẩu + Icon Mắt -->
             <div style="position: relative;">
               <label style="display: block; font-size: 11px; font-family: var(--font-dm-mono, monospace); color: #8a94a6; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Mật khẩu</label>
               <div style="display: flex; align-items: center; position: relative;">
@@ -2165,7 +2183,7 @@ function renderLoginForm(container) {
                   type="password" 
                   id="login-password" 
                   required 
-                  value="${savedCreds.password || ''}"
+                  value="${savedCreds.remember ? (savedCreds.password || '') : ''}"
                   placeholder="Nhập mật khẩu..." 
                   style="
                     width: 100%; 
@@ -2198,7 +2216,6 @@ function renderLoginForm(container) {
               </div>
             </div>
 
-            <!-- Checkbox Ghi nhớ đăng nhập -->
             <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
               <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #a0aec0; cursor: pointer; user-select: none;">
                 <input 
@@ -2211,12 +2228,10 @@ function renderLoginForm(container) {
               </label>
             </div>
 
-            <!-- Thông báo lỗi -->
             <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); padding: 8px 12px; border-radius: 6px; text-align: center;">
               Tài khoản hoặc mật khẩu không chính xác!
             </div>
 
-            <!-- Nút Đăng nhập Cam Gradient -->
             <button 
               type="submit" 
               style="
@@ -2241,17 +2256,16 @@ function renderLoginForm(container) {
             </button>
           </form>
 
-          <!-- Icon Mạng xã hội trang trí -->
           <div style="margin-top: 28px; text-align: center;">
             <p style="font-size: 11px; color: #8a94a6; font-family: var(--font-dm-mono, monospace); margin-bottom: 12px;">Nền tảng hỗ trợ liên kết</p>
             <div style="display: flex; justify-content: center; gap: 12px;">
-              <div style="width: 34px; height: 34px; border-radius: 50%; background: #38bdf8; display: flex; align-items: center; justify-content: center; color: #ffffff; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: #38bdf8; display: flex; align-items: center; justify-content: center; color: #ffffff; cursor: pointer;">
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
               </div>
-              <div style="width: 34px; height: 34px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: #ffffff; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: #ffffff; cursor: pointer;">
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
               </div>
-              <div style="width: 34px; height: 34px; border-radius: 50%; background: #ef4444; display: flex; align-items: center; justify-content: center; color: #ffffff; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: #ef4444; display: flex; align-items: center; justify-content: center; color: #ffffff; cursor: pointer;">
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 11v2.4h3.97c-.16 1.03-1.2 3.02-3.97 3.02-2.39 0-4.34-1.98-4.34-4.42s1.95-4.42 4.34-4.42c1.36 0 2.27.58 2.79 1.08l1.9-1.83C15.47 5.69 13.89 5 12 5 8.13 5 8.13 5 12s3.13 7 7 7c4.04 0 6.72-2.84 6.72-6.84 0-.46-.05-.81-.11-1.16H12z"></path></svg>
               </div>
             </div>
