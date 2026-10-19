@@ -3587,10 +3587,10 @@ function renderQuotationForm(c) {
           <button type="button" class="btn-cancel" onclick="navigate('quotations')">${isView ? 'Quay lại' : 'Hủy'}</button>
           <div style="display: flex; gap: 8px;">
           <!-- Nút xuất PDF & Chia sẻ Zalo -->
-${isView ? `<button type="button" class="btn-primary" onclick="exportToPDFAndShare('BaoGia')" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
-  Xuất PDF & Chia sẻ Zalo
-</button>` : ''}
-            ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToExcel()" style="color: #ffffff; border: 1px solid var(--border); padding: 8px 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">Xuất Excel</button>` : ''}
+            ${isView ? `<button type="button" class="btn-primary" onclick="exportToPDFAndShare('BaoGia')" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
+              Xuất PDF
+            </button>` : ''}
+            <!-- ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToExcel()" style="color: #ffffff; border: 1px solid var(--border); padding: 8px 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">Xuất Excel</button>` : ''} -->
             ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo báo giá' : 'Cập nhật'}</button>` : ''}
           </div>
         </div>
@@ -3770,7 +3770,10 @@ function renderSalesOrderForm(c) {
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
           <button type="button" class="btn-cancel" onclick="navigate('sales-orders')">${isView ? 'Quay lại' : 'Hủy'}</button>
           <div style="display: flex; gap: 8px;">
-            ${isView ? `<button type="button" class="btn-primary" onclick="exportSalesOrderToExcel()" style="color: #ffffff; border: 1px solid var(--border); padding: 8px 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">Xuất Excel</button>` : ''}
+            ${isView ? `<button type="button" class="btn-primary" onclick="exportToPDFAndShare('BaoGia')" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
+              Xuất PDF
+            </button>` : ''}
+            <!-- ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToExcel()" style="color: #ffffff; border: 1px solid var(--border); padding: 8px 16px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">Xuất Excel</button>` : ''} -->
             ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo đơn hàng' : 'Cập nhật'}</button>` : ''}
           </div>
         </div>
@@ -4493,37 +4496,318 @@ function renderReportSales(c) {
 }
 
 // ==========================================
-// HÀM BỔ TRỢ: Xuất Worksheet SheetJS ra XLSX & Chia sẻ Zalo
+// HÀM BỔ TRỢ CHUNG: TẠO VÀ CHIA SẺ FILE PDF QUA ZALO / TẢI VỀ PC
 // ==========================================
-async function downloadOrShareXLSX(wb, fileName) {
-  try {
-    const fullFileName = `${fileName}.xlsx`;
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const file = new File([blob], fullFileName, { type: blob.type });
+async function generateAndSharePDF(htmlElement, fileName, shareTitle) {
+  if (typeof html2pdf === 'undefined') {
+    showAlert('Thư viện html2pdf chưa được tải, vui lòng kiểm tra kết nối mạng!', 'Lỗi');
+    return;
+  }
 
-    // Kiềm tra nếu trình duyệt mobile hỗ trợ Web Share API (Gửi qua Zalo)
+  const fullFileName = `${fileName}.pdf`;
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: fullFileName,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  try {
+    const worker = html2pdf().set(opt).from(htmlElement);
+    const pdfBlob = await worker.output('blob');
+    const file = new File([pdfBlob], fullFileName, { type: 'application/pdf' });
+
+    // Kiểm tra & Kích hoạt chia sẻ qua Zalo/Ứng dụng trên di động
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({
           files: [file],
-          title: fileName,
-          text: `Gửi file ${fileName} qua Zalo`
+          title: shareTitle,
+          text: `Gửi ${shareTitle} qua Zalo`
         });
         return;
       } catch (shareErr) {
-        if (shareErr.name !== 'AbortError') {
-          console.warn('Lỗi chia sẻ:', shareErr);
-        }
+        if (shareErr.name !== 'AbortError') console.warn('Lỗi khi chia sẻ:', shareErr);
       }
     }
 
-    // Nếu chạy trên PC hoặc trình duyệt không hỗ trợ Share -> Tải file .xlsx về máy
-    XLSX.writeFile(wb, fullFileName);
+    // Tải trực tiếp file PDF về máy nếu dùng PC
+    html2pdf().set(opt).from(htmlElement).save();
   } catch (err) {
-    console.error('Lỗi khi tạo/chia sẻ file Excel:', err);
-    showAlert('Có lỗi xảy ra khi tạo file Excel .xlsx!', 'Lỗi');
+    console.error('Lỗi khi xuất PDF:', err);
+    showAlert('Có lỗi xảy ra trong quá trình tạo file PDF!', 'Lỗi');
   }
+}
+
+// ==========================================
+// 1. XUẤT PDF BẢNG BÁO GIÁ
+// ==========================================
+async function exportQuotationToExcel() {
+  const d = state.formData;
+  if (!d) return;
+
+  const custAddress = getCustomerAddress(d.customer);
+  const { dayStr, monthStr, yearStr } = parseDateParts(d.date);
+  const fromDateVN = formatDateVN(d.validbegin || d.validBegin || d.date);
+  const toDateVN = formatDateVN(d.validUntil || d.validuntil);
+  const items = (d.lineItems || d.lineitems || []);
+
+  let totalQty = 0;
+  let totalAmount = 0;
+
+  const maxRows = Math.max(items.length, 12);
+  let rowsHtml = '';
+
+  for (let i = 0; i < maxRows; i++) {
+    if (i < items.length) {
+      const l = items[i];
+      const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
+      const unitName = mat ? (mat.unit || '—') : (l.unit || '—');
+      const qty = Number(l.qty) || 0;
+      const price = Number(l.unitPrice) || 0;
+      const discount = Number(l.discount) || 0;
+      const tax = Number(l.tax) || 0;
+
+      const lineSub = qty * price * (1 - discount / 100);
+      const lineTotal = lineSub * (1 + tax / 100);
+
+      totalQty += qty;
+      totalAmount += lineTotal;
+
+      rowsHtml += `
+        <tr style="height: 26px;">
+          <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${i + 1}</td>
+          <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px;">${l.name || ''}</td>
+          <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${unitName}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${price ? Math.round(price).toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${qty ? qty.toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${discount ? discount + '%' : '0%'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${tax ? tax + '%' : '0%'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : ''}</td>
+        </tr>
+      `;
+    } else {
+      rowsHtml += `
+        <tr style="height: 26px;">
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+        </tr>
+      `;
+    }
+  }
+
+  const container = document.createElement('div');
+  container.style.width = '750px';
+  container.style.padding = '15px';
+  container.style.background = '#ffffff';
+  container.style.color = '#000000';
+  container.style.fontFamily = "'Times New Roman', serif";
+
+  container.innerHTML = `
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+      <tr>
+        <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
+          ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
+          Xã Sơn Đồng – TP Hà Nội<br>
+          ĐT: 0936.35.31.37
+        </td>
+        <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
+          Giấy phép ĐKKD số: 01U8005300<br>
+          Địa chỉ nhận hóa đơn: nhambc@gmail.com<br>
+          MST: 0110640531
+        </td>
+      </tr>
+    </table>
+
+    <div style="font-size: 16pt; font-weight: bold; text-align: center; margin: 15px 0 12px 0;">
+      CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
+    </div>
+
+    <table style="width: 100%; font-size: 11pt; margin-bottom: 12px; border-collapse: collapse;">
+      <tr>
+        <td style="width: 50%; padding: 3px 0;">Khách hàng: ${d.customer || ''}</td>
+        <td style="width: 50%; padding: 3px 0;">Bảng báo giá: ${d.id || ''}</td>
+      </tr>
+      <tr>
+        <td style="padding: 3px 0;">Địa chỉ: ${custAddress}</td>
+        <td style="padding: 3px 0;">Ngày hiệu lực: từ ngày ${fromDateVN} - đến ngày ${toDateVN}</td>
+      </tr>
+    </table>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
+      <thead>
+        <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
+          <td style="border: 1px solid #000; width: 5%;">STT</td>
+          <td style="border: 1px solid #000; width: 33%;">Tên Hàng</td>
+          <td style="border: 1px solid #000; width: 8%;">ĐVT</td>
+          <td style="border: 1px solid #000; width: 12%;">Đơn Giá</td>
+          <td style="border: 1px solid #000; width: 9%;">Số Lượng</td>
+          <td style="border: 1px solid #000; width: 8%;">CK%</td>
+          <td style="border: 1px solid #000; width: 8%;">Thuế%</td>
+          <td style="border: 1px solid #000; width: 17%;">Thành Tiền</td>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+        <tr style="height: 26px; font-weight: bold;">
+          <td colspan="4" style="border: 1px solid #000; text-align: center;">Tổng Cộng</td>
+          <td style="border: 1px solid #000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 15px; text-align: right; font-size: 11pt;">
+      <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
+      <div style="font-weight: bold; margin-top: 4px; margin-bottom: 50px;">Đại diện nhà cung cấp</div>
+      <div style="font-weight: bold;">BÙI CAO NHÂM</div>
+    </div>
+  `;
+
+  await generateAndSharePDF(container, `BaoGia_${d.id || 'Export'}`, `Bảng Báo Giá ${d.id || ''}`);
+}
+
+// ==========================================
+// 2. XUẤT PDF ĐƠN BÁN HÀNG
+// ==========================================
+async function exportSalesOrderToExcel() {
+  const d = state.formData;
+  if (!d) return;
+
+  const custAddress = getCustomerAddress(d.customer);
+  const { dayStr, monthStr, yearStr } = parseDateParts(d.date);
+  const items = (d.lineItems || d.lineitems || []);
+
+  let totalQty = 0;
+  let totalAmount = 0;
+
+  const maxRows = Math.max(items.length, 12);
+  let rowsHtml = '';
+
+  for (let i = 0; i < maxRows; i++) {
+    if (i < items.length) {
+      const l = items[i];
+      const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
+      const unitName = mat ? (mat.unit || '—') : (l.unit || '—');
+      const qty = Number(l.qty) || 0;
+      const price = Number(l.unitPrice) || 0;
+      const discount = Number(l.discount) || 0;
+      const tax = Number(l.tax) || 0;
+
+      const lineSub = qty * price * (1 - discount / 100);
+      const lineTotal = lineSub * (1 + tax / 100);
+
+      totalQty += qty;
+      totalAmount += lineTotal;
+
+      rowsHtml += `
+        <tr style="height: 26px;">
+          <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${i + 1}</td>
+          <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px;">${l.name || ''}</td>
+          <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${unitName}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${price ? Math.round(price).toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${qty ? qty.toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${discount ? discount + '%' : '0%'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${tax ? tax + '%' : '0%'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : ''}</td>
+        </tr>
+      `;
+    } else {
+      rowsHtml += `
+        <tr style="height: 26px;">
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+        </tr>
+      `;
+    }
+  }
+
+  const container = document.createElement('div');
+  container.style.width = '750px';
+  container.style.padding = '15px';
+  container.style.background = '#ffffff';
+  container.style.color = '#000000';
+  container.style.fontFamily = "'Times New Roman', serif";
+
+  container.innerHTML = `
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+      <tr>
+        <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
+          ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
+          Xã Sơn Đồng – TP Hà Nội<br>
+          ĐT: 0936.35.31.37
+        </td>
+        <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
+          Giấy phép ĐKKD số: 01U8005300<br>
+          Địa chỉ nhận hóa đơn: nhambc@gmail.com<br>
+          MST: 0110640531
+        </td>
+      </tr>
+    </table>
+
+    <div style="font-size: 16pt; font-weight: bold; text-align: center; margin: 15px 0 12px 0;">
+      CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
+    </div>
+
+    <table style="width: 100%; font-size: 11pt; margin-bottom: 12px; border-collapse: collapse;">
+      <tr>
+        <td style="width: 50%; padding: 3px 0;">Khách hàng: ${d.customer || ''}</td>
+        <td style="width: 50%; padding: 3px 0;">Đơn hàng bán: ${d.id || ''}</td>
+      </tr>
+      <tr>
+        <td style="padding: 3px 0;">Địa chỉ: ${custAddress}</td>
+        <td style="padding: 3px 0;">Ghi chú: ${d.notes || ''}</td>
+      </tr>
+    </table>
+
+    <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
+      <thead>
+        <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
+          <td style="border: 1px solid #000; width: 5%;">STT</td>
+          <td style="border: 1px solid #000; width: 33%;">Tên Hàng</td>
+          <td style="border: 1px solid #000; width: 8%;">ĐVT</td>
+          <td style="border: 1px solid #000; width: 12%;">Đơn Giá</td>
+          <td style="border: 1px solid #000; width: 9%;">Số Lượng</td>
+          <td style="border: 1px solid #000; width: 8%;">CK%</td>
+          <td style="border: 1px solid #000; width: 8%;">Thuế%</td>
+          <td style="border: 1px solid #000; width: 17%;">Thành Tiền</td>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+        <tr style="height: 26px; font-weight: bold;">
+          <td colspan="4" style="border: 1px solid #000; text-align: center;">Tổng Cộng</td>
+          <td style="border: 1px solid #000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 15px; text-align: right; font-size: 11pt;">
+      <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
+      <div style="font-weight: bold; margin-top: 4px; margin-bottom: 50px;">Đại diện nhà cung cấp</div>
+      <div style="font-weight: bold;">BÙI CAO NHÂM</div>
+    </div>
+  `;
+
+  await generateAndSharePDF(container, `DonHang_${d.id || 'Export'}`, `Đơn Bán Hàng ${d.id || ''}`);
 }
 
 // ==========================================
