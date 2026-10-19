@@ -4643,24 +4643,24 @@ async function exportQuotationToPDF() {
     <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
       <thead>
         <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
-          <td style="border: 1px solid #000; width: 4%;">STT</td>
-          <td style="border: 1px solid #000; width: 32%;">Tên Hàng</td>
-          <td style="border: 1px solid #000; width: 8%;">ĐVT</td>
-          <td style="border: 1px solid #000; width: 12%;">Đơn Giá</td>
-          <td style="border: 1px solid #000; width: 11%;">Số Lượng</td>
-          <td style="border: 1px solid #000; width: 8%;">CK%</td>
-          <td style="border: 1px solid #000; width: 8%;">Thuế%</td>
-          <td style="border: 1px solid #000; width: 17%;">Thành Tiền</td>
+          <td style="border: 1px solid #000000; width: 4%;">STT</td>
+          <td style="border: 1px solid #000000; width: 32%;">Tên Hàng</td>
+          <td style="border: 1px solid #000000; width: 8%;">ĐVT</td>
+          <td style="border: 1px solid #000000; width: 12%;">Đơn Giá</td>
+          <td style="border: 1px solid #000000; width: 11%;">Số Lượng</td>
+          <td style="border: 1px solid #000000; width: 8%;">CK%</td>
+          <td style="border: 1px solid #000000; width: 8%;">Thuế%</td>
+          <td style="border: 1px solid #000000; width: 17%;">Thành Tiền</td>
         </tr>
       </thead>
       <tbody>
         ${rowsHtml}
         <tr style="height: 26px; font-weight: bold;">
-          <td colspan="4" style="border: 1px solid #000; text-align: center;">Tổng Cộng</td>
-          <td style="border: 1px solid #000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
+          <td colspan="4" style="border: 1px solid #000000; text-align: center;">Tổng Cộng</td>
+          <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000000;"></td>
+          <td style="border: 1px solid #000000;"></td>
+          <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
         </tr>
       </tbody>
     </table>
@@ -4780,24 +4780,24 @@ async function exportSalesOrderToPDF() {
     <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
       <thead>
         <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
-          <td style="border: 1px solid #000; width: 4%;">STT</td>
-          <td style="border: 1px solid #000; width: 32%;">Tên Hàng</td>
-          <td style="border: 1px solid #000; width: 8%;">ĐVT</td>
-          <td style="border: 1px solid #000; width: 12%;">Đơn Giá</td>
-          <td style="border: 1px solid #000; width: 11%;">Số Lượng</td>
-          <td style="border: 1px solid #000; width: 8%;">CK%</td>
-          <td style="border: 1px solid #000; width: 8%;">Thuế%</td>
-          <td style="border: 1px solid #000; width: 17%;">Thành Tiền</td>
+          <td style="border: 1px solid #000000; width: 4%;">STT</td>
+          <td style="border: 1px solid #000000; width: 32%;">Tên Hàng</td>
+          <td style="border: 1px solid #000000; width: 8%;">ĐVT</td>
+          <td style="border: 1px solid #000000; width: 12%;">Đơn Giá</td>
+          <td style="border: 1px solid #000000; width: 11%;">Số Lượng</td>
+          <td style="border: 1px solid #000000; width: 8%;">CK%</td>
+          <td style="border: 1px solid #000000; width: 8%;">Thuế%</td>
+          <td style="border: 1px solid #000000; width: 17%;">Thành Tiền</td>
         </tr>
       </thead>
       <tbody>
         ${rowsHtml}
         <tr style="height: 26px; font-weight: bold;">
-          <td colspan="4" style="border: 1px solid #000; text-align: center;">Tổng Cộng</td>
-          <td style="border: 1px solid #000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
+          <td colspan="4" style="border: 1px solid #000000; text-align: center;">Tổng Cộng</td>
+          <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000000;"></td>
+          <td style="border: 1px solid #000000;"></td>
+          <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
         </tr>
       </tbody>
     </table>
