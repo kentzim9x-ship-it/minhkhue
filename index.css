@@ -674,6 +674,324 @@ tr:hover {
   border-radius: 2px;
 }
 
+/* Dropdown Thông Báo - Đã dùng clip-path để cắt bóng hắt mép phải */
+.notif-dropdown {
+  position: absolute;
+  top: 55px;
+  right: 20px;
+  width: 420px;
+  max-height: 520px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 1px rgba(240, 160, 48, 0.3) !important;
+  clip-path: inset(-30px 0px -30px -30px) !important;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-12px);
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.notif-dropdown.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.notif-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notif-item:hover {
+  background: rgba(240, 160, 48, 0.08);
+}
+
+.notif-item.unread {
+  background: rgba(240, 160, 48, 0.04);
+  border-left: 3px solid #f0a030;
+}
+
+/* Tab Lịch sử thông báo - Bóng hắt sang trái, loại bỏ bóng tràn sang mép phải */
+.notif-history-drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 25vw;
+  min-width: 320px;
+  height: 100vh;
+  background: var(--card);
+  border-left: 1px solid var(--border);
+  box-shadow: -12px 0 20px -5px rgba(0, 0, 0, 0.5) !important;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--font-jost, sans-serif);
+}
+
+.notif-history-drawer.open {
+  right: 0;
+}
+
+/* Overlay tối màu nền khi mở Drawer Lịch sử */
+.notif-history-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 9998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.notif-history-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Thẻ gom nhóm ngày */
+.notif-date-group-title {
+  padding: 8px 16px;
+  background: var(--secondary);
+  color: #f0a030;
+  font-family: var(--font-dm-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* Kích thước Nút Ngôi Nhà & Nút Chuông Thông Báo */
+.header-icon-btn {
+  position: relative;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--secondary) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 2px !important;
+  color: var(--foreground) !important;
+  cursor: pointer;
+  box-sizing: border-box !important;
+  transition: all 0.2s ease;
+}
+
+.header-icon-btn svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Container nút chuông */
+.notif-bell-btn {
+  position: relative;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 8px;
+  color: var(--foreground);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.notif-bell-btn:hover {
+  background: var(--muted);
+}
+
+.notif-badge-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 9px;
+  height: 9px;
+  background-color: #f87171;
+  border-radius: 50%;
+  border: 2px solid var(--card);
+  display: none;
+}
+
+.notif-badge-dot.active {
+  display: block;
+}
+
+/* Giới hạn độ rộng và cắt 3 chấm cho ô nội dung */
+.hover-row td:not(:last-child) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.hover-row td:last-child {
+  white-space: nowrap;
+  max-width: none !important;
+  overflow: visible !important;
+}
+
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 998;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.mobile-overlay.active {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+[data-theme="light"] .mobile-overlay {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Form Login đồng bộ Dark/Light Mode */
+[data-theme="light"] .login-split-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: var(--border, #e4e4e7) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .login-form-col {
+  background: rgba(255, 255, 255, 0.98) !important;
+}
+
+[data-theme="light"] .login-title {
+  color: #18181b !important;
+}
+
+[data-theme="light"] .login-subtext {
+  color: #71717a !important;
+}
+
+[data-theme="light"] .login-input {
+  color: #09090b !important;
+  border-bottom-color: #d4d4d8 !important;
+}
+
+[data-theme="light"] .login-input:-webkit-autofill {
+  -webkit-text-fill-color: #09090b !important;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+}
+
+/* Nút Home & Theme Toggle Sidebar */
+.sidebar-header .logo-icon,
+.sidebar-header .home-logo-btn {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+#theme-toggle-btn-sidebar {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--card, #141821);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
+  border-radius: 4px !important;
+  color: var(--foreground, #ffffff);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+#theme-toggle-btn-sidebar svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* Ẩn mũi tên tăng giảm trên ô input number */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+input[type=number] {
+  appearance: textfield !important;
+}
+
+/* Tối ưu cuộn mượt bằng GPU */
+#app-content,
+.app-content,
+div[style*="overflow-x: auto"],
+div[style*="overflow: auto"],
+.table-responsive {
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
+  overscroll-behavior: auto;
+}
+
+/* Hiệu ứng rung lắc icon chuông */
+@keyframes bellRing {
+  0% { transform: rotate(0); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-15deg); }
+  30% { transform: rotate(10deg); }
+  40% { transform: rotate(-10deg); }
+  50% { transform: rotate(5deg); }
+  60% { transform: rotate(-5deg); }
+  100% { transform: rotate(0); }
+}
+
+.bell-ring-active {
+  animation: bellRing 1.2s ease-in-out infinite;
+  transform-origin: top center;
+}
+
 /* ==============================================================
    TỐI ƯU GIAO DIỆN MOBILE & RESPONSIVE TỔNG HỢP (< 768px)
    ============================================================== */
@@ -715,7 +1033,7 @@ tr:hover {
     padding: 12px !important;
   }
 
-  /* 2. Cố định Sticky Header - Khôi phục khoảng cách ban đầu và loại bỏ bóng tràn sang trái */
+  /* 2. Cố định Sticky Header */
   .app-header {
     position: fixed !important;
     top: 0 !important;
@@ -725,7 +1043,6 @@ tr:hover {
     z-index: 997 !important;
     background-color: var(--background) !important;
     border-bottom: 1px solid var(--border) !important;
-    /* Giữ nguyên độ rợp bóng 15px như cũ nhưng dùng clip-path CHỈ cho bóng đổ xuống dưới, triệt tiêu 100% bóng tràn sang trái/phải */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
     clip-path: inset(0 0 -20px 0) !important;
     padding-left: 28px !important;
@@ -757,7 +1074,6 @@ tr:hover {
     z-index: 9999 !important;
     transform: translateX(-100%) !important;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    /* TRIỆT ĐỂ: Tắt bóng mờ của sidebar khi đang ẩn để không hắt bóng ra mép trái */
     box-shadow: none !important;
     background: var(--card) !important;
     display: flex !important;
@@ -769,17 +1085,6 @@ tr:hover {
   body.mobile-menu-open aside {
     transform: translateX(0) !important;
     box-shadow: 6px 0 25px rgba(0, 0, 0, 0.6) !important;
-  }
-
-  /* Header luôn ghim ở trên cùng */
-  .sidebar-header {
-    height: 50px !important;
-    padding: 0 18px !important;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
   }
 
   /* Phần giữa chứa danh sách menu có thể cuộn dọc */
@@ -947,7 +1252,7 @@ tr:hover {
     white-space: nowrap !important;
   }
 
-  /* Form Thông báo thả xuống (Dropdown) trên Mobile */
+  /* Overrides Dropdown & Drawer Thông báo trên Mobile */
   .notif-dropdown {
     position: fixed !important;
     top: 56px !important;
@@ -958,13 +1263,14 @@ tr:hover {
     max-height: calc(100vh - 56px) !important;
     border-radius: 2px !important;
     box-shadow: none !important;
+    clip-path: none !important;
     z-index: 9990 !important;
   }
 
-  /* Form Lịch sử Thông báo (Drawer) trên Mobile */
   .notif-history-drawer {
     width: 100vw !important;
     max-width: 100vw !important;
+    box-shadow: none !important;
   }
 
   #notif-dropdown button[onclick*="markAllNotificationsAsRead"] {
@@ -981,695 +1287,8 @@ tr:hover {
 }
 
 @media (min-width: 769px) {
-
   .mobile-home-btn,
   .mobile-overlay {
     display: none !important;
-  }
-}
-
-/* Ẩn mũi tên tăng giảm trên ô input number */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none !important;
-  margin: 0 !important;
-}
-
-input[type=number] {
-  appearance: textfield !important;
-}
-
-/* Tối ưu cuộn mượt bằng GPU */
-#app-content,
-.app-content,
-div[style*="overflow-x: auto"],
-div[style*="overflow: auto"],
-.table-responsive {
-  -webkit-overflow-scrolling: touch;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  perspective: 1000px;
-  -webkit-perspective: 1000px;
-  overscroll-behavior: auto;
-}
-
-/* Hiệu ứng rung lắc icon chuông */
-@keyframes bellRing {
-  0% { transform: rotate(0); }
-  10% { transform: rotate(15deg); }
-  20% { transform: rotate(-15deg); }
-  30% { transform: rotate(10deg); }
-  40% { transform: rotate(-10deg); }
-  50% { transform: rotate(5deg); }
-  60% { transform: rotate(-5deg); }
-  100% { transform: rotate(0); }
-}
-
-.bell-ring-active {
-  animation: bellRing 1.2s ease-in-out infinite;
-  transform-origin: top center;
-}
-
-/* Container nút chuông */
-.notif-bell-btn {
-  position: relative;
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  padding: 8px;
-  color: var(--foreground);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-
-.notif-bell-btn:hover {
-  background: var(--muted);
-}
-
-.notif-badge-dot {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 9px;
-  height: 9px;
-  background-color: #f87171;
-  border-radius: 50%;
-  border: 2px solid var(--card);
-  display: none;
-}
-
-.notif-badge-dot.active {
-  display: block;
-}
-
-/* Dropdown thông báo */
-.notif-dropdown {
-  position: absolute;
-  top: 55px;
-  right: 20px;
-  width: 420px;
-  max-height: 520px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 1px rgba(240, 160, 48, 0.3);
-  z-index: 999;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(-12px);
-  pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.notif-dropdown.open {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.notif-item {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 0.15s;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.notif-item:hover {
-  background: rgba(240, 160, 48, 0.08);
-}
-
-.notif-item.unread {
-  background: rgba(240, 160, 48, 0.04);
-  border-left: 3px solid #f0a030;
-}
-
-/* Tab Lịch sử thông báo trượt */
-.notif-history-drawer {
-  position: fixed;
-  top: 0;
-  right: -100%;
-  width: 25vw;
-  min-width: 320px;
-  height: 100vh;
-  background: var(--card);
-  border-left: 1px solid var(--border);
-  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.6);
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-family: var(--font-jost, sans-serif);
-}
-
-.notif-history-drawer.open {
-  right: 0;
-}
-
-/* Overlay tối màu nền khi mở Drawer Lịch sử */
-.notif-history-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
-  z-index: 9998;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-}
-
-.notif-history-overlay.active {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Thẻ gom nhóm ngày */
-.notif-date-group-title {
-  padding: 8px 16px;
-  background: var(--secondary);
-  color: #f0a030;
-  font-family: var(--font-dm-mono, monospace);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-
-/* Kích thước Nút Ngôi Nhà & Nút Chuông Thông Báo */
-.header-icon-btn {
-  position: relative;
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  min-height: 40px !important;
-  padding: 0 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background: var(--secondary) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 2px !important;
-  color: var(--foreground) !important;
-  cursor: pointer;
-  box-sizing: border-box !important;
-  transition: all 0.2s ease;
-}
-
-.header-icon-btn svg {
-  width: 20px !important;
-  height: 20px !important;
-}
-
-/* Giới hạn độ rộng và cắt 3 chấm cho ô nội dung */
-.hover-row td:not(:last-child) {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 220px;
-}
-
-.hover-row td:last-child {
-  white-space: nowrap;
-  max-width: none !important;
-  overflow: visible !important;
-}
-
-.mobile-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  z-index: 998;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
-}
-
-.mobile-overlay.active {
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-}
-
-[data-theme="light"] .mobile-overlay {
-  background: rgba(0, 0, 0, 0.25);
-}
-
-/* Form Login đồng bộ Dark/Light Mode */
-[data-theme="light"] .login-split-card {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-color: var(--border, #e4e4e7) !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1) !important;
-}
-
-[data-theme="light"] .login-form-col {
-  background: rgba(255, 255, 255, 0.98) !important;
-}
-
-[data-theme="light"] .login-title {
-  color: #18181b !important;
-}
-
-[data-theme="light"] .login-subtext {
-  color: #71717a !important;
-}
-
-[data-theme="light"] .login-input {
-  color: #09090b !important;
-  border-bottom-color: #d4d4d8 !important;
-}
-
-[data-theme="light"] .login-input:-webkit-autofill {
-  -webkit-text-fill-color: #09090b !important;
-  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
-}
-
-/* Nút Home */
-.sidebar-header .logo-icon,
-.sidebar-header .home-logo-btn {
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
-  border-radius: 4px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-sizing: border-box !important;
-}
-
-/* Nút Dark/Light Mode trong Sidebar */
-#theme-toggle-btn-sidebar {
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background: var(--card, #141821);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
-  border-radius: 4px !important;
-  color: var(--foreground, #ffffff);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-#theme-toggle-btn-sidebar svg {
-  width: 18px !important;
-  height: 18px !important;
-}
-
-/* ==============================================================
-   THIẾT KẾ CÓ LỚP NỀN BANNER PHÍA SAU NGHIÊNG GIỐNG 100% ẢNH MẪU
-   ============================================================== */
-
-.login-page-wrapper {
-  min-height: 100vh;
-  width: 100vw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-  background-color: var(--background, #e5e7eb);
-  box-sizing: border-box;
-  padding: 20px;
-}
-
-/* --- 1. LỚP HÌNH ẢNH PHÍA SAU TRÀN MÀN HÌNH VỚI ĐƯỜNG CẮT CHÉO --- */
-.background-banner-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 68%;
-  height: 100%;
-  background-size: cover;
-  background-position: left center;
-  /* Cắt góc nghiêng từ dưới góc trái lên trên theo đúng góc nghiêng ảnh mẫu */
-  clip-path: polygon(0 0, 100% 0, 62% 100%, 0 100%);
-  z-index: 1;
-}
-
-/* --- 2. CARD DĂNG NHẬP CHÍNH NẰM TRONG KHUNG VIỀN TRẮNG NỔI --- */
-.login-card {
-  width: 100%;
-  max-width: 960px;
-  min-height: 580px;
-  background: var(--card, #ffffff);
-  border-radius: 36px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
-  display: flex;
-  overflow: hidden;
-  position: relative;
-  z-index: 2;
-  border: 12px solid var(--card, #ffffff); /* Viền bo góc bao quanh */
-}
-
-/* Cột trái: Nội dung banner */
-.login-banner-side {
-  flex: 1;
-  background-size: cover;
-  background-position: center;
-  position: relative;
-  padding: 32px 36px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  color: #ffffff;
-  border-radius: 28px;
-  /* Vẫn áp dụng clip-path nhẹ để đồng bộ góc nghiêng bên trong card */
-  clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%);
-  margin-right: -4%;
-  z-index: 2;
-}
-
-.banner-overlay {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.55) 100%);
-  z-index: 1;
-}
-
-.banner-top-bar,
-.banner-bottom-bar {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.banner-tag {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.banner-top-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding-right: 30px;
-}
-
-.banner-link {
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  opacity: 0.9;
-}
-
-.banner-btn-join {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  color: #ffffff;
-  padding: 6px 18px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.banner-bottom-bar {
-  align-items: flex-end;
-  padding-right: 30px;
-}
-
-.banner-profile {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.profile-avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #3b82f6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-}
-
-.profile-name {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.profile-role {
-  font-size: 11px;
-  opacity: 0.75;
-}
-
-.banner-arrows {
-  display: flex;
-  gap: 8px;
-}
-
-.arrow-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-/* Cột phải: Form nhập thông tin */
-.login-form-side {
-  flex: 0.95;
-  padding: 30px 40px 30px 50px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background: var(--card, #ffffff);
-  z-index: 1;
-}
-
-.form-header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.brand-text {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  color: var(--foreground);
-}
-
-.lang-selector {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 4px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--foreground);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-}
-
-.form-title-block {
-  text-align: center;
-  margin: 10px 0;
-}
-
-.main-title {
-  font-size: 32px;
-  font-weight: 800;
-  color: var(--foreground);
-  margin-bottom: 4px;
-  letter-spacing: -0.02em;
-}
-
-.sub-title {
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-
-.login-form-body {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.custom-login-input {
-  width: 100%;
-  padding: 11px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--secondary);
-  color: var(--foreground);
-  font-size: 13px;
-  outline: none;
-  box-sizing: border-box;
-}
-
-.custom-login-input:focus {
-  border-color: var(--primary);
-}
-
-.eye-toggle-btn {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  color: var(--muted-foreground);
-  display: flex;
-  align-items: center;
-}
-
-.form-options-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11.5px;
-}
-
-.remember-checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  user-select: none;
-}
-
-.remember-checkbox-label input {
-  accent-color: #ef4444;
-  width: 14px;
-  height: 14px;
-}
-
-.forgot-link {
-  color: #ef4444;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.submit-login-btn {
-  width: 100%;
-  padding: 12px;
-  border-radius: 20px;
-  border: none;
-  background: #ef4444;
-  color: #ffffff;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
-  transition: opacity 0.15s;
-}
-
-.submit-login-btn:hover {
-  opacity: 0.92;
-}
-
-.signup-prompt {
-  text-align: center;
-  font-size: 11.5px;
-  color: var(--muted-foreground);
-}
-
-.signup-link {
-  color: #ef4444;
-  text-decoration: none;
-  font-weight: 600;
-  margin-left: 4px;
-}
-
-.social-icons-row {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 4px;
-}
-
-.social-icon {
-  color: var(--muted-foreground);
-  transition: color 0.2s;
-}
-
-.social-icon:hover {
-  color: var(--foreground);
-}
-
-.login-error-msg {
-  color: #ef4444;
-  font-size: 12px;
-  display: none;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  padding: 8px 12px;
-  border-radius: 8px;
-  text-align: center;
-}
-
-/* --- TỐI ƯU TRÊN DI ĐỘNG --- */
-@media (max-width: 850px) {
-  .background-banner-layer {
-    display: none;
-  }
-
-  .login-card {
-    flex-direction: column;
-    border-radius: 20px;
-    border: none;
-  }
-
-  .login-banner-side {
-    clip-path: none;
-    margin-right: 0;
-    min-height: 180px;
-    padding: 20px;
-    border-radius: 20px 20px 0 0;
-  }
-
-  .banner-top-actions,
-  .banner-bottom-bar {
-    padding-right: 0;
-  }
-
-  .login-form-side {
-    padding: 24px 18px;
   }
 }

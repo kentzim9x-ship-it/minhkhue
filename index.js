@@ -2149,100 +2149,170 @@ function markAllNotificationsAsRead() {
 // 9. RENDER GIAO DIỆN & CÁC TRANG (VIEWS)
 // ==========================================
 
+// GIAO DIỆN ĐĂNG NHẬP SANG TRỌNG
 function renderLoginForm(container) {
   const savedCredsRaw = localStorage.getItem('remembered_user');
   const savedCreds = savedCredsRaw ? JSON.parse(savedCredsRaw) : { username: '', password: '', remember: false };
-  const bannerImg = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80';
+  const bannerImg = 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80';
 
   container.innerHTML = `
-    <div class="login-page-wrapper">
-      <!-- 1. HÌNH ẢNH BANNER PHÍA SAU TẠO ĐƯỜNG CẮT CHÉO TOÀN TRANG -->
-      <div class="background-banner-layer" style="background-image: url('${bannerImg}');"></div>
+    <style>
+      input:-webkit-autofill,
+      input:-webkit-autofill:hover, 
+      input:-webkit-autofill:focus, 
+      input:-webkit-autofill:active {
+          -webkit-text-fill-color: var(--foreground, #ffffff) !important;
+          -webkit-box-shadow: 0 0 0px 1000px var(--card, #1e232d) inset !important;
+          transition: background-color 5000s ease-in-out 0s !important;
+      }
+    </style>
 
-      <!-- 2. KHUNG DĂNG NHẬP NẰM ĐÈ LÊN TRÊN -->
-      <div class="login-card">
+    <div style="
+      min-height: 100vh; 
+      width: 100%;
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      padding: 20px; 
+      font-family: var(--font-jost, sans-serif);
+      position: relative;
+      overflow: hidden;
+      background-color: var(--background, #0c0e12);
+      box-sizing: border-box;
+    ">
+      
+      <!-- Background mờ toàn trang phủ kín 100% -->
+      <div style="
+        position: absolute;
+        top: -5%; left: -5%; width: 110%; height: 110%;
+        background: radial-gradient(circle at center, rgba(12, 14, 18, 0.4) 0%, rgba(12, 14, 18, 0.85) 80%),
+                    url('${bannerImg}') center/cover no-repeat;
+        filter: blur(8px);
+        z-index: 0;
+        pointer-events: none;
+      "></div>
 
-        <!-- CỘT TRÁI: BANNER NỔI VỚI HÌNH ẢNH -->
-        <div class="login-banner-side" style="background-image: url('${bannerImg}');">
-          <div class="banner-overlay"></div>
+      <!-- Card Login chính -->
+      <div style="
+        width: 100%; 
+        max-width: 900px; 
+        min-height: 520px;
+        background: var(--card, rgba(20, 24, 33, 0.9)); 
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-radius: 4px; 
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 1px rgba(240, 160, 48, 0.3); 
+        border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+        display: flex;
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+      " class="login-split-card">
+
+        <!-- Cột trái: Banner thông tin -->
+        <div style="
+          flex: 1; 
+          background: radial-gradient(circle at center, rgba(20, 24, 33, 0.6) 0%, rgba(13, 16, 22, 0.95) 100%), 
+                      url('${bannerImg}') center/cover no-repeat; 
+          padding: 40px; 
+          display: flex; 
+          flex-direction: column; 
+          justify-content: center; 
+          align-items: center;
+          text-align: center;
+          position: relative;
+        " class="login-banner-col">
           
-          <div class="banner-top-bar">
-            <span class="banner-tag">Selected Works</span>
-            <div class="banner-top-actions">
-              <span class="banner-link">Sign Up</span>
-              <button class="banner-btn-join" type="button">Join Us</button>
+          <div style="max-width: 320px; position: relative; z-index: 2;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(240, 160, 48, 0.15); border: 1px solid rgba(240, 160, 48, 0.35); border-radius: 4px; margin-bottom: 20px;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f0a030" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             </div>
-          </div>
-
-          <div class="banner-bottom-bar">
-            <div class="banner-profile">
-              <div class="profile-avatar">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              </div>
-              <div class="profile-info">
-                <div class="profile-name">Andrew.ui</div>
-                <div class="profile-role">UI & Illustration</div>
-              </div>
-            </div>
-
-            <div class="banner-arrows">
-              <button class="arrow-btn" type="button">&larr;</button>
-              <button class="arrow-btn" type="button">&rarr;</button>
-            </div>
+            <h1 style="font-size: 30px; font-weight: 700; color: #ffffff; letter-spacing: 0.05em; margin: 0 0 10px 0;">
+              MINH KHUÊ <span style="color: #f0a030;">LMS</span>
+            </h1>
+            <p style="font-size: 13px; color: #e4e4e7; font-family: var(--font-dm-mono, monospace); line-height: 1.6; margin: 0;">
+              Hệ thống quản lý kho hàng, báo giá và theo dõi đơn bán hàng tập trung
+            </p>
           </div>
         </div>
 
-        <!-- CỘT PHẢI: FORM ĐĂNG NHẬP (TRẮNG/TỐI THEO THEME) -->
-        <div class="login-form-side">
+        <!-- Cột phải: Form nhập liệu -->
+        <div style="
+          flex: 1; 
+          padding: 48px 40px; 
+          display: flex; 
+          flex-direction: column; 
+          justify-content: center;
+          background: var(--card, rgba(20, 24, 33, 0.95));
+        " class="login-form-col">
           
-          <!-- Header: Brand & Ngôn ngữ -->
-          <div class="form-header-bar">
-            <div class="brand-text">UISOCIAL</div>
-            <button class="lang-selector" type="button">
-              <span style="font-size: 14px;">🇬🇧</span> EN <span>&#9662;</span>
-            </button>
+          <div style="margin-bottom: 28px;">
+            <h2 class="login-title" style="font-size: 22px; font-weight: 600; color: var(--foreground, #ffffff); margin: 0 0 6px 0;">Đăng Nhập Hệ Thống</h2>
+            <p class="login-subtext" style="font-size: 12px; color: var(--muted-foreground, #8a94a6); font-family: var(--font-dm-mono, monospace);">Vui lòng nhập thông tin tài khoản của bạn</p>
           </div>
 
-          <!-- Tiêu đề chính -->
-          <div class="form-title-block">
-            <h1 class="main-title">Hi Designer</h1>
-            <p class="sub-title">Welcome to UISOCIAL</p>
-          </div>
-
-          <!-- Form Đăng nhập -->
-          <form onsubmit="handleLogin(event)" class="login-form-body">
+          <form onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 20px;">
             
-            <div class="input-field-group">
+            <div style="position: relative;">
+              <label style="display: block; font-size: 11px; font-family: var(--font-dm-mono, monospace); color: #f0a030; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Tên tài khoản</label>
               <input 
                 type="text" 
                 id="login-username" 
-                class="custom-login-input"
+                class="login-input"
                 required 
                 value="${savedCreds.remember ? (savedCreds.username || '') : ''}"
-                placeholder="Email" 
+                placeholder="Nhập tên tài khoản..." 
+                style="
+                  width: 100%; 
+                  padding: 10px 0; 
+                  background: transparent; 
+                  border: none; 
+                  border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.2)); 
+                  color: var(--foreground, #ffffff); 
+                  outline: none; 
+                  font-size: 14px; 
+                  transition: border-color 0.2s;
+                  box-sizing: border-box;
+                "
+                onfocus="this.style.borderColor='#f0a030';"
+                onblur="this.style.borderColor='var(--border)';"
               >
             </div>
 
-            <div class="input-field-group">
-              <div style="position: relative; width: 100%;">
+            <div style="position: relative;">
+              <label style="display: block; font-size: 11px; font-family: var(--font-dm-mono, monospace); color: var(--muted-foreground, #8a94a6); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Mật khẩu</label>
+              <div style="display: flex; align-items: center; position: relative;">
                 <input 
                   type="password" 
                   id="login-password" 
-                  class="custom-login-input"
+                  class="login-input"
                   required 
                   value="${savedCreds.remember ? (savedCreds.password || '') : ''}"
-                  placeholder="Password" 
+                  placeholder="Nhập mật khẩu..." 
+                  style="
+                    width: 100%; 
+                    padding: 10px 32px 10px 0; 
+                    background: transparent; 
+                    border: none; 
+                    border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.2)); 
+                    color: var(--foreground, #ffffff); 
+                    outline: none; 
+                    font-size: 14px; 
+                    transition: border-color 0.2s;
+                    box-sizing: border-box;
+                  "
+                  onfocus="this.style.borderColor='#f0a030';"
+                  onblur="this.style.borderColor='var(--border)';"
                 >
                 <span 
                   id="toggle-password-btn"
                   onclick="togglePasswordVisibility()" 
-                  class="eye-toggle-btn"
+                  style="position: absolute; right: 0; cursor: pointer; color: var(--muted-foreground, #8a94a6); display: flex; align-items: center;"
+                  onmouseover="this.style.color='#f0a030'"
+                  onmouseout="this.style.color='var(--muted-foreground)'"
                   title="Ẩn/Hiện mật khẩu"
                 >
-                  <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                     <circle cx="12" cy="12" r="3"></circle>
                   </svg>
@@ -2250,50 +2320,44 @@ function renderLoginForm(container) {
               </div>
             </div>
 
-            <!-- Tùy chọn: Checkbox lưu thông tin & Quên mật khẩu (Decor) -->
-            <div class="form-options-row">
-              <label class="remember-checkbox-label">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted-foreground, #a0aec0); cursor: pointer; user-select: none;">
                 <input 
                   type="checkbox" 
                   id="login-remember" 
                   ${savedCreds.remember ? 'checked' : ''} 
+                  style="cursor: pointer; accent-color: #f0a030; width: 15px; height: 15px;"
                 >
-                Lưu thông tin đăng nhập
+                Ghi nhớ đăng nhập
               </label>
-              <a href="javascript:void(0)" class="forgot-link">Forgot password ?</a>
             </div>
 
-            <!-- Thống báo lỗi nếu đăng nhập sai -->
-            <div id="login-error" class="login-error-msg">
+            <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); padding: 8px 12px; border-radius: 2px; text-align: center;">
               Tài khoản hoặc mật khẩu không chính xác!
             </div>
 
-            <!-- Nút Đăng Nhập -->
-            <button type="submit" class="submit-login-btn">
-              Login
+            <button 
+              type="submit" 
+              style="
+                width: 100%; 
+                padding: 12px; 
+                margin-top: 10px; 
+                background: linear-gradient(135deg, #f0a030 0%, #d98818 100%); 
+                border: none; 
+                border-radius: 2px; 
+                color: #000000; 
+                font-family: var(--font-jost, sans-serif); 
+                font-size: 14px; 
+                font-weight: 600; 
+                cursor: pointer; 
+                transition: all 0.2s ease;
+                box-shadow: 0 4px 15px rgba(240, 160, 48, 0.25);
+              "
+              onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(240, 160, 48, 0.4)';"
+              onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 15px rgba(240, 160, 48, 0.25)';"
+            >
+              Đăng Nhập
             </button>
-
-            <!-- Chưa có tài khoản đăng ký (Decor) -->
-            <div class="signup-prompt">
-              Don't have an account? <a href="javascript:void(0)" class="signup-link">Sign up</a>
-            </div>
-
-            <!-- Các Icon liên kết bên dưới (Decor) -->
-            <div class="social-icons-row">
-              <a href="javascript:void(0)" class="social-icon">
-                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-              </a>
-              <a href="javascript:void(0)" class="social-icon">
-                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.936 9.936 0 0024 4.59z"/></svg>
-              </a>
-              <a href="javascript:void(0)" class="social-icon">
-                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-              </a>
-              <a href="javascript:void(0)" class="social-icon">
-                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-              </a>
-            </div>
-
           </form>
 
         </div>
