@@ -1215,3 +1215,81 @@ div[style*="overflow: auto"],
   max-width: none !important;
   overflow: visible !important;
 }
+
+/* --- 1. SỬA LỖI LỚP PHỦ MỜ (MOBILE OVERLAY) --- */
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 998;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+/* Khi active mở menu mới cho hiển thị */
+.mobile-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Tự động điều chỉnh overlay theo Light Theme */
+[data-theme="light"] .mobile-overlay {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* --- 2. ĐỒNG BỘ KÍCH THƯỚC NÚT HOME VÀ NÚT DARK-LIGHT MODE --- */
+.sidebar-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 16px !important;
+  box-sizing: border-box !important;
+}
+
+/* Nút Home màu vàng */
+.sidebar-header .logo-icon,
+.sidebar-header .home-logo-btn {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: justify-content !important;
+  box-sizing: border-box !important;
+}
+
+/* Nút Dark/Light Mode trong Sidebar */
+#theme-toggle-btn-sidebar {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--card, #141821);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
+  border-radius: 4px !important;
+  color: var(--foreground, #ffffff);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+#theme-toggle-btn-sidebar svg {
+  width: 18px !important;
+  height: 18px !important;
+}

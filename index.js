@@ -45,8 +45,14 @@ overlayEl.onclick = toggleMobileMenu;
 document.body.appendChild(overlayEl);
 
 function toggleMobileMenu() {
-  document.body.classList.toggle('mobile-menu-open');
-  overlayEl.classList.toggle('active');
+  const isMenuOpen = document.body.classList.toggle('mobile-menu-open');
+  if (overlayEl) {
+    if (isMenuOpen) {
+      overlayEl.classList.add('active');
+    } else {
+      overlayEl.classList.remove('active');
+    }
+  }
 }
 
 // ==========================================
@@ -296,6 +302,7 @@ async function handleLogin(e) {
   const un = document.getElementById('login-username').value.trim();
   const pw = document.getElementById('login-password').value;
   const remember = document.getElementById('login-remember').checked;
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
 
   try {
     const { data, error } = await supabaseClient
@@ -311,12 +318,17 @@ async function handleLogin(e) {
       const session = { isLoggedIn: true, currentUser: foundUser, remember };
       localStorage.setItem('app_session', JSON.stringify(session));
 
-      // XỬ LÝ GHI NHỚ ĐĂNG NHẬP:
+      // XỬ LÝ GHI NHỚ ĐĂNG NHẬP & THEME:
       if (remember) {
-        localStorage.setItem('remembered_user', JSON.stringify({ username: un, password: pw, remember: true }));
+        localStorage.setItem('remembered_user', JSON.stringify({ 
+          username: un, 
+          password: pw, 
+          remember: true,
+          theme: currentTheme 
+        }));
       } else {
-        // Bỏ tích -> Xóa sạch dữ liệu đã lưu
         localStorage.removeItem('remembered_user');
+        sessionStorage.setItem('app_session_theme', currentTheme);
       }
 
       document.querySelector('.app-container').style.display = 'flex';
@@ -380,17 +392,9 @@ function updateUserInfoUI() {
     }
   }
 
-  // -------------------------------------------------------------
-  // 1. TRẢ NÚT HOME VỀ HEADER (GÓC TRÁI)
-  // -------------------------------------------------------------
+  // 1. NÚT HOME Ở HEADER TRÊN MOBILE
   const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header-left') || document.querySelector('.app-header');
   
-  // Gỡ bỏ nút theme ở header nếu có
-  const oldHeaderThemeBtn = document.getElementById('theme-toggle-btn');
-  if (oldHeaderThemeBtn && oldHeaderThemeBtn.parentElement === headerLeft) {
-    oldHeaderThemeBtn.remove();
-  }
-
   if (headerLeft && !document.getElementById('mobile-home-trigger')) {
     const homeBtn = document.createElement('button');
     homeBtn.id = 'mobile-home-trigger';
@@ -399,46 +403,28 @@ function updateUserInfoUI() {
     homeBtn.innerHTML = Icons.home;
     homeBtn.title = 'Trang chủ / Menu';
     homeBtn.onclick = () => {
-      // Trên Mobile (<=768px): Mở/Đóng menu bên trái
       if (window.innerWidth <= 768) {
         toggleMobileMenu();
-      } else {
-        // Trên PC (>768px): Không thực hiện thao tác
-        return false;
       }
     };
     headerLeft.insertBefore(homeBtn, headerLeft.firstChild);
   }
 
-  // -------------------------------------------------------------
-  // 2. ĐẶT NÚT THEME (SÁNG/TỐI) VÀO BÊN TRONG SIDEBAR HEADER
-  // -------------------------------------------------------------
+  // 2. ĐỒNG BỘ NÚT THEME (DARK/LIGHT) VÀ NÚT HOME TRONG SIDEBAR
   const sidebarHeader = document.querySelector('.sidebar-header') || document.querySelector('.logo-brand');
   if (sidebarHeader) {
-    // Đảm bảo sidebarHeader xếp dạng Flexbox để đặt 2 nút ở 2 đầu đối diện
-    sidebarHeader.style.cssText += 'display: flex; align-items: center; justify-content: space-between; padding: 12px 16px;';
+    sidebarHeader.style.cssText += 'display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; box-sizing: border-box;';
+
+    // Đảm bảo nút logo Home vàng cũng có kích thước chuẩn 36x36px
+    const yellowHomeIcon = sidebarHeader.querySelector('.logo-icon, .app-logo, svg');
+    if (yellowHomeIcon && yellowHomeIcon.parentElement) {
+      yellowHomeIcon.parentElement.style.cssText += 'width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box;';
+    }
 
     if (!document.getElementById('theme-toggle-btn-sidebar')) {
       const themeBtn = document.createElement('button');
       themeBtn.id = 'theme-toggle-btn-sidebar';
       themeBtn.className = 'sidebar-theme-btn';
-      
-      // Giống hệt thiết kế nút Home màu vàng (Kích thước, padding, border-radius)
-      themeBtn.style.cssText = `
-        width: 36px;
-        height: 36px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 2px;
-        color: var(--foreground);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        flex-shrink: 0;
-      `;
       themeBtn.onclick = (e) => {
         e.stopPropagation();
         toggleTheme();
@@ -457,7 +443,22 @@ function updateUserInfoUI() {
 // ==========================================
 
 function initTheme() {
-  const savedTheme = localStorage.getItem('app-theme') || 'dark';
+  let savedTheme = 'dark'; // Mặc định là dark
+
+  const savedCredsRaw = localStorage.getItem('remembered_user');
+  const savedCreds = savedCredsRaw ? JSON.parse(savedCredsRaw) : null;
+
+  // Nếu người dùng có chọn "Ghi nhớ đăng nhập" và đã lưu theme
+  if (savedCreds && savedCreds.remember && savedCreds.theme) {
+    savedTheme = savedCreds.theme;
+  } else {
+    // Ngược lại, lấy theme từ sessionStorage của phiên làm việc hiện tại
+    const sessionTheme = sessionStorage.getItem('app_session_theme');
+    if (sessionTheme) {
+      savedTheme = sessionTheme;
+    }
+  }
+
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeButtonUI(savedTheme);
 }
@@ -467,13 +468,24 @@ function toggleTheme() {
   const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
   document.documentElement.setAttribute('data-theme', newTheme);
-  localStorage.setItem('app-theme', newTheme);
+
+  // Kiểm tra trạng thái Ghi nhớ đăng nhập
+  const savedCredsRaw = localStorage.getItem('remembered_user');
+  const savedCreds = savedCredsRaw ? JSON.parse(savedCredsRaw) : null;
+
+  if (savedCreds && savedCreds.remember) {
+    // TÍCH CHỌN GHI NHỚ: Lưu cấu hình theme vào localStorage
+    savedCreds.theme = newTheme;
+    localStorage.setItem('remembered_user', JSON.stringify(savedCreds));
+  } else {
+    // KHÔNG TÍCH GHI NHỚ: Chỉ lưu vào SessionStorage (hết phiên/đóng trình duyệt sẽ mất)
+    sessionStorage.setItem('app_session_theme', newTheme);
+  }
 
   updateThemeButtonUI(newTheme);
 }
 
 function updateThemeButtonUI(theme) {
-  // Tìm nút theme trong Sidebar hoặc bất kỳ vị trí nào
   const btn = document.getElementById('theme-toggle-btn-sidebar') || document.getElementById('theme-toggle-btn');
   if (!btn) return;
 
@@ -5183,4 +5195,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   handleRouteChange();
   updateHeaderDate();
   initNotificationUI();
+  initTheme();
 });
