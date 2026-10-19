@@ -4298,199 +4298,148 @@ function renderReportInventory(c) {
   }, 100);
 }
 
-function renderReportSales(c) {
-  const {
-    salesDataReal,
-    ytdRevenue,
-    ytdOrders
-  } = getSalesAnalyticsData();
+function renderReportSales() {
+  const container = document.getElementById('main-content');
+  if (!container) return;
 
-  const totalReturnsCount = (db.returns || []).filter(r => ['processed', 'approved', 'đã xử lý', 'đã duyệt'].includes((r.status || '').toLowerCase())).length;
-  const returnRatePercent = ytdOrders > 0 ? ((totalReturnsCount / ytdOrders) * 100).toFixed(1) : '0.0';
-  const avgOrderValue = ytdOrders > 0 ? (ytdRevenue / ytdOrders) : 0;
+  // 1. Lọc và xử lý dữ liệu bán hàng
+  const salesOrders = (db.salesOrders || []).filter(o => o.status !== 'cancelled');
+  const now = new Date();
+  const currentMonth = state.reportSalesMonth || (now.getMonth() + 1);
+  const currentYear = state.reportSalesYear || now.getFullYear();
+  const selectedCustomer = state.reportSalesCustomer || 'all';
 
-  // State lọc Tháng & Khách hàng
-  if (!state.reportSalesMonth) {
-    state.reportSalesMonth = String(new Date().getMonth() + 1);
-  }
-  if (state.reportSalesCustomer === undefined) {
-    state.reportSalesCustomer = '';
-  }
-
-  const currentYear = new Date().getFullYear();
-  const selectedMonthNum = parseInt(state.reportSalesMonth, 10) || (new Date().getMonth() + 1);
-  const selectedCustomer = state.reportSalesCustomer;
-
-  // Lọc dữ liệu đơn hàng theo tháng
-  const filteredOrdersForMonth = (db.orders || []).filter(o => {
-    const status = (o.status || '').toLowerCase();
-    if (!['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) return false;
+  // Lọc theo tháng/năm
+  const filteredOrders = salesOrders.filter(o => {
     if (!o.date) return false;
-    const parts = o.date.split('-');
-    if (parts.length >= 2) {
-      const oYear = parseInt(parts[0], 10);
-      const oMonth = parseInt(parts[1], 10);
-      return oYear === currentYear && oMonth === selectedMonthNum;
-    }
-    return false;
+    const d = new Date(o.date);
+    const mMatch = (d.getMonth() + 1) === Number(currentMonth);
+    const yMatch = d.getFullYear() === Number(currentYear);
+    const cMatch = selectedCustomer === 'all' || o.customer === selectedCustomer;
+    return mMatch && yMatch && cMatch;
   });
 
-  // Top khách hàng trong tháng
-  const customerMap = {};
-  filteredOrdersForMonth.forEach(o => {
-    const cName = o.customer || 'Khách lẻ';
-    if (!customerMap[cName]) customerMap[cName] = { name: cName, revenue: 0, orders: 0 };
-    customerMap[cName].revenue += Number(o.total || 0);
-    customerMap[cName].orders += 1;
-  });
-  const topCustomersReal = Object.values(customerMap).sort((a, b) => b.revenue - a.revenue);
+  // 2. Gom nhóm theo SKU / Mặt hàng
+  const itemMap = {};
+  filteredOrders.forEach(order => {
+    (order.lineItems || order.lineitems || []).forEach(item => {
+      const sku = item.sku || item.id || 'N/A';
+      const name = item.name || 'Hàng hóa không tên';
+      const qty = Number(item.qty) || 0;
+      const price = Number(item.unitPrice) || 0;
+      const discount = Number(item.discount) || 0;
+      const tax = Number(item.tax) || 0;
 
-  // Tổng hợp mã hàng theo khách hàng
-  const itemSummaryMap = {};
-  filteredOrdersForMonth.forEach(o => {
-    if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
-      const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
-      items.forEach(item => {
-        const sku = item.sku || '—';
-        const name = item.name || '—';
-        const qty = Number(item.qty || 0);
-        const price = Number(item.unitPrice || 0);
-        const disc = Number(item.discount || 0);
-        const tax = Number(item.tax || 0);
-        const lineSub = qty * price * (1 - disc / 100);
-        const lineTotal = lineSub * (1 + tax / 100);
+      const lineSub = qty * price * (1 - discount / 100);
+      const lineTotal = lineSub * (1 + tax / 100);
 
-        if (!itemSummaryMap[sku]) {
-          itemSummaryMap[sku] = { sku, name, qty: 0, totalAmount: 0 };
-        }
-        itemSummaryMap[sku].qty += qty;
-        itemSummaryMap[sku].totalAmount += lineTotal;
-      });
-    }
+      if (!itemMap[sku]) {
+        itemMap[sku] = { sku, name, totalQty: 0, totalAmount: 0 };
+      }
+      itemMap[sku].totalQty += qty;
+      itemMap[sku].totalAmount += lineTotal;
+    });
   });
 
-  const detailItemsList = Object.values(itemSummaryMap).sort((a, b) => b.totalAmount - a.totalAmount);
+  const itemList = Object.values(itemMap);
 
-  const customersHtml = topCustomersReal.slice(0, 5).map((cus, i) => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
-      <td style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); width: 28px;">${String(i + 1).padStart(2, '0')}</td>
-      <td style="padding: 9px 14px; font-size: 13px;">${cus.name}</td>
-      <td style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--primary);">${fmtUSD(cus.revenue)}</td>
-      <td style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; text-align: right; color: var(--muted-foreground);">${cus.orders} đơn</td>
+  // 3. Tính Tổng Cộng Toàn Bộ Mặt Hàng
+  let grandTotalQty = 0;
+  let grandTotalAmount = 0;
+
+  itemList.forEach(item => {
+    grandTotalQty += item.totalQty;
+    grandTotalAmount += item.totalAmount;
+  });
+
+  // 4. Render danh sách hàng hóa
+  const rowsHtml = itemList.length > 0 ? itemList.map(item => `
+    <tr style="border-bottom: 1px solid var(--border); transition: background-color 0.15s ease;" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.02)'" onmouseout="this.style.backgroundColor='transparent'">
+      <td style="padding: 12px 16px; color: #eab308; font-weight: 500; font-size: 13px;">${item.sku}</td>
+      <td style="padding: 12px 16px; color: var(--foreground); font-size: 13px;">${item.name}</td>
+      <td style="padding: 12px 16px; text-align: right; color: var(--foreground); font-size: 13px;">${item.totalQty.toLocaleString('vi-VN')}</td>
+      <td style="padding: 12px 16px; text-align: right; color: #eab308; font-weight: 500; font-size: 13px;">${Math.round(item.totalAmount).toLocaleString('vi-VN')} đ</td>
     </tr>
-  `).join('');
-
-  const detailHeaders = ['Mã Hàng (SKU)', 'Tên Hàng Hóa', 'Tổng Số Lượng', 'Tổng Số Tiền']
-    .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Tổng Số Lượng' || h === 'Tổng Số Tiền' ? 'right' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
-    .join('');
-
-  const detailRows = detailItemsList.map(item => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${item.sku}</td>
-      <td style="padding: 11px 16px; font-size: 13px; font-weight: 500;">${item.name}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(item.qty)}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right; color: var(--primary);">${fmtUSD(item.totalAmount)}</td>
+  `).join('') : `
+    <tr>
+      <td colspan="4" style="text-align: center; padding: 32px; color: var(--muted-foreground); font-size: 13px;">Không có dữ liệu bán hàng trong khoảng thời gian này</td>
     </tr>
-  `).join('');
-
-  const customerSelectOptions = (db.customers || []).map(cust => `
-    <option value="${cust.name}" ${selectedCustomer === cust.name ? 'selected' : ''}>${cust.name}</option>
-  `).join('');
-
-  c.innerHTML = `
-    <div style="display: flex; flex-direction: column; gap: 16px;">
-      
-      <!-- KPI CARDS -->
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
-        <div class="kpi-card"><span class="kpi-label">Doanh Thu Lũy Kế Năm</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(ytdRevenue)}</span></div><span class="kpi-sub">Năm ${currentYear}</span></div>
-        <div class="kpi-card"><span class="kpi-label">Tổng Đơn Bán</span><div class="kpi-value-row"><span class="kpi-value">${fmt(ytdOrders)}</span></div><span class="kpi-sub">Năm ${currentYear}</span></div>
-        <div class="kpi-card"><span class="kpi-label">Tỷ Lệ Trả Hàng</span><div class="kpi-value-row"><span class="kpi-value">${returnRatePercent}%</span></div><span class="kpi-sub">theo số lượt đổi trả</span></div>
-        <div class="kpi-card"><span class="kpi-label">Giá Trị Đơn Trung Bình</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(avgOrderValue)}</span></div><span class="kpi-sub">AOV năm ${currentYear}</span></div>
-      </div>
-
-      <!-- BIỂU ĐỒ DOANH SỐ & TOP KHÁCH HÀNG -->
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="grid-2">
-        <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
-          <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Biểu Đồ Doanh Thu & Sản Lượng Đơn Bán</div>
-          <div style="height: 220px;"><canvas id="chart-sales"></canvas></div>
-        </div>
-        <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
-          <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng (Tháng ${selectedMonthNum})</div>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tbody>
-              ${customersHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có dữ liệu khách hàng</td></tr>'}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG (GỘP HEADER TIÊU ĐỀ & BỘ LỌC CẢM ỨNG) -->
-      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
-        <div style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-          
-          <div style="display: flex; flex-direction: column; gap: 2px;">
-            <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--foreground);">
-              Thống Kê Chi Tiết Theo Khách Hàng ${selectedCustomer ? `(${selectedCustomer})` : ''} - Tháng ${selectedMonthNum}/${currentYear}
-            </span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--primary);">
-              Tổng số mặt hàng: ${detailItemsList.length}
-            </span>
-          </div>
-
-          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
-              <select class="form-select" style="width: 110px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; render();">
-                ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
-              </select>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Khách hàng:</label>
-              <select class="form-select" style="width: 200px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesCustomer=this.value; render();">
-                <option value="">-- Tất cả khách hàng --</option>
-                ${customerSelectOptions}
-              </select>
-            </div>
-          </div>
-
-        </div>
-
-        <table style="width: 100%; border-collapse: collapse;">
-          <thead>
-            <tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">
-              ${detailHeaders}
-            </tr>
-          </thead>
-          <tbody>
-            ${detailRows}
-          </tbody>
-        </table>
-        ${detailItemsList.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không có dữ liệu đơn hàng trong tháng đã chọn</div>` : ''}
-      </div>
-
-    </div>
   `;
 
-  new Chart(document.getElementById('chart-sales').getContext('2d'), {
-    type: 'line',
-    data: {
-      labels: salesDataReal.map(d => d.month),
-      datasets: [
-        { yAxisID: 'yRev', label: 'Doanh thu', data: salesDataReal.map(d => d.revenue), borderColor: '#f0a030', tension: 0.3 },
-        { yAxisID: 'yOrd', label: 'Đơn hàng', data: salesDataReal.map(d => d.orders), borderColor: '#60a5fa', tension: 0.3 }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        yRev: { position: 'left', grid: { color: '#252a33' } },
-        yOrd: { position: 'right', grid: { drawOnChartArea: false } },
-        x: { grid: { color: '#252a33' } }
-      }
-    }
-  });
+  // 5. Template HTML toàn bộ Báo Cáo Bán Hàng
+  container.innerHTML = `
+    <div class="report-page" style="padding: 20px;">
+      <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG -->
+      <div class="card" style="background: var(--card-bg, #121212); border: 1px solid var(--border, #27272a); border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        
+        <!-- Header Bảng -->
+        <div style="padding: 16px 20px; border-bottom: 1px solid var(--border, #27272a); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h3 style="margin: 0; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--foreground, #ffffff);">
+              THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG – THÁNG ${currentMonth}/${currentYear}
+            </h3>
+            <div style="font-size: 12px; color: var(--muted-foreground, #a1a1aa); margin-top: 4px;">
+              Tổng số mặt hàng: <span style="color: #eab308; font-weight: 600;">${itemList.length}</span>
+            </div>
+          </div>
+
+          <!-- Bộ lọc Tháng & Khách hàng -->
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <label style="font-size: 12px; color: var(--muted-foreground, #a1a1aa);">THÁNG:
+              <select onchange="state.reportSalesMonth = this.value; renderReportSales();" style="background: var(--input-bg, #18181b); color: var(--foreground, #fff); border: 1px solid var(--border, #3f3f46); padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 4px;">
+                ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => `<option value="${m}" ${Number(currentMonth) === m ? 'selected' : ''}>Tháng ${m}</option>`).join('')}
+              </select>
+            </label>
+
+            <label style="font-size: 12px; color: var(--muted-foreground, #a1a1aa);">KHÁCH HÀNG:
+              <select onchange="state.reportSalesCustomer = this.value; renderReportSales();" style="background: var(--input-bg, #18181b); color: var(--foreground, #fff); border: 1px solid var(--border, #3f3f46); padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 4px;">
+                <option value="all">-- Tất cả khách hàng --</option>
+                ${(db.customers || []).map(c => `<option value="${c.name}" ${selectedCustomer === c.name ? 'selected' : ''}>${c.name}</option>`).join('')}
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <!-- Bảng Dữ Liệu -->
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; font-family: inherit;">
+            <thead>
+              <tr style="background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border, #27272a); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; color: var(--muted-foreground, #a1a1aa);">
+                <th style="padding: 12px 16px; text-align: left; font-weight: 600; width: 18%;">MÃ HÀNG (SKU)</th>
+                <th style="padding: 12px 16px; text-align: left; font-weight: 600;">TÊN HÀNG HÓA</th>
+                <th style="padding: 12px 16px; text-align: right; font-weight: 600; width: 18%;">TỔNG SỐ LƯỢNG</th>
+                <th style="padding: 12px 16px; text-align: right; font-weight: 600; width: 22%;">TỔNG SỐ TIỀN</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+
+            <!-- HÀNG TỔNG CỘNG ĐÃ ĐƯỢC THIẾT KẾ THẨM MỸ -->
+            ${itemList.length > 0 ? `
+              <tfoot>
+                <tr style="background: rgba(255, 255, 255, 0.04); border-top: 2px solid var(--border, #3f3f46); font-weight: 700; font-size: 13px;">
+                  <td colspan="2" style="padding: 14px 16px; color: var(--foreground, #ffffff); text-transform: uppercase; letter-spacing: 0.5px;">
+                    <span style="display: inline-flex; align-items: center; gap: 8px;">
+                      <span style="width: 8px; height: 8px; background-color: #eab308; border-radius: 50%; display: inline-block;"></span>
+                      Tổng cộng
+                    </span>
+                  </td>
+                  <td style="padding: 14px 16px; text-align: right; color: var(--foreground, #ffffff); font-size: 14px;">
+                    ${grandTotalQty.toLocaleString('vi-VN')}
+                  </td>
+                  <td style="padding: 14px 16px; text-align: right; color: #eab308; font-size: 15px; font-weight: 700;">
+                    ${Math.round(grandTotalAmount).toLocaleString('vi-VN')} đ
+                  </td>
+                </tr>
+              </tfoot>
+            ` : ''}
+          </table>
+        </div>
+
+      </div>
+    </div>
+  `;
 }
 
 // ==========================================
