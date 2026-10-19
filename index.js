@@ -380,17 +380,23 @@ function updateUserInfoUI() {
     }
   }
 
-  // Chèn nút Home vào trước thẻ Tag/Title ở Header
+  // Thay nút Home bằng Nút Chuyển Dark/Light Mode ở góc trái Header (trước view-tag / view-title)
   const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header-left') || document.querySelector('.app-header');
-  if (headerLeft && !document.getElementById('mobile-home-trigger')) {
-    const homeBtn = document.createElement('button');
-    homeBtn.id = 'mobile-home-trigger';
-    homeBtn.className = 'header-icon-btn mobile-home-btn';
-    homeBtn.style.cssText = 'background: var(--card); border: 1px solid var(--border); padding: 8px; cursor: pointer; color: var(--foreground); display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; border-radius: 2px;';
-    homeBtn.innerHTML = Icons.home;
-    homeBtn.title = 'Trang chủ';
-    homeBtn.onclick = () => navigate('dashboard', 'list');
-    headerLeft.insertBefore(homeBtn, headerLeft.firstChild);
+  
+  // Gỡ bỏ nút home cũ nếu có
+  const oldHomeBtn = document.getElementById('mobile-home-trigger');
+  if (oldHomeBtn) oldHomeBtn.remove();
+
+  if (headerLeft && !document.getElementById('theme-toggle-btn')) {
+    const themeBtn = document.createElement('button');
+    themeBtn.id = 'theme-toggle-btn';
+    themeBtn.className = 'header-icon-btn';
+    themeBtn.style.cssText = 'background: var(--card); border: 1px solid var(--border); padding: 8px; cursor: pointer; color: var(--foreground); display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; border-radius: 2px;';
+    themeBtn.onclick = toggleTheme;
+    headerLeft.insertBefore(themeBtn, headerLeft.firstChild);
+
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    updateThemeButtonUI(currentTheme);
   }
 
   const logoBrand = document.querySelector('.logo-brand, .app-brand, .sidebar-header');
@@ -723,19 +729,6 @@ function fmtUSD(n) {
 
 function updateHeaderDate() {
   const dateElement = document.getElementById('header-date');
-  const headerRight = document.querySelector('.app-header > div:last-child') || document.querySelector('.app-header');
-
-  if (headerRight && !document.getElementById('theme-toggle-btn')) {
-    const themeBtn = document.createElement('button');
-    themeBtn.id = 'theme-toggle-btn';
-    themeBtn.className = 'header-icon-btn';
-    themeBtn.onclick = toggleTheme;
-    headerRight.insertBefore(themeBtn, headerRight.firstChild);
-
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-    updateThemeButtonUI(currentTheme);
-  }
-
   if (dateElement) {
     const now = new Date();
     const options = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
@@ -1791,29 +1784,28 @@ function subscribeRealtimeNotifications() {
 }
 
 function initNotificationUI() {
-  const headerRight = document.querySelector('.app-header > div:last-child') || document.querySelector('.app-header');
+  const headerRight = document.querySelector('.app-header > div:last-child') || document.querySelector('.app-header-right') || document.querySelector('.app-header');
   if (!headerRight) return;
 
   let bellBtn = document.getElementById('notif-bell-btn');
   if (!bellBtn) {
-    const existingBell = headerRight.querySelector('button, .bell-icon, [class*="bell"]');
-    if (existingBell) {
-      bellBtn = existingBell;
-      bellBtn.id = 'notif-bell-btn';
-    } else {
-      bellBtn = document.createElement('button');
-      bellBtn.id = 'notif-bell-btn';
-      headerRight.appendChild(bellBtn);
-    }
+    bellBtn = document.createElement('button');
+    bellBtn.id = 'notif-bell-btn';
+    // Chèn sau phần hiển thị Ngày Tháng
+    headerRight.appendChild(bellBtn);
   }
 
   bellBtn.className = 'header-icon-btn notif-bell-btn';
+  bellBtn.style.cssText = 'margin-left: 8px; cursor: pointer; background: transparent; border: none; color: var(--foreground); display: inline-flex; align-items: center; position: relative;';
   bellBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
 
-  const dot = document.createElement('div');
-  dot.id = 'notif-badge-dot';
-  dot.className = 'notif-badge-dot';
-  bellBtn.appendChild(dot);
+  let dot = document.getElementById('notif-badge-dot');
+  if (!dot) {
+    dot = document.createElement('div');
+    dot.id = 'notif-badge-dot';
+    dot.className = 'notif-badge-dot';
+    bellBtn.appendChild(dot);
+  }
 
   if (!document.getElementById('notif-dropdown')) {
     const dropdown = document.createElement('div');
