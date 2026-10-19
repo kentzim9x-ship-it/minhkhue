@@ -380,33 +380,75 @@ function updateUserInfoUI() {
     }
   }
 
-  // Thay nút Home bằng Nút Chuyển Dark/Light Mode ở góc trái Header (trước view-tag / view-title)
+  // -------------------------------------------------------------
+  // 1. TRẢ NÚT HOME VỀ HEADER (GÓC TRÁI)
+  // -------------------------------------------------------------
   const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header-left') || document.querySelector('.app-header');
   
-  // Gỡ bỏ nút home cũ nếu có
-  const oldHomeBtn = document.getElementById('mobile-home-trigger');
-  if (oldHomeBtn) oldHomeBtn.remove();
-
-  if (headerLeft && !document.getElementById('theme-toggle-btn')) {
-    const themeBtn = document.createElement('button');
-    themeBtn.id = 'theme-toggle-btn';
-    themeBtn.className = 'header-icon-btn';
-    themeBtn.style.cssText = 'background: var(--card); border: 1px solid var(--border); padding: 8px; cursor: pointer; color: var(--foreground); display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; border-radius: 2px;';
-    themeBtn.onclick = toggleTheme;
-    headerLeft.insertBefore(themeBtn, headerLeft.firstChild);
-
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-    updateThemeButtonUI(currentTheme);
+  // Gỡ bỏ nút theme ở header nếu có
+  const oldHeaderThemeBtn = document.getElementById('theme-toggle-btn');
+  if (oldHeaderThemeBtn && oldHeaderThemeBtn.parentElement === headerLeft) {
+    oldHeaderThemeBtn.remove();
   }
 
-  const logoBrand = document.querySelector('.logo-brand, .app-brand, .sidebar-header');
-  if (logoBrand) {
-    logoBrand.style.cursor = 'pointer';
-    logoBrand.onclick = () => {
-      if (window.innerWidth <= 768 && document.body.classList.contains('mobile-menu-open')) {
+  if (headerLeft && !document.getElementById('mobile-home-trigger')) {
+    const homeBtn = document.createElement('button');
+    homeBtn.id = 'mobile-home-trigger';
+    homeBtn.className = 'header-icon-btn mobile-home-btn';
+    homeBtn.style.cssText = 'background: var(--card); border: 1px solid var(--border); padding: 8px; cursor: pointer; color: var(--foreground); display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; border-radius: 2px;';
+    homeBtn.innerHTML = Icons.home;
+    homeBtn.title = 'Trang chủ / Menu';
+    homeBtn.onclick = () => {
+      // Trên Mobile (<=768px): Mở/Đóng menu bên trái
+      if (window.innerWidth <= 768) {
         toggleMobileMenu();
+      } else {
+        // Trên PC (>768px): Không thực hiện thao tác
+        return false;
       }
     };
+    headerLeft.insertBefore(homeBtn, headerLeft.firstChild);
+  }
+
+  // -------------------------------------------------------------
+  // 2. ĐẶT NÚT THEME (SÁNG/TỐI) VÀO BÊN TRONG SIDEBAR HEADER
+  // -------------------------------------------------------------
+  const sidebarHeader = document.querySelector('.sidebar-header') || document.querySelector('.logo-brand');
+  if (sidebarHeader) {
+    // Đảm bảo sidebarHeader xếp dạng Flexbox để đặt 2 nút ở 2 đầu đối diện
+    sidebarHeader.style.cssText += 'display: flex; align-items: center; justify-content: space-between; padding: 12px 16px;';
+
+    if (!document.getElementById('theme-toggle-btn-sidebar')) {
+      const themeBtn = document.createElement('button');
+      themeBtn.id = 'theme-toggle-btn-sidebar';
+      themeBtn.className = 'sidebar-theme-btn';
+      
+      // Giống hệt thiết kế nút Home màu vàng (Kích thước, padding, border-radius)
+      themeBtn.style.cssText = `
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 2px;
+        color: var(--foreground);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      `;
+      themeBtn.onclick = (e) => {
+        e.stopPropagation();
+        toggleTheme();
+      };
+
+      sidebarHeader.appendChild(themeBtn);
+
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      updateThemeButtonUI(currentTheme);
+    }
   }
 }
 
@@ -431,7 +473,8 @@ function toggleTheme() {
 }
 
 function updateThemeButtonUI(theme) {
-  const btn = document.getElementById('theme-toggle-btn');
+  // Tìm nút theme trong Sidebar hoặc bất kỳ vị trí nào
+  const btn = document.getElementById('theme-toggle-btn-sidebar') || document.getElementById('theme-toggle-btn');
   if (!btn) return;
 
   if (theme === 'light') {
