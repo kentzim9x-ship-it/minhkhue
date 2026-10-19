@@ -2113,7 +2113,7 @@ function renderLoginForm(container) {
         background: rgba(20, 24, 33, 0.9); 
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
-        border-radius: 0; 
+        border-radius: 1px; 
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 1px rgba(240, 160, 48, 0.3); 
         border: 1px solid rgba(255, 255, 255, 0.08);
         display: flex;
@@ -2137,7 +2137,7 @@ function renderLoginForm(container) {
         " class="login-banner-col">
           
           <div style="max-width: 320px; position: relative; z-index: 2;">
-            <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(240, 160, 48, 0.15); border: 1px solid rgba(240, 160, 48, 0.35); border-radius: 0; margin-bottom: 20px;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(240, 160, 48, 0.15); border: 1px solid rgba(240, 160, 48, 0.35); border-radius: 1px; margin-bottom: 20px;">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f0a030" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             </div>
             <h1 style="font-size: 30px; font-weight: 700; color: #ffffff; letter-spacing: 0.05em; margin: 0 0 10px 0;">
@@ -2243,7 +2243,7 @@ function renderLoginForm(container) {
               </label>
             </div>
 
-            <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); padding: 8px 12px; border-radius: 0; text-align: center;">
+            <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); padding: 8px 12px; border-radius: 1px; text-align: center;">
               Tài khoản hoặc mật khẩu không chính xác!
             </div>
 
@@ -2255,7 +2255,7 @@ function renderLoginForm(container) {
                 margin-top: 10px; 
                 background: linear-gradient(135deg, #f0a030 0%, #d98818 100%); 
                 border: none; 
-                border-radius: 0; 
+                border-radius: 1px; 
                 color: #000000; 
                 font-family: var(--font-jost, sans-serif); 
                 font-size: 14px; 

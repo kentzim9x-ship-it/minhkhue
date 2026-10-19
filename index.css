@@ -461,7 +461,7 @@ input:-webkit-autofill:active {
   padding: 9px 12px;
   outline: none;
   width: 100%;
-  border-radius: 0;
+  border-radius: 1px;
 }
 
 .form-input:focus,
@@ -554,7 +554,7 @@ tr:hover {
   text-transform: uppercase;
   padding: 3px 8px;
   display: inline-block;
-  border-radius: 0;
+  border-radius: 1px;
 }
 
 .badge-emerald {
@@ -643,7 +643,7 @@ tr:hover {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border);
-  border-radius: 0;
+  border-radius: 1px;
 }
 
 /* ==============================================================
@@ -1032,7 +1032,7 @@ div[style*="overflow: auto"],
   position: relative;
   background: transparent;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
-  border-radius: 0;
+  border-radius: 1px;
   padding: 8px;
   color: var(--foreground, #ffffff);
   cursor: pointer;
@@ -1071,7 +1071,7 @@ div[style*="overflow: auto"],
   max-height: 520px;
   background: var(--card, #141821);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
-  border-radius: 0;
+  border-radius: 1px;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 1px rgba(240, 160, 48, 0.3);
   z-index: 999;
   display: flex;
