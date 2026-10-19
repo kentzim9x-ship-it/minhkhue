@@ -4070,22 +4070,8 @@ function renderReportInventory(c) {
   const materials = db.materials;
   const hasPermission = checkModulePermission('materials');
 
-  // Khởi tạo state tìm kiếm & giới hạn lazy loading
   if (state.reportInvSearch === undefined) state.reportInvSearch = '';
   if (!state.reportInvLimit) state.reportInvLimit = 20;
-
-  // Lọc theo Danh mục & Ô tìm kiếm Mã hàng / Tên hàng
-  const searchKey = state.reportInvSearch.trim().toLowerCase();
-  const filtered = materials.filter(m => {
-    const matchCat = (state.filter === 'all' || m.category === state.filter);
-    const matchSearch = !searchKey ||
-      (m.id && m.id.toLowerCase().includes(searchKey)) ||
-      (m.name && m.name.toLowerCase().includes(searchKey));
-    return matchCat && matchSearch;
-  });
-
-  // Giới hạn danh sáchLazy Loading
-  const visibleList = filtered.slice(0, state.reportInvLimit);
 
   const getActualStock = (m) => {
     const invList = (db.inventory || []).filter(i => i.sku === m.id || i.material_id === m.id);
@@ -4094,6 +4080,20 @@ function renderReportInventory(c) {
     }
     return m.stock ?? 0;
   };
+
+  const getFilteredList = () => {
+    const searchKey = (state.reportInvSearch || '').trim().toLowerCase();
+    return materials.filter(m => {
+      const matchCat = (state.filter === 'all' || m.category === state.filter);
+      const matchSearch = !searchKey ||
+        (m.id && m.id.toLowerCase().includes(searchKey)) ||
+        (m.name && m.name.toLowerCase().includes(searchKey));
+      return matchCat && matchSearch;
+    });
+  };
+
+  const filtered = getFilteredList();
+  const visibleList = filtered.slice(0, state.reportInvLimit);
 
   const totalVal = filtered.reduce((s, m) => s + getActualStock(m) * (m.cost || 0), 0);
   const reservedVal = filtered.reduce((s, m) => s + (m.reserved || 0) * (m.cost || 0), 0);
@@ -4138,33 +4138,35 @@ function renderReportInventory(c) {
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
-  const rowsHtml = visibleList.map(m => {
-    const tonThucTe = getActualStock(m);
-    const tonDauKy = m.stock ?? 0;
-    const tamGiu = m.reserved ?? 0;
-    const coTheBan = tonThucTe - tamGiu;
+  const renderRows = (list) => {
+    return list.map(m => {
+      const tonThucTe = getActualStock(m);
+      const tonDauKy = m.stock ?? 0;
+      const tamGiu = m.reserved ?? 0;
+      const coTheBan = tonThucTe - tamGiu;
 
-    return `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
-      <td style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${m.category || '—'}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px;">${m.location || '—'}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${tonDauKy}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; font-weight: 600; color: var(--primary);">${tonThucTe}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${tamGiu}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${coTheBan}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${m.reorder ?? 0}</td>
-      <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
-      <td style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'Đủ hàng' : m.status}</span></td>
-      <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>`}
-        ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''}
-      </td>
-    </tr>
-  `;
-  }).join('');
+      return `
+      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
+        <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
+        <td style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
+        <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
+        <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${m.category || '—'}</td>
+        <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px;">${m.location || '—'}</td>
+        <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${tonDauKy}</td>
+        <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; font-weight: 600; color: var(--primary);">${tonThucTe}</td>
+        <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${tamGiu}</td>
+        <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${coTheBan}</td>
+        <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${m.reorder ?? 0}</td>
+        <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
+        <td style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'Đủ hàng' : m.status}</span></td>
+        <td style="padding: 8px 16px; text-align: center; white-space: nowrap;">
+          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>`}
+          ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''}
+        </td>
+      </tr>
+    `;
+    }).join('');
+  };
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 24px;">
@@ -4189,18 +4191,16 @@ function renderReportInventory(c) {
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;" id="inventory-report-table-box">
         
-        <!-- HEADER CÓ TÌM KIẾM MÃ HÀNG/TÊN HÀNG VÀ BỘ LỌC CẢNH BÁO/DANH MỤC -->
         <div style="padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Báo Cáo Tồn Kho Chi Tiết & Định Giá</span>
           
           <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <!-- Ô TÌM KIẾM BỔ SUNG TRÊN HEADER BÁO CÁO TỒN KHO -->
+            <!-- Ô TÌM KIẾM DÙNG SỰ KIỆN CẬP NHẬT ĐỘNG, GIỮ NGUYÊN FOCUS CON TRỎ -->
             <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 4px; width: 220px;">
               <span style="color: var(--muted-foreground);">${Icons.search}</span>
-              <input type="text" placeholder="Tìm mã, tên hàng..." value="${state.reportInvSearch}" oninput="state.reportInvSearch=this.value; state.reportInvLimit=20; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; padding: 6px 0;">
+              <input type="text" id="report-inv-search-input" placeholder="Tìm mã, tên hàng..." value="${state.reportInvSearch}" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; padding: 6px 0;">
             </div>
 
-            <!-- TẤT CẢ / DANH MỤC BUTTONS -->
             <div style="display: flex; gap: 1px;">
               ${['all', ...categories].map(cat => `
                 <button onclick="state.filter='${cat}'; state.reportInvLimit=20; render();" style="padding: 5px 12px; font-family: var(--font-dm-mono); font-size: 10px; text-transform: uppercase; background: ${state.filter === cat ? 'var(--primary)' : 'var(--muted)'}; color: ${state.filter === cat ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer;">${cat === 'all' ? 'Tất cả' : cat}</button>
@@ -4210,7 +4210,9 @@ function renderReportInventory(c) {
         </div>
 
         <div style="padding: 8px 20px 4px; display: flex; justify-content: flex-end; border-bottom: 1px solid var(--border); background: var(--secondary);">
-          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">Đang hiển thị <strong>${visibleList.length}/${filtered.length}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(totalVal)}</strong> · Đã tạm giữ: ${fmtUSD(reservedVal)} · Cảnh báo: ${alertCount}</span>
+          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);" id="report-inv-summary-text">
+            Đang hiển thị <strong>${visibleList.length}/${filtered.length}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(totalVal)}</strong> · Đã tạm giữ: ${fmtUSD(reservedVal)} · Cảnh báo: ${alertCount}
+          </span>
         </div>
 
         <table style="width: 100%; border-collapse: collapse;">
@@ -4219,36 +4221,70 @@ function renderReportInventory(c) {
               ${headersHtml}
             </tr>
           </thead>
-          <tbody>
-            ${rowsHtml}
+          <tbody id="report-inv-tbody">
+            ${renderRows(visibleList)}
           </tbody>
         </table>
 
-        ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu mặt hàng phù hợp</div>` : ''}
+        <div id="report-inv-empty-msg" style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px; display: ${filtered.length === 0 ? 'block' : 'none'};">
+          Không tìm thấy dữ liệu mặt hàng phù hợp
+        </div>
 
-        <!-- CHẾ ĐỘ LAZY LOADING (NÚT TẢI THÊM 10 MÃ HÀNG) -->
-        ${visibleList.length < filtered.length ? `
-          <div style="padding: 16px; text-align: center; border-top: 1px solid var(--border); background: var(--secondary);">
-            <button onclick="state.reportInvLimit += 10; render();" style="padding: 8px 24px; background: var(--primary); color: var(--primary-foreground); border: none; font-family: var(--font-dm-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; border-radius: 4px; transition: opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-              Tải thêm 10 mã hàng ➔
-            </button>
-          </div>
-        ` : ''}
+        <div id="report-inv-loadmore-btn" style="padding: 16px; text-align: center; border-top: 1px solid var(--border); background: var(--secondary); display: ${visibleList.length < filtered.length ? 'block' : 'none'};">
+          <button onclick="state.reportInvLimit += 10; render();" style="padding: 8px 24px; background: var(--primary); color: var(--primary-foreground); border: none; font-family: var(--font-dm-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; border-radius: 4px; transition: opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            Tải thêm 10 mã hàng ➔
+          </button>
+        </div>
 
       </div>
     </div>
   `;
 
-  // Bắt sự kiện cuộn trang tự động Lazy Loading khi cuộn xuống gần đáy bảng
+  // Xử lý ô Tìm kiếm không bị giật / mất focus khi nhập
+  const searchInput = document.getElementById('report-inv-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      state.reportInvSearch = e.target.value;
+      state.reportInvLimit = 20;
+
+      const newFiltered = getFilteredList();
+      const newVisible = newFiltered.slice(0, state.reportInvLimit);
+      const newTotalVal = newFiltered.reduce((s, m) => s + getActualStock(m) * (m.cost || 0), 0);
+      const newReservedVal = newFiltered.reduce((s, m) => s + (m.reserved || 0) * (m.cost || 0), 0);
+      const newAlertCount = newFiltered.filter(m => ['low', 'critical', 'out'].includes(m.status)).length;
+
+      // Cập nhật tbody
+      const tbody = document.getElementById('report-inv-tbody');
+      if (tbody) tbody.innerHTML = renderRows(newVisible);
+
+      // Cập nhật dòng tổng kết
+      const summaryText = document.getElementById('report-inv-summary-text');
+      if (summaryText) {
+        summaryText.innerHTML = `Đang hiển thị <strong>${newVisible.length}/${newFiltered.length}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(newTotalVal)}</strong> · Đã tạm giữ: ${fmtUSD(newReservedVal)} · Cảnh báo: ${newAlertCount}`;
+      }
+
+      // Cập nhật ẩn/hiển thị thông báo rỗng & nút tải thêm
+      const emptyMsg = document.getElementById('report-inv-empty-msg');
+      if (emptyMsg) emptyMsg.style.display = newFiltered.length === 0 ? 'block' : 'none';
+
+      const loadMoreBtn = document.getElementById('report-inv-loadmore-btn');
+      if (loadMoreBtn) loadMoreBtn.style.display = newVisible.length < newFiltered.length ? 'block' : 'none';
+    });
+  }
+
+  // Tự động lazy load khi cuộn trang
   setTimeout(() => {
     const contentBox = document.getElementById('app-content');
     if (contentBox && !contentBox.dataset.lazyBound) {
       contentBox.addEventListener('scroll', () => {
         if (state.view === 'report-inventory') {
           const scrollBottom = contentBox.scrollHeight - contentBox.scrollTop - contentBox.clientHeight;
-          if (scrollBottom < 100 && state.reportInvLimit < filtered.length) {
-            state.reportInvLimit += 10;
-            render();
+          if (scrollBottom < 100) {
+            const currentFiltered = getFilteredList();
+            if (state.reportInvLimit < currentFiltered.length) {
+              state.reportInvLimit += 10;
+              render();
+            }
           }
         }
       });
@@ -4383,34 +4419,37 @@ function renderReportSales(c) {
         </div>
       </div>
 
-      <!-- BỘ LỌC ĐẶT NGAY PHÍA TRÊN BẢNG THỐNG KÊ CHI TIẾT -->
-      <div style="display: flex; justify-content: space-between; align-items: center; background: var(--card); border: 1px solid var(--border); padding: 12px 20px; flex-wrap: wrap; gap: 12px; margin-top: 8px;">
-        <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--muted-foreground);">
-          Lọc dữ liệu thống kê chi tiết:
-        </div>
-        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
-            <select class="form-select" style="width: 120px; padding: 6px 10px;" onchange="state.reportSalesMonth=this.value; render();">
-              ${Array.from({length: 12}, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
-            </select>
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); text-transform: uppercase;">Khách hàng:</label>
-            <select class="form-select" style="width: 220px; padding: 6px 10px;" onchange="state.reportSalesCustomer=this.value; render();">
-              <option value="">-- Tất cả khách hàng --</option>
-              ${customerSelectOptions}
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG -->
+      <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG (GỘP HEADER TIÊU ĐỀ & BỘ LỌC CẢM ỨNG) -->
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
-        <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Thống Kê Chi Tiết Theo Khách Hàng ${selectedCustomer ? `(${selectedCustomer})` : ''} - Tháng ${selectedMonthNum}/${currentYear}</span>
-          <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--primary);">Tổng số mặt hàng: ${detailItemsList.length}</span>
+        <div style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--foreground);">
+              Thống Kê Chi Tiết Theo Khách Hàng ${selectedCustomer ? `(${selectedCustomer})` : ''} - Tháng ${selectedMonthNum}/${currentYear}
+            </span>
+            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--primary);">
+              Tổng số mặt hàng: ${detailItemsList.length}
+            </span>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
+              <select class="form-select" style="width: 110px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; render();">
+                ${Array.from({length: 12}, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
+              </select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Khách hàng:</label>
+              <select class="form-select" style="width: 200px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesCustomer=this.value; render();">
+                <option value="">-- Tất cả khách hàng --</option>
+                ${customerSelectOptions}
+              </select>
+            </div>
+          </div>
+
         </div>
+
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
             <tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">
