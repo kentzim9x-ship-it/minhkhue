@@ -340,49 +340,45 @@ function updateUserInfoUI() {
   const session = getAuthSession();
   if (session.isLoggedIn && session.currentUser) {
     const user = session.currentUser;
-    const sidebarEl = document.querySelector('.app-sidebar');
+    const userAvatarEl = document.querySelector('.user-avatar');
+    const userNameEl = document.querySelector('.user-name');
+    const userRoleEl = document.querySelector('.user-role');
+    const sidebarUserEl = document.querySelector('.sidebar-user');
 
-    if (sidebarEl) {
-      // Tìm hoặc xóa vùng user info cũ nếu có
-      let userBox = sidebarEl.querySelector('.sidebar-user-wrapper');
-      if (!userBox) {
-        userBox = document.createElement('div');
-        userBox.className = 'sidebar-user-wrapper';
-        sidebarEl.appendChild(userBox);
-      }
+    if (userAvatarEl) userAvatarEl.innerText = (user.fullname || user.username || 'U').substring(0, 2).toUpperCase();
+    if (userNameEl) userNameEl.innerText = user.fullname || user.username; // Dùng cột fullname từ DB
+    if (userRoleEl) userRoleEl.innerText = user.role || 'USER';
 
-      const fullname = user.fullname || user.username || 'User';
-      const initials = fullname.substring(0, 2).toUpperCase();
-      const role = user.role || 'ADMIN';
-
-      // Tạo cấu trúc HTML mới
-      userBox.innerHTML = `
-        <div class="user-avatar-pill">${initials}</div>
-        <div class="user-info-meta">
-          <span class="user-info-fullname" title="${fullname}">${fullname}</span>
-          <span class="user-info-role">${role}</span>
-        </div>
-        <button class="btn-logout-icon" onclick="handleLogout()" title="Đăng xuất khỏi hệ thống">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-            <polyline points="16 17 21 12 16 7"></polyline>
-            <line x1="21" y1="12" x2="9" y2="12"></line>
-          </svg>
-          <span>Thoát</span>
-        </button>
-      `;
+    if (sidebarUserEl && !document.getElementById('logout-btn')) {
+      const logoutBtn = document.createElement('button');
+      logoutBtn.id = 'logout-btn';
+      logoutBtn.innerText = 'Đăng xuất';
+      logoutBtn.onclick = handleLogout;
+      logoutBtn.style.cssText = "margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--muted-foreground); font-size: 10px; padding: 3px 6px; cursor: pointer;";
+      sidebarUserEl.appendChild(logoutBtn);
     }
   }
 
-  // Tích hợp Trigger Nút Home Mobile Header
+  // Thêm nút Nút Icon Ngôi nhà vào Header cho Mobile nếu chưa có
   const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header');
   if (headerLeft && !document.getElementById('mobile-home-trigger')) {
     const homeBtn = document.createElement('button');
     homeBtn.id = 'mobile-home-trigger';
     homeBtn.className = 'header-icon-btn mobile-home-btn';
-    homeBtn.innerHTML = typeof Icons !== 'undefined' && Icons.home ? Icons.home : '🏠';
+    homeBtn.innerHTML = Icons.home;
     homeBtn.onclick = toggleMobileMenu;
     headerLeft.insertBefore(homeBtn, headerLeft.firstChild);
+  }
+
+  // Gán sự kiện click vào Logo Ngôi nhà trên đầu Sidebar để đóng Drawer Menu
+  const logoBrand = document.querySelector('.logo-brand, .app-brand, .sidebar-header');
+  if (logoBrand) {
+    logoBrand.style.cursor = 'pointer';
+    logoBrand.onclick = () => {
+      if (window.innerWidth <= 768 && document.body.classList.contains('mobile-menu-open')) {
+        toggleMobileMenu();
+      }
+    };
   }
 }
 
@@ -2368,7 +2364,7 @@ function render() {
           const len = el.value ? el.value.length : 0;
           el.setSelectionRange(len, len);
         }
-      } catch (err) { }
+      } catch (err) {}
     }
   }
 }
