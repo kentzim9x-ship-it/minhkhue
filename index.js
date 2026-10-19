@@ -1,3 +1,41 @@
+// ==========================================
+// 1. CẤU HÌNH, STATE & GIAO DIỆN CƠ BẢN
+// ==========================================
+
+const BASE_PATH = '/minhkhue'; // Đường dẫn gốc trên GitHub Pages
+
+// STATE MANAGEMENT
+let state = {
+  view: 'dashboard',
+  mode: 'list',
+  filter: 'all',
+  search: '',
+  formData: null
+};
+
+const viewMeta = {
+  dashboard: { tag: 'TỔNG QUAN', title: 'Tổng Quan' },
+  materials: { tag: 'DỮ LIỆU DANH MỤC', title: 'Danh Mục Hàng Hóa' },
+  customers: { tag: 'DỮ LIỆU DANH MỤC', title: 'Danh Sách Khách Hàng' },
+  warehouses: { tag: 'DỮ LIỆU DANH MỤC', title: 'Danh Sách Kho Hàng' },
+  quotations: { tag: 'GIAO DỊCH', title: 'Bảng Báo Giá' },
+  'sales-orders': { tag: 'GIAO DỊCH', title: 'Đơn Bán Hàng' },
+  returns: { tag: 'GIAO DỊCH', title: 'Đổi Trả Hàng Bán' },
+  grn: { tag: 'GIAO DỊCH', title: 'Phiếu Nhập Kho' },
+  'report-inventory': { tag: 'BÁO CÁO', title: 'Báo Cáo Tồn Kho' },
+  'report-sales': { tag: 'BÁO CÁO', title: 'Báo Cáo Bán Hàng' },
+};
+
+const Icons = {
+  home: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+  view: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="3"/><path d="M1 7s2.5-4.5 6-4.5S13 7 13 7s-2.5 4.5-6 4.5S1 7 1 7z"/></svg>`,
+  edit: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z" /></svg>`,
+  trash: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M5 4V2h4v2M6 7v4M8 7v4M3 4l1 8h6l1-8" /></svg>`,
+  plus: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2"><line x1="6.5" y1="1" x2="6.5" y2="12" /><line x1="1" y1="6.5" x2="12" y2="6.5" /></svg>`,
+  back: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2L4 7l5 5" /></svg>`,
+  search: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5" /><line x1="10" y1="10" x2="14" y2="14" /></svg>`
+};
+
 // Tạo lớp Overlay để bấm ra ngoài đóng Menu
 const overlayEl = document.createElement('div');
 overlayEl.className = 'mobile-overlay';
@@ -9,41 +47,9 @@ function toggleMobileMenu() {
   overlayEl.classList.toggle('active');
 }
 
-function getAuthSession() {
-  const saved = localStorage.getItem('app_session');
-  return saved ? JSON.parse(saved) : { isLoggedIn: false, currentUser: null, remember: false };
-}
-
-// Hàm kiểm tra quyền thao tác (thêm mới, sửa, xóa) dựa theo tài khoản đăng nhập
-function checkModulePermission(module) {
-  const session = getAuthSession();
-  const user = session.currentUser || {};
-
-  // Tổng quan và 2 báo cáo chỉ có xem -> không có quyền Thêm/Sửa/Xóa
-  if (['dashboard', 'report-inventory', 'report-sales'].includes(module)) {
-    return false;
-  }
-
-  const permissionMap = {
-    'materials': ['material_yn', 'materials_yn', 'material'],
-    'customers': ['customers_yn', 'customer_yn', 'customers'],
-    'warehouses': ['warehouses_yn', 'warehouse_yn', 'warehouses'],
-    'quotations': ['quotations_yn', 'quotation_yn', 'quotations'],
-    'sales-orders': ['order_yn', 'saleorder_yn', 'orders_yn', 'sales_orders'],
-    'returns': ['return_yn', 'returns_yn', 'returns'],
-    'grn': ['grn_yn', 'grns_yn', 'grn']
-  };
-
-  const keys = permissionMap[module] || [];
-  for (const key of keys) {
-    if (user[key] !== undefined && user[key] !== null) {
-      return user[key] === true || user[key] === 'true' || user[key] === 1 || user[key] === '1';
-    }
-  }
-
-  // Nếu không khai báo riêng hoặc không tìm thấy cột thì mặc định không được Thêm/Sửa/Xóa
-  return false;
-}
+// ==========================================
+// 2. KẾT NỐI DB SUPABASE & REALTIME STOCK
+// ==========================================
 
 // Supabase Client Initialization
 const SUPABASE_URL = 'https://gzmczqeczlrujhzleaoa.supabase.co';
@@ -61,10 +67,6 @@ let db = {
   grns: [],
   users: [] // <--- Thêm mảng users
 };
-
-function sortDescById(a, b) {
-  return String(b.id || '').localeCompare(String(a.id || ''), undefined, { numeric: true, sensitivity: 'base' });
-}
 
 async function fetchDataFromSupabase() {
   try {
@@ -141,28 +143,6 @@ async function fetchDataFromSupabase() {
   } catch (err) {
     console.error('Lỗi khi tải dữ liệu từ Supabase:', err);
   }
-}
-
-// Hàm chuyển đổi từ user_id sang fullname
-function getUserFullName(userId) {
-  if (!userId) return '—';
-  const user = (db.users || []).find(u => String(u.id) === String(userId) || String(u.username) === String(userId));
-  return user ? (user.fullname || user.username || userId) : userId;
-}
-
-// Hàm hỗ trợ định dạng ngày VN (DD/MM/YYYY) nếu ngày lưu dạng YYYY-MM-DD
-function fmtDateStr(dateStr) {
-  if (!dateStr) return '—';
-  if (dateStr.includes('T')) dateStr = dateStr.split('T')[0];
-  const parts = dateStr.split('-');
-  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-  return dateStr;
-}
-
-// Hàm hỗ trợ cắt bỏ giây nếu cần (HH:mm:ss -> HH:mm)
-function fmtTimeStr(timeStr) {
-  if (!timeStr) return '—';
-  return String(timeStr).substring(0, 5);
 }
 
 function syncRealtimeStockToSupabase(sku, warehouseCode, realStock) {
@@ -269,15 +249,165 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
   return realtimeStock;
 }
 
-const Icons = {
-  home: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
-  view: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="3"/><path d="M1 7s2.5-4.5 6-4.5S13 7 13 7s-2.5 4.5-6 4.5S1 7 1 7z"/></svg>`,
-  edit: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z" /></svg>`,
-  trash: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M5 4V2h4v2M6 7v4M8 7v4M3 4l1 8h6l1-8" /></svg>`,
-  plus: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2"><line x1="6.5" y1="1" x2="6.5" y2="12" /><line x1="1" y1="6.5" x2="12" y2="6.5" /></svg>`,
-  back: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2L4 7l5 5" /></svg>`,
-  search: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5" /><line x1="10" y1="10" x2="14" y2="14" /></svg>`
-};
+// ==========================================
+// 3. AUTHENTICATION & PHÂN QUYỀN
+// ==========================================
+
+function getAuthSession() {
+  const saved = localStorage.getItem('app_session');
+  return saved ? JSON.parse(saved) : { isLoggedIn: false, currentUser: null, remember: false };
+}
+
+// Hàm kiểm tra quyền thao tác (thêm mới, sửa, xóa) dựa theo tài khoản đăng nhập
+function checkModulePermission(module) {
+  const session = getAuthSession();
+  const user = session.currentUser || {};
+
+  // Tổng quan và 2 báo cáo chỉ có xem -> không có quyền Thêm/Sửa/Xóa
+  if (['dashboard', 'report-inventory', 'report-sales'].includes(module)) {
+    return false;
+  }
+
+  const permissionMap = {
+    'materials': ['material_yn', 'materials_yn', 'material'],
+    'customers': ['customers_yn', 'customer_yn', 'customers'],
+    'warehouses': ['warehouses_yn', 'warehouse_yn', 'warehouses'],
+    'quotations': ['quotations_yn', 'quotation_yn', 'quotations'],
+    'sales-orders': ['order_yn', 'saleorder_yn', 'orders_yn', 'sales_orders'],
+    'returns': ['return_yn', 'returns_yn', 'returns'],
+    'grn': ['grn_yn', 'grns_yn', 'grn']
+  };
+
+  const keys = permissionMap[module] || [];
+  for (const key of keys) {
+    if (user[key] !== undefined && user[key] !== null) {
+      return user[key] === true || user[key] === 'true' || user[key] === 1 || user[key] === '1';
+    }
+  }
+
+  // Nếu không khai báo riêng hoặc không tìm thấy cột thì mặc định không được Thêm/Sửa/Xóa
+  return false;
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const un = document.getElementById('login-username').value.trim();
+  const pw = document.getElementById('login-password').value;
+  const remember = document.getElementById('login-remember').checked;
+
+  try {
+    // Truy vấn tới bảng userinfo trên Supabase
+    const { data, error } = await supabaseClient
+      .from('userinfo')
+      .select('*')
+      .eq('username', un)
+      .eq('password', pw);
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      const foundUser = data[0]; // Chứa id, username, fullname, role, các cột _yn...
+      const session = { isLoggedIn: true, currentUser: foundUser, remember };
+      localStorage.setItem('app_session', JSON.stringify(session));
+
+      if (remember) {
+        localStorage.setItem('remembered_user', JSON.stringify({ username: un, password: pw, remember: true }));
+      } else {
+        localStorage.removeItem('remembered_user');
+      }
+
+      document.querySelector('.app-container').style.display = 'flex';
+      updateUserInfoUI();
+      render();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+    }
+  } catch (err) {
+    console.error('Lỗi truy vấn đăng nhập:', err);
+    alert('Không thể kết nối đến máy chủ xác thực.');
+  }
+}
+
+function handleLogout() {
+  localStorage.removeItem('app_session');
+  location.reload();
+}
+
+function updateUserInfoUI() {
+  const session = getAuthSession();
+  if (session.isLoggedIn && session.currentUser) {
+    const user = session.currentUser;
+    const userAvatarEl = document.querySelector('.user-avatar');
+    const userNameEl = document.querySelector('.user-name');
+    const userRoleEl = document.querySelector('.user-role');
+    const sidebarUserEl = document.querySelector('.sidebar-user');
+
+    if (userAvatarEl) userAvatarEl.innerText = (user.fullname || user.username || 'U').substring(0, 2).toUpperCase();
+    if (userNameEl) userNameEl.innerText = user.fullname || user.username; // Dùng cột fullname từ DB
+    if (userRoleEl) userRoleEl.innerText = user.role || 'USER';
+
+    if (sidebarUserEl && !document.getElementById('logout-btn')) {
+      const logoutBtn = document.createElement('button');
+      logoutBtn.id = 'logout-btn';
+      logoutBtn.innerText = 'Đăng xuất';
+      logoutBtn.onclick = handleLogout;
+      logoutBtn.style.cssText = "margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--muted-foreground); font-size: 10px; padding: 3px 6px; cursor: pointer;";
+      sidebarUserEl.appendChild(logoutBtn);
+    }
+  }
+
+  // Thêm nút Nút Icon Ngôi nhà vào Header cho Mobile nếu chưa có
+  const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header');
+  if (headerLeft && !document.getElementById('mobile-home-trigger')) {
+    const homeBtn = document.createElement('button');
+    homeBtn.id = 'mobile-home-trigger';
+    homeBtn.className = 'header-icon-btn mobile-home-btn';
+    homeBtn.innerHTML = Icons.home;
+    homeBtn.onclick = toggleMobileMenu;
+    headerLeft.insertBefore(homeBtn, headerLeft.firstChild);
+  }
+
+  // Gán sự kiện click vào Logo Ngôi nhà trên đầu Sidebar để đóng Drawer Menu
+  const logoBrand = document.querySelector('.logo-brand, .app-brand, .sidebar-header');
+  if (logoBrand) {
+    logoBrand.style.cursor = 'pointer';
+    logoBrand.onclick = () => {
+      if (window.innerWidth <= 768 && document.body.classList.contains('mobile-menu-open')) {
+        toggleMobileMenu();
+      }
+    };
+  }
+}
+
+// ==========================================
+// 4. TIỆN ÍCH (HELPERS) & FORMATTER
+// ==========================================
+
+function sortDescById(a, b) {
+  return String(b.id || '').localeCompare(String(a.id || ''), undefined, { numeric: true, sensitivity: 'base' });
+}
+
+// Hàm chuyển đổi từ user_id sang fullname
+function getUserFullName(userId) {
+  if (!userId) return '—';
+  const user = (db.users || []).find(u => String(u.id) === String(userId) || String(u.username) === String(userId));
+  return user ? (user.fullname || user.username || userId) : userId;
+}
+
+// Hàm hỗ trợ định dạng ngày VN (DD/MM/YYYY) nếu ngày lưu dạng YYYY-MM-DD
+function fmtDateStr(dateStr) {
+  if (!dateStr) return '—';
+  if (dateStr.includes('T')) dateStr = dateStr.split('T')[0];
+  const parts = dateStr.split('-');
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  return dateStr;
+}
+
+// Hàm hỗ trợ cắt bỏ giây nếu cần (HH:mm:ss -> HH:mm)
+function fmtTimeStr(timeStr) {
+  if (!timeStr) return '—';
+  return String(timeStr).substring(0, 5);
+}
 
 function getBadgeClass(status) {
   const s = String(status || '').toLowerCase().trim();
@@ -338,29 +468,227 @@ function getFilterBar(options) {
   `;
 }
 
-// STATE MANAGEMENT
-let state = {
-  view: 'dashboard',
-  mode: 'list',
-  filter: 'all',
-  search: '',
-  formData: null
-};
+function generateAutoId(module) {
+  const collection = db[module === 'sales-orders' ? 'orders' : module] || [];
 
-const viewMeta = {
-  dashboard: { tag: 'TỔNG QUAN', title: 'Tổng Quan' },
-  materials: { tag: 'DỮ LIỆU DANH MỤC', title: 'Danh Mục Hàng Hóa' },
-  customers: { tag: 'DỮ LIỆU DANH MỤC', title: 'Danh Sách Khách Hàng' },
-  warehouses: { tag: 'DỮ LIỆU DANH MỤC', title: 'Danh Sách Kho Hàng' },
-  quotations: { tag: 'GIAO DỊCH', title: 'Bảng Báo Giá' },
-  'sales-orders': { tag: 'GIAO DỊCH', title: 'Đơn Bán Hàng' },
-  returns: { tag: 'GIAO DỊCH', title: 'Đổi Trả Hàng Bán' },
-  grn: { tag: 'GIAO DỊCH', title: 'Phiếu Nhập Kho' },
-  'report-inventory': { tag: 'BÁO CÁO', title: 'Báo Cáo Tồn Kho' },
-  'report-sales': { tag: 'BÁO CÁO', title: 'Báo Cáo Bán Hàng' },
-};
+  if (module === 'materials') {
+    const maxNum = collection.reduce((m, x) => {
+      const match = (x.id || '').match(/SKU-(\d+)/i);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+    return `SKU-${String(maxNum + 1).padStart(4, '0')}`;
+  }
 
-const BASE_PATH = '/minhkhue'; // Đường dẫn gốc trên GitHub Pages
+  if (module === 'customers') {
+    const maxNum = collection.reduce((m, x) => {
+      const match = (x.id || '').match(/CUS-(\d+)/i);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+    return `CUS-${String(maxNum + 1).padStart(4, '0')}`;
+  }
+
+  if (module === 'warehouses') {
+    const maxNum = collection.reduce((m, x) => {
+      const match = ((x.code || x.id) || '').match(/(?:WH|KHO)-(\d+)/i);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+    return `WH-${String(maxNum + 1).padStart(2, '0')}`;
+  }
+
+  if (module === 'quotations') {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = `BBG-${yy}${mm}`;
+
+    const maxNum = collection.reduce((m, x) => {
+      if (!x.id) return m;
+      const regex = new RegExp(`^${prefix}-(\\d+)`, 'i');
+      const match = x.id.match(regex);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+
+    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
+  }
+
+  if (module === 'sales-orders') {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = `DHB-${yy}${mm}`;
+
+    const maxNum = collection.reduce((m, x) => {
+      if (!x.id) return m;
+      const regex = new RegExp(`^${prefix}-(\\d+)`, 'i');
+      const match = x.id.match(regex);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+
+    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
+  }
+
+  if (module === 'returns') {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = `DTHB-${yy}${mm}`;
+
+    const maxNum = collection.reduce((m, x) => {
+      if (!x.id) return m;
+      const regex = new RegExp(`^${prefix}-(\\d+)`, 'i');
+      const match = x.id.match(regex);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+
+    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
+  }
+
+  if (module === 'grn') {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = `PNK-${yy}${mm}`;
+
+    const list = Array.isArray(db.grns) ? db.grns : [];
+
+    const maxNum = list.reduce((m, x) => {
+      const currentId = String(x.id || '');
+      const regex = new RegExp(`^${prefix}-?(\\d+)`, 'i');
+      const match = currentId.match(regex);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+
+    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
+  }
+}
+
+function getMonthRange() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+
+  const firstDay = `${year}-${month}-01`;
+  const lastDayNum = new Date(year, now.getMonth() + 1, 0).getDate();
+  const lastDay = `${year}-${month}-${String(lastDayNum).padStart(2, '0')}`;
+
+  return { firstDay, lastDay };
+}
+
+function parseDateParts(dateStr) {
+  let dayStr = '02', monthStr = '10', yearStr = '2026';
+  if (dateStr) {
+    if (dateStr.includes('-')) {
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        yearStr = parts[0];
+        monthStr = parts[1];
+        dayStr = parts[2];
+      }
+    } else if (dateStr.includes('/')) {
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        dayStr = parts[0].padStart(2, '0');
+        monthStr = parts[1].padStart(2, '0');
+        yearStr = parts[2];
+      }
+    }
+  } else {
+    const today = new Date();
+    dayStr = String(today.getDate()).padStart(2, '0');
+    monthStr = String(today.getMonth() + 1).padStart(2, '0');
+    yearStr = String(today.getFullYear());
+  }
+  return { dayStr, monthStr, yearStr };
+}
+
+function getCustomerAddress(customerNameOrId) {
+  if (!customerNameOrId) return '—';
+  const cust = (db.customers || []).find(c =>
+    (c.name && c.name.trim().toLowerCase() === customerNameOrId.trim().toLowerCase()) ||
+    (c.id && c.id.trim().toLowerCase() === customerNameOrId.trim().toLowerCase())
+  );
+  return cust ? (cust.address || cust.diachi || '—') : '—';
+}
+
+function getTodayDateStr() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getFirstDayOfMonthStr() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}-01`;
+}
+
+function getCurrentTimeStr() {
+  const d = new Date();
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
+function formatDateVN(dateStr) {
+  if (!dateStr) return '';
+  if (dateStr.includes('/')) return dateStr;
+
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+  }
+  return dateStr;
+}
+
+function parseNumberInput(val) {
+  if (val === null || val === undefined || val === '') return 0;
+  const str = String(val).trim();
+  const cleanStr = str.replace(/[^0-9-]/g, '');
+  return cleanStr ? Number(cleanStr) : 0;
+}
+
+function formatVNDInput(val) {
+  const num = parseNumberInput(val);
+  return num ? num.toLocaleString('vi-VN') : '0';
+}
+
+function fmt(n) { return new Intl.NumberFormat('en-US').format(n); }
+
+function fmtUSD(n) {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
+}
+
+function updateHeaderDate() {
+  const dateElement = document.getElementById('header-date');
+  if (!dateElement) return;
+
+  const now = new Date();
+  const options = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
+  const formattedDate = now.toLocaleDateString('vi-VN', options);
+
+  dateElement.innerText = formattedDate;
+}
+
+function toTitleCase(str) {
+  if (!str) return '';
+  return str.toLowerCase().replace(/(^|\s)\S/g, function (firstLetter) {
+    return firstLetter.toUpperCase();
+  });
+}
+
+function toUpperCaseStr(str) {
+  if (!str) return '';
+  return str.toUpperCase();
+}
+
+// ==========================================
+// 5. ĐIỀU HƯỚNG & ROUTING (NAVIGATION)
+// ==========================================
 
 function navigate(view, mode = 'list', itemId = null) {
   if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
@@ -463,6 +791,10 @@ function handleRouteChange() {
 
 window.addEventListener('popstate', handleRouteChange);
 
+// ==========================================
+// 6. XỬ LÝ DỮ LIỆU & FORM (DATA HANDLERS)
+// ==========================================
+
 function updateField(field, value, type = 'text') {
   if (!state.formData) return;
   state.formData[field] = (type === 'number') ? Number(value) : value;
@@ -527,7 +859,7 @@ function updateLine(lineId, field, value, type = 'text') {
     state.formData.totalValue = total;
   }
 
-  // 2. CẬP NHẬT KHUNG TỔNG TIỀN (BẮT CHUẨN 100%)
+  // CẬP NHẬT KHUNG TỔNG TIỀN (BẮT CHUẨN 100%)
   const summaryDivs = document.querySelectorAll('div[style*="justify-content: space-between"]');
   summaryDivs.forEach(div => {
     const spans = div.querySelectorAll('span');
@@ -628,11 +960,7 @@ function removeLineItem(lineId) {
 async function saveForm(module) {
   const session = getAuthSession();
   const currentUserId = session.currentUser ? session.currentUser.id : 'Hệ Thống';
-
-  // Khai báo chuẩn biến tên đầy đủ người dùng để truyền vào Thông báo
-  const currentUserFullname = session.currentUser
-    ? (session.currentUser.fullname || session.currentUser.username)
-    : 'Hệ Thống';
+  const currentUserFullname = session.currentUser ? (session.currentUser.fullname || session.currentUser.username) : 'Hệ Thống';
 
   if (!checkModulePermission(module)) {
     alert('Tài khoản của bạn chỉ có quyền xem, không thể thực hiện thao tác lưu!');
@@ -799,7 +1127,6 @@ async function saveForm(module) {
       if (error) throw error;
       db[targetKey].unshift(dbPayload);
 
-      // KÍCH HOẠT THÔNG BÁO KHI THÊM MỚI BÁO GIÁ
       if (module === 'quotations') {
         addNotification(
           'quotation_add',
@@ -817,7 +1144,6 @@ async function saveForm(module) {
       const idx = db[targetKey].findIndex(item => item.id === dbPayload.id);
       if (idx !== -1) db[targetKey][idx] = dbPayload;
 
-      // KÍCH HOẠT THÔNG BÁO KHI CHỈNH SỬA BÁO GIÁ
       if (module === 'quotations') {
         addNotification(
           'quotation_edit',
@@ -876,6 +1202,835 @@ async function deleteItem(module, id) {
     }
   }
 }
+
+function initFormData(module, id) {
+  const keyMap = { 'sales-orders': 'orders', 'grn': 'grns' };
+  const targetKey = keyMap[module] || module;
+  const collection = db[targetKey] || [];
+
+  if (id) {
+    state.formData = JSON.parse(JSON.stringify(collection.find(x => String(x.id) === String(id))));
+  } else {
+    const autoId = generateAutoId(module);
+    if (module === 'materials') {
+      state.formData = {
+        id: autoId, name: '', unit: '', category: 'Hoa Quả', location: '', stock: 0, reorder: 0, cost: 0, status: 'ok'
+      };
+    }
+
+    if (module === 'customers') {
+      state.formData = {
+        id: autoId, name: '', type: 'B2B', contact: '', email: '', phone: '', address: '', creditLimit: 0, paymentTerms: 'Net 30', status: 'active'
+      };
+    }
+
+    if (module === 'warehouses') {
+      state.formData = {
+        id: autoId, code: autoId, name: '', location: '', capacity: 0, used: 0, manager: '', status: 'active'
+      };
+    }
+
+    if (module === 'quotations') {
+      const today = getTodayDateStr();
+      const firstDay = getFirstDayOfMonthStr();
+      const { lastDay } = getMonthRange();
+      state.formData = {
+        id: autoId, customer: '', date: today, validbegin: firstDay, validUntil: lastDay, status: 'accepted', notes: '',
+        lineItems: [{ lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0 }]
+      };
+    }
+
+    if (module === 'sales-orders') {
+      const defaultWh = db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '';
+      state.formData = {
+        id: autoId,
+        customer: '',
+        warehouseCode: defaultWh,
+        quotationId: null,
+        date: getTodayDateStr(),
+        status: 'completed',
+        notes: '',
+        tax: 0,
+        total: 0,
+        lineItems: [
+          {
+            lineId: Date.now().toString(),
+            warehouseCode: defaultWh,
+            sku: '',
+            name: '',
+            qty: 1,
+            unitPrice: 0,
+            discount: 0,
+            tax: 0
+          }
+        ]
+      };
+    }
+
+    if (module === 'returns') {
+      const defaultWh = db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '';
+      state.formData = {
+        id: autoId, warehouseCode: defaultWh, orderId: '', customer: '', date: getTodayDateStr(), reason: 'Hàng lỗi/hỏng', notes: '', status: 'processed',
+        lineItems: [{ lineId: Date.now().toString(), sku: '', name: '', qtyReturned: 1, unitPrice: 0 }]
+      };
+    }
+
+    if (module === 'grn') {
+      const defaultWh = db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '';
+      state.formData = {
+        id: autoId,
+        supplier: '',
+        warehouseCode: defaultWh,
+        notes: '',
+        date: getTodayDateStr(),
+        status: 'Đã nhận',
+        lineItems: [{ lineId: Date.now().toString(), sku: '', name: '', receivedQty: 1, unitCost: 0 }]
+      };
+    }
+  }
+}
+
+// ==========================================
+// 7. CÁC HÀM XỬ LÝ CHỌN LỌC TỰ ĐỘNG DỮ LIỆU
+// ==========================================
+
+function updateGlobalMaterialDatalist() {
+  let dl = document.getElementById('global-materials-list');
+  if (!dl) {
+    dl = document.createElement('datalist');
+    dl.id = 'global-materials-list';
+    document.body.appendChild(dl);
+  }
+  dl.innerHTML = (db.materials || []).map(m => {
+    const safeName = m.name || '';
+    const safeId = m.id || '';
+    const safeCost = m.cost || 0;
+    return `<option value="${safeName}">${safeId} - ${safeName} (${fmtUSD(safeCost)})</option>`;
+  }).join('');
+}
+
+function handleOrderSelectInReturn(orderId) {
+  if (!state.formData || state.mode === 'view') return;
+  state.formData.orderId = orderId;
+
+  if (!orderId) {
+    state.formData.customer = '';
+    state.formData.lineItems = [{
+      lineId: Date.now().toString(),
+      sku: '',
+      name: '',
+      qtyReturned: 1,
+      unitPrice: 0
+    }];
+    render();
+    return;
+  }
+
+  const targetOrder = db.orders.find(o => o.id === orderId);
+
+  if (targetOrder) {
+    state.formData.customer = targetOrder.customer || '';
+    state.formData.lineItems = (targetOrder.lineItems || []).map(item => ({
+      lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+      sku: item.sku || '',
+      name: item.name || '',
+      qtyReturned: item.qty || 1,
+      unitPrice: item.unitPrice || 0
+    }));
+  }
+  render();
+}
+
+function handleMaterialSelectInLine(lineId, selectedName) {
+  if (!state.formData || state.mode === 'view') return;
+  const line = (state.formData.lineItems || []).find(l => l.lineId === lineId);
+  if (!line) return;
+
+  const valStr = selectedName ? String(selectedName).trim() : '';
+  if (!valStr) {
+    line.name = '';
+    line.sku = '';
+    render();
+    return;
+  }
+
+  let cleanName = valStr;
+  if (valStr.includes(' - ')) {
+    const parts = valStr.split(' - ');
+    cleanName = parts.length > 1 ? parts.slice(1).join(' - ').split(' (')[0].trim() : valStr;
+  }
+
+  const mat = (db.materials || []).find(m =>
+    (m.name && m.name.toLowerCase() === cleanName.toLowerCase()) ||
+    (m.id && m.id.toLowerCase() === valStr.toLowerCase())
+  );
+
+  if (mat) {
+    line.name = mat.name || '';
+    line.sku = mat.id || '';
+    line.unitPrice = mat.cost || 0;
+    line.unitCost = mat.cost || 0;
+  } else {
+    line.name = cleanName;
+  }
+
+  render();
+}
+
+function handleCustomerSelectInQuotation(customerName) {
+  if (!state.formData || state.mode === 'view') return;
+  const safeCustomer = String(customerName || '').trim();
+  state.formData.customer = safeCustomer;
+
+  if (!safeCustomer) {
+    state.formData.lineItems = [{
+      lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
+    }];
+    render();
+    return;
+  }
+
+  const latestQuotation = (db.quotations || [])
+    .filter(q => q && q.customer === safeCustomer)
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
+
+  if (latestQuotation && Array.isArray(latestQuotation.lineItems) && latestQuotation.lineItems.length > 0) {
+    state.formData.lineItems = latestQuotation.lineItems.map(item => ({
+      lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+      sku: item.sku || '',
+      name: item.name || '',
+      qty: item.qty ?? 1,
+      unitPrice: item.unitPrice ?? 0,
+      discount: item.discount ?? 0,
+      tax: item.tax ?? 0
+    }));
+  } else {
+    state.formData.lineItems = [{
+      lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
+    }];
+  }
+
+  render();
+}
+
+async function handleCustomerSelectInOrder(customerName) {
+  if (!state.formData || state.mode === 'view') return;
+  const safeCustomer = String(customerName || '').trim();
+  state.formData.customer = safeCustomer;
+
+  if (!safeCustomer) {
+    state.formData.quotationId = null;
+    state.formData.lineItems = [{
+      lineId: Date.now().toString(),
+      warehouseCode: state.formData.warehouseCode || '',
+      sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
+    }];
+    render();
+    return;
+  }
+
+  const orderDate = state.formData.date || getTodayDateStr();
+
+  const activeQuotation = (db.quotations || [])
+    .filter(q => {
+      if (!q || q.customer !== safeCustomer) return false;
+      if ((q.status || '').toLowerCase() !== 'accepted') return false;
+
+      const vBegin = q.validbegin || q.validBegin || q.date || '';
+      const vUntil = q.validUntil || q.validuntil || '';
+
+      if (vBegin && vUntil) {
+        return orderDate >= vBegin && orderDate <= vUntil;
+      }
+      return false;
+    })
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
+
+  if (activeQuotation) {
+    const confirmImport = await showConfirm(
+      "Bạn có muốn nhập toàn bộ mã hàng, đơn giá theo Bảng báo giá không?",
+      "Áp dụng báo giá"
+    );
+
+    if (confirmImport) {
+      state.formData.quotationId = activeQuotation.id || null;
+      if (Array.isArray(activeQuotation.lineItems) && activeQuotation.lineItems.length > 0) {
+        state.formData.lineItems = activeQuotation.lineItems.map(item => ({
+          lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+          warehouseCode: state.formData.warehouseCode || '',
+          sku: item.sku || '',
+          name: item.name || '',
+          qty: item.qty ?? 1,
+          unitPrice: item.unitPrice ?? 0,
+          discount: item.discount ?? 0,
+          tax: item.tax ?? 0
+        }));
+      }
+    } else {
+      state.formData.quotationId = null;
+    }
+  } else {
+    state.formData.quotationId = null;
+  }
+
+  render();
+}
+
+// ==========================================
+// 8. CUSTOM MODALS & HỆ THỐNG THÔNG BÁO 
+// ==========================================
+
+function initCustomModal() {
+  if (document.getElementById('custom-modal-overlay')) return;
+
+  const modalHtml = `
+    <div id="custom-modal-overlay" style="
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-jost, sans-serif);
+    ">
+      <div id="custom-modal-box" style="
+        width: 100%;
+        max-width: 440px;
+        background: var(--card, #141821);
+        border: 1px solid var(--border, rgba(255,255,255,0.1));
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 1px rgba(240,160,48,0.3);
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        transform: scale(0.95);
+        transition: transform 0.2s ease, opacity 0.2s ease;
+      ">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div id="modal-icon-container" style="
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(240, 160, 48, 0.15);
+            border: 1px solid rgba(240, 160, 48, 0.3);
+            color: #f0a030;
+            flex-shrink: 0;
+          ">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h3 id="modal-title" style="
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--foreground, #ffffff);
+            letter-spacing: 0.02em;
+          ">Thông báo</h3>
+        </div>
+
+        <div id="modal-message" style="
+          font-size: 13.5px;
+          line-height: 1.5;
+          color: var(--muted-foreground, #a0aec0);
+        "></div>
+
+        <div id="modal-actions" style="
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          margin-top: 4px;
+        ">
+          <button id="modal-btn-cancel" style="
+            padding: 8px 18px;
+            background: transparent;
+            border: 1px solid var(--border, rgba(255,255,255,0.15));
+            border-radius: 6px;
+            color: var(--foreground, #ffffff);
+            font-family: var(--font-dm-mono, monospace);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.15s;
+          " onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Hủy bỏ</button>
+
+          <button id="modal-btn-confirm" style="
+            padding: 8px 20px;
+            background: linear-gradient(135deg, #f0a030 0%, #d98818 100%);
+            border: none;
+            border-radius: 6px;
+            color: #000000;
+            font-family: var(--font-dm-mono, monospace);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(240, 160, 48, 0.25);
+            transition: all 0.15s;
+          " onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">Xác nhận</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function showConfirm(message, title = 'Xác nhận thao tác') {
+  initCustomModal();
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('custom-modal-overlay');
+    const titleEl = document.getElementById('modal-title');
+    const msgEl = document.getElementById('modal-message');
+    const btnConfirm = document.getElementById('modal-btn-confirm');
+    const btnCancel = document.getElementById('modal-btn-cancel');
+
+    titleEl.innerText = title;
+    msgEl.innerText = message;
+    btnCancel.style.display = 'inline-block';
+    btnConfirm.innerText = 'ĐỒNG Ý';
+
+    overlay.style.display = 'flex';
+
+    const handleConfirm = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    const cleanup = () => {
+      overlay.style.display = 'none';
+      btnConfirm.removeEventListener('click', handleConfirm);
+      btnCancel.removeEventListener('click', handleCancel);
+    };
+
+    btnConfirm.addEventListener('click', handleConfirm);
+    btnCancel.addEventListener('click', handleCancel);
+  });
+}
+
+function showAlert(message, title = 'Thông báo hệ thống') {
+  initCustomModal();
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('custom-modal-overlay');
+    const titleEl = document.getElementById('modal-title');
+    const msgEl = document.getElementById('modal-message');
+    const btnConfirm = document.getElementById('modal-btn-confirm');
+    const btnCancel = document.getElementById('modal-btn-cancel');
+
+    titleEl.innerText = title;
+    msgEl.innerText = message;
+    btnCancel.style.display = 'none';
+    btnConfirm.innerText = 'ĐÃ HỂU';
+
+    overlay.style.display = 'flex';
+
+    const handleConfirm = () => {
+      overlay.style.display = 'none';
+      btnConfirm.removeEventListener('click', handleConfirm);
+      resolve(true);
+    };
+
+    btnConfirm.addEventListener('click', handleConfirm);
+  });
+}
+
+function getReadNotifIds() {
+  const saved = localStorage.getItem('app_read_notif_ids');
+  return saved ? JSON.parse(saved) : [];
+}
+
+function markNotifIdAsRead(notifId) {
+  const readIds = getReadNotifIds();
+  if (!readIds.includes(notifId)) {
+    readIds.push(notifId);
+    localStorage.setItem('app_read_notif_ids', JSON.stringify(readIds));
+  }
+  updateNotificationUI();
+}
+
+async function fetchNotificationsFromSupabase() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (!error && data) {
+      db.notifications = data;
+      updateNotificationUI();
+    }
+  } catch (err) {
+    console.error('Lỗi lấy thông báo:', err);
+  }
+}
+
+async function addNotification(type, title, detail, targetView, itemId, actorName = '') {
+  if (!actorName) {
+    const session = getAuthSession();
+    actorName = session.currentUser ? (session.currentUser.fullname || session.currentUser.username) : 'Hệ thống';
+  }
+
+  const newNotif = {
+    id: 'NTF-' + Date.now(),
+    type: type,
+    title: title,
+    detail: detail,
+    actor: actorName,
+    targetview: targetView,
+    itemid: itemId,
+    time: getCurrentTimeStr(),
+    date: getTodayDateStr()
+  };
+
+  try {
+    await supabaseClient.from('notifications').insert([newNotif]);
+  } catch (err) {
+    console.error('Lỗi gửi thông báo:', err);
+  }
+}
+
+function subscribeRealtimeNotifications() {
+  supabaseClient
+    .channel('public:notifications')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
+      if (payload.new) {
+        if (!Array.isArray(db.notifications)) db.notifications = [];
+        db.notifications.unshift(payload.new);
+        updateNotificationUI();
+      }
+    })
+    .subscribe();
+}
+
+function initNotificationUI() {
+  const headerRight = document.querySelector('.app-header > div:last-child') || document.querySelector('.app-header');
+  if (!headerRight) return;
+
+  let bellBtn = document.getElementById('notif-bell-btn');
+  if (!bellBtn) {
+    const existingBell = headerRight.querySelector('button, .bell-icon, [class*="bell"]');
+    if (existingBell) {
+      bellBtn = existingBell;
+      bellBtn.id = 'notif-bell-btn';
+    } else {
+      bellBtn = document.createElement('button');
+      bellBtn.id = 'notif-bell-btn';
+      headerRight.appendChild(bellBtn);
+    }
+  }
+
+  bellBtn.className = 'header-icon-btn notif-bell-btn';
+  bellBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+
+  const dot = document.createElement('div');
+  dot.id = 'notif-badge-dot';
+  dot.className = 'notif-badge-dot';
+  bellBtn.appendChild(dot);
+
+  if (!document.getElementById('notif-dropdown')) {
+    const dropdown = document.createElement('div');
+    dropdown.id = 'notif-dropdown';
+    dropdown.className = 'notif-dropdown';
+    document.body.appendChild(dropdown);
+  }
+
+  bellBtn.onclick = (e) => {
+    e.stopPropagation();
+    const dropdown = document.getElementById('notif-dropdown');
+    dropdown.classList.toggle('open');
+    renderNotificationList();
+  };
+
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('notif-dropdown');
+    const bell = document.getElementById('notif-bell-btn');
+    if (dropdown && !dropdown.contains(e.target) && !bell.contains(e.target)) {
+      dropdown.classList.remove('open');
+    }
+  });
+
+  fetchNotificationsFromSupabase();
+  subscribeRealtimeNotifications();
+}
+
+function isWithinDays(dateStr, days) {
+  if (!dateStr) return false;
+  const itemDate = new Date(dateStr);
+  if (isNaN(itemDate.getTime())) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const diffTime = today.getTime() - itemDate.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays >= 0 && diffDays < days;
+}
+
+function getDayLabel(dateStr) {
+  if (!dateStr) return 'Khác';
+  const itemDate = new Date(dateStr);
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+  const targetDate = new Date(dateStr);
+  targetDate.setHours(0, 0, 0, 0);
+
+  const diffTime = today.getTime() - targetDate.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Hôm nay';
+  if (diffDays === 1) return 'Hôm qua';
+  return fmtDateStr(dateStr); 
+}
+
+function updateNotificationUI() {
+  const allList = db.notifications || [];
+  const recentList = allList.filter(n => isWithinDays(n.date || n.created_at, 2));
+  const readIds = getReadNotifIds();
+
+  const hasUnread = recentList.length > 0 && recentList.some(n => !readIds.includes(n.id));
+
+  const bellBtn = document.getElementById('notif-bell-btn');
+  const dot = document.getElementById('notif-badge-dot');
+
+  if (hasUnread) {
+    if (dot) dot.style.display = 'block';
+    if (bellBtn) bellBtn.classList.add('bell-ring-active');
+  } else {
+    if (dot) dot.style.display = 'none';
+    if (bellBtn) bellBtn.classList.remove('bell-ring-active');
+  }
+
+  const dropdown = document.getElementById('notif-dropdown');
+  if (dropdown && dropdown.classList.contains('open')) {
+    renderNotificationList();
+  }
+}
+
+function renderNotificationList() {
+  const dropdown = document.getElementById('notif-dropdown');
+  if (!dropdown) return;
+
+  const allList = db.notifications || [];
+  const recentList = allList.filter(n => isWithinDays(n.date || n.created_at, 2));
+  const readIds = getReadNotifIds();
+
+  let itemsHtml = '';
+  if (recentList.length === 0) {
+    itemsHtml = `<div style="padding: 32px; text-align: center; color: var(--muted-foreground, #8a94a6); font-size: 13px; font-family: var(--font-dm-mono);">Không có thông báo trong 2 ngày gần đây</div>`;
+  } else {
+    itemsHtml = recentList.map(item => {
+      const isRead = readIds.includes(item.id);
+      const formattedDate = fmtDateStr(item.date || item.created_at);
+      const timeStr = item.time ? item.time.substring(0, 5) : '';
+      const fullTimeDisplay = `${formattedDate} ${timeStr}`.trim();
+      const actorDisplay = item.actor || item.user_fullname || 'Hệ thống';
+
+      return `
+        <div class="notif-item ${isRead ? '' : 'unread'}" style="padding: 14px 18px; cursor: pointer;" onclick="handleNotificationClick('${item.id}', '${item.targetview}', '${item.itemid}')">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 4px;">
+            <span style="font-size: 14px; font-weight: 600; color: #ffffff;">${item.title}</span>
+            <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); white-space: nowrap;">${fullTimeDisplay}</span>
+          </div>
+          <div style="font-size: 13px; color: var(--foreground, #e2e8f0); line-height: 1.4;">${item.detail}</div>
+          <div style="font-size: 11px; color: #f0a030; font-family: var(--font-dm-mono); margin-top: 6px; display: flex; align-items: center; gap: 4px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Thực hiện: <strong>${actorDisplay}</strong></span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  dropdown.innerHTML = `
+    <div style="padding: 14px 18px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
+      <span style="font-family: var(--font-dm-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">THÔNG BÁO</span>
+      ${recentList.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; cursor: pointer; text-transform: uppercase; font-weight: 500; white-space: nowrap;">ĐÁNH DẤU ĐỌC HẾT</button>` : ''}
+    </div>
+    <div style="overflow-y: auto; max-height: 380px;">
+      ${itemsHtml}
+    </div>
+    <div style="padding: 10px; border-top: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--card, #141821); text-align: center;">
+      <button onclick="openNotificationHistory()" style="width: 100%; padding: 8px; background: rgba(240, 160, 48, 0.12); border: 1px solid rgba(240, 160, 48, 0.3); border-radius: 6px; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(240, 160, 48, 0.25)'" onmouseout="this.style.background='rgba(240, 160, 48, 0.12)'">
+        Xem lịch sử thông báo ➔
+      </button>
+    </div>
+  `;
+
+  if (!dropdown.dataset.swipeBound) {
+    let dropStartX = 0, dropStartY = 0;
+    dropdown.addEventListener('touchstart', (e) => {
+      dropStartX = e.touches[0].clientX;
+      dropStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    dropdown.addEventListener('touchend', (e) => {
+      const dropEndX = e.changedTouches[0].clientX;
+      const dropEndY = e.changedTouches[0].clientY;
+      const diffX = dropEndX - dropStartX;
+      const diffY = dropEndY - dropStartY;
+
+      if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+        dropdown.classList.remove('open');
+      }
+    }, { passive: true });
+
+    dropdown.dataset.swipeBound = 'true';
+  }
+}
+
+function initNotificationHistoryDrawer() {
+  if (document.getElementById('notif-history-drawer')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'notif-history-overlay';
+  overlay.className = 'notif-history-overlay';
+  overlay.onclick = closeNotificationHistory;
+
+  const drawer = document.createElement('div');
+  drawer.id = 'notif-history-drawer';
+  drawer.className = 'notif-history-drawer';
+
+  let drawerStartX = 0, drawerStartY = 0;
+  drawer.addEventListener('touchstart', (e) => {
+    drawerStartX = e.touches[0].clientX;
+    drawerStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  drawer.addEventListener('touchend', (e) => {
+    const drawerEndX = e.changedTouches[0].clientX;
+    const drawerEndY = e.changedTouches[0].clientY;
+    const diffX = drawerEndX - drawerStartX;
+    const diffY = drawerEndY - drawerStartY;
+
+    if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+      closeNotificationHistory();
+    }
+  }, { passive: true });
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(drawer);
+}
+
+function openNotificationHistory() {
+  initNotificationHistoryDrawer();
+
+  const dropdown = document.getElementById('notif-dropdown');
+  if (dropdown) dropdown.classList.remove('open');
+
+  const drawer = document.getElementById('notif-history-drawer');
+  const overlay = document.getElementById('notif-history-overlay');
+
+  renderNotificationHistoryContent();
+
+  drawer.classList.add('open');
+  overlay.classList.add('active');
+}
+
+function closeNotificationHistory() {
+  const drawer = document.getElementById('notif-history-drawer');
+  const overlay = document.getElementById('notif-history-overlay');
+  if (drawer) drawer.classList.remove('open');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function renderNotificationHistoryContent() {
+  const drawer = document.getElementById('notif-history-drawer');
+  if (!drawer) return;
+
+  const allList = db.notifications || [];
+  const monthlyList = allList.filter(n => isWithinDays(n.date || n.created_at, 30));
+  const readIds = getReadNotifIds();
+
+  const grouped = {};
+  monthlyList.forEach(item => {
+    const label = getDayLabel(item.date || item.created_at);
+    if (!grouped[label]) grouped[label] = [];
+    grouped[label].push(item);
+  });
+
+  let historyHtml = '';
+  const groupKeys = Object.keys(grouped);
+
+  if (groupKeys.length === 0) {
+    historyHtml = `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-size: 13px; font-family: var(--font-dm-mono);">Không có lịch sử thông báo trong 30 ngày qua</div>`;
+  } else {
+    groupKeys.forEach(dateLabel => {
+      const items = grouped[dateLabel];
+      historyHtml += `<div class="notif-date-group-title">${dateLabel} (${items.length})</div>`;
+
+      items.forEach(item => {
+        const isRead = readIds.includes(item.id);
+        const timeStr = item.time ? item.time.substring(0, 5) : '';
+        const actorDisplay = item.actor || item.user_fullname || 'Hệ thống';
+
+        historyHtml += `
+          <div class="notif-item ${isRead ? '' : 'unread'}" style="padding: 14px 18px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.06)); cursor: pointer;" onclick="handleNotificationClick('${item.id}', '${item.targetview}', '${item.itemid}')">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 4px;">
+              <span style="font-size: 13.5px; font-weight: 600; color: #ffffff;">${item.title}</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); white-space: nowrap;">${timeStr}</span>
+            </div>
+            <div style="font-size: 12.5px; color: var(--foreground, #e2e8f0); line-height: 1.4;">${item.detail}</div>
+            <div style="font-size: 11px; color: #f0a030; font-family: var(--font-dm-mono); margin-top: 6px; display: flex; align-items: center; gap: 4px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>Thực hiện: <strong>${actorDisplay}</strong></span>
+            </div>
+          </div>
+        `;
+      });
+    });
+  }
+
+  drawer.innerHTML = `
+    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-family: var(--font-dm-mono); font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">LỊCH SỬ THÔNG BÁO</span>
+      </div>
+      <button onclick="closeNotificationHistory()" style="background: none; border: none; color: var(--muted-foreground); cursor: pointer; padding: 4px; display: flex; align-items: center;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--muted-foreground)'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div style="flex: 1; overflow-y: auto;">
+      ${historyHtml}
+    </div>
+  `;
+}
+
+function handleNotificationClick(notifId, targetView, itemId) {
+  markNotifIdAsRead(notifId);
+
+  const dropdown = document.getElementById('notif-dropdown');
+  if (dropdown) dropdown.classList.remove('open');
+
+  closeNotificationHistory();
+
+  if (targetView && itemId && targetView !== 'null' && itemId !== 'null') {
+    navigate(targetView, 'view', itemId);
+  }
+}
+
+function markAllNotificationsAsRead() {
+  const list = db.notifications || [];
+  list.forEach(n => markNotifIdAsRead(n.id));
+}
+
+// ==========================================
+// 9. RENDER GIAO DIỆN & CÁC TRANG (VIEWS)
+// ==========================================
 
 // GIAO DIỆN ĐĂNG NHẬP SANG TRỌNG
 function renderLoginForm(container) {
@@ -952,111 +2107,6 @@ function renderLoginForm(container) {
   `;
 }
 
-async function handleLogin(e) {
-  e.preventDefault();
-  const un = document.getElementById('login-username').value.trim();
-  const pw = document.getElementById('login-password').value;
-  const remember = document.getElementById('login-remember').checked;
-
-  try {
-    // Truy vấn tới bảng userinfo trên Supabase
-    const { data, error } = await supabaseClient
-      .from('userinfo')
-      .select('*')
-      .eq('username', un)
-      .eq('password', pw);
-
-    if (error) throw error;
-
-    if (data && data.length > 0) {
-      const foundUser = data[0]; // Chứa id, username, fullname, role, các cột _yn...
-      const session = { isLoggedIn: true, currentUser: foundUser, remember };
-      localStorage.setItem('app_session', JSON.stringify(session));
-
-      if (remember) {
-        localStorage.setItem('remembered_user', JSON.stringify({ username: un, password: pw, remember: true }));
-      } else {
-        localStorage.removeItem('remembered_user');
-      }
-
-      document.querySelector('.app-container').style.display = 'flex';
-      updateUserInfoUI();
-      render();
-    } else {
-      document.getElementById('login-error').style.display = 'block';
-    }
-  } catch (err) {
-    console.error('Lỗi truy vấn đăng nhập:', err);
-    alert('Không thể kết nối đến máy chủ xác thực.');
-  }
-}
-
-function handleLogout() {
-  localStorage.removeItem('app_session');
-  location.reload();
-}
-
-function updateUserInfoUI() {
-  const session = getAuthSession();
-  if (session.isLoggedIn && session.currentUser) {
-    const user = session.currentUser;
-    const userAvatarEl = document.querySelector('.user-avatar');
-    const userNameEl = document.querySelector('.user-name');
-    const userRoleEl = document.querySelector('.user-role');
-    const sidebarUserEl = document.querySelector('.sidebar-user');
-
-    if (userAvatarEl) userAvatarEl.innerText = (user.fullname || user.username || 'U').substring(0, 2).toUpperCase();
-    if (userNameEl) userNameEl.innerText = user.fullname || user.username; // Dùng cột fullname từ DB
-    if (userRoleEl) userRoleEl.innerText = user.role || 'USER';
-
-    if (sidebarUserEl && !document.getElementById('logout-btn')) {
-      const logoutBtn = document.createElement('button');
-      logoutBtn.id = 'logout-btn';
-      logoutBtn.innerText = 'Đăng xuất';
-      logoutBtn.onclick = handleLogout;
-      logoutBtn.style.cssText = "margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--muted-foreground); font-size: 10px; padding: 3px 6px; cursor: pointer;";
-      sidebarUserEl.appendChild(logoutBtn);
-    }
-  }
-
-  // Thêm nút Nút Icon Ngôi nhà vào Header cho Mobile nếu chưa có
-  const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header');
-  if (headerLeft && !document.getElementById('mobile-home-trigger')) {
-    const homeBtn = document.createElement('button');
-    homeBtn.id = 'mobile-home-trigger';
-    homeBtn.className = 'header-icon-btn mobile-home-btn';
-    homeBtn.innerHTML = Icons.home;
-    homeBtn.onclick = toggleMobileMenu;
-    headerLeft.insertBefore(homeBtn, headerLeft.firstChild);
-  }
-
-  // Gán sự kiện click vào Logo Ngôi nhà trên đầu Sidebar để đóng Drawer Menu
-  const logoBrand = document.querySelector('.logo-brand, .app-brand, .sidebar-header');
-  if (logoBrand) {
-    logoBrand.style.cursor = 'pointer';
-    logoBrand.onclick = () => {
-      if (window.innerWidth <= 768 && document.body.classList.contains('mobile-menu-open')) {
-        toggleMobileMenu();
-      }
-    };
-  }
-}
-
-function updateGlobalMaterialDatalist() {
-  let dl = document.getElementById('global-materials-list');
-  if (!dl) {
-    dl = document.createElement('datalist');
-    dl.id = 'global-materials-list';
-    document.body.appendChild(dl);
-  }
-  dl.innerHTML = (db.materials || []).map(m => {
-    const safeName = m.name || '';
-    const safeId = m.id || '';
-    const safeCost = m.cost || 0;
-    return `<option value="${safeName}">${safeId} - ${safeName} (${fmtUSD(safeCost)})</option>`;
-  }).join('');
-}
-
 function render() {
   const appContainer = document.querySelector('.app-container');
   const c = document.getElementById('app-content');
@@ -1109,24 +2159,21 @@ function render() {
     }
   }
 
-  // ĐOẠN CODE MỚI ĐỂ ĐẶT CUỐI HÀM render()
   if (activeId) {
     const el = document.getElementById(activeId);
     if (el) {
       el.focus();
       try {
-        // Trình duyệt không cho phép setSelectionRange trên ô type="number"
         if (typeof el.selectionStart !== 'undefined' && el.type !== 'number' && el.type !== 'email') {
           const len = el.value ? el.value.length : 0;
           el.setSelectionRange(len, len);
         }
-      } catch (err) {
-        // Bỏ qua lỗi êm đẹp nếu thiết bị không hỗ trợ
-      }
+      } catch (err) {}
     }
   }
 }
 
+// BÁO CÁO DOANH THU & DASHBOARD
 function getSalesAnalyticsData() {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -1205,7 +2252,6 @@ function getSalesAnalyticsData() {
 
   const topCustomersReal = Object.values(customerMap).sort((a, b) => b.revenue - a.revenue);
 
-  // --- LẤY HOẠT ĐỘNG MỚI NHẤT TỪ THÔNG BÁO VÀ CHUẨN HÓA NGÀY THÁNG GIỜ PHÚT ---
   const notifList = db.notifications || [];
   const recentActivityReal = notifList.slice(0, 6).map(n => {
     const formattedDate = fmtDateStr(n.date || n.created_at);
@@ -1307,7 +2353,6 @@ function renderDashboard(c) {
   });
 }
 
-// LISTS
 function renderMaterialsList(c) {
   const hasPermission = checkModulePermission('materials');
 
@@ -1329,14 +2374,12 @@ function renderMaterialsList(c) {
     </div>
   `).join('');
 
-  // 1. Khai báo danh sách Header
   const headersHtml = [
     'Mã Hàng', 'Tên Hàng', 'Đơn Vị', 'Danh Mục', 'Vị Trí Lưu Kho', 'Tồn Kho Ban Đầu', 'Đơn Giá', 'Trạng Thái',
-    'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', // <--- Bổ sung 6 cột
+    'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa',
     'Hành Động'
   ].map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tồn Kho Ban Đầu' || h === 'Đơn Giá' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`).join('');
 
-  // 2. Render từng dòng trong rowsHtml
   const rowsHtml = filtered.map(m => `
   <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
     <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
@@ -1348,7 +2391,6 @@ function renderMaterialsList(c) {
     <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
     <td style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'CÒN HÀNG' : m.status.toUpperCase()}</span></td>
     
-    <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
     <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
     <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
     <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
@@ -1369,8 +2411,6 @@ function renderMaterialsList(c) {
       <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
-
-    <div style="display: flex; flex-direction: column; gap: 16px;">
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['ok', 'Đủ hàng'], ['low', 'Sắp hết'], ['critical', 'Nguy cấp'], ['out', 'Hết hàng']])}
         <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
@@ -1403,18 +2443,13 @@ function renderCustomersList(c) {
   const hasPermission = checkModulePermission('customers');
 
   const filtered = db.customers.filter(c => {
-    // 1. Kiểm tra điều kiện lọc theo trạng thái (Filter)
     const matchStatus = (state.filter === 'all' || c.status === state.filter);
-
-    // 2. Kiểm tra điều kiện tìm kiếm (Search)
     const searchKey = (state.search || '').trim().toLowerCase();
     const matchSearch = !searchKey ||
       (c.name && c.name.toLowerCase().includes(searchKey)) ||
       (c.id && c.id.toLowerCase().includes(searchKey)) ||
       (c.contact && c.contact.toLowerCase().includes(searchKey)) ||
       (c.address && c.address.toLowerCase().includes(searchKey));
-
-    // Phải thỏa mãn cả 2 điều kiện thì mới hiển thị
     return matchStatus && matchSearch;
   });
 
@@ -1451,7 +2486,6 @@ function renderCustomersList(c) {
       <td style="padding: 11px 16px; font-size: 13px; text-align: left;">${c.address || c.diachi || '—'}</td>
       <td style="padding: 11px 16px; text-align: left;"><span class="badge ${getBadgeClass(c.status)}">${c.status === 'active' ? 'hoạt động' : (c.status === 'suspended' ? 'tạm khóa' : (c.status || 'hoạt động'))}</span></td>
 
-      <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
       <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(c.user_id0)}</td>
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(c.date0)}</td>
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(c.time0)}</td>
@@ -1472,8 +2506,6 @@ function renderCustomersList(c) {
       <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
-    
-    <div style="display: flex; flex-direction: column; gap: 16px;">
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['active', 'Đang Hoạt Động'], ['inactive', 'Ngừng Hoạt Động'], ['suspended', 'Tạm Khóa']])}
         <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
@@ -1599,7 +2631,6 @@ function renderQuotationsList(c) {
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(q.total)}</td>
       <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(q.status)}">${getStatusLabel(q.status)}</span></td>
 
-            <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
       <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(q.user_id0)}</td>
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(q.date0)}</td>
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(q.time0)}</td>
@@ -1655,7 +2686,6 @@ function renderOrdersList(c) {
 
   const filtered = db.orders.filter(o => {
     const matchStatus = (state.filter === 'all' || o.status === state.filter);
-
     const searchKey = (state.search || '').trim().toLowerCase();
     const custId = (o.customerId || o.customerid || '').toLowerCase();
     const custName = (o.customer || '').toLowerCase();
@@ -1684,7 +2714,7 @@ function renderOrdersList(c) {
 
   const headersHtml = [
     'Mã Đơn Hàng', 'Khách Hàng', 'Ngày Tạo', 'Mã Kho', 'Số Dòng', 'Tổng Tiền', 'Trạng Thái',
-    'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', // <--- Bổ sung 6 cột
+    'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa',
     'Hành Động'
   ].map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`).join('');
 
@@ -1698,7 +2728,6 @@ function renderOrdersList(c) {
     <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(o.total)}</td>
     <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(o.status)}">${getStatusLabel(o.status)}</span></td>
 
-    <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
     <td style="padding: 12px 16px; font-size: 12px;">${getUserFullName(o.user_id0)}</td>
     <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(o.date0)}</td>
     <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(o.time0)}</td>
@@ -1755,7 +2784,6 @@ function renderReturnsList(c) {
   const filtered = db.returns.filter(r => {
     const matchStatus = (state.filter === 'all' || r.status === state.filter);
     const searchKey = (state.search || '').trim().toLowerCase();
-
     const rId = (r.id || '').toLowerCase();
     const orderId = (r.orderId || '').toLowerCase();
     const customer = (r.customer || '').toLowerCase();
@@ -1799,7 +2827,6 @@ function renderReturnsList(c) {
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; color: #f87171; text-align: right;">${fmtUSD(r.total)}</td>
         <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(r.status)}">${getStatusLabel(r.status)}</span></td>
 
-      <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
       <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(r.user_id0)}</td>
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(r.date0)}</td>
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(r.time0)}</td>
@@ -1857,7 +2884,6 @@ function renderGRNList(c) {
   const filtered = db.grns.filter(g => {
     const matchStatus = (state.filter === 'all' || g.status === state.filter);
     const searchKey = (state.search || '').trim().toLowerCase();
-
     const gId = (g.id || '').toLowerCase();
     const supplier = (g.supplier || '').toLowerCase();
     const wCode = (g.warehouseCode || g.warehouse_code || '').toLowerCase();
@@ -1898,7 +2924,6 @@ function renderGRNList(c) {
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(g.totalValue)}</td>
         <td style="padding: 12px 16px;"><span class="badge ${getBadgeClass(g.status)}">${getStatusLabel(g.status)}</span></td>
 
-        <!-- BỔ SUNG 6 CỘT MỚI TẠI ĐÂY -->
       <td style="padding: 11px 16px; font-size: 12px;">${getUserFullName(g.user_id0)}</td>
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(g.date0)}</td>
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(g.time0)}</td>
@@ -1950,7 +2975,6 @@ function renderGRNList(c) {
   `;
 }
 
-// FORMS
 function renderMaterialForm(c) {
   const d = state.formData || {};
   const isView = state.mode === 'view';
@@ -2212,7 +3236,6 @@ function renderQuotationForm(c) {
     `<option value="${cust.name}" ${d.customer === cust.name ? 'selected' : ''}>${cust.name}</option>`
   ).join('');
 
-  // Tăng độ rộng cột Tên sản phẩm và đồng bộ header với các cột còn lại
   const gridLayout = isView
     ? "90px minmax(180px, 1.5fr) 65px 80px 100px 70px 70px 120px"
     : "90px minmax(180px, 1.5fr) 65px 80px 100px 70px 70px 120px 32px";
@@ -3081,321 +4104,7 @@ function renderReportSales(c) {
   });
 }
 
-function handleOrderSelectInReturn(orderId) {
-  if (!state.formData || state.mode === 'view') return;
-  state.formData.orderId = orderId;
-
-  if (!orderId) {
-    state.formData.customer = '';
-    state.formData.lineItems = [{
-      lineId: Date.now().toString(),
-      sku: '',
-      name: '',
-      qtyReturned: 1,
-      unitPrice: 0
-    }];
-    render();
-    return;
-  }
-
-  const targetOrder = db.orders.find(o => o.id === orderId);
-
-  if (targetOrder) {
-    state.formData.customer = targetOrder.customer || '';
-    state.formData.lineItems = (targetOrder.lineItems || []).map(item => ({
-      lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-      sku: item.sku || '',
-      name: item.name || '',
-      qtyReturned: item.qty || 1,
-      unitPrice: item.unitPrice || 0
-    }));
-  }
-  render();
-}
-
-function handleMaterialSelectInLine(lineId, selectedName) {
-  if (!state.formData || state.mode === 'view') return;
-  const line = (state.formData.lineItems || []).find(l => l.lineId === lineId);
-  if (!line) return;
-
-  const valStr = selectedName ? String(selectedName).trim() : '';
-  if (!valStr) {
-    line.name = '';
-    line.sku = '';
-    render();
-    return;
-  }
-
-  let cleanName = valStr;
-  if (valStr.includes(' - ')) {
-    const parts = valStr.split(' - ');
-    cleanName = parts.length > 1 ? parts.slice(1).join(' - ').split(' (')[0].trim() : valStr;
-  }
-
-  const mat = (db.materials || []).find(m =>
-    (m.name && m.name.toLowerCase() === cleanName.toLowerCase()) ||
-    (m.id && m.id.toLowerCase() === valStr.toLowerCase())
-  );
-
-  if (mat) {
-    line.name = mat.name || '';
-    line.sku = mat.id || '';
-    line.unitPrice = mat.cost || 0;
-    line.unitCost = mat.cost || 0;
-  } else {
-    line.name = cleanName;
-  }
-
-  render();
-}
-
-function handleCustomerSelectInQuotation(customerName) {
-  if (!state.formData || state.mode === 'view') return;
-  const safeCustomer = String(customerName || '').trim();
-  state.formData.customer = safeCustomer;
-
-  if (!safeCustomer) {
-    state.formData.lineItems = [{
-      lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
-    }];
-    render();
-    return;
-  }
-
-  const latestQuotation = (db.quotations || [])
-    .filter(q => q && q.customer === safeCustomer)
-    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
-
-  if (latestQuotation && Array.isArray(latestQuotation.lineItems) && latestQuotation.lineItems.length > 0) {
-    state.formData.lineItems = latestQuotation.lineItems.map(item => ({
-      lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-      sku: item.sku || '',
-      name: item.name || '',
-      qty: item.qty ?? 1,
-      unitPrice: item.unitPrice ?? 0,
-      discount: item.discount ?? 0,
-      tax: item.tax ?? 0
-    }));
-  } else {
-    state.formData.lineItems = [{
-      lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
-    }];
-  }
-
-  render();
-}
-
-async function handleCustomerSelectInOrder(customerName) {
-  if (!state.formData || state.mode === 'view') return;
-  const safeCustomer = String(customerName || '').trim();
-  state.formData.customer = safeCustomer;
-
-  // Nếu người dùng xóa trống ô khách hàng -> Reset lại 1 dòng trống
-  if (!safeCustomer) {
-    state.formData.quotationId = null;
-    state.formData.lineItems = [{
-      lineId: Date.now().toString(),
-      warehouseCode: state.formData.warehouseCode || '',
-      sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
-    }];
-    render();
-    return;
-  }
-
-  // Lấy ngày của đơn hàng hiện tại đang tạo
-  const orderDate = state.formData.date || getTodayDateStr();
-
-  // Lọc Báo giá: Khách hàng trùng + Đã chấp nhận + Nằm trong thời gian hiệu lực
-  const activeQuotation = (db.quotations || [])
-    .filter(q => {
-      if (!q || q.customer !== safeCustomer) return false;
-      if ((q.status || '').toLowerCase() !== 'accepted') return false; // Phải là Đã chấp nhận
-
-      const vBegin = q.validbegin || q.validBegin || q.date || '';
-      const vUntil = q.validUntil || q.validuntil || '';
-
-      // Kiểm tra ngày đơn hàng (orderDate) có nằm trong khoảng hiệu lực không
-      if (vBegin && vUntil) {
-        return orderDate >= vBegin && orderDate <= vUntil;
-      }
-      return false;
-    })
-    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0]; // Nếu có nhiều cái hợp lệ thì lấy cái mới nhất
-
-  if (activeQuotation) {
-    // THAY THẾ confirm() BẰNG showConfirm():
-    const confirmImport = await showConfirm(
-      "Bạn có muốn nhập toàn bộ mã hàng, đơn giá theo Bảng báo giá không?",
-      "Áp dụng báo giá"
-    );
-
-    if (confirmImport) {
-      state.formData.quotationId = activeQuotation.id || null;
-      if (Array.isArray(activeQuotation.lineItems) && activeQuotation.lineItems.length > 0) {
-        state.formData.lineItems = activeQuotation.lineItems.map(item => ({
-          lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-          warehouseCode: state.formData.warehouseCode || '',
-          sku: item.sku || '',
-          name: item.name || '',
-          qty: item.qty ?? 1,
-          unitPrice: item.unitPrice ?? 0,
-          discount: item.discount ?? 0,
-          tax: item.tax ?? 0
-        }));
-      }
-    } else {
-      state.formData.quotationId = null;
-    }
-  } else {
-    state.formData.quotationId = null;
-  }
-
-  render();
-}
-
-function generateAutoId(module) {
-  const collection = db[module === 'sales-orders' ? 'orders' : module] || [];
-
-  if (module === 'materials') {
-    const maxNum = collection.reduce((m, x) => {
-      const match = (x.id || '').match(/SKU-(\d+)/i);
-      return match ? Math.max(m, parseInt(match[1], 10)) : m;
-    }, 0);
-    return `SKU-${String(maxNum + 1).padStart(4, '0')}`;
-  }
-
-  if (module === 'customers') {
-    const maxNum = collection.reduce((m, x) => {
-      const match = (x.id || '').match(/CUS-(\d+)/i);
-      return match ? Math.max(m, parseInt(match[1], 10)) : m;
-    }, 0);
-    return `CUS-${String(maxNum + 1).padStart(4, '0')}`;
-  }
-
-  if (module === 'warehouses') {
-    const maxNum = collection.reduce((m, x) => {
-      const match = ((x.code || x.id) || '').match(/(?:WH|KHO)-(\d+)/i);
-      return match ? Math.max(m, parseInt(match[1], 10)) : m;
-    }, 0);
-    return `WH-${String(maxNum + 1).padStart(2, '0')}`;
-  }
-
-  if (module === 'quotations') {
-    const now = new Date();
-    const yy = String(now.getFullYear()).slice(-2);
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const prefix = `BBG-${yy}${mm}`;
-
-    const maxNum = collection.reduce((m, x) => {
-      if (!x.id) return m;
-      const regex = new RegExp(`^${prefix}-(\\d+)`, 'i');
-      const match = x.id.match(regex);
-      return match ? Math.max(m, parseInt(match[1], 10)) : m;
-    }, 0);
-
-    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
-  }
-
-  if (module === 'sales-orders') {
-    const now = new Date();
-    const yy = String(now.getFullYear()).slice(-2);
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const prefix = `DHB-${yy}${mm}`;
-
-    const maxNum = collection.reduce((m, x) => {
-      if (!x.id) return m;
-      const regex = new RegExp(`^${prefix}-(\\d+)`, 'i');
-      const match = x.id.match(regex);
-      return match ? Math.max(m, parseInt(match[1], 10)) : m;
-    }, 0);
-
-    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
-  }
-
-  if (module === 'returns') {
-    const now = new Date();
-    const yy = String(now.getFullYear()).slice(-2);
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const prefix = `DTHB-${yy}${mm}`;
-
-    const maxNum = collection.reduce((m, x) => {
-      if (!x.id) return m;
-      const regex = new RegExp(`^${prefix}-(\\d+)`, 'i');
-      const match = x.id.match(regex);
-      return match ? Math.max(m, parseInt(match[1], 10)) : m;
-    }, 0);
-
-    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
-  }
-
-  if (module === 'grn') {
-    const now = new Date();
-    const yy = String(now.getFullYear()).slice(-2);
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const prefix = `PNK-${yy}${mm}`;
-
-    const list = Array.isArray(db.grns) ? db.grns : [];
-
-    const maxNum = list.reduce((m, x) => {
-      const currentId = String(x.id || '');
-      const regex = new RegExp(`^${prefix}-?(\\d+)`, 'i');
-      const match = currentId.match(regex);
-      return match ? Math.max(m, parseInt(match[1], 10)) : m;
-    }, 0);
-
-    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
-  }
-}
-
-function getMonthRange() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-
-  const firstDay = `${year}-${month}-01`;
-  const lastDayNum = new Date(year, now.getMonth() + 1, 0).getDate();
-  const lastDay = `${year}-${month}-${String(lastDayNum).padStart(2, '0')}`;
-
-  return { firstDay, lastDay };
-}
-
-function parseDateParts(dateStr) {
-  let dayStr = '02', monthStr = '10', yearStr = '2026';
-  if (dateStr) {
-    if (dateStr.includes('-')) {
-      const parts = dateStr.split('-');
-      if (parts.length === 3) {
-        yearStr = parts[0];
-        monthStr = parts[1];
-        dayStr = parts[2];
-      }
-    } else if (dateStr.includes('/')) {
-      const parts = dateStr.split('/');
-      if (parts.length === 3) {
-        dayStr = parts[0].padStart(2, '0');
-        monthStr = parts[1].padStart(2, '0');
-        yearStr = parts[2];
-      }
-    }
-  } else {
-    const today = new Date();
-    dayStr = String(today.getDate()).padStart(2, '0');
-    monthStr = String(today.getMonth() + 1).padStart(2, '0');
-    yearStr = String(today.getFullYear());
-  }
-  return { dayStr, monthStr, yearStr };
-}
-
-function getCustomerAddress(customerNameOrId) {
-  if (!customerNameOrId) return '—';
-  const cust = (db.customers || []).find(c =>
-    (c.name && c.name.trim().toLowerCase() === customerNameOrId.trim().toLowerCase()) ||
-    (c.id && c.id.trim().toLowerCase() === customerNameOrId.trim().toLowerCase())
-  );
-  return cust ? (cust.address || cust.diachi || '—') : '—';
-}
-
-// Xuất Excel
+// Xuất Excel Báo Giá
 function exportQuotationToExcel() {
   const d = state.formData;
   if (!d) return;
@@ -3408,7 +4117,6 @@ function exportQuotationToExcel() {
   let totalQty = 0;
   let totalAmount = 0;
 
-  // Lặp cố định 23 dòng để tạo kẻ viền trống y hệt file mẫu
   const items = (d.lineItems || d.lineitems || []);
   const maxRows = 23;
 
@@ -3442,7 +4150,6 @@ function exportQuotationToExcel() {
         </tr>
       `;
     } else {
-      // Kẻ viền cho các dòng trống còn lại
       rowsHtml += `
         <tr style="height: 26px;">
           <td style="border: 1px solid #000;"></td>
@@ -3571,7 +4278,6 @@ function exportQuotationToExcel() {
     </html>
   `;
 
-  // Ép xuất file định dạng .xls để giữ toàn bộ CSS HTML
   const blob = new Blob(['\ufeff', tableHtml], { type: 'application/vnd.ms-excel' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -3583,6 +4289,7 @@ function exportQuotationToExcel() {
   URL.revokeObjectURL(url);
 }
 
+// Xuất Excel Đơn Bán Hàng
 function exportSalesOrderToExcel() {
   const d = state.formData;
   if (!d) return;
@@ -3765,736 +4472,34 @@ function exportSalesOrderToExcel() {
   URL.revokeObjectURL(url);
 }
 
-// Khởi tạo Custom Modal Container
-function initCustomModal() {
-  if (document.getElementById('custom-modal-overlay')) return;
+// ==========================================
+// 10. LẮNG NGHE SỰ KIỆN TỔNG (EVENT LISTENERS)
+// ==========================================
 
-  const modalHtml = `
-    <div id="custom-modal-overlay" style="
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-jost, sans-serif);
-    ">
-      <div id="custom-modal-box" style="
-        width: 100%;
-        max-width: 440px;
-        background: var(--card, #141821);
-        border: 1px solid var(--border, rgba(255,255,255,0.1));
-        border-radius: 12px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 1px rgba(240,160,48,0.3);
-        padding: 24px;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        transform: scale(0.95);
-        transition: transform 0.2s ease, opacity 0.2s ease;
-      ">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div id="modal-icon-container" style="
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            background: rgba(240, 160, 48, 0.15);
-            border: 1px solid rgba(240, 160, 48, 0.3);
-            color: #f0a030;
-            flex-shrink: 0;
-          ">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          </div>
-          <h3 id="modal-title" style="
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--foreground, #ffffff);
-            letter-spacing: 0.02em;
-          ">Thông báo</h3>
-        </div>
-
-        <div id="modal-message" style="
-          font-size: 13.5px;
-          line-height: 1.5;
-          color: var(--muted-foreground, #a0aec0);
-        "></div>
-
-        <div id="modal-actions" style="
-          display: flex;
-          justify-content: flex-end;
-          gap: 10px;
-          margin-top: 4px;
-        ">
-          <button id="modal-btn-cancel" style="
-            padding: 8px 18px;
-            background: transparent;
-            border: 1px solid var(--border, rgba(255,255,255,0.15));
-            border-radius: 6px;
-            color: var(--foreground, #ffffff);
-            font-family: var(--font-dm-mono, monospace);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            cursor: pointer;
-            transition: all 0.15s;
-          " onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">Hủy bỏ</button>
-
-          <button id="modal-btn-confirm" style="
-            padding: 8px 20px;
-            background: linear-gradient(135deg, #f0a030 0%, #d98818 100%);
-            border: none;
-            border-radius: 6px;
-            color: #000000;
-            font-family: var(--font-dm-mono, monospace);
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(240, 160, 48, 0.25);
-            transition: all 0.15s;
-          " onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">Xác nhận</button>
-        </div>
-      </div>
-    </div>
-  `;
-
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-}
-
-// Hàm hiển thị hộp thoại Xác nhận (Thay thế confirm)
-function showConfirm(message, title = 'Xác nhận thao tác') {
-  initCustomModal();
-  return new Promise((resolve) => {
-    const overlay = document.getElementById('custom-modal-overlay');
-    const titleEl = document.getElementById('modal-title');
-    const msgEl = document.getElementById('modal-message');
-    const btnConfirm = document.getElementById('modal-btn-confirm');
-    const btnCancel = document.getElementById('modal-btn-cancel');
-
-    titleEl.innerText = title;
-    msgEl.innerText = message;
-    btnCancel.style.display = 'inline-block';
-    btnConfirm.innerText = 'ĐỒNG Ý';
-
-    overlay.style.display = 'flex';
-
-    const handleConfirm = () => {
-      cleanup();
-      resolve(true);
-    };
-
-    const handleCancel = () => {
-      cleanup();
-      resolve(false);
-    };
-
-    const cleanup = () => {
-      overlay.style.display = 'none';
-      btnConfirm.removeEventListener('click', handleConfirm);
-      btnCancel.removeEventListener('click', handleCancel);
-    };
-
-    btnConfirm.addEventListener('click', handleConfirm);
-    btnCancel.addEventListener('click', handleCancel);
-  });
-}
-
-// Hàm hiển thị hộp thoại Thông báo (Thay thế alert)
-function showAlert(message, title = 'Thông báo hệ thống') {
-  initCustomModal();
-  return new Promise((resolve) => {
-    const overlay = document.getElementById('custom-modal-overlay');
-    const titleEl = document.getElementById('modal-title');
-    const msgEl = document.getElementById('modal-message');
-    const btnConfirm = document.getElementById('modal-btn-confirm');
-    const btnCancel = document.getElementById('modal-btn-cancel');
-
-    titleEl.innerText = title;
-    msgEl.innerText = message;
-    btnCancel.style.display = 'none'; // Cảnh báo chỉ có nút OK
-    btnConfirm.innerText = 'ĐÃ HỂU';
-
-    overlay.style.display = 'flex';
-
-    const handleConfirm = () => {
-      overlay.style.display = 'none';
-      btnConfirm.removeEventListener('click', handleConfirm);
-      resolve(true);
-    };
-
-    btnConfirm.addEventListener('click', handleConfirm);
-  });
-}
-
-// --- LOGIC TRUNG TÂM THÔNG BÁO REALTIME (SUPABASE) ---
-
-// Lấy danh sách ID các thông báo đã đọc lưu ở trình duyệt này
-function getReadNotifIds() {
-  const saved = localStorage.getItem('app_read_notif_ids');
-  return saved ? JSON.parse(saved) : [];
-}
-
-function markNotifIdAsRead(notifId) {
-  const readIds = getReadNotifIds();
-  if (!readIds.includes(notifId)) {
-    readIds.push(notifId);
-    localStorage.setItem('app_read_notif_ids', JSON.stringify(readIds));
-  }
-  updateNotificationUI();
-}
-
-// Tải 20 thông báo mới nhất từ Supabase
-async function fetchNotificationsFromSupabase() {
-  try {
-    const { data, error } = await supabaseClient
-      .from('notifications')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(20);
-
-    if (!error && data) {
-      db.notifications = data;
-      updateNotificationUI();
-    }
-  } catch (err) {
-    console.error('Lỗi lấy thông báo:', err);
-  }
-}
-
-// Hàm đẩy thông báo lên Supabase (Tất cả trình duyệt khác sẽ nhận được ngay)
-async function addNotification(type, title, detail, targetView, itemId, actorName = '') {
-  // Lấy tên người dùng hiện tại nếu không truyền vào
-  if (!actorName) {
-    const session = getAuthSession();
-    actorName = session.currentUser ? (session.currentUser.fullname || session.currentUser.username) : 'Hệ thống';
-  }
-
-  const newNotif = {
-    id: 'NTF-' + Date.now(),
-    type: type,
-    title: title,
-    detail: detail,
-    actor: actorName, // Thêm trường người tạo/sửa
-    targetview: targetView,
-    itemid: itemId,
-    time: getCurrentTimeStr(),
-    date: getTodayDateStr()
-  };
-
-  try {
-    await supabaseClient.from('notifications').insert([newNotif]);
-  } catch (err) {
-    console.error('Lỗi gửi thông báo:', err);
-  }
-}
-
-// Đăng ký nhận thông báo thời gian thực (Realtime)
-function subscribeRealtimeNotifications() {
-  supabaseClient
-    .channel('public:notifications')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
-      if (payload.new) {
-        if (!Array.isArray(db.notifications)) db.notifications = [];
-        db.notifications.unshift(payload.new);
-        updateNotificationUI();
-      }
-    })
-    .subscribe();
-}
-
-function initNotificationUI() {
-  const headerRight = document.querySelector('.app-header > div:last-child') || document.querySelector('.app-header');
-  if (!headerRight) return;
-
-  let bellBtn = document.getElementById('notif-bell-btn');
-  if (!bellBtn) {
-    const existingBell = headerRight.querySelector('button, .bell-icon, [class*="bell"]');
-    if (existingBell) {
-      bellBtn = existingBell;
-      bellBtn.id = 'notif-bell-btn';
-    } else {
-      bellBtn = document.createElement('button');
-      bellBtn.id = 'notif-bell-btn';
-      headerRight.appendChild(bellBtn);
-    }
-  }
-
-  // 1. Đồng nhất class kích thước
-  bellBtn.className = 'header-icon-btn notif-bell-btn';
-
-  // 2. Gán lại SVG Chuông chuẩn (SẠCH, KHÔNG CÓ CHẤM ĐỎ VẼ SẴN)
-  // Loại bỏ các thẻ span/div chấm đỏ tĩnh cũ trong nút (nếu có)
-  bellBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
-
-  // 3. Tạo duy nhất 1 thẻ chấm đỏ động do JavaScript kiểm soát
-  const dot = document.createElement('div');
-  dot.id = 'notif-badge-dot';
-  dot.className = 'notif-badge-dot';
-  bellBtn.appendChild(dot);
-
-  if (!document.getElementById('notif-dropdown')) {
-    const dropdown = document.createElement('div');
-    dropdown.id = 'notif-dropdown';
-    dropdown.className = 'notif-dropdown';
-    document.body.appendChild(dropdown);
-  }
-
-  bellBtn.onclick = (e) => {
-    e.stopPropagation();
+document.addEventListener('keydown', function (e) {
+  // 1. Thao tác bấm ESC để đóng Form Thông báo / Form Lịch sử
+  if (e.key === 'Escape' || e.key === 'Esc') {
     const dropdown = document.getElementById('notif-dropdown');
-    dropdown.classList.toggle('open');
-    renderNotificationList();
-  };
-
-  document.addEventListener('click', (e) => {
-    const dropdown = document.getElementById('notif-dropdown');
-    const bell = document.getElementById('notif-bell-btn');
-    if (dropdown && !dropdown.contains(e.target) && !bell.contains(e.target)) {
+    if (dropdown && dropdown.classList.contains('open')) {
       dropdown.classList.remove('open');
     }
-  });
 
-  fetchNotificationsFromSupabase();
-  subscribeRealtimeNotifications();
-}
-
-// --- HÀM HỖ TRỢ XỬ LÝ NGÀY THÁNG ---
-function isWithinDays(dateStr, days) {
-  if (!dateStr) return false;
-  const itemDate = new Date(dateStr);
-  if (isNaN(itemDate.getTime())) return false;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const diffTime = today.getTime() - itemDate.setHours(0, 0, 0, 0);
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays >= 0 && diffDays < days;
-}
-
-function getDayLabel(dateStr) {
-  if (!dateStr) return 'Khác';
-  const itemDate = new Date(dateStr);
-  const today = new Date();
-
-  today.setHours(0, 0, 0, 0);
-  const targetDate = new Date(dateStr);
-  targetDate.setHours(0, 0, 0, 0);
-
-  const diffTime = today.getTime() - targetDate.getTime();
-  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return 'Hôm nay';
-  if (diffDays === 1) return 'Hôm qua';
-  return fmtDateStr(dateStr); // Trả về định dạng DD/MM/YYYY
-}
-
-function updateNotificationUI() {
-  const allList = db.notifications || [];
-  // Lọc thông báo trong 2 ngày gần đây
-  const recentList = allList.filter(n => isWithinDays(n.date || n.created_at, 2));
-  const readIds = getReadNotifIds();
-
-  // Kiểm tra có thông báo nào chưa đọc hay không
-  const hasUnread = recentList.length > 0 && recentList.some(n => !readIds.includes(n.id));
-
-  const bellBtn = document.getElementById('notif-bell-btn');
-  const dot = document.getElementById('notif-badge-dot');
-
-  if (hasUnread) {
-    if (dot) dot.style.display = 'block';
-    if (bellBtn) bellBtn.classList.add('bell-ring-active');
-  } else {
-    // ĐÃ ĐỌC HẾT: Ẩn chấm đỏ và tắt hiệu ứng rung chuông
-    if (dot) dot.style.display = 'none';
-    if (bellBtn) bellBtn.classList.remove('bell-ring-active');
-  }
-
-  const dropdown = document.getElementById('notif-dropdown');
-  if (dropdown && dropdown.classList.contains('open')) {
-    renderNotificationList();
-  }
-}
-
-function renderNotificationList() {
-  const dropdown = document.getElementById('notif-dropdown');
-  if (!dropdown) return;
-
-  const allList = db.notifications || [];
-  // Chỉ lấy thông báo trong 2 ngày gần nhất
-  const recentList = allList.filter(n => isWithinDays(n.date || n.created_at, 2));
-  const readIds = getReadNotifIds();
-
-  let itemsHtml = '';
-  if (recentList.length === 0) {
-    itemsHtml = `<div style="padding: 32px; text-align: center; color: var(--muted-foreground, #8a94a6); font-size: 13px; font-family: var(--font-dm-mono);">Không có thông báo trong 2 ngày gần đây</div>`;
-  } else {
-    itemsHtml = recentList.map(item => {
-      const isRead = readIds.includes(item.id);
-      const formattedDate = fmtDateStr(item.date || item.created_at);
-      const timeStr = item.time ? item.time.substring(0, 5) : '';
-      const fullTimeDisplay = `${formattedDate} ${timeStr}`.trim();
-      const actorDisplay = item.actor || item.user_fullname || 'Hệ thống';
-
-      return `
-        <div class="notif-item ${isRead ? '' : 'unread'}" style="padding: 14px 18px; cursor: pointer;" onclick="handleNotificationClick('${item.id}', '${item.targetview}', '${item.itemid}')">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 4px;">
-            <span style="font-size: 14px; font-weight: 600; color: #ffffff;">${item.title}</span>
-            <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); white-space: nowrap;">${fullTimeDisplay}</span>
-          </div>
-          <div style="font-size: 13px; color: var(--foreground, #e2e8f0); line-height: 1.4;">${item.detail}</div>
-          <div style="font-size: 11px; color: #f0a030; font-family: var(--font-dm-mono); margin-top: 6px; display: flex; align-items: center; gap: 4px;">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span>Thực hiện: <strong>${actorDisplay}</strong></span>
-          </div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  dropdown.innerHTML = `
-    <div style="padding: 14px 18px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
-      <span style="font-family: var(--font-dm-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">THÔNG BÁO</span>
-      ${recentList.length > 0 ? `<button onclick="markAllNotificationsAsRead()" style="background: none; border: none; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; cursor: pointer; text-transform: uppercase; font-weight: 500; white-space: nowrap;">ĐÁNH DẤU ĐỌC HẾT</button>` : ''}
-    </div>
-    <div style="overflow-y: auto; max-height: 380px;">
-      ${itemsHtml}
-    </div>
-    <div style="padding: 10px; border-top: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--card, #141821); text-align: center;">
-      <button onclick="openNotificationHistory()" style="width: 100%; padding: 8px; background: rgba(240, 160, 48, 0.12); border: 1px solid rgba(240, 160, 48, 0.3); border-radius: 6px; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(240, 160, 48, 0.25)'" onmouseout="this.style.background='rgba(240, 160, 48, 0.12)'">
-        Xem lịch sử thông báo ➔
-      </button>
-    </div>
-  `;
-
-  // Thêm thao tác vuốt từ trái vào phải để đóng Form Thông báo trên Mobile
-  if (!dropdown.dataset.swipeBound) {
-    let dropStartX = 0, dropStartY = 0;
-    dropdown.addEventListener('touchstart', (e) => {
-      dropStartX = e.touches[0].clientX;
-      dropStartY = e.touches[0].clientY;
-    }, { passive: true });
-
-    dropdown.addEventListener('touchend', (e) => {
-      const dropEndX = e.changedTouches[0].clientX;
-      const dropEndY = e.changedTouches[0].clientY;
-      const diffX = dropEndX - dropStartX;
-      const diffY = dropEndY - dropStartY;
-
-      // Vuốt từ trái sang phải > 50px
-      if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY)) {
-        dropdown.classList.remove('open');
-      }
-    }, { passive: true });
-
-    dropdown.dataset.swipeBound = 'true';
-  }
-}
-
-function initNotificationHistoryDrawer() {
-  if (document.getElementById('notif-history-drawer')) return;
-
-  const overlay = document.createElement('div');
-  overlay.id = 'notif-history-overlay';
-  overlay.className = 'notif-history-overlay';
-  overlay.onclick = closeNotificationHistory;
-
-  const drawer = document.createElement('div');
-  drawer.id = 'notif-history-drawer';
-  drawer.className = 'notif-history-drawer';
-
-  // Gắn sự kiện vuốt từ trái sang phải để đóng Form Lịch sử
-  let drawerStartX = 0, drawerStartY = 0;
-  drawer.addEventListener('touchstart', (e) => {
-    drawerStartX = e.touches[0].clientX;
-    drawerStartY = e.touches[0].clientY;
-  }, { passive: true });
-
-  drawer.addEventListener('touchend', (e) => {
-    const drawerEndX = e.changedTouches[0].clientX;
-    const drawerEndY = e.changedTouches[0].clientY;
-    const diffX = drawerEndX - drawerStartX;
-    const diffY = drawerEndY - drawerStartY;
-
-    // Vuốt từ trái sang phải > 50px
-    if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+    if (typeof closeNotificationHistory === 'function') {
       closeNotificationHistory();
     }
-  }, { passive: true });
-
-  document.body.appendChild(overlay);
-  document.body.appendChild(drawer);
-}
-
-// Mở Tab Lịch sử thông báo (Trượt từ bên phải)
-function openNotificationHistory() {
-  initNotificationHistoryDrawer();
-
-  // Đóng dropdown nhỏ nếu đang mở
-  const dropdown = document.getElementById('notif-dropdown');
-  if (dropdown) dropdown.classList.remove('open');
-
-  const drawer = document.getElementById('notif-history-drawer');
-  const overlay = document.getElementById('notif-history-overlay');
-
-  renderNotificationHistoryContent();
-
-  drawer.classList.add('open');
-  overlay.classList.add('active');
-}
-
-function closeNotificationHistory() {
-  const drawer = document.getElementById('notif-history-drawer');
-  const overlay = document.getElementById('notif-history-overlay');
-  if (drawer) drawer.classList.remove('open');
-  if (overlay) overlay.classList.remove('active');
-}
-
-// Render toàn bộ thông báo trong 1 tháng (Gom nhóm theo ngày)
-function renderNotificationHistoryContent() {
-  const drawer = document.getElementById('notif-history-drawer');
-  if (!drawer) return;
-
-  const allList = db.notifications || [];
-  // Lọc lấy thông báo trong vòng 30 ngày gần đây
-  const monthlyList = allList.filter(n => isWithinDays(n.date || n.created_at, 30));
-  const readIds = getReadNotifIds();
-
-  // Gom nhóm thông báo theo ngày (Group by Date)
-  const grouped = {};
-  monthlyList.forEach(item => {
-    const label = getDayLabel(item.date || item.created_at);
-    if (!grouped[label]) grouped[label] = [];
-    grouped[label].push(item);
-  });
-
-  let historyHtml = '';
-  const groupKeys = Object.keys(grouped);
-
-  if (groupKeys.length === 0) {
-    historyHtml = `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-size: 13px; font-family: var(--font-dm-mono);">Không có lịch sử thông báo trong 30 ngày qua</div>`;
-  } else {
-    groupKeys.forEach(dateLabel => {
-      const items = grouped[dateLabel];
-      historyHtml += `<div class="notif-date-group-title">${dateLabel} (${items.length})</div>`;
-
-      items.forEach(item => {
-        const isRead = readIds.includes(item.id);
-        const timeStr = item.time ? item.time.substring(0, 5) : '';
-        const actorDisplay = item.actor || item.user_fullname || 'Hệ thống';
-
-        historyHtml += `
-          <div class="notif-item ${isRead ? '' : 'unread'}" style="padding: 14px 18px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.06)); cursor: pointer;" onclick="handleNotificationClick('${item.id}', '${item.targetview}', '${item.itemid}')">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 4px;">
-              <span style="font-size: 13.5px; font-weight: 600; color: #ffffff;">${item.title}</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); white-space: nowrap;">${timeStr}</span>
-            </div>
-            <div style="font-size: 12.5px; color: var(--foreground, #e2e8f0); line-height: 1.4;">${item.detail}</div>
-            <div style="font-size: 11px; color: #f0a030; font-family: var(--font-dm-mono); margin-top: 6px; display: flex; align-items: center; gap: 4px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <span>Thực hiện: <strong>${actorDisplay}</strong></span>
-            </div>
-          </div>
-        `;
-      });
-    });
+    return;
   }
 
-  drawer.innerHTML = `
-    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <span style="font-family: var(--font-dm-mono); font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">LỊCH SỬ THÔNG BÁO</span>
-      </div>
-      <button onclick="closeNotificationHistory()" style="background: none; border: none; color: var(--muted-foreground); cursor: pointer; padding: 4px; display: flex; align-items: center;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--muted-foreground)'">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
+  // 2. Chặn tự động Submit Form khi bấm Enter trên các ô input/select
+  if (e.key === 'Enter') {
+    if (document.getElementById('login-container')) return;
+    if (e.target.tagName === 'TEXTAREA') return;
 
-    <div style="flex: 1; overflow-y: auto;">
-      ${historyHtml}
-    </div>
-  `;
-}
-
-function handleNotificationClick(notifId, targetView, itemId) {
-  markNotifIdAsRead(notifId);
-
-  // Đóng Popup nhỏ
-  const dropdown = document.getElementById('notif-dropdown');
-  if (dropdown) dropdown.classList.remove('open');
-
-  // Đóng Drawer Lịch sử
-  closeNotificationHistory();
-
-  // Điều hướng
-  if (targetView && itemId && targetView !== 'null' && itemId !== 'null') {
-    navigate(targetView, 'view', itemId);
-  }
-}
-
-function markAllNotificationsAsRead() {
-  const list = db.notifications || [];
-  list.forEach(n => markNotifIdAsRead(n.id));
-}
-
-function initFormData(module, id) {
-  const keyMap = { 'sales-orders': 'orders', 'grn': 'grns' };
-  const targetKey = keyMap[module] || module;
-  const collection = db[targetKey] || [];
-
-  if (id) {
-    state.formData = JSON.parse(JSON.stringify(collection.find(x => String(x.id) === String(id))));
-  } else {
-    const autoId = generateAutoId(module);
-    if (module === 'materials') {
-      state.formData = {
-        id: autoId, name: '', unit: '', category: 'Hoa Quả', location: '', stock: 0, reorder: 0, cost: 0, status: 'ok'
-      };
-    }
-
-    if (module === 'customers') {
-      state.formData = {
-        id: autoId, name: '', type: 'B2B', contact: '', email: '', phone: '', address: '', creditLimit: 0, paymentTerms: 'Net 30', status: 'active'
-      };
-    }
-
-    if (module === 'warehouses') {
-      state.formData = {
-        id: autoId, code: autoId, name: '', location: '', capacity: 0, used: 0, manager: '', status: 'active'
-      };
-    }
-
-    if (module === 'quotations') {
-      const today = getTodayDateStr();
-      const firstDay = getFirstDayOfMonthStr();
-      const { lastDay } = getMonthRange();
-      state.formData = {
-        id: autoId, customer: '', date: today, validbegin: firstDay, validUntil: lastDay, status: 'accepted', notes: '',
-        lineItems: [{ lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0 }]
-      };
-    }
-
-    if (module === 'sales-orders') {
-      const defaultWh = db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '';
-      state.formData = {
-        id: autoId,
-        customer: '',
-        warehouseCode: defaultWh,
-        quotationId: null,
-        date: getTodayDateStr(),
-        status: 'completed',
-        notes: '',
-        tax: 0,
-        total: 0,
-        lineItems: [
-          {
-            lineId: Date.now().toString(),
-            warehouseCode: defaultWh,
-            sku: '',
-            name: '',
-            qty: 1,
-            unitPrice: 0,
-            discount: 0,
-            tax: 0
-          }
-        ]
-      };
-    }
-
-    if (module === 'returns') {
-      const defaultWh = db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '';
-      state.formData = {
-        id: autoId, warehouseCode: defaultWh, orderId: '', customer: '', date: getTodayDateStr(), reason: 'Hàng lỗi/hỏng', notes: '', status: 'processed',
-        lineItems: [{ lineId: Date.now().toString(), sku: '', name: '', qtyReturned: 1, unitPrice: 0 }]
-      };
-    }
-
-    if (module === 'grn') {
-      const defaultWh = db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '';
-      state.formData = {
-        id: autoId,
-        supplier: '',
-        warehouseCode: defaultWh,
-        notes: '',
-        date: getTodayDateStr(),
-        status: 'Đã nhận',
-        lineItems: [{ lineId: Date.now().toString(), sku: '', name: '', receivedQty: 1, unitCost: 0 }]
-      };
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+      e.preventDefault();
     }
   }
-}
-
-function getTodayDateStr() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function getFirstDayOfMonthStr() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  return `${year}-${month}-01`;
-}
-
-function getCurrentTimeStr() {
-  const d = new Date();
-  const h = String(d.getHours()).padStart(2, '0');
-  const m = String(d.getMinutes()).padStart(2, '0');
-  const s = String(d.getSeconds()).padStart(2, '0');
-  return `${h}:${m}:${s}`;
-}
-
-function formatDateVN(dateStr) {
-  if (!dateStr) return '';
-  if (dateStr.includes('/')) return dateStr;
-
-  const parts = dateStr.split('-');
-  if (parts.length === 3) {
-    const [year, month, day] = parts;
-    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
-  }
-  return dateStr;
-}
-
-function parseNumberInput(val) {
-  if (val === null || val === undefined || val === '') return 0;
-  const str = String(val).trim();
-  const cleanStr = str.replace(/[^0-9-]/g, '');
-  return cleanStr ? Number(cleanStr) : 0;
-}
-
-function formatVNDInput(val) {
-  const num = parseNumberInput(val);
-  return num ? num.toLocaleString('vi-VN') : '0';
-}
-
-function fmt(n) { return new Intl.NumberFormat('en-US').format(n); }
-
-function fmtUSD(n) {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
-}
-
-function updateHeaderDate() {
-  const dateElement = document.getElementById('header-date');
-  if (!dateElement) return;
-
-  const now = new Date();
-  const options = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
-  const formattedDate = now.toLocaleDateString('vi-VN', options);
-
-  dateElement.innerText = formattedDate;
-}
+});
 
 document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -4533,41 +4538,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   handleRouteChange();
   updateHeaderDate();
   initNotificationUI();
-});
-
-function toTitleCase(str) {
-  if (!str) return '';
-  return str.toLowerCase().replace(/(^|\s)\S/g, function (firstLetter) {
-    return firstLetter.toUpperCase();
-  });
-}
-
-function toUpperCaseStr(str) {
-  if (!str) return '';
-  return str.toUpperCase();
-}
-
-document.addEventListener('keydown', function (e) {
-  // 1. Thao tác bấm ESC để đóng Form Thông báo / Form Lịch sử
-  if (e.key === 'Escape' || e.key === 'Esc') {
-    const dropdown = document.getElementById('notif-dropdown');
-    if (dropdown && dropdown.classList.contains('open')) {
-      dropdown.classList.remove('open');
-    }
-
-    if (typeof closeNotificationHistory === 'function') {
-      closeNotificationHistory();
-    }
-    return;
-  }
-
-  // 2. Chặn tự động Submit Form khi bấm Enter trên các ô input/select
-  if (e.key === 'Enter') {
-    if (document.getElementById('login-container')) return;
-    if (e.target.tagName === 'TEXTAREA') return;
-
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
-      e.preventDefault();
-    }
-  }
 });
