@@ -86,7 +86,6 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  box-shadow: none !important;
 }
 
 .sidebar-header {
@@ -259,31 +258,21 @@ input:-webkit-autofill:active {
 }
 
 /* App Wrapper */
-.main-wrapper,
-.dashboard-container,
-#main-content {
+.main-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: none !important;
-  border-left: none !important;
-  margin-left: 0;
 }
 
 .app-header {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  z-index: 997 !important;
-  background-color: var(--background) !important;
-  border-bottom: 1px solid var(--border) !important;
-  /* Xóa hoàn toàn box-shadow của header để không bị lan sang 2 bên */
-  box-shadow: none !important;
-  padding-left: 12px !important;
-  padding-right: 12px !important;
+  height: 50px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  flex-shrink: 0;
 }
 
 .header-title-container {
@@ -713,15 +702,20 @@ tr:hover {
   #app-content,
   .app-main,
   .main-content {
-    box-shadow: none !important;
-    border: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding: 70px 10px 30px 10px !important;
+    background-color: inherit !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .app-content {
     padding: 12px !important;
   }
 
-  /* 2. Cố định Sticky Header - Sửa lỗi dải xám mờ tràn viền */
+  /* 2. Cố định Sticky Header - Khôi phục khoảng cách ban đầu và loại bỏ bóng tràn sang trái */
   .app-header {
     position: fixed !important;
     top: 0 !important;
@@ -731,10 +725,11 @@ tr:hover {
     z-index: 997 !important;
     background-color: var(--background) !important;
     border-bottom: 1px solid var(--border) !important;
-    /* KHẮC PHỤC: Đổi bóng đổ tỏa rộng 2 bên thành bóng mờ nhẹ đổ xuống bên dưới */
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+    /* Giữ nguyên độ rợp bóng 15px như cũ nhưng dùng clip-path CHỈ cho bóng đổ xuống dưới, triệt tiêu 100% bóng tràn sang trái/phải */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+    clip-path: inset(0 0 -20px 0) !important;
+    padding-left: 28px !important;
+    padding-right: 28px !important;
   }
 
   .app-header>div:first-child {
@@ -762,7 +757,7 @@ tr:hover {
     z-index: 9999 !important;
     transform: translateX(-100%) !important;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    /* TRIỆT ĐỂ: Ẩn hoàn toàn box-shadow khi sidebar đang thu gọn */
+    /* TRIỆT ĐỂ: Tắt bóng mờ của sidebar khi đang ẩn để không hắt bóng ra mép trái */
     box-shadow: none !important;
     background: var(--card) !important;
     display: flex !important;
@@ -774,6 +769,17 @@ tr:hover {
   body.mobile-menu-open aside {
     transform: translateX(0) !important;
     box-shadow: 6px 0 25px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  /* Header luôn ghim ở trên cùng */
+  .sidebar-header {
+    height: 50px !important;
+    padding: 0 18px !important;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
   }
 
   /* Phần giữa chứa danh sách menu có thể cuộn dọc */
@@ -1011,37 +1017,14 @@ div[style*="overflow: auto"],
 
 /* Hiệu ứng rung lắc icon chuông */
 @keyframes bellRing {
-  0% {
-    transform: rotate(0);
-  }
-
-  10% {
-    transform: rotate(15deg);
-  }
-
-  20% {
-    transform: rotate(-15deg);
-  }
-
-  30% {
-    transform: rotate(10deg);
-  }
-
-  40% {
-    transform: rotate(-10deg);
-  }
-
-  50% {
-    transform: rotate(5deg);
-  }
-
-  60% {
-    transform: rotate(-5deg);
-  }
-
-  100% {
-    transform: rotate(0);
-  }
+  0% { transform: rotate(0); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-15deg); }
+  30% { transform: rotate(10deg); }
+  40% { transform: rotate(-10deg); }
+  50% { transform: rotate(5deg); }
+  60% { transform: rotate(-5deg); }
+  100% { transform: rotate(0); }
 }
 
 .bell-ring-active {
@@ -1241,8 +1224,6 @@ div[style*="overflow: auto"],
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
-  display: none !important;
-  /* TRIỆT ĐỂ: Không render lớp phủ khi chưa kích hoạt */
   transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
@@ -1250,7 +1231,6 @@ div[style*="overflow: auto"],
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
-  display: block !important;
 }
 
 [data-theme="light"] .mobile-overlay {
