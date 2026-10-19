@@ -138,12 +138,12 @@ body {
 }
 
 input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-    -webkit-text-fill-color: #ffffff !important;
-    -webkit-box-shadow: 0 0 0px 1000px #1e1f25 inset !important;
-    transition: background-color 5000s ease-in-out 0s !important;
+  -webkit-text-fill-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0px 1000px #1e1f25 inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
 }
 
 /* ==========================================
@@ -153,11 +153,14 @@ input:-webkit-autofill:active {
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
-  padding: 12px 14px !important;
-  margin: 10px 12px 12px !important;
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 10px !important;
+  padding: 12px 18px !important;
+  /* Đồng nhất padding ngang với các nav-btn (18px) */
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-top: 1px solid var(--border) !important;
+  /* Chỉ giữ lại đường viền ngăn cách phía trên */
+  border-radius: 0 !important;
   flex-shrink: 0 !important;
 }
 
@@ -709,10 +712,7 @@ tr:hover {
   }
 
   .sidebar,
-  aside,
-  .mobile-menu,
-  nav[style*="position: fixed"],
-  div[class*="sidebar"] {
+  aside {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -725,9 +725,11 @@ tr:hover {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     box-shadow: 6px 0 25px rgba(0, 0, 0, 0.6) !important;
     background: #11141a !important;
+
+    /* BẮT BUỘC: Sử dụng Flexbox chiều dọc để cố định Header và Footer, giữa cuộn */
     display: flex !important;
     flex-direction: column !important;
-    overflow: hidden !important; /* Đảm bảo Header và Footer cố định, giữa cuộn */
+    overflow: hidden !important;
   }
 
   body.mobile-menu-open .sidebar,
@@ -735,29 +737,36 @@ tr:hover {
     transform: translateX(0) !important;
   }
 
-  /* Header cố định trên mobile drawer */
+  /* 1. Header luôn ghim ở trên cùng */
   .sidebar-header {
     display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
     padding: 16px 18px !important;
     border-bottom: 1px solid var(--border) !important;
     background: #11141a !important;
     flex-shrink: 0 !important;
   }
 
-  /* Phần cuộn menu danh mục nằm ở giữa */
+  /* 2. Phần giữa chứa danh sách menu có thể cuộn dọc */
   .nav-menu {
     flex: 1 1 auto !important;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    padding: 10px 0 !important;
+    padding: 8px 0 !important;
   }
 
-  /* Footer thông tin user cố định ở dưới cùng mobile drawer */
+  /* 3. Footer thông tin user luôn ghim ở dưới cùng */
   .sidebar-user {
     display: flex !important;
-    margin: 10px 12px 16px 12px !important;
-    background: rgba(255, 255, 255, 0.04) !important;
-    border: 1px solid var(--border) !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 12px 16px !important;
+    margin: 0 !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: none !important;
+    border-top: 1px solid var(--border) !important;
+    border-radius: 0 !important;
     flex-shrink: 0 !important;
   }
 
@@ -774,17 +783,10 @@ tr:hover {
   }
 
   .mobile-home-btn {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--primary);
-    cursor: pointer;
-    margin-right: 10px;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
   }
 
   /* 5. Khung Tổng Tiền, Thanh Lọc & Layout */
@@ -1024,7 +1026,7 @@ div[style*="overflow: auto"],
   position: relative;
   background: transparent;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
-  border-radius: 8px;
+  border-radius: 0;
   padding: 8px;
   color: var(--foreground, #ffffff);
   cursor: pointer;
@@ -1063,7 +1065,7 @@ div[style*="overflow: auto"],
   max-height: 520px;
   background: var(--card, #141821);
   border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
-  border-radius: 12px;
+  border-radius: 0;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 1px rgba(240, 160, 48, 0.3);
   z-index: 999;
   display: flex;
@@ -1172,7 +1174,7 @@ div[style*="overflow: auto"],
   justify-content: center !important;
   background: rgba(255, 255, 255, 0.04) !important;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.12)) !important;
-  border-radius: 8px !important;
+  border-radius: 0 !important;
   color: var(--foreground, #ffffff) !important;
   cursor: pointer;
   box-sizing: border-box !important;
