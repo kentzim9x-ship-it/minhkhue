@@ -2152,14 +2152,17 @@ function markAllNotificationsAsRead() {
 function renderLoginForm(container) {
   const savedCredsRaw = localStorage.getItem('remembered_user');
   const savedCreds = savedCredsRaw ? JSON.parse(savedCredsRaw) : { username: '', password: '', remember: false };
-  const bannerImg = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80';
+  const bannerImg = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80';
 
   container.innerHTML = `
-    <div class="login-wrapper">
-      <!-- Outer Card Bo góc tròn trắng -->
+    <div class="login-page-wrapper">
+      <!-- 1. HÌNH ẢNH BANNER PHÍA SAU TẠO ĐƯỜNG CẮT CHÉO TOÀN TRANG -->
+      <div class="background-banner-layer" style="background-image: url('${bannerImg}');"></div>
+
+      <!-- 2. KHUNG DĂNG NHẬP NẰM ĐÈ LÊN TRÊN -->
       <div class="login-card">
 
-        <!-- CỘT TRÁI: BANNER BẮT CHƯỚC ĐƯỜNG NGHINÊNG / CHÉO VỚI CLIP-PATH -->
+        <!-- CỘT TRÁI: BANNER NỔI VỚI HÌNH ẢNH -->
         <div class="login-banner-side" style="background-image: url('${bannerImg}');">
           <div class="banner-overlay"></div>
           
@@ -2192,10 +2195,10 @@ function renderLoginForm(container) {
           </div>
         </div>
 
-        <!-- CỘT PHẢI: FORM ĐĂNG NHẬP -->
+        <!-- CỘT PHẢI: FORM ĐĂNG NHẬP (TRẮNG/TỐI THEO THEME) -->
         <div class="login-form-side">
           
-          <!-- Top Bar: Brand & Ngôn ngữ -->
+          <!-- Header: Brand & Ngôn ngữ -->
           <div class="form-header-bar">
             <div class="brand-text">UISOCIAL</div>
             <button class="lang-selector" type="button">
@@ -2219,7 +2222,7 @@ function renderLoginForm(container) {
                 class="custom-login-input"
                 required 
                 value="${savedCreds.remember ? (savedCreds.username || '') : ''}"
-                placeholder="Email hoặc Tên đăng nhập" 
+                placeholder="Email" 
               >
             </div>
 
@@ -2265,7 +2268,7 @@ function renderLoginForm(container) {
               Tài khoản hoặc mật khẩu không chính xác!
             </div>
 
-            <!-- Nút Đăng Nhập chính -->
+            <!-- Nút Đăng Nhập -->
             <button type="submit" class="submit-login-btn">
               Login
             </button>

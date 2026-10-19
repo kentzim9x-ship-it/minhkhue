@@ -1306,53 +1306,74 @@ div[style*="overflow: auto"],
   height: 18px !important;
 }
 
-.login-wrapper {
+/* ==============================================================
+   THIẾT KẾ CÓ LỚP NỀN BANNER PHÍA SAU NGHIÊNG GIỐNG 100% ẢNH MẪU
+   ============================================================== */
+
+.login-page-wrapper {
   min-height: 100vh;
-  width: 100%;
+  width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
-  background-color: var(--background);
+  position: relative;
+  overflow: hidden;
+  background-color: var(--background, #e5e7eb);
   box-sizing: border-box;
+  padding: 20px;
 }
 
+/* --- 1. LỚP HÌNH ẢNH PHÍA SAU TRÀN MÀN HÌNH VỚI ĐƯỜNG CẮT CHÉO --- */
+.background-banner-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 68%;
+  height: 100%;
+  background-size: cover;
+  background-position: left center;
+  /* Cắt góc nghiêng từ dưới góc trái lên trên theo đúng góc nghiêng ảnh mẫu */
+  clip-path: polygon(0 0, 100% 0, 62% 100%, 0 100%);
+  z-index: 1;
+}
+
+/* --- 2. CARD DĂNG NHẬP CHÍNH NẰM TRONG KHUNG VIỀN TRẮNG NỔI --- */
 .login-card {
   width: 100%;
-  max-width: 1000px;
-  min-height: 600px;
-  background: var(--card);
-  border-radius: 32px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+  max-width: 960px;
+  min-height: 580px;
+  background: var(--card, #ffffff);
+  border-radius: 36px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.25);
   display: flex;
   overflow: hidden;
   position: relative;
-  border: 1px solid var(--border);
+  z-index: 2;
+  border: 12px solid var(--card, #ffffff); /* Viền bo góc bao quanh */
 }
 
-/* --- CỘT TRÁI: BANNER TẠO ĐƯỜNG CHÉO BẰNG CLIP-PATH --- */
+/* Cột trái: Nội dung banner */
 .login-banner-side {
-  flex: 1.1;
+  flex: 1;
   background-size: cover;
   background-position: center;
   position: relative;
-  padding: 36px 40px;
+  padding: 32px 36px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   color: #ffffff;
-  /* Tạo đường chéo phân chia viền nghiêng từ trên xuống dưới */
-  clip-path: polygon(0 0, 100% 0, 88% 100%, 0 100%);
-  margin-right: -5%;
+  border-radius: 28px;
+  /* Vẫn áp dụng clip-path nhẹ để đồng bộ góc nghiêng bên trong card */
+  clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%);
+  margin-right: -4%;
   z-index: 2;
-  border-top-left-radius: 32px;
-  border-bottom-left-radius: 32px;
 }
 
 .banner-overlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.65) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.55) 100%);
   z-index: 1;
 }
 
@@ -1366,16 +1387,15 @@ div[style*="overflow: auto"],
 }
 
 .banner-tag {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: -0.01em;
 }
 
 .banner-top-actions {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding-right: 40px;
+  padding-right: 30px;
 }
 
 .banner-link {
@@ -1386,31 +1406,31 @@ div[style*="overflow: auto"],
 }
 
 .banner-btn-join {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.4);
   color: #ffffff;
-  padding: 7px 20px;
+  padding: 6px 18px;
   border-radius: 20px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
 }
 
 .banner-bottom-bar {
   align-items: flex-end;
-  padding-right: 40px;
+  padding-right: 30px;
 }
 
 .banner-profile {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .profile-avatar {
-  width: 42px;
-  height: 42px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: #3b82f6;
   display: flex;
@@ -1420,12 +1440,12 @@ div[style*="overflow: auto"],
 }
 
 .profile-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .profile-role {
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.75;
 }
 
@@ -1435,8 +1455,8 @@ div[style*="overflow: auto"],
 }
 
 .arrow-btn {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(8px);
@@ -1446,17 +1466,17 @@ div[style*="overflow: auto"],
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
 }
 
-/* --- CỘT PHẢI: KHU VỰC THÔNG TIN VÀ FORM --- */
+/* Cột phải: Form nhập thông tin */
 .login-form-side {
-  flex: 1;
-  padding: 40px 50px 40px 60px;
+  flex: 0.95;
+  padding: 30px 40px 30px 50px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background: var(--card);
+  background: var(--card, #ffffff);
   z-index: 1;
 }
 
@@ -1467,7 +1487,7 @@ div[style*="overflow: auto"],
 }
 
 .brand-text {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   letter-spacing: 0.04em;
   color: var(--foreground);
@@ -1477,8 +1497,8 @@ div[style*="overflow: auto"],
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 18px;
-  padding: 5px 14px;
-  font-size: 12px;
+  padding: 4px 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--foreground);
   display: flex;
@@ -1489,36 +1509,36 @@ div[style*="overflow: auto"],
 
 .form-title-block {
   text-align: center;
-  margin: 15px 0 10px 0;
+  margin: 10px 0;
 }
 
 .main-title {
-  font-size: 34px;
+  font-size: 32px;
   font-weight: 800;
   color: var(--foreground);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   letter-spacing: -0.02em;
 }
 
 .sub-title {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--muted-foreground);
 }
 
 .login-form-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .custom-login-input {
   width: 100%;
-  padding: 12px 16px;
+  padding: 11px 14px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--secondary);
   color: var(--foreground);
-  font-size: 13.5px;
+  font-size: 13px;
   outline: none;
   box-sizing: border-box;
 }
@@ -1542,7 +1562,7 @@ div[style*="overflow: auto"],
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
+  font-size: 11.5px;
 }
 
 .remember-checkbox-label {
@@ -1568,12 +1588,12 @@ div[style*="overflow: auto"],
 
 .submit-login-btn {
   width: 100%;
-  padding: 13px;
+  padding: 12px;
   border-radius: 20px;
   border: none;
   background: #ef4444;
   color: #ffffff;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
@@ -1586,7 +1606,7 @@ div[style*="overflow: auto"],
 
 .signup-prompt {
   text-align: center;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--muted-foreground);
 }
 
@@ -1601,7 +1621,7 @@ div[style*="overflow: auto"],
   display: flex;
   justify-content: center;
   gap: 16px;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .social-icon {
@@ -1624,19 +1644,24 @@ div[style*="overflow: auto"],
   text-align: center;
 }
 
-/* --- TỐI ƯU RESPONSIVE MOBILE --- */
+/* --- TỐI ƯU TRÊN DI ĐỘNG --- */
 @media (max-width: 850px) {
+  .background-banner-layer {
+    display: none;
+  }
+
   .login-card {
     flex-direction: column;
-    border-radius: 24px;
+    border-radius: 20px;
+    border: none;
   }
 
   .login-banner-side {
     clip-path: none;
     margin-right: 0;
-    min-height: 200px;
+    min-height: 180px;
     padding: 20px;
-    border-radius: 24px 24px 0 0;
+    border-radius: 20px 20px 0 0;
   }
 
   .banner-top-actions,
@@ -1645,6 +1670,6 @@ div[style*="overflow: auto"],
   }
 
   .login-form-side {
-    padding: 30px 20px;
+    padding: 24px 18px;
   }
 }
