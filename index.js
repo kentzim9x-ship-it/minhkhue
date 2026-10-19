@@ -1531,7 +1531,7 @@ function initCustomModal() {
         max-width: 440px;
         background: var(--card, #141821);
         border: 1px solid var(--border, rgba(255,255,255,0.1));
-        border-radius: 12px;
+        border-radius: 2px;
         box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 1px rgba(240,160,48,0.3);
         padding: 24px;
         display: flex;
@@ -1547,7 +1547,7 @@ function initCustomModal() {
             justify-content: center;
             width: 36px;
             height: 36px;
-            border-radius: 8px;
+            border-radius: 2px;
             background: rgba(240, 160, 48, 0.15);
             border: 1px solid rgba(240, 160, 48, 0.3);
             color: #f0a030;
@@ -1580,7 +1580,7 @@ function initCustomModal() {
             padding: 8px 18px;
             background: transparent;
             border: 1px solid var(--border, rgba(255,255,255,0.15));
-            border-radius: 6px;
+            border-radius: 2px;
             color: var(--foreground, #ffffff);
             font-family: var(--font-dm-mono, monospace);
             font-size: 11px;
@@ -1594,7 +1594,7 @@ function initCustomModal() {
             padding: 8px 20px;
             background: linear-gradient(135deg, #f0a030 0%, #d98818 100%);
             border: none;
-            border-radius: 6px;
+            border-radius: 2px;
             color: #000000;
             font-family: var(--font-dm-mono, monospace);
             font-size: 11px;
@@ -1894,7 +1894,7 @@ function renderNotificationList() {
       ${itemsHtml}
     </div>
     <div style="padding: 10px; border-top: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--card, #141821); text-align: center;">
-      <button onclick="openNotificationHistory()" style="width: 100%; padding: 8px; background: rgba(240, 160, 48, 0.12); border: 1px solid rgba(240, 160, 48, 0.3); border-radius: 6px; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(240, 160, 48, 0.25)'" onmouseout="this.style.background='rgba(240, 160, 48, 0.12)'">
+      <button onclick="openNotificationHistory()" style="width: 100%; padding: 8px; background: rgba(240, 160, 48, 0.12); border: 1px solid rgba(240, 160, 48, 0.3); border-radius: 2px; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(240, 160, 48, 0.25)'" onmouseout="this.style.background='rgba(240, 160, 48, 0.12)'">
         Xem lịch sử thông báo ➔
       </button>
     </div>
