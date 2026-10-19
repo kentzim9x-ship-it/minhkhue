@@ -331,6 +331,8 @@ async function handleLogin(e) {
 
 function handleLogout() {
   localStorage.removeItem('app_session');
+  // Chuyển URL trình duyệt thành /minhkhue/login và reload lại trang
+  window.history.pushState({}, '', `${BASE_PATH}/login`);
   location.reload();
 }
 
@@ -737,12 +739,18 @@ function navigate(view, mode = 'list', itemId = null) {
 }
 
 function handleRouteChange() {
-  // Bỏ tiền tố /minhkhue/ và các dấu / ở hai đầu
   let pathname = window.location.pathname;
   if (pathname.startsWith(BASE_PATH)) {
     pathname = pathname.substring(BASE_PATH.length);
   }
   pathname = pathname.replace(/^\/+|\/+$/g, '');
+
+  // Nếu URL là /minhkhue/login hoặc trống
+  if (pathname === 'login') {
+    localStorage.removeItem('app_session'); // Mặc định đăng xuất khi truy cập URL /login
+    render();
+    return;
+  }
 
   if (!pathname) {
     navigate('dashboard', 'list');
@@ -2038,166 +2046,193 @@ function renderLoginForm(container) {
   const savedCreds = JSON.parse(localStorage.getItem('remembered_user') || '{}');
 
   container.innerHTML = `
-    <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #26272b; padding: 20px; font-family: var(--font-jost, sans-serif);">
+    <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #121316; padding: 20px; font-family: var(--font-jost, sans-serif);">
       
-      <!-- Khung Form chính có hiệu ứng Glow cam xung quanh -->
+      <!-- Card chính chứa 2 cột -->
       <div style="
         width: 100%; 
-        max-width: 420px; 
-        background: #1e1f23; 
-        border-radius: 28px; 
-        padding: 40px 36px; 
-        box-shadow: 0 0 50px rgba(255, 90, 50, 0.25), 0 20px 40px rgba(0,0,0,0.6); 
-        border: 1px solid rgba(255, 100, 50, 0.15);
-        position: relative;
+        max-width: 900px; 
+        min-height: 520px;
+        background: #1e1f25; 
+        border-radius: 12px; 
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); 
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
         overflow: hidden;
-      ">
+      " class="login-split-card">
 
-        <!-- Tiêu đề & Subtitle -->
-        <div style="margin-bottom: 32px; text-align: left;">
-          <h2 style="font-size: 28px; font-weight: 600; color: #ff6b35; margin: 0 0 6px 0; letter-spacing: 0.02em;">
-            Đăng Nhập
-          </h2>
-          <p style="font-size: 13px; color: #8a8d93; font-family: var(--font-dm-mono, monospace); margin: 0;">
-            MINH KHUÊ LMS SYSTEM
-          </p>
+        <!-- CỘT TRÁI: Hình ảnh thương hiệu & Banner -->
+        <div style="
+          flex: 1; 
+          background: linear-gradient(rgba(18, 19, 22, 0.82), rgba(18, 19, 22, 0.88)), 
+                      url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat; 
+          padding: 40px; 
+          display: flex; 
+          flex-direction: column; 
+          justify-content: center; 
+          align-items: center;
+          text-align: center;
+          position: relative;
+        " class="login-banner-col">
+          
+          <div style="max-width: 320px;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 16px; margin-bottom: 20px;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <h1 style="font-size: 32px; font-weight: 700; color: #ffffff; letter-spacing: 0.05em; margin: 0 0 10px 0;">
+              MINH KHUÊ <span style="color: #a78bfa;">LMS</span>
+            </h1>
+            <p style="font-size: 13px; color: #9ca3af; font-family: var(--font-dm-mono, monospace); line-height: 1.6; margin: 0;">
+              Hệ thống quản lý kho hàng, báo giá và theo dõi đơn bán hàng tập trung
+            </p>
+          </div>
         </div>
 
-        <form onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 22px;">
+        <!-- CỘT PHẢI: Form đăng nhập -->
+        <div style="
+          flex: 1; 
+          padding: 48px 40px; 
+          display: flex; 
+          flex-direction: column; 
+          justify-content: center;
+          background: #1e1f25;
+        ">
           
-          <!-- Ô nhập Tên tài khoản -->
-          <div>
+          <div style="margin-bottom: 28px;">
+            <h2 style="font-size: 22px; font-weight: 600; color: #ffffff; margin: 0 0 6px 0;">Đăng Nhập Hệ Thống</h2>
+            <p style="font-size: 12px; color: #6b7280; font-family: var(--font-dm-mono, monospace);">Vui lòng nhập thông tin tài khoản của bạn</p>
+          </div>
+
+          <form onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 20px;">
+            
+            <!-- Input Tên tài khoản -->
             <div style="position: relative;">
+              <label style="display: block; font-size: 11px; font-family: var(--font-dm-mono, monospace); color: #8b5cf6; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Tên tài khoản</label>
               <input 
                 type="text" 
                 id="login-username" 
                 required 
                 value="${savedCreds.username || ''}"
-                placeholder="Tên tài khoản" 
+                placeholder="Nhập tên tài khoản..." 
                 style="
                   width: 100%; 
-                  padding: 14px 18px; 
-                  background: #282a2f; 
-                  border: 1px solid #363940; 
-                  border-radius: 14px; 
+                  padding: 10px 0; 
+                  background: transparent; 
+                  border: none; 
+                  border-bottom: 1px solid #374151; 
                   color: #ffffff; 
                   outline: none; 
                   font-size: 14px; 
-                  transition: all 0.3s ease;
+                  transition: border-color 0.2s;
                   box-sizing: border-box;
                 "
-                onfocus="this.style.borderColor='#ff6b35'; this.style.boxShadow='0 0 15px rgba(255, 107, 53, 0.3)';"
-                onblur="this.style.borderColor='#363940'; this.style.boxShadow='none';"
+                onfocus="this.style.borderColor='#8b5cf6';"
+                onblur="this.style.borderColor='#374151';"
               >
+            </div>
+
+            <!-- Input Mật khẩu + Icon Mắt -->
+            <div style="position: relative;">
+              <label style="display: block; font-size: 11px; font-family: var(--font-dm-mono, monospace); color: #9ca3af; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Mật khẩu</label>
+              <div style="display: flex; align-items: center; position: relative;">
+                <input 
+                  type="password" 
+                  id="login-password" 
+                  required 
+                  value="${savedCreds.password || ''}"
+                  placeholder="Nhập mật khẩu..." 
+                  style="
+                    width: 100%; 
+                    padding: 10px 32px 10px 0; 
+                    background: transparent; 
+                    border: none; 
+                    border-bottom: 1px solid #374151; 
+                    color: #ffffff; 
+                    outline: none; 
+                    font-size: 14px; 
+                    transition: border-color 0.2s;
+                    box-sizing: border-box;
+                  "
+                  onfocus="this.style.borderColor='#8b5cf6';"
+                  onblur="this.style.borderColor='#374151';"
+                >
+                <span 
+                  id="toggle-password-btn"
+                  onclick="togglePasswordVisibility()" 
+                  style="position: absolute; right: 0; cursor: pointer; color: #6b7280; display: flex; align-items: center;"
+                  onmouseover="this.style.color='#8b5cf6'"
+                  onmouseout="this.style.color='#6b7280'"
+                  title="Ẩn/Hiện mật khẩu"
+                >
+                  <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </span>
+              </div>
+            </div>
+
+            <!-- Checkbox Ghi nhớ đăng nhập -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+              <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #9ca3af; cursor: pointer; user-select: none;">
+                <input 
+                  type="checkbox" 
+                  id="login-remember" 
+                  ${savedCreds.remember ? 'checked' : ''} 
+                  style="cursor: pointer; accent-color: #8b5cf6; width: 15px; height: 15px;"
+                >
+                Ghi nhớ đăng nhập
+              </label>
+            </div>
+
+            <!-- Thông báo lỗi -->
+            <div id="login-error" style="color: #ef4444; font-size: 12px; display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 8px 12px; border-radius: 6px; text-align: center;">
+              Tài khoản hoặc mật khẩu không chính xác!
+            </div>
+
+            <!-- Nút Đăng nhập -->
+            <button 
+              type="submit" 
+              style="
+                width: 100%; 
+                padding: 12px; 
+                margin-top: 10px; 
+                background: #8b5cf6; 
+                border: none; 
+                border-radius: 6px; 
+                color: #ffffff; 
+                font-family: var(--font-jost, sans-serif); 
+                font-size: 14px; 
+                font-weight: 600; 
+                cursor: pointer; 
+                transition: background 0.2s;
+              "
+              onmouseover="this.style.background='#7c3aed';"
+              onmouseout="this.style.background='#8b5cf6';"
+            >
+              Đăng Nhập
+            </button>
+          </form>
+
+          <!-- Các Icon Mạng xã hội giống mẫu ảnh -->
+          <div style="margin-top: 28px; text-align: center;">
+            <p style="font-size: 11px; color: #6b7280; font-family: var(--font-dm-mono, monospace); margin-bottom: 12px;">Nền tảng hỗ trợ liên kết</p>
+            <div style="display: flex; justify-content: center; gap: 12px;">
+              <!-- Twitter / X Icon -->
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: #38bdf8; display: flex; align-items: center; justify-content: center; color: #ffffff; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+              </div>
+              <!-- Facebook Icon -->
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: #ffffff; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+              </div>
+              <!-- Google+ Icon -->
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: #ef4444; display: flex; align-items: center; justify-content: center; color: #ffffff; cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 11v2.4h3.97c-.16 1.03-1.2 3.02-3.97 3.02-2.39 0-4.34-1.98-4.34-4.42s1.95-4.42 4.34-4.42c1.36 0 2.27.58 2.79 1.08l1.9-1.83C15.47 5.69 13.89 5 12 5 8.13 5 5 8.13 5 12s3.13 7 7 7c4.04 0 6.72-2.84 6.72-6.84 0-.46-.05-.81-.11-1.16H12z"></path></svg>
+              </div>
             </div>
           </div>
 
-          <!-- Ô nhập Mật khẩu + Icon Mắt -->
-          <div>
-            <div style="position: relative; display: flex; align-items: center;">
-              <input 
-                type="password" 
-                id="login-password" 
-                required 
-                value="${savedCreds.password || ''}"
-                placeholder="Mật khẩu" 
-                style="
-                  width: 100%; 
-                  padding: 14px 48px 14px 18px; 
-                  background: #282a2f; 
-                  border: 1px solid #363940; 
-                  border-radius: 14px; 
-                  color: #ffffff; 
-                  outline: none; 
-                  font-size: 14px; 
-                  transition: all 0.3s ease;
-                  box-sizing: border-box;
-                "
-                onfocus="this.style.borderColor='#ff6b35'; this.style.boxShadow='0 0 15px rgba(255, 107, 53, 0.3)';"
-                onblur="this.style.borderColor='#363940'; this.style.boxShadow='none';"
-              >
-              <!-- Icon Mắt ẩn/hiện mật khẩu -->
-              <span 
-                id="toggle-password-btn"
-                onclick="togglePasswordVisibility()" 
-                style="
-                  position: absolute; 
-                  right: 16px; 
-                  cursor: pointer; 
-                  color: #8a8d93; 
-                  display: flex; 
-                  align-items: center;
-                  user-select: none;
-                  transition: color 0.2s;
-                "
-                onmouseover="this.style.color='#ff6b35'"
-                onmouseout="this.style.color='#8a8d93'"
-                title="Ẩn/Hiện mật khẩu"
-              >
-                <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </span>
-            </div>
-          </div>
-
-          <!-- Ghi nhớ đăng nhập -->
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #a0a5b1; cursor: pointer; user-select: none;">
-              <input 
-                type="checkbox" 
-                id="login-remember" 
-                ${savedCreds.remember ? 'checked' : ''} 
-                style="
-                  cursor: pointer; 
-                  accent-color: #ff6b35; 
-                  width: 16px; 
-                  height: 16px;
-                  border-radius: 4px;
-                "
-              >
-              Ghi nhớ đăng nhập
-            </label>
-          </div>
-
-          <!-- Thông báo lỗi khi đăng nhập sai -->
-          <div id="login-error" style="color: #ff5252; font-size: 12.5px; display: none; background: rgba(255, 82, 82, 0.1); border: 1px solid rgba(255, 82, 82, 0.2); padding: 10px 14px; border-radius: 10px; text-align: center;">
-            Tài khoản hoặc mật khẩu không chính xác!
-          </div>
-
-          <!-- Nút Đăng nhập dạng Pill Gradient Cam -->
-          <button 
-            type="submit" 
-            style="
-              width: 100%; 
-              padding: 14px; 
-              margin-top: 6px; 
-              background: linear-gradient(135deg, #ff7e47 0%, #ff5221 100%); 
-              border: none; 
-              border-radius: 16px; 
-              color: #ffffff; 
-              font-family: var(--font-jost, sans-serif); 
-              font-size: 15px; 
-              font-weight: 600; 
-              letter-spacing: 0.03em; 
-              cursor: pointer; 
-              transition: all 0.3s ease; 
-              box-shadow: 0 6px 20px rgba(255, 82, 33, 0.35);
-            "
-            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(255, 82, 33, 0.5)';"
-            onmouseout="this.style.transform='none'; this.style.boxShadow='0 6px 20px rgba(255, 82, 33, 0.35)';"
-          >
-            Đăng Nhập
-          </button>
-        </form>
-
-        <!-- Trang trí đường kẻ gạch ngang & Social trang trí giống ảnh -->
-        <div style="margin-top: 32px; position: relative; text-align: center;">
-          <div style="height: 1px; background: #363940; width: 100%; position: absolute; top: 50%; left: 0; z-index: 1;"></div>
-          <span style="background: #1e1f23; padding: 0 12px; color: #ff6b35; font-size: 11px; font-family: var(--font-dm-mono, monospace); position: relative; z-index: 2; text-transform: uppercase;">
-            NEXSTOCK
-          </span>
         </div>
 
       </div>
@@ -2214,14 +2249,12 @@ function togglePasswordVisibility() {
 
   if (pwdInput.type === 'password') {
     pwdInput.type = 'text';
-    // Đổi icon sang trạng thái Mắt Gạch Chéo (Mở mắt)
     eyeIcon.innerHTML = `
       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
       <line x1="1" y1="1" x2="23" y2="23"></line>
     `;
   } else {
     pwdInput.type = 'password';
-    // Đổi icon về Mắt thường
     eyeIcon.innerHTML = `
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
       <circle cx="12" cy="12" r="3"></circle>
