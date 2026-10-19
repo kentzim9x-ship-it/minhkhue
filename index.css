@@ -168,7 +168,7 @@ input:-webkit-autofill:active {
   width: 32px !important;
   height: 32px !important;
   min-width: 32px !important;
-  border-radius: 8px !important;
+  border-radius: 0 !important;
   background: rgba(240, 160, 48, 0.15) !important;
   border: 1px solid rgba(240, 160, 48, 0.3) !important;
   color: var(--primary) !important;
@@ -215,7 +215,7 @@ input:-webkit-autofill:active {
   font-size: 10px !important;
   font-weight: 500 !important;
   padding: 5px 9px !important;
-  border-radius: 6px !important;
+  border-radius: 0 !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
 }
@@ -838,7 +838,7 @@ tr:hover {
   /* 6. Bo góc toàn bộ Form & Icon */
   .kpi-card,
   div[style*="background: var(--card)"] {
-    border-radius: 8px !important;
+    border-radius: 0 !important;
     margin-bottom: 8px !important;
     border: 1px solid var(--border) !important;
   }
@@ -846,7 +846,7 @@ tr:hover {
   form,
   form>div[style*="border"],
   form>div {
-    border-radius: 8px !important;
+    border-radius: 0 !important;
   }
 
   form>div:first-child {
@@ -865,12 +865,12 @@ tr:hover {
   button,
   table input,
   table select {
-    border-radius: 6px !important;
+    border-radius: 0 !important;
   }
 
   .sidebar-header>div:first-child,
   .user-avatar {
-    border-radius: 8px !important;
+    border-radius: 0 !important;
   }
 
   /* 7. Xử lý Lưới Grid, KPI & Bảng Table có thanh cuộn */
