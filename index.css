@@ -1320,3 +1320,12 @@ div[style*="overflow: auto"],
   width: 18px !important;
   height: 18px !important;
 }
+
+#login-container {
+  width: 100vw;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--background, #0c0e12);
+}

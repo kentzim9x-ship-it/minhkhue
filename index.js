@@ -320,11 +320,11 @@ async function handleLogin(e) {
 
       // XỬ LÝ GHI NHỚ ĐĂNG NHẬP & THEME:
       if (remember) {
-        localStorage.setItem('remembered_user', JSON.stringify({ 
-          username: un, 
-          password: pw, 
+        localStorage.setItem('remembered_user', JSON.stringify({
+          username: un,
+          password: pw,
           remember: true,
-          theme: currentTheme 
+          theme: currentTheme
         }));
       } else {
         localStorage.removeItem('remembered_user');
@@ -394,7 +394,7 @@ function updateUserInfoUI() {
 
   // 1. NÚT HOME Ở HEADER TRÊN MOBILE
   const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header-left') || document.querySelector('.app-header');
-  
+
   if (headerLeft && !document.getElementById('mobile-home-trigger')) {
     const homeBtn = document.createElement('button');
     homeBtn.id = 'mobile-home-trigger';
@@ -2169,6 +2169,7 @@ function renderLoginForm(container) {
 
     <div style="
       min-height: 100vh; 
+      width: 100%;
       display: flex; 
       align-items: center; 
       justify-content: center; 
@@ -2176,18 +2177,19 @@ function renderLoginForm(container) {
       font-family: var(--font-jost, sans-serif);
       position: relative;
       overflow: hidden;
-      background: var(--background, #0c0e12);
+      background-color: var(--background, #0c0e12);
+      box-sizing: border-box;
     ">
       
-      <!-- Background mờ toàn trang -->
+      <!-- Background mờ toàn trang phủ kín 100% -->
       <div style="
         position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
+        top: -5%; left: -5%; width: 110%; height: 110%;
         background: radial-gradient(circle at center, rgba(12, 14, 18, 0.4) 0%, rgba(12, 14, 18, 0.85) 80%),
                     url('${bannerImg}') center/cover no-repeat;
         filter: blur(8px);
-        transform: scale(1.05);
         z-index: 0;
+        pointer-events: none;
       "></div>
 
       <!-- Card Login chính -->
