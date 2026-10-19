@@ -4602,8 +4602,9 @@ async function exportQuotationToExcel() {
   }
 
   const container = document.createElement('div');
-  container.style.width = '750px';
-  container.style.padding = '15px';
+  container.style.width = '100%';
+  container.style.boxSizing = 'border-box';
+  container.style.padding = '10px';
   container.style.background = '#ffffff';
   container.style.color = '#000000';
   container.style.fontFamily = "'Times New Roman', serif";
@@ -4642,11 +4643,11 @@ async function exportQuotationToExcel() {
     <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
       <thead>
         <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
-          <td style="border: 1px solid #000; width: 5%;">STT</td>
-          <td style="border: 1px solid #000; width: 33%;">Tên Hàng</td>
+          <td style="border: 1px solid #000; width: 4%;">STT</td>
+          <td style="border: 1px solid #000; width: 32%;">Tên Hàng</td>
           <td style="border: 1px solid #000; width: 8%;">ĐVT</td>
           <td style="border: 1px solid #000; width: 12%;">Đơn Giá</td>
-          <td style="border: 1px solid #000; width: 9%;">Số Lượng</td>
+          <td style="border: 1px solid #000; width: 11%;">Số Lượng</td>
           <td style="border: 1px solid #000; width: 8%;">CK%</td>
           <td style="border: 1px solid #000; width: 8%;">Thuế%</td>
           <td style="border: 1px solid #000; width: 17%;">Thành Tiền</td>
@@ -4664,10 +4665,12 @@ async function exportQuotationToExcel() {
       </tbody>
     </table>
 
-    <div style="margin-top: 15px; text-align: right; font-size: 11pt;">
-      <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
-      <div style="font-weight: bold; margin-top: 4px; margin-bottom: 50px;">Đại diện nhà cung cấp</div>
-      <div style="font-weight: bold;">BÙI CAO NHÂM</div>
+    <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+      <div style="width: 250px; text-align: center; font-size: 11pt;">
+        <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
+        <div style="font-weight: bold; margin-top: 4px; margin-bottom: 55px;">Đại diện nhà cung cấp</div>
+        <div style="font-weight: bold;">BÙI CAO NHÂM</div>
+      </div>
     </div>
   `;
 
@@ -4736,8 +4739,9 @@ async function exportSalesOrderToExcel() {
   }
 
   const container = document.createElement('div');
-  container.style.width = '750px';
-  container.style.padding = '15px';
+  container.style.width = '100%';
+  container.style.boxSizing = 'border-box';
+  container.style.padding = '10px';
   container.style.background = '#ffffff';
   container.style.color = '#000000';
   container.style.fontFamily = "'Times New Roman', serif";
@@ -4776,11 +4780,11 @@ async function exportSalesOrderToExcel() {
     <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
       <thead>
         <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
-          <td style="border: 1px solid #000; width: 5%;">STT</td>
-          <td style="border: 1px solid #000; width: 33%;">Tên Hàng</td>
+          <td style="border: 1px solid #000; width: 4%;">STT</td>
+          <td style="border: 1px solid #000; width: 32%;">Tên Hàng</td>
           <td style="border: 1px solid #000; width: 8%;">ĐVT</td>
           <td style="border: 1px solid #000; width: 12%;">Đơn Giá</td>
-          <td style="border: 1px solid #000; width: 9%;">Số Lượng</td>
+          <td style="border: 1px solid #000; width: 11%;">Số Lượng</td>
           <td style="border: 1px solid #000; width: 8%;">CK%</td>
           <td style="border: 1px solid #000; width: 8%;">Thuế%</td>
           <td style="border: 1px solid #000; width: 17%;">Thành Tiền</td>
@@ -4798,10 +4802,12 @@ async function exportSalesOrderToExcel() {
       </tbody>
     </table>
 
-    <div style="margin-top: 15px; text-align: right; font-size: 11pt;">
-      <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
-      <div style="font-weight: bold; margin-top: 4px; margin-bottom: 50px;">Đại diện nhà cung cấp</div>
-      <div style="font-weight: bold;">BÙI CAO NHÂM</div>
+    <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+      <div style="width: 250px; text-align: center; font-size: 11pt;">
+        <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
+        <div style="font-weight: bold; margin-top: 4px; margin-bottom: 55px;">Đại diện nhà cung cấp</div>
+        <div style="font-weight: bold;">BÙI CAO NHÂM</div>
+      </div>
     </div>
   `;
 
