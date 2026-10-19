@@ -45,29 +45,6 @@ function checkModulePermission(module) {
   return false;
 }
 
-function getTodayDateStr() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-function getFirstDayOfMonthStr() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  return `${year}-${month}-01`;
-}
-
-function getCurrentTimeStr() {
-  const d = new Date();
-  const h = String(d.getHours()).padStart(2, '0');
-  const m = String(d.getMinutes()).padStart(2, '0');
-  const s = String(d.getSeconds()).padStart(2, '0');
-  return `${h}:${m}:${s}`;
-}
-
 // Supabase Client Initialization
 const SUPABASE_URL = 'https://gzmczqeczlrujhzleaoa.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_oBZ4Z1bekEMIjq_wmPFsyg_V68Y3dWE';
@@ -148,7 +125,6 @@ async function fetchDataFromSupabase() {
 
       return {
         ...g,
-        id: g.id,
         supplier: g.supplier || '',
         warehouseCode: g.warehousecode || g.warehouseCode || '',
         warehousecode: g.warehousecode || g.warehouseCode || '',
@@ -293,10 +269,6 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
   return realtimeStock;
 }
 
-function getStockQty(sku, warehouseCode) {
-  return calculateRealtimeStock(sku, warehouseCode);
-}
-
 const Icons = {
   home: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
   view: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="3"/><path d="M1 7s2.5-4.5 6-4.5S13 7 13 7s-2.5 4.5-6 4.5S1 7 1 7z"/></svg>`,
@@ -306,11 +278,6 @@ const Icons = {
   back: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2L4 7l5 5" /></svg>`,
   search: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5" /><line x1="10" y1="10" x2="14" y2="14" /></svg>`
 };
-
-function fmt(n) { return new Intl.NumberFormat('en-US').format(n); }
-function fmtUSD(n) {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
-}
 
 function getBadgeClass(status) {
   const s = String(status || '').toLowerCase().trim();
@@ -496,56 +463,6 @@ function handleRouteChange() {
 
 window.addEventListener('popstate', handleRouteChange);
 
-function handleHashChange() {
-  const hash = window.location.hash.replace('#', '');
-  if (!hash) {
-    navigate('dashboard', 'list');
-    return;
-  }
-
-  const parts = hash.split('/');
-  const view = parts[0];
-  let mode = parts[1] || 'list';
-  const itemId = parts[2] || null;
-
-  if (viewMeta[view]) {
-    if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
-      alert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!');
-      mode = 'list';
-    }
-
-    state.view = view;
-    state.mode = mode;
-    state.filter = 'all';
-    state.search = '';
-
-    const meta = viewMeta[view];
-    const tagEl = document.getElementById('view-tag');
-    const titleEl = document.getElementById('view-title');
-
-    if (tagEl) tagEl.innerText = meta.tag;
-    if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
-
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-view') === view);
-    });
-
-    if (mode !== 'list') {
-      initFormData(view, itemId);
-    }
-
-    render();
-
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    const contentBox = document.getElementById('app-content');
-    if (contentBox) contentBox.scrollTop = 0;
-  } else {
-    navigate('dashboard', 'list');
-  }
-}
-
-window.addEventListener('hashchange', handleHashChange);
-
 function updateField(field, value, type = 'text') {
   if (!state.formData) return;
   state.formData[field] = (type === 'number') ? Number(value) : value;
@@ -626,7 +543,7 @@ function updateLine(lineId, field, value, type = 'text') {
       }
     }
   });
-} // Kết thúc hàm updateLine()
+}
 
 function handleLineItemKeyDown(e, module, lineIndex, fieldName) {
   if (e.key === 'Enter') {
@@ -797,7 +714,11 @@ async function saveForm(module) {
     rawData.validuntil = rawData.validUntil;
     rawData.validbegin = rawData.validbegin || rawData.validBegin || rawData.date;
     rawData.lineitems = rawData.lineItems;
-    delete rawData.discountTotal; delete rawData.discounttotal; delete rawData.subtotal; delete rawData.validUntil; delete rawData.validBegin; delete rawData.lineItems;
+    delete rawData.discountTotal;
+    delete rawData.subtotal;
+    delete rawData.validUntil;
+    delete rawData.validBegin;
+    delete rawData.lineItems;
   }
 
   let dbPayload = { ...rawData };
@@ -1204,7 +1125,7 @@ function render() {
       }
     }
   }
-} // <--- Kết thúc hàm render()
+}
 
 function getSalesAnalyticsData() {
   const currentYear = new Date().getFullYear();
@@ -1386,6 +1307,7 @@ function renderDashboard(c) {
   });
 }
 
+// LISTS
 function renderMaterialsList(c) {
   const hasPermission = checkModulePermission('materials');
 
@@ -2028,411 +1950,6 @@ function renderGRNList(c) {
   `;
 }
 
-function parseDateParts(dateStr) {
-  let dayStr = '02', monthStr = '10', yearStr = '2026';
-  if (dateStr) {
-    if (dateStr.includes('-')) {
-      const parts = dateStr.split('-');
-      if (parts.length === 3) {
-        yearStr = parts[0];
-        monthStr = parts[1];
-        dayStr = parts[2];
-      }
-    } else if (dateStr.includes('/')) {
-      const parts = dateStr.split('/');
-      if (parts.length === 3) {
-        dayStr = parts[0].padStart(2, '0');
-        monthStr = parts[1].padStart(2, '0');
-        yearStr = parts[2];
-      }
-    }
-  } else {
-    const today = new Date();
-    dayStr = String(today.getDate()).padStart(2, '0');
-    monthStr = String(today.getMonth() + 1).padStart(2, '0');
-    yearStr = String(today.getFullYear());
-  }
-  return { dayStr, monthStr, yearStr };
-}
-
-function getCustomerAddress(customerNameOrId) {
-  if (!customerNameOrId) return '—';
-  const cust = (db.customers || []).find(c =>
-    (c.name && c.name.trim().toLowerCase() === customerNameOrId.trim().toLowerCase()) ||
-    (c.id && c.id.trim().toLowerCase() === customerNameOrId.trim().toLowerCase())
-  );
-  return cust ? (cust.address || cust.diachi || '—') : '—';
-}
-
-function exportQuotationToExcel() {
-  const d = state.formData;
-  if (!d) return;
-
-  const custAddress = getCustomerAddress(d.customer);
-  const { dayStr, monthStr, yearStr } = parseDateParts(d.date);
-  const fromDateVN = formatDateVN(d.validbegin || d.validBegin || d.date);
-  const toDateVN = formatDateVN(d.validUntil || d.validuntil);
-
-  let totalQty = 0;
-  let totalAmount = 0;
-
-  // Lặp cố định 23 dòng để tạo kẻ viền trống y hệt file mẫu
-  const items = (d.lineItems || d.lineitems || []);
-  const maxRows = 23;
-
-  let rowsHtml = '';
-  for (let i = 0; i < maxRows; i++) {
-    if (i < items.length) {
-      const l = items[i];
-      const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
-      const unitName = mat ? (mat.unit || '—') : (l.unit || '—');
-      const qty = Number(l.qty) || 0;
-      const price = Number(l.unitPrice) || 0;
-      const discount = Number(l.discount) || 0;
-      const tax = Number(l.tax) || 0;
-
-      const lineSub = qty * price * (1 - discount / 100);
-      const lineTotal = lineSub * (1 + tax / 100);
-
-      totalQty += qty;
-      totalAmount += lineTotal;
-
-      rowsHtml += `
-        <tr style="height: 26px;">
-          <td style="border: 1px solid #000; text-align: center; font-family: 'Times New Roman'; font-size: 11pt;">${i + 1}</td>
-          <td style="border: 1px solid #000; text-align: left; font-family: 'Times New Roman'; font-size: 11pt; padding-left: 4px;">${l.name || ''}</td>
-          <td style="border: 1px solid #000; text-align: center; font-family: 'Times New Roman'; font-size: 11pt;">${unitName}</td>
-          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${price ? Math.round(price).toLocaleString('vi-VN') : ''}</td>
-          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${qty ? qty.toLocaleString('vi-VN') : ''}</td>
-          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${discount ? discount + '%' : '0%'}</td>
-          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${tax ? tax + '%' : '0%'}</td>
-          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : ''}</td>
-        </tr>
-      `;
-    } else {
-      // Kẻ viền cho các dòng trống còn lại
-      rowsHtml += `
-        <tr style="height: 26px;">
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-        </tr>
-      `;
-    }
-  }
-
-  const tableHtml = `
-    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-    <head>
-      <meta charset="utf-8">
-      <style>
-        body { font-family: 'Times New Roman', serif; }
-        td { vertical-align: middle; white-space: nowrap; }
-        .wrap-text { white-space: normal; }
-      </style>
-    </head>
-    <body>
-      <table style="border-collapse: collapse; font-family: 'Times New Roman', serif; width: 800px;">
-        <colgroup>
-          <col style="width: 40px;">
-          <col style="width: 250px;">
-          <col style="width: 60px;">
-          <col style="width: 90px;">
-          <col style="width: 70px;">
-          <col style="width: 60px;">
-          <col style="width: 60px;">
-          <col style="width: 120px;">
-        </colgroup>
-
-        <tr style="height: 60px;">
-          <td colspan="4" class="wrap-text" style="font-size: 10pt; text-align: center; vertical-align: middle;">
-            ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
-            Xã Sơn Đồng – TP Hà Nội<br>
-            ĐT: 0936.35.31.37
-          </td>
-          <td colspan="4" class="wrap-text" style="font-size: 10pt; text-align: center; vertical-align: middle;">
-            Giấy phép ĐKKD số: 01U8005300<br>
-            Địa chỉ nhận hóa đơn: nhambc@gmail.com<br>
-            MST: 0110640531
-          </td>
-        </tr>
-
-        <tr style="height: 30px;">
-          <td colspan="8" style="font-size: 16pt; font-weight: bold; text-align: center; vertical-align: middle;">
-            CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
-          </td>
-        </tr>
-
-        <tr style="height: 22px;">
-          <td colspan="4" style="font-size: 11pt; text-align: left;">
-            Khách hàng: ${d.customer || ''}
-          </td>
-          <td colspan="4" style="font-size: 11pt; text-align: left;">
-            Bảng báo giá: ${d.id || ''}
-          </td>
-        </tr>
-
-        <tr style="height: 22px;">
-          <td colspan="4" style="font-size: 11pt; text-align: left;">
-            Địa chỉ: ${custAddress}
-          </td>
-          <td colspan="4" style="font-size: 11pt; text-align: left;">
-            Ngày hiệu lực: từ ngày ${fromDateVN} - đến ngày ${toDateVN}
-          </td>
-        </tr>
-
-        <tr style="height: 10px;"><td colspan="8"></td></tr>
-
-        <tr style="height: 24px; background-color: #8db4e2; font-weight: bold; font-size: 11pt; text-align: center;">
-          <td style="border: 1px solid #000;">STT</td>
-          <td style="border: 1px solid #000;">Tên Hàng</td>
-          <td style="border: 1px solid #000;">ĐVT</td>
-          <td style="border: 1px solid #000;">Đơn Giá</td>
-          <td style="border: 1px solid #000;">Số Lượng</td>
-          <td style="border: 1px solid #000;">CK%</td>
-          <td style="border: 1px solid #000;">Thuế%</td>
-          <td style="border: 1px solid #000;">Thành Tiền</td>
-        </tr>
-
-        ${rowsHtml}
-
-        <tr style="height: 24px; font-weight: bold; font-size: 11pt;">
-          <td colspan="4" style="border: 1px solid #000; text-align: center;">Tổng Cộng</td>
-          <td style="border: 1px solid #000; text-align: right; padding-right: 4px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000; text-align: right; padding-right: 4px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
-        </tr>
-
-        <tr style="height: 18px;"><td colspan="8"></td></tr>
-
-        <tr style="height: 22px;">
-          <td colspan="5"></td>
-          <td colspan="3" style="font-size: 11pt; text-align: center;">
-            Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}
-          </td>
-        </tr>
-
-        <tr style="height: 22px;">
-          <td colspan="5"></td>
-          <td colspan="3" style="font-size: 11pt; font-weight: bold; text-align: center;">
-            Đại diện nhà cung cấp
-          </td>
-        </tr>
-
-        <tr style="height: 20px;"><td colspan="8"></td></tr>
-        <tr style="height: 20px;"><td colspan="8"></td></tr>
-
-        <tr style="height: 22px;">
-          <td colspan="5"></td>
-          <td colspan="3" style="font-size: 11pt; font-weight: bold; text-align: center;">
-            BÙI CAO NHÂM
-          </td>
-        </tr>
-      </table>
-    </body>
-    </html>
-  `;
-
-  // Ép xuất file định dạng .xls để giữ toàn bộ CSS HTML
-  const blob = new Blob(['\ufeff', tableHtml], { type: 'application/vnd.ms-excel' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `BaoGia_${d.id || 'Export'}.xls`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function exportSalesOrderToExcel() {
-  const d = state.formData;
-  if (!d) return;
-
-  const custAddress = getCustomerAddress(d.customer);
-  const { dayStr, monthStr, yearStr } = parseDateParts(d.date);
-
-  let totalQty = 0;
-  let totalAmount = 0;
-
-  const items = (d.lineItems || d.lineitems || []);
-  const maxRows = 23;
-
-  let rowsHtml = '';
-  for (let i = 0; i < maxRows; i++) {
-    if (i < items.length) {
-      const l = items[i];
-      const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
-      const unitName = mat ? (mat.unit || '—') : (l.unit || '—');
-      const qty = Number(l.qty) || 0;
-      const price = Number(l.unitPrice) || 0;
-      const discount = Number(l.discount) || 0;
-      const tax = Number(l.tax) || 0;
-
-      const lineSub = qty * price * (1 - discount / 100);
-      const lineTotal = lineSub * (1 + tax / 100);
-
-      totalQty += qty;
-      totalAmount += lineTotal;
-
-      rowsHtml += `
-        <tr style="height: 26px;">
-          <td style="border: 1px solid #000; text-align: center; font-family: 'Times New Roman'; font-size: 11pt;">${i + 1}</td>
-          <td style="border: 1px solid #000; text-align: left; font-family: 'Times New Roman'; font-size: 11pt; padding-left: 4px;">${l.name || ''}</td>
-          <td style="border: 1px solid #000; text-align: center; font-family: 'Times New Roman'; font-size: 11pt;">${unitName}</td>
-          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${price ? Math.round(price).toLocaleString('vi-VN') : ''}</td>
-          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${qty ? qty.toLocaleString('vi-VN') : ''}</td>
-          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${discount ? discount + '%' : '0%'}</td>
-          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${tax ? tax + '%' : '0%'}</td>
-          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : ''}</td>
-        </tr>
-      `;
-    } else {
-      rowsHtml += `
-        <tr style="height: 26px;">
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-        </tr>
-      `;
-    }
-  }
-
-  const tableHtml = `
-    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-    <head>
-      <meta charset="utf-8">
-      <style>
-        body { font-family: 'Times New Roman', serif; }
-        td { vertical-align: middle; white-space: nowrap; }
-        .wrap-text { white-space: normal; }
-      </style>
-    </head>
-    <body>
-      <table style="border-collapse: collapse; font-family: 'Times New Roman', serif; width: 800px;">
-        <colgroup>
-          <col style="width: 40px;">
-          <col style="width: 250px;">
-          <col style="width: 60px;">
-          <col style="width: 90px;">
-          <col style="width: 70px;">
-          <col style="width: 60px;">
-          <col style="width: 60px;">
-          <col style="width: 120px;">
-        </colgroup>
-
-        <tr style="height: 60px;">
-          <td colspan="4" class="wrap-text" style="font-size: 10pt; text-align: center; vertical-align: middle;">
-            ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
-            Xã Sơn Đồng – TP Hà Nội<br>
-            ĐT: 0936.35.31.37
-          </td>
-          <td colspan="4" class="wrap-text" style="font-size: 10pt; text-align: center; vertical-align: middle;">
-            Giấy phép ĐKKD số: 01U8005300<br>
-            Địa chỉ nhận hóa đơn: nhambc@gmail.com<br>
-            MST: 0110640531
-          </td>
-        </tr>
-
-        <tr style="height: 30px;">
-          <td colspan="8" style="font-size: 16pt; font-weight: bold; text-align: center; vertical-align: middle;">
-            CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
-          </td>
-        </tr>
-
-        <tr style="height: 22px;">
-          <td colspan="4" style="font-size: 11pt; text-align: left;">
-            Khách hàng: ${d.customer || ''}
-          </td>
-          <td colspan="4" style="font-size: 11pt; text-align: left;">
-            Đơn hàng bán: ${d.id || ''}
-          </td>
-        </tr>
-
-        <tr style="height: 22px;">
-          <td colspan="4" style="font-size: 11pt; text-align: left;">
-            Địa chỉ: ${custAddress}
-          </td>
-          <td colspan="4" style="font-size: 11pt; text-align: left;">
-            Ghi chú: ${d.notes || ''}
-          </td>
-        </tr>
-
-        <tr style="height: 10px;"><td colspan="8"></td></tr>
-
-        <tr style="height: 24px; background-color: #8db4e2; font-weight: bold; font-size: 11pt; text-align: center;">
-          <td style="border: 1px solid #000;">STT</td>
-          <td style="border: 1px solid #000;">Tên Hàng</td>
-          <td style="border: 1px solid #000;">ĐVT</td>
-          <td style="border: 1px solid #000;">Đơn Giá</td>
-          <td style="border: 1px solid #000;">Số Lượng</td>
-          <td style="border: 1px solid #000;">CK%</td>
-          <td style="border: 1px solid #000;">Thuế%</td>
-          <td style="border: 1px solid #000;">Thành Tiền</td>
-        </tr>
-
-        ${rowsHtml}
-
-        <tr style="height: 24px; font-weight: bold; font-size: 11pt;">
-          <td colspan="4" style="border: 1px solid #000; text-align: center;">Tổng Cộng</td>
-          <td style="border: 1px solid #000; text-align: right; padding-right: 4px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000; text-align: right; padding-right: 4px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
-        </tr>
-
-        <tr style="height: 18px;"><td colspan="8"></td></tr>
-
-        <tr style="height: 22px;">
-          <td colspan="5"></td>
-          <td colspan="3" style="font-size: 11pt; text-align: center;">
-            Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}
-          </td>
-        </tr>
-
-        <tr style="height: 22px;">
-          <td colspan="5"></td>
-          <td colspan="3" style="font-size: 11pt; font-weight: bold; text-align: center;">
-            Đại diện nhà cung cấp
-          </td>
-        </tr>
-
-        <tr style="height: 20px;"><td colspan="8"></td></tr>
-        <tr style="height: 20px;"><td colspan="8"></td></tr>
-
-        <tr style="height: 22px;">
-          <td colspan="5"></td>
-          <td colspan="3" style="font-size: 11pt; font-weight: bold; text-align: center;">
-            BÙI CAO NHÂM
-          </td>
-        </tr>
-      </table>
-    </body>
-    </html>
-  `;
-
-  const blob = new Blob(['\ufeff', tableHtml], { type: 'application/vnd.ms-excel' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `DonHang_${d.id || 'Export'}.xls`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
 // FORMS
 function renderMaterialForm(c) {
   const d = state.formData || {};
@@ -2673,178 +2190,6 @@ function renderWarehouseForm(c) {
       </form>
     </div>
   `;
-}
-
-function handleOrderSelectInReturn(orderId) {
-  if (!state.formData || state.mode === 'view') return;
-  state.formData.orderId = orderId;
-
-  if (!orderId) {
-    state.formData.customer = '';
-    state.formData.lineItems = [{
-      lineId: Date.now().toString(),
-      sku: '',
-      name: '',
-      qtyReturned: 1,
-      unitPrice: 0
-    }];
-    render();
-    return;
-  }
-
-  const targetOrder = db.orders.find(o => o.id === orderId);
-
-  if (targetOrder) {
-    state.formData.customer = targetOrder.customer || '';
-    state.formData.lineItems = (targetOrder.lineItems || []).map(item => ({
-      lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-      sku: item.sku || '',
-      name: item.name || '',
-      qtyReturned: item.qty || 1,
-      unitPrice: item.unitPrice || 0
-    }));
-  }
-  render();
-}
-
-function handleMaterialSelectInLine(lineId, selectedName) {
-  if (!state.formData || state.mode === 'view') return;
-  const line = (state.formData.lineItems || []).find(l => l.lineId === lineId);
-  if (!line) return;
-
-  const valStr = selectedName ? String(selectedName).trim() : '';
-  if (!valStr) {
-    line.name = '';
-    line.sku = '';
-    render();
-    return;
-  }
-
-  let cleanName = valStr;
-  if (valStr.includes(' - ')) {
-    const parts = valStr.split(' - ');
-    cleanName = parts.length > 1 ? parts.slice(1).join(' - ').split(' (')[0].trim() : valStr;
-  }
-
-  const mat = (db.materials || []).find(m =>
-    (m.name && m.name.toLowerCase() === cleanName.toLowerCase()) ||
-    (m.id && m.id.toLowerCase() === valStr.toLowerCase())
-  );
-
-  if (mat) {
-    line.name = mat.name || '';
-    line.sku = mat.id || '';
-    line.unitPrice = mat.cost || 0;
-    line.unitCost = mat.cost || 0;
-  } else {
-    line.name = cleanName;
-  }
-
-  render();
-}
-
-function handleCustomerSelectInQuotation(customerName) {
-  if (!state.formData || state.mode === 'view') return;
-  const safeCustomer = String(customerName || '').trim();
-  state.formData.customer = safeCustomer;
-
-  if (!safeCustomer) {
-    state.formData.lineItems = [{
-      lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
-    }];
-    render();
-    return;
-  }
-
-  const latestQuotation = (db.quotations || [])
-    .filter(q => q && q.customer === safeCustomer)
-    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
-
-  if (latestQuotation && Array.isArray(latestQuotation.lineItems) && latestQuotation.lineItems.length > 0) {
-    state.formData.lineItems = latestQuotation.lineItems.map(item => ({
-      lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-      sku: item.sku || '',
-      name: item.name || '',
-      qty: item.qty ?? 1,
-      unitPrice: item.unitPrice ?? 0,
-      discount: item.discount ?? 0,
-      tax: item.tax ?? 0
-    }));
-  } else {
-    state.formData.lineItems = [{
-      lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
-    }];
-  }
-
-  render();
-}
-
-async function handleCustomerSelectInOrder(customerName) {
-  if (!state.formData || state.mode === 'view') return;
-  const safeCustomer = String(customerName || '').trim();
-  state.formData.customer = safeCustomer;
-
-  // Nếu người dùng xóa trống ô khách hàng -> Reset lại 1 dòng trống
-  if (!safeCustomer) {
-    state.formData.quotationId = null;
-    state.formData.lineItems = [{
-      lineId: Date.now().toString(),
-      warehouseCode: state.formData.warehouseCode || '',
-      sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
-    }];
-    render();
-    return;
-  }
-
-  // Lấy ngày của đơn hàng hiện tại đang tạo
-  const orderDate = state.formData.date || getTodayDateStr();
-
-  // Lọc Báo giá: Khách hàng trùng + Đã chấp nhận + Nằm trong thời gian hiệu lực
-  const activeQuotation = (db.quotations || [])
-    .filter(q => {
-      if (!q || q.customer !== safeCustomer) return false;
-      if ((q.status || '').toLowerCase() !== 'accepted') return false; // Phải là Đã chấp nhận
-
-      const vBegin = q.validbegin || q.validBegin || q.date || '';
-      const vUntil = q.validUntil || q.validuntil || '';
-
-      // Kiểm tra ngày đơn hàng (orderDate) có nằm trong khoảng hiệu lực không
-      if (vBegin && vUntil) {
-        return orderDate >= vBegin && orderDate <= vUntil;
-      }
-      return false;
-    })
-    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0]; // Nếu có nhiều cái hợp lệ thì lấy cái mới nhất
-
-  if (activeQuotation) {
-    // THAY THẾ confirm() BẰNG showConfirm():
-    const confirmImport = await showConfirm(
-      "Bạn có muốn nhập toàn bộ mã hàng, đơn giá theo Bảng báo giá không?",
-      "Áp dụng báo giá"
-    );
-
-    if (confirmImport) {
-      state.formData.quotationId = activeQuotation.id || null;
-      if (Array.isArray(activeQuotation.lineItems) && activeQuotation.lineItems.length > 0) {
-        state.formData.lineItems = activeQuotation.lineItems.map(item => ({
-          lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-          warehouseCode: state.formData.warehouseCode || '',
-          sku: item.sku || '',
-          name: item.name || '',
-          qty: item.qty ?? 1,
-          unitPrice: item.unitPrice ?? 0,
-          discount: item.discount ?? 0,
-          tax: item.tax ?? 0
-        }));
-      }
-    } else {
-      state.formData.quotationId = null;
-    }
-  } else {
-    state.formData.quotationId = null;
-  }
-
-  render();
 }
 
 function renderQuotationForm(c) {
@@ -3736,6 +3081,178 @@ function renderReportSales(c) {
   });
 }
 
+function handleOrderSelectInReturn(orderId) {
+  if (!state.formData || state.mode === 'view') return;
+  state.formData.orderId = orderId;
+
+  if (!orderId) {
+    state.formData.customer = '';
+    state.formData.lineItems = [{
+      lineId: Date.now().toString(),
+      sku: '',
+      name: '',
+      qtyReturned: 1,
+      unitPrice: 0
+    }];
+    render();
+    return;
+  }
+
+  const targetOrder = db.orders.find(o => o.id === orderId);
+
+  if (targetOrder) {
+    state.formData.customer = targetOrder.customer || '';
+    state.formData.lineItems = (targetOrder.lineItems || []).map(item => ({
+      lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+      sku: item.sku || '',
+      name: item.name || '',
+      qtyReturned: item.qty || 1,
+      unitPrice: item.unitPrice || 0
+    }));
+  }
+  render();
+}
+
+function handleMaterialSelectInLine(lineId, selectedName) {
+  if (!state.formData || state.mode === 'view') return;
+  const line = (state.formData.lineItems || []).find(l => l.lineId === lineId);
+  if (!line) return;
+
+  const valStr = selectedName ? String(selectedName).trim() : '';
+  if (!valStr) {
+    line.name = '';
+    line.sku = '';
+    render();
+    return;
+  }
+
+  let cleanName = valStr;
+  if (valStr.includes(' - ')) {
+    const parts = valStr.split(' - ');
+    cleanName = parts.length > 1 ? parts.slice(1).join(' - ').split(' (')[0].trim() : valStr;
+  }
+
+  const mat = (db.materials || []).find(m =>
+    (m.name && m.name.toLowerCase() === cleanName.toLowerCase()) ||
+    (m.id && m.id.toLowerCase() === valStr.toLowerCase())
+  );
+
+  if (mat) {
+    line.name = mat.name || '';
+    line.sku = mat.id || '';
+    line.unitPrice = mat.cost || 0;
+    line.unitCost = mat.cost || 0;
+  } else {
+    line.name = cleanName;
+  }
+
+  render();
+}
+
+function handleCustomerSelectInQuotation(customerName) {
+  if (!state.formData || state.mode === 'view') return;
+  const safeCustomer = String(customerName || '').trim();
+  state.formData.customer = safeCustomer;
+
+  if (!safeCustomer) {
+    state.formData.lineItems = [{
+      lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
+    }];
+    render();
+    return;
+  }
+
+  const latestQuotation = (db.quotations || [])
+    .filter(q => q && q.customer === safeCustomer)
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
+
+  if (latestQuotation && Array.isArray(latestQuotation.lineItems) && latestQuotation.lineItems.length > 0) {
+    state.formData.lineItems = latestQuotation.lineItems.map(item => ({
+      lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+      sku: item.sku || '',
+      name: item.name || '',
+      qty: item.qty ?? 1,
+      unitPrice: item.unitPrice ?? 0,
+      discount: item.discount ?? 0,
+      tax: item.tax ?? 0
+    }));
+  } else {
+    state.formData.lineItems = [{
+      lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
+    }];
+  }
+
+  render();
+}
+
+async function handleCustomerSelectInOrder(customerName) {
+  if (!state.formData || state.mode === 'view') return;
+  const safeCustomer = String(customerName || '').trim();
+  state.formData.customer = safeCustomer;
+
+  // Nếu người dùng xóa trống ô khách hàng -> Reset lại 1 dòng trống
+  if (!safeCustomer) {
+    state.formData.quotationId = null;
+    state.formData.lineItems = [{
+      lineId: Date.now().toString(),
+      warehouseCode: state.formData.warehouseCode || '',
+      sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
+    }];
+    render();
+    return;
+  }
+
+  // Lấy ngày của đơn hàng hiện tại đang tạo
+  const orderDate = state.formData.date || getTodayDateStr();
+
+  // Lọc Báo giá: Khách hàng trùng + Đã chấp nhận + Nằm trong thời gian hiệu lực
+  const activeQuotation = (db.quotations || [])
+    .filter(q => {
+      if (!q || q.customer !== safeCustomer) return false;
+      if ((q.status || '').toLowerCase() !== 'accepted') return false; // Phải là Đã chấp nhận
+
+      const vBegin = q.validbegin || q.validBegin || q.date || '';
+      const vUntil = q.validUntil || q.validuntil || '';
+
+      // Kiểm tra ngày đơn hàng (orderDate) có nằm trong khoảng hiệu lực không
+      if (vBegin && vUntil) {
+        return orderDate >= vBegin && orderDate <= vUntil;
+      }
+      return false;
+    })
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0]; // Nếu có nhiều cái hợp lệ thì lấy cái mới nhất
+
+  if (activeQuotation) {
+    // THAY THẾ confirm() BẰNG showConfirm():
+    const confirmImport = await showConfirm(
+      "Bạn có muốn nhập toàn bộ mã hàng, đơn giá theo Bảng báo giá không?",
+      "Áp dụng báo giá"
+    );
+
+    if (confirmImport) {
+      state.formData.quotationId = activeQuotation.id || null;
+      if (Array.isArray(activeQuotation.lineItems) && activeQuotation.lineItems.length > 0) {
+        state.formData.lineItems = activeQuotation.lineItems.map(item => ({
+          lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+          warehouseCode: state.formData.warehouseCode || '',
+          sku: item.sku || '',
+          name: item.name || '',
+          qty: item.qty ?? 1,
+          unitPrice: item.unitPrice ?? 0,
+          discount: item.discount ?? 0,
+          tax: item.tax ?? 0
+        }));
+      }
+    } else {
+      state.formData.quotationId = null;
+    }
+  } else {
+    state.formData.quotationId = null;
+  }
+
+  render();
+}
+
 function generateAutoId(module) {
   const collection = db[module === 'sales-orders' ? 'orders' : module] || [];
 
@@ -3828,14 +3345,6 @@ function generateAutoId(module) {
 
     return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
   }
-
-  const prefixMap = { 'quotations': 'QUO', 'sales-orders': 'ORD', 'returns': 'RET', 'grn': 'GRN' };
-  const prefix = prefixMap[module] || 'DOC';
-  const maxNum = collection.reduce((m, x) => {
-    const match = (x.id || '').match(new RegExp(`${prefix}-(\\d+)`, 'i'));
-    return match ? Math.max(m, parseInt(match[1], 10)) : m;
-  }, 0);
-  return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
 }
 
 function getMonthRange() {
@@ -3848,6 +3357,412 @@ function getMonthRange() {
   const lastDay = `${year}-${month}-${String(lastDayNum).padStart(2, '0')}`;
 
   return { firstDay, lastDay };
+}
+
+function parseDateParts(dateStr) {
+  let dayStr = '02', monthStr = '10', yearStr = '2026';
+  if (dateStr) {
+    if (dateStr.includes('-')) {
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        yearStr = parts[0];
+        monthStr = parts[1];
+        dayStr = parts[2];
+      }
+    } else if (dateStr.includes('/')) {
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        dayStr = parts[0].padStart(2, '0');
+        monthStr = parts[1].padStart(2, '0');
+        yearStr = parts[2];
+      }
+    }
+  } else {
+    const today = new Date();
+    dayStr = String(today.getDate()).padStart(2, '0');
+    monthStr = String(today.getMonth() + 1).padStart(2, '0');
+    yearStr = String(today.getFullYear());
+  }
+  return { dayStr, monthStr, yearStr };
+}
+
+function getCustomerAddress(customerNameOrId) {
+  if (!customerNameOrId) return '—';
+  const cust = (db.customers || []).find(c =>
+    (c.name && c.name.trim().toLowerCase() === customerNameOrId.trim().toLowerCase()) ||
+    (c.id && c.id.trim().toLowerCase() === customerNameOrId.trim().toLowerCase())
+  );
+  return cust ? (cust.address || cust.diachi || '—') : '—';
+}
+
+// Xuất Excel
+function exportQuotationToExcel() {
+  const d = state.formData;
+  if (!d) return;
+
+  const custAddress = getCustomerAddress(d.customer);
+  const { dayStr, monthStr, yearStr } = parseDateParts(d.date);
+  const fromDateVN = formatDateVN(d.validbegin || d.validBegin || d.date);
+  const toDateVN = formatDateVN(d.validUntil || d.validuntil);
+
+  let totalQty = 0;
+  let totalAmount = 0;
+
+  // Lặp cố định 23 dòng để tạo kẻ viền trống y hệt file mẫu
+  const items = (d.lineItems || d.lineitems || []);
+  const maxRows = 23;
+
+  let rowsHtml = '';
+  for (let i = 0; i < maxRows; i++) {
+    if (i < items.length) {
+      const l = items[i];
+      const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
+      const unitName = mat ? (mat.unit || '—') : (l.unit || '—');
+      const qty = Number(l.qty) || 0;
+      const price = Number(l.unitPrice) || 0;
+      const discount = Number(l.discount) || 0;
+      const tax = Number(l.tax) || 0;
+
+      const lineSub = qty * price * (1 - discount / 100);
+      const lineTotal = lineSub * (1 + tax / 100);
+
+      totalQty += qty;
+      totalAmount += lineTotal;
+
+      rowsHtml += `
+        <tr style="height: 26px;">
+          <td style="border: 1px solid #000; text-align: center; font-family: 'Times New Roman'; font-size: 11pt;">${i + 1}</td>
+          <td style="border: 1px solid #000; text-align: left; font-family: 'Times New Roman'; font-size: 11pt; padding-left: 4px;">${l.name || ''}</td>
+          <td style="border: 1px solid #000; text-align: center; font-family: 'Times New Roman'; font-size: 11pt;">${unitName}</td>
+          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${price ? Math.round(price).toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${qty ? qty.toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${discount ? discount + '%' : '0%'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${tax ? tax + '%' : '0%'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : ''}</td>
+        </tr>
+      `;
+    } else {
+      // Kẻ viền cho các dòng trống còn lại
+      rowsHtml += `
+        <tr style="height: 26px;">
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+        </tr>
+      `;
+    }
+  }
+
+  const tableHtml = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: 'Times New Roman', serif; }
+        td { vertical-align: middle; white-space: nowrap; }
+        .wrap-text { white-space: normal; }
+      </style>
+    </head>
+    <body>
+      <table style="border-collapse: collapse; font-family: 'Times New Roman', serif; width: 800px;">
+        <colgroup>
+          <col style="width: 40px;">
+          <col style="width: 250px;">
+          <col style="width: 60px;">
+          <col style="width: 90px;">
+          <col style="width: 70px;">
+          <col style="width: 60px;">
+          <col style="width: 60px;">
+          <col style="width: 120px;">
+        </colgroup>
+
+        <tr style="height: 60px;">
+          <td colspan="4" class="wrap-text" style="font-size: 10pt; text-align: center; vertical-align: middle;">
+            ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
+            Xã Sơn Đồng – TP Hà Nội<br>
+            ĐT: 0936.35.31.37
+          </td>
+          <td colspan="4" class="wrap-text" style="font-size: 10pt; text-align: center; vertical-align: middle;">
+            Giấy phép ĐKKD số: 01U8005300<br>
+            Địa chỉ nhận hóa đơn: nhambc@gmail.com<br>
+            MST: 0110640531
+          </td>
+        </tr>
+
+        <tr style="height: 30px;">
+          <td colspan="8" style="font-size: 16pt; font-weight: bold; text-align: center; vertical-align: middle;">
+            CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
+          </td>
+        </tr>
+
+        <tr style="height: 22px;">
+          <td colspan="4" style="font-size: 11pt; text-align: left;">
+            Khách hàng: ${d.customer || ''}
+          </td>
+          <td colspan="4" style="font-size: 11pt; text-align: left;">
+            Bảng báo giá: ${d.id || ''}
+          </td>
+        </tr>
+
+        <tr style="height: 22px;">
+          <td colspan="4" style="font-size: 11pt; text-align: left;">
+            Địa chỉ: ${custAddress}
+          </td>
+          <td colspan="4" style="font-size: 11pt; text-align: left;">
+            Ngày hiệu lực: từ ngày ${fromDateVN} - đến ngày ${toDateVN}
+          </td>
+        </tr>
+
+        <tr style="height: 10px;"><td colspan="8"></td></tr>
+
+        <tr style="height: 24px; background-color: #8db4e2; font-weight: bold; font-size: 11pt; text-align: center;">
+          <td style="border: 1px solid #000;">STT</td>
+          <td style="border: 1px solid #000;">Tên Hàng</td>
+          <td style="border: 1px solid #000;">ĐVT</td>
+          <td style="border: 1px solid #000;">Đơn Giá</td>
+          <td style="border: 1px solid #000;">Số Lượng</td>
+          <td style="border: 1px solid #000;">CK%</td>
+          <td style="border: 1px solid #000;">Thuế%</td>
+          <td style="border: 1px solid #000;">Thành Tiền</td>
+        </tr>
+
+        ${rowsHtml}
+
+        <tr style="height: 24px; font-weight: bold; font-size: 11pt;">
+          <td colspan="4" style="border: 1px solid #000; text-align: center;">Tổng Cộng</td>
+          <td style="border: 1px solid #000; text-align: right; padding-right: 4px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000; text-align: right; padding-right: 4px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
+        </tr>
+
+        <tr style="height: 18px;"><td colspan="8"></td></tr>
+
+        <tr style="height: 22px;">
+          <td colspan="5"></td>
+          <td colspan="3" style="font-size: 11pt; text-align: center;">
+            Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}
+          </td>
+        </tr>
+
+        <tr style="height: 22px;">
+          <td colspan="5"></td>
+          <td colspan="3" style="font-size: 11pt; font-weight: bold; text-align: center;">
+            Đại diện nhà cung cấp
+          </td>
+        </tr>
+
+        <tr style="height: 20px;"><td colspan="8"></td></tr>
+        <tr style="height: 20px;"><td colspan="8"></td></tr>
+
+        <tr style="height: 22px;">
+          <td colspan="5"></td>
+          <td colspan="3" style="font-size: 11pt; font-weight: bold; text-align: center;">
+            BÙI CAO NHÂM
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  // Ép xuất file định dạng .xls để giữ toàn bộ CSS HTML
+  const blob = new Blob(['\ufeff', tableHtml], { type: 'application/vnd.ms-excel' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `BaoGia_${d.id || 'Export'}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportSalesOrderToExcel() {
+  const d = state.formData;
+  if (!d) return;
+
+  const custAddress = getCustomerAddress(d.customer);
+  const { dayStr, monthStr, yearStr } = parseDateParts(d.date);
+
+  let totalQty = 0;
+  let totalAmount = 0;
+
+  const items = (d.lineItems || d.lineitems || []);
+  const maxRows = 23;
+
+  let rowsHtml = '';
+  for (let i = 0; i < maxRows; i++) {
+    if (i < items.length) {
+      const l = items[i];
+      const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
+      const unitName = mat ? (mat.unit || '—') : (l.unit || '—');
+      const qty = Number(l.qty) || 0;
+      const price = Number(l.unitPrice) || 0;
+      const discount = Number(l.discount) || 0;
+      const tax = Number(l.tax) || 0;
+
+      const lineSub = qty * price * (1 - discount / 100);
+      const lineTotal = lineSub * (1 + tax / 100);
+
+      totalQty += qty;
+      totalAmount += lineTotal;
+
+      rowsHtml += `
+        <tr style="height: 26px;">
+          <td style="border: 1px solid #000; text-align: center; font-family: 'Times New Roman'; font-size: 11pt;">${i + 1}</td>
+          <td style="border: 1px solid #000; text-align: left; font-family: 'Times New Roman'; font-size: 11pt; padding-left: 4px;">${l.name || ''}</td>
+          <td style="border: 1px solid #000; text-align: center; font-family: 'Times New Roman'; font-size: 11pt;">${unitName}</td>
+          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${price ? Math.round(price).toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${qty ? qty.toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${discount ? discount + '%' : '0%'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${tax ? tax + '%' : '0%'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-family: 'Times New Roman'; font-size: 11pt; padding-right: 4px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : ''}</td>
+        </tr>
+      `;
+    } else {
+      rowsHtml += `
+        <tr style="height: 26px;">
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+        </tr>
+      `;
+    }
+  }
+
+  const tableHtml = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: 'Times New Roman', serif; }
+        td { vertical-align: middle; white-space: nowrap; }
+        .wrap-text { white-space: normal; }
+      </style>
+    </head>
+    <body>
+      <table style="border-collapse: collapse; font-family: 'Times New Roman', serif; width: 800px;">
+        <colgroup>
+          <col style="width: 40px;">
+          <col style="width: 250px;">
+          <col style="width: 60px;">
+          <col style="width: 90px;">
+          <col style="width: 70px;">
+          <col style="width: 60px;">
+          <col style="width: 60px;">
+          <col style="width: 120px;">
+        </colgroup>
+
+        <tr style="height: 60px;">
+          <td colspan="4" class="wrap-text" style="font-size: 10pt; text-align: center; vertical-align: middle;">
+            ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
+            Xã Sơn Đồng – TP Hà Nội<br>
+            ĐT: 0936.35.31.37
+          </td>
+          <td colspan="4" class="wrap-text" style="font-size: 10pt; text-align: center; vertical-align: middle;">
+            Giấy phép ĐKKD số: 01U8005300<br>
+            Địa chỉ nhận hóa đơn: nhambc@gmail.com<br>
+            MST: 0110640531
+          </td>
+        </tr>
+
+        <tr style="height: 30px;">
+          <td colspan="8" style="font-size: 16pt; font-weight: bold; text-align: center; vertical-align: middle;">
+            CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
+          </td>
+        </tr>
+
+        <tr style="height: 22px;">
+          <td colspan="4" style="font-size: 11pt; text-align: left;">
+            Khách hàng: ${d.customer || ''}
+          </td>
+          <td colspan="4" style="font-size: 11pt; text-align: left;">
+            Đơn hàng bán: ${d.id || ''}
+          </td>
+        </tr>
+
+        <tr style="height: 22px;">
+          <td colspan="4" style="font-size: 11pt; text-align: left;">
+            Địa chỉ: ${custAddress}
+          </td>
+          <td colspan="4" style="font-size: 11pt; text-align: left;">
+            Ghi chú: ${d.notes || ''}
+          </td>
+        </tr>
+
+        <tr style="height: 10px;"><td colspan="8"></td></tr>
+
+        <tr style="height: 24px; background-color: #8db4e2; font-weight: bold; font-size: 11pt; text-align: center;">
+          <td style="border: 1px solid #000;">STT</td>
+          <td style="border: 1px solid #000;">Tên Hàng</td>
+          <td style="border: 1px solid #000;">ĐVT</td>
+          <td style="border: 1px solid #000;">Đơn Giá</td>
+          <td style="border: 1px solid #000;">Số Lượng</td>
+          <td style="border: 1px solid #000;">CK%</td>
+          <td style="border: 1px solid #000;">Thuế%</td>
+          <td style="border: 1px solid #000;">Thành Tiền</td>
+        </tr>
+
+        ${rowsHtml}
+
+        <tr style="height: 24px; font-weight: bold; font-size: 11pt;">
+          <td colspan="4" style="border: 1px solid #000; text-align: center;">Tổng Cộng</td>
+          <td style="border: 1px solid #000; text-align: right; padding-right: 4px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000; text-align: right; padding-right: 4px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
+        </tr>
+
+        <tr style="height: 18px;"><td colspan="8"></td></tr>
+
+        <tr style="height: 22px;">
+          <td colspan="5"></td>
+          <td colspan="3" style="font-size: 11pt; text-align: center;">
+            Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}
+          </td>
+        </tr>
+
+        <tr style="height: 22px;">
+          <td colspan="5"></td>
+          <td colspan="3" style="font-size: 11pt; font-weight: bold; text-align: center;">
+            Đại diện nhà cung cấp
+          </td>
+        </tr>
+
+        <tr style="height: 20px;"><td colspan="8"></td></tr>
+        <tr style="height: 20px;"><td colspan="8"></td></tr>
+
+        <tr style="height: 22px;">
+          <td colspan="5"></td>
+          <td colspan="3" style="font-size: 11pt; font-weight: bold; text-align: center;">
+            BÙI CAO NHÂM
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
+  const blob = new Blob(['\ufeff', tableHtml], { type: 'application/vnd.ms-excel' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `DonHang_${d.id || 'Export'}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // Khởi tạo Custom Modal Container
@@ -4517,6 +4432,29 @@ function initFormData(module, id) {
   }
 }
 
+function getTodayDateStr() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getFirstDayOfMonthStr() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}-01`;
+}
+
+function getCurrentTimeStr() {
+  const d = new Date();
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
 function formatDateVN(dateStr) {
   if (!dateStr) return '';
   if (dateStr.includes('/')) return dateStr;
@@ -4541,6 +4479,12 @@ function formatVNDInput(val) {
   return num ? num.toLocaleString('vi-VN') : '0';
 }
 
+function fmt(n) { return new Intl.NumberFormat('en-US').format(n); }
+
+function fmtUSD(n) {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
+}
+
 function updateHeaderDate() {
   const dateElement = document.getElementById('header-date');
   if (!dateElement) return;
@@ -4552,7 +4496,6 @@ function updateHeaderDate() {
   dateElement.innerText = formattedDate;
 }
 
-// INIT
 document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => navigate(btn.getAttribute('data-view')));
@@ -4592,7 +4535,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNotificationUI();
 });
 
-// Hàm chuyển đổi chuỗi thành dạng Viết Hoa Mọi Chữ Cái Đầu Mỗi Từ (Title Case)
 function toTitleCase(str) {
   if (!str) return '';
   return str.toLowerCase().replace(/(^|\s)\S/g, function (firstLetter) {
@@ -4600,13 +4542,11 @@ function toTitleCase(str) {
   });
 }
 
-// Hàm chuyển đổi chuỗi thành dạng Viết Hoa Tất Cả Các Ký Tự (UPPERCASE)
 function toUpperCaseStr(str) {
   if (!str) return '';
   return str.toUpperCase();
 }
 
-// --- CHẶN TỰ ĐỘNG SUBMIT FORM KHI ẤN ENTER TRÊN TOÀN HỆ THỐNG ---
 document.addEventListener('keydown', function (e) {
   // 1. Thao tác bấm ESC để đóng Form Thông báo / Form Lịch sử
   if (e.key === 'Escape' || e.key === 'Esc') {
