@@ -345,21 +345,42 @@ function updateUserInfoUI() {
     const userRoleEl = document.querySelector('.user-role');
     const sidebarUserEl = document.querySelector('.sidebar-user');
 
-    if (userAvatarEl) userAvatarEl.innerText = (user.fullname || user.username || 'U').substring(0, 2).toUpperCase();
-    if (userNameEl) userNameEl.innerText = user.fullname || user.username; // Dùng cột fullname từ DB
-    if (userRoleEl) userRoleEl.innerText = user.role || 'USER';
+    if (userAvatarEl) {
+      userAvatarEl.innerText = (user.fullname || user.username || 'U').substring(0, 2).toUpperCase();
+    }
 
-    if (sidebarUserEl && !document.getElementById('logout-btn')) {
-      const logoutBtn = document.createElement('button');
-      logoutBtn.id = 'logout-btn';
-      logoutBtn.innerText = 'Đăng xuất';
-      logoutBtn.onclick = handleLogout;
-      logoutBtn.style.cssText = "margin-left: auto; background: transparent; border: 1px solid var(--border); color: var(--muted-foreground); font-size: 10px; padding: 3px 6px; cursor: pointer;";
-      sidebarUserEl.appendChild(logoutBtn);
+    if (userNameEl) {
+      userNameEl.innerText = user.fullname || user.username;
+      userNameEl.title = user.fullname || user.username; // Tooltip khi đè chuột
+    }
+
+    if (userRoleEl) {
+      userRoleEl.innerText = user.role || 'USER';
+    }
+
+    if (sidebarUserEl) {
+      // Đảm bảo cấu trúc các thẻ lồng nhau gọn gàng
+      let infoTextContainer = sidebarUserEl.querySelector('.user-info-text');
+      if (!infoTextContainer && userNameEl && userRoleEl) {
+        infoTextContainer = document.createElement('div');
+        infoTextContainer.className = 'user-info-text';
+        sidebarUserEl.insertBefore(infoTextContainer, userRoleEl.parentNode === sidebarUserEl ? userRoleEl : null);
+        infoTextContainer.appendChild(userNameEl);
+        infoTextContainer.appendChild(userRoleEl);
+      }
+
+      // Khởi tạo nút Đăng xuất
+      if (!document.getElementById('logout-btn')) {
+        const logoutBtn = document.createElement('button');
+        logoutBtn.id = 'logout-btn';
+        logoutBtn.innerText = 'Đăng xuất';
+        logoutBtn.onclick = handleLogout;
+        sidebarUserEl.appendChild(logoutBtn);
+      }
     }
   }
 
-  // Thêm nút Nút Icon Ngôi nhà vào Header cho Mobile nếu chưa có
+  // Thêm nút Home cho Header trên Mobile
   const headerLeft = document.querySelector('.app-header > div:first-child') || document.querySelector('.app-header');
   if (headerLeft && !document.getElementById('mobile-home-trigger')) {
     const homeBtn = document.createElement('button');
@@ -370,7 +391,7 @@ function updateUserInfoUI() {
     headerLeft.insertBefore(homeBtn, headerLeft.firstChild);
   }
 
-  // Gán sự kiện click vào Logo Ngôi nhà trên đầu Sidebar để đóng Drawer Menu
+  // Gán sự kiện đóng Mobile Drawer khi bấm Logo/Header
   const logoBrand = document.querySelector('.logo-brand, .app-brand, .sidebar-header');
   if (logoBrand) {
     logoBrand.style.cursor = 'pointer';
@@ -2364,7 +2385,7 @@ function render() {
           const len = el.value ? el.value.length : 0;
           el.setSelectionRange(len, len);
         }
-      } catch (err) {}
+      } catch (err) { }
     }
   }
 }
