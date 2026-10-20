@@ -2210,12 +2210,47 @@ function renderLoginForm(container) {
           </div>
         </div>
 
-        <!-- Cột phải: Form nhập liệu (Tỉ lệ 2/5 - 40%) -->
         <div class="login-form-col">
+
+        <div style="
+          display: inline-flex; 
+          align-items: center; 
+          gap: 6px; 
+          padding: 4px 10px; 
+          background: rgba(240, 160, 48, 0.1); 
+          border: 1px solid rgba(240, 160, 48, 0.25); 
+          border-radius: 20px; 
+          margin-bottom: 12px;
+        ">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #f0a030;"></span>
+          <span style="font-family: var(--font-dm-mono); font-size: 10px; font-weight: 600; color: #f0a030; letter-spacing: 0.08em; text-transform: uppercase;">
+            Minh Khuê Portal
+          </span>
+        </div>
           
           <div style="margin-bottom: 24px;">
-            <h2 class="login-title" style="font-size: 22px; font-weight: 600; color: var(--foreground, #ffffff); margin: 0 0 6px 0;">Đăng Nhập Hệ Thống</h2>
-            <p class="login-subtext" style="font-size: 12px; color: var(--muted-foreground, #8a94a6); font-family: var(--font-dm-mono, monospace);">Vui lòng nhập thông tin tài khoản của bạn</p>
+           <h2 class="login-title" style="
+      font-size: 24px; 
+      font-weight: 700; 
+      color: var(--foreground, #ffffff); 
+      margin: 0 0 6px 0;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    ">
+      Đăng Nhập Hệ Thống
+    </h2>
+
+    <p class="login-subtext" style="
+      font-size: 12.5px; 
+      color: var(--muted-foreground, #8a94a6); 
+      font-family: var(--font-dm-mono, monospace);
+      line-height: 1.5;
+      margin: 0;
+    ">
+      Vui lòng nhập thông tin tài khoản để truy cập hệ thống
+    </p>
           </div>
 
           <form onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 18px;">
@@ -2365,16 +2400,6 @@ function renderLoginForm(container) {
               <!-- Twitter / X -->
               <button class="social-icon-btn" title="Twitter / X" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border, rgba(255,255,255,0.12)); background: rgba(255,255,255,0.04); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="#1DA1F2"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.936 9.936 0 0024 4.59z"/></svg>
-              </button>
-
-              <!-- LinkedIn -->
-              <button class="social-icon-btn" title="LinkedIn" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border, rgba(255,255,255,0.12)); background: rgba(255,255,255,0.04); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#0A66C2"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.762-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-              </button>
-
-              <!-- Zalo -->
-              <button class="social-icon-btn" title="Zalo" style="width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border, rgba(255,255,255,0.12)); background: rgba(255,255,255,0.04); color: #0068FF; font-weight: 700; font-size: 11px; font-family: var(--font-dm-mono); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s ease;">
-                Zalo
               </button>
             </div>
           </div>
