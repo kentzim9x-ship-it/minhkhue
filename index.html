@@ -43,6 +43,29 @@
       }
     }(window.location));
   </script>
+
+  <script>
+    (function() {
+      try {
+        // 1. Lấy theme đã lưu trong localStorage (hoặc mặc định 'dark')
+        var savedTheme = localStorage.getItem('app_theme'); 
+        
+        // Hoặc nếu bạn lưu cấu hình người dùng trong đối tượng JSON (ví dụ 'remembered_user'):
+        // var savedUser = JSON.parse(localStorage.getItem('remembered_user') || '{}');
+        // var savedTheme = savedUser.theme || 'dark';
+
+        if (savedTheme) {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        } else {
+          // Tùy chọn: Tự động nhận diện theme hệ thống của máy tính/điện thoại người dùng
+          var prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+          document.documentElement.setAttribute('data-theme', prefersLight ? 'light' : 'dark');
+        }
+      } catch (e) {
+        console.error('Error setting initial theme:', e);
+      }
+    })();
+  </script>
 </head>
 
 <body>

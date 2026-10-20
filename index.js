@@ -467,6 +467,8 @@ function toggleTheme() {
 
   document.documentElement.setAttribute('data-theme', newTheme);
 
+  localStorage.setItem('app_theme', newTheme);
+
   const savedCredsRaw = localStorage.getItem('remembered_user');
   const savedCreds = savedCredsRaw ? JSON.parse(savedCredsRaw) : null;
 
