@@ -1,0 +1,575 @@
+// ==========================================
+// 1. CẤU HÌNH, STATE & GIAO DIỆN CƠ BẢN
+// ==========================================
+
+const BASE_PATH = '/minhkhue'; // Đường dẫn gốc trên GitHub Pages
+
+// STATE MANAGEMENT
+let state = {
+  view: 'dashboard',
+  mode: 'list',
+  filter: 'all',
+  search: '',
+  formData: null
+};
+
+const viewMeta = {
+  dashboard: { tag: 'TỔNG QUAN', title: 'Tổng Quan' },
+  materials: { tag: 'DỮ LIỆU DANH MỤC', title: 'Danh Mục Hàng Hóa' },
+  customers: { tag: 'DỮ LIỆU DANH MỤC', title: 'Danh Sách Khách Hàng' },
+  warehouses: { tag: 'DỮ LIỆU DANH MỤC', title: 'Danh Sách Kho Hàng' },
+  quotations: { tag: 'GIAO DỊCH', title: 'Bảng Báo Giá' },
+  'sales-orders': { tag: 'GIAO DỊCH', title: 'Đơn Bán Hàng' },
+  returns: { tag: 'GIAO DỊCH', title: 'Đổi Trả Hàng Bán' },
+  grn: { tag: 'GIAO DỊCH', title: 'Phiếu Nhập Kho' },
+  'report-inventory': { tag: 'BÁO CÁO', title: 'Báo Cáo Tồn Kho' },
+  'report-sales': { tag: 'BÁO CÁO', title: 'Báo Cáo Bán Hàng' },
+};
+
+const Icons = {
+  home: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+  view: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="3"/><path d="M1 7s2.5-4.5 6-4.5S13 7 13 7s-2.5 4.5-6 4.5S1 7 1 7z"/></svg>`,
+  edit: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.5 2.5l2 2L4 12H2v-2L9.5 2.5z" /></svg>`,
+  trash: `<svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h10M5 4V2h4v2M6 7v4M8 7v4M3 4l1 8h6l1-8" /></svg>`,
+  plus: `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="2"><line x1="6.5" y1="1" x2="6.5" y2="12" /><line x1="1" y1="6.5" x2="12" y2="6.5" /></svg>`,
+  back: `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2L4 7l5 5" /></svg>`,
+  search: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6.5" cy="6.5" r="4.5" /><line x1="10" y1="10" x2="14" y2="14" /></svg>`,
+  sun: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>`,
+  moon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>`,
+};
+
+// Tạo lớp Overlay để bấm ra ngoài đóng Menu
+const overlayEl = document.createElement('div');
+overlayEl.className = 'mobile-overlay';
+overlayEl.onclick = toggleMobileMenu;
+document.body.appendChild(overlayEl);
+
+// Tạo lớp Overlay để bấm ra ngoài đóng Menu (Khởi tạo an toàn)
+let overlayEl = null;
+
+function initMobileOverlay() {
+  if (overlayEl || !document.body) return;
+  overlayEl = document.createElement('div');
+  overlayEl.className = 'mobile-overlay';
+  overlayEl.onclick = toggleMobileMenu;
+  document.body.appendChild(overlayEl);
+}
+
+function toggleMobileMenu() {
+  if (!overlayEl) initMobileOverlay();
+  const isMenuOpen = document.body.classList.toggle('mobile-menu-open');
+  if (overlayEl) {
+    if (isMenuOpen) {
+      overlayEl.classList.add('active');
+    } else {
+      overlayEl.classList.remove('active');
+    }
+  }
+}
+
+// ==========================================
+// 2. KẾT NỐI DB SUPABASE & REALTIME STOCK
+// ==========================================
+
+// Supabase Client Initialization
+const SUPABASE_URL = 'https://gzmczqeczlrujhzleaoa.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_oBZ4Z1bekEMIjq_wmPFsyg_V68Y3dWE';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Bổ sung users vào db toàn cục
+let db = {
+  materials: [],
+  customers: [],
+  warehouses: [],
+  quotations: [],
+  orders: [],
+  returns: [],
+  grns: [],
+  users: [] // <--- Thêm mảng users
+};
+
+async function fetchDataFromSupabase() {
+  try {
+    const [custRes, matRes, whRes, invRes, quoRes, ordRes, retRes, grnRes, userRes] = await Promise.all([
+      supabaseClient.from('customers').select('*'),
+      supabaseClient.from('materials').select('*'),
+      supabaseClient.from('warehouses').select('*'),
+      supabaseClient.from('inventory').select('*'),
+      supabaseClient.from('quotations').select('*'),
+      supabaseClient.from('orders').select('*'),
+      supabaseClient.from('returns').select('*'),
+      supabaseClient.from('grns').select('*'),
+      supabaseClient.from('userinfo').select('*') // <--- Lấy bảng userinfo
+    ]);
+
+    db.customers = custRes.data || [];
+    db.materials = matRes.data || [];
+    db.warehouses = whRes.data || [];
+    db.inventory = invRes.data || [];
+    db.users = userRes.data || [];
+
+    db.quotations = (quoRes.data || []).map(q => ({
+      ...q,
+      date: q.date ? String(q.date).split('T')[0] : '',
+      validbegin: (q.validbegin || q.validBegin) ? String(q.validbegin || q.validBegin).split('T')[0] : '',
+      validUntil: (q.validUntil || q.validuntil) ? String(q.validUntil || q.validuntil).split('T')[0] : '',
+      lineItems: Array.isArray(q.lineItems || q.lineitems) ? (q.lineItems || q.lineitems) : []
+    })).sort(sortDescById);
+
+    db.orders = (ordRes.data || []).map(o => ({
+      ...o,
+      date: o.date ? String(o.date).split('T')[0] : '',
+      quotationId: o.quotation_id || o.quotationId || o.quotationid || null,
+      warehouseCode: o.warehouse_code || o.warehouseCode || o.warehouse || '',
+      lineItems: Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : []
+    })).sort(sortDescById);
+
+    db.returns = (retRes.data || []).map(r => ({
+      ...r,
+      date: r.date ? String(r.date).split('T')[0] : '',
+      warehouseCode: r.warehouse_code || r.warehouseCode || '',
+      orderId: r.order_id || r.orderId || '',
+      notes: r.notes || '',
+      lineItems: Array.isArray(r.lineItems || r.lineitems) ? (r.lineItems || r.lineitems) : []
+    })).sort(sortDescById);
+
+    db.grns = (grnRes.data || []).map(g => {
+      let parsedItems = [];
+      try {
+        if (Array.isArray(g.lineitems || g.lineItems)) {
+          parsedItems = g.lineitems || g.lineItems;
+        } else if (typeof (g.lineitems || g.lineItems) === 'string') {
+          parsedItems = JSON.parse(g.lineitems || g.lineItems);
+        }
+      } catch (e) {
+        parsedItems = [];
+      }
+
+      return {
+        ...g,
+        supplier: g.supplier || '',
+        warehouseCode: g.warehousecode || g.warehouseCode || '',
+        warehousecode: g.warehousecode || g.warehouseCode || '',
+        date: g.date ? String(g.date).split('T')[0] : '',
+        status: g.status || 'Đã nhận',
+        notes: g.notes || '',
+        totalValue: g.totalvalue ?? g.totalValue ?? 0,
+        totalvalue: g.totalvalue ?? g.totalValue ?? 0,
+        lineItems: parsedItems,
+        lineitems: parsedItems
+      };
+    }).sort(sortDescById);
+
+  } catch (err) {
+    console.error('Lỗi khi tải dữ liệu từ Supabase:', err);
+  }
+}
+
+function syncRealtimeStockToSupabase(sku, warehouseCode, realStock) {
+  if (!sku || !warehouseCode) return;
+  setTimeout(async () => {
+    try {
+      const invIndex = (db.inventory || []).findIndex(i =>
+        (i.sku === sku || i.material_id === sku) &&
+        (i.warehouse_code === warehouseCode || i.warehouse_id === warehouseCode || i.warehouseCode === warehouseCode)
+      );
+
+      if (invIndex !== -1) {
+        db.inventory[invIndex].ton_thuc_te = realStock;
+        await supabaseClient
+          .from('inventory')
+          .update({ ton_thuc_te: realStock })
+          .eq('id', db.inventory[invIndex].id);
+      } else {
+        const newRecord = {
+          sku: sku,
+          warehouse_code: warehouseCode,
+          ton_thuc_te: realStock,
+          stock: 0
+        };
+        const { data, error } = await supabaseClient.from('inventory').insert([newRecord]).select();
+        if (!error && data && data.length > 0) {
+          db.inventory.push(data[0]);
+        }
+      }
+    } catch (err) {
+      console.error('Lỗi cập nhật ton_thuc_te:', err);
+    }
+  }, 0);
+}
+
+function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
+  if (!sku) return 0;
+
+  let initialStock = 0;
+  if (warehouseCode && db.inventory && db.inventory.length > 0) {
+    const inv = db.inventory.find(i =>
+      (i.sku === sku || i.material_id === sku) &&
+      (i.warehouse_code === warehouseCode || i.warehouse_id === warehouseCode || i.warehouseCode === warehouseCode)
+    );
+    if (inv) {
+      initialStock = Number(inv.stock ?? inv.qty ?? inv.quantity ?? 0);
+    }
+  } else {
+    const mat = db.materials.find(m => m.id === sku);
+    if (mat) initialStock = Number(mat.stock || 0);
+  }
+
+  let totalGRN = 0;
+  (db.grns || []).forEach(g => {
+    if (currentDocId && String(g.id) === String(currentDocId)) return;
+    const status = (g.status || '').toLowerCase();
+    const gWh = g.warehouseCode || g.warehousecode || g.warehouse_code || '';
+
+    if (gWh === warehouseCode && ['verified', 'received', 'đã nhận', 'đã xác minh'].includes(status)) {
+      (g.lineItems || g.lineitems || []).forEach(item => {
+        if (item.sku === sku) {
+          totalGRN += Number(item.receivedQty || item.qtyImport || item.qty || 0);
+        }
+      });
+    }
+  });
+
+  let totalOrders = 0;
+  (db.orders || []).forEach(o => {
+    if (currentDocId && String(o.id) === String(currentDocId)) return;
+    const status = (o.status || '').toLowerCase();
+    const oWh = o.warehouseCode || o.warehousecode || o.warehouse_code || '';
+
+    if (oWh === warehouseCode && ['processing', 'completed', 'đang xử lý', 'hoàn thành'].includes(status)) {
+      (o.lineItems || o.lineitems || []).forEach(item => {
+        if (item.sku === sku) {
+          totalOrders += Number(item.qty || 0);
+        }
+      });
+    }
+  });
+
+  let totalReturns = 0;
+  (db.returns || []).forEach(r => {
+    if (currentDocId && String(r.id) === String(currentDocId)) return;
+    const status = (r.status || '').toLowerCase();
+    const rWh = r.warehouseCode || r.warehousecode || r.warehouse_code || '';
+
+    if (rWh === warehouseCode && ['approved', 'processed', 'đã duyệt', 'đã xử lý'].includes(status)) {
+      (r.lineItems || r.lineitems || []).forEach(item => {
+        if (item.sku === sku) {
+          totalReturns += Number(item.qtyReturned || item.qty || 0);
+        }
+      });
+    }
+  });
+
+  const realtimeStock = Number((initialStock + totalGRN - totalOrders - totalReturns).toFixed(2));
+
+  if (warehouseCode) {
+    syncRealtimeStockToSupabase(sku, warehouseCode, realtimeStock);
+  }
+
+  return realtimeStock;
+}
+
+// ==========================================
+// 4. TIỆN ÍCH (HELPERS) & FORMATTER
+// ==========================================
+
+function sortDescById(a, b) {
+  return String(b.id || '').localeCompare(String(a.id || ''), undefined, { numeric: true, sensitivity: 'base' });
+}
+
+// Hàm chuyển đổi từ user_id sang fullname
+function getUserFullName(userId) {
+  if (!userId) return '—';
+  const user = (db.users || []).find(u => String(u.id) === String(userId) || String(u.username) === String(userId));
+  return user ? (user.fullname || user.username || userId) : userId;
+}
+
+// Hàm hỗ trợ định dạng ngày VN (DD/MM/YYYY) nếu ngày lưu dạng YYYY-MM-DD
+function fmtDateStr(dateStr) {
+  if (!dateStr) return '—';
+  if (dateStr.includes('T')) dateStr = dateStr.split('T')[0];
+  const parts = dateStr.split('-');
+  if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  return dateStr;
+}
+
+// Hàm hỗ trợ cắt bỏ giây nếu cần (HH:mm:ss -> HH:mm)
+function fmtTimeStr(timeStr) {
+  if (!timeStr) return '—';
+  return String(timeStr).substring(0, 5);
+}
+
+function getBadgeClass(status) {
+  const s = String(status || '').toLowerCase().trim();
+  const map = {
+    'completed': 'badge-emerald', 'hoàn thành': 'badge-emerald', 'approved': 'badge-emerald', 'đã duyệt': 'badge-emerald',
+    'processed': 'badge-emerald', 'đã xử lý': 'badge-emerald', 'accepted': 'badge-emerald', 'đã chấp nhận': 'badge-emerald',
+    'verified': 'badge-emerald', 'đã xác minh': 'badge-emerald', 'active': 'badge-emerald', 'hoạt động': 'badge-emerald',
+    'ok': 'badge-emerald', 'đủ hàng': 'badge-emerald', 'processing': 'badge-amber', 'đang xử lý': 'badge-amber',
+    'received': 'badge-amber', 'đã nhận': 'badge-amber', 'maintenance': 'badge-amber', 'bảo trì': 'badge-amber',
+    'low': 'badge-amber', 'sắp hết': 'badge-amber', 'shipped': 'badge-blue', 'delivered': 'badge-blue',
+    'pending': 'badge-zinc', 'chờ xử lý': 'badge-zinc', 'chờ duyệt': 'badge-zinc', 'draft': 'badge-zinc',
+    'bản nháp': 'badge-zinc', 'inactive': 'badge-zinc', 'ngừng hoạt động': 'badge-zinc', 'expired': 'badge-red',
+    'hết hạn': 'badge-red', 'cancelled': 'badge-red', 'đã hủy': 'badge-red', 'rejected': 'badge-red',
+    'từ chối': 'badge-red', 'suspended': 'badge-red', 'tạm khóa': 'badge-red', 'closed': 'badge-red',
+    'đóng cửa': 'badge-red', 'critical': 'badge-red', 'out': 'badge-red', 'hết hàng': 'badge-red'
+  };
+  return map[s] || 'badge-zinc';
+}
+
+function getStatusLabel(status) {
+  const s = String(status || '').toLowerCase().trim();
+  const map = {
+    'approved': 'Đã duyệt', 'processed': 'Đã xử lý', 'processing': 'Đang xử lý', 'completed': 'Hoàn thành',
+    'pending': 'Chờ xử lý', 'accepted': 'Đã chấp nhận', 'draft': 'Bản nháp', 'expired': 'Hết hạn',
+    'verified': 'Đã xác minh', 'received': 'Đã nhận', 'active': 'Hoạt động', 'inactive': 'Ngừng hoạt động',
+    'suspended': 'Tạm khóa', 'maintenance': 'Bảo trì', 'closed': 'Đóng cửa', 'cancelled': 'Đã hủy',
+    'rejected': 'Từ chối', 'ok': 'Đủ hàng', 'low': 'Sắp hết', 'critical': 'Nguy cấp', 'out': 'Hết hàng'
+  };
+  return map[s] || (status ? String(status).toUpperCase() : '—');
+}
+
+function getWarehouseStatusLabel(status) {
+  const map = { 'active': 'HOẠT ĐỘNG', 'maintenance': 'BẢO TRÌ', 'closed': 'ĐÓNG CỬA' };
+  return map[status?.toLowerCase()] || (status ? status.toUpperCase() : 'HOẠT ĐỘNG');
+}
+
+function getBreadcrumb(backLabel, current, module) {
+  return `
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px;">
+      <button onclick="navigate('${module}', 'list')" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 0; display: flex; align-items: center; gap: 6px;">
+        ${Icons.back}${backLabel}
+      </button>
+      <span style="color: var(--border); font-family: var(--font-dm-mono); font-size: 11px;">/</span>
+      <span style="font-family: var(--font-dm-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--foreground);">${current}</span>
+    </div>
+  `;
+}
+
+function getFilterBar(options) {
+  const buttonsHtml = options.map(([val, label]) => `
+    <button onclick="state.filter='${val}'; render();" style="padding: 6px 14px; font-family: var(--font-dm-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; background: ${state.filter === val ? 'var(--primary)' : 'transparent'}; color: ${state.filter === val ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer; transition: all 0.15s;">${label}</button>
+  `).join('');
+
+  return `
+    <div style="display: flex; gap: 1px; background: var(--muted); width: fit-content; max-width: 100%; overflow-x: auto;">
+      ${buttonsHtml}
+    </div>
+  `;
+}
+
+function generateAutoId(module) {
+  const collection = db[module === 'sales-orders' ? 'orders' : module] || [];
+
+  if (module === 'materials') {
+    const maxNum = collection.reduce((m, x) => {
+      const match = (x.id || '').match(/SKU-(\d+)/i);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+    return `SKU-${String(maxNum + 1).padStart(4, '0')}`;
+  }
+
+  if (module === 'customers') {
+    const maxNum = collection.reduce((m, x) => {
+      const match = (x.id || '').match(/CUS-(\d+)/i);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+    return `CUS-${String(maxNum + 1).padStart(4, '0')}`;
+  }
+
+  if (module === 'warehouses') {
+    const maxNum = collection.reduce((m, x) => {
+      const match = ((x.code || x.id) || '').match(/(?:WH|KHO)-(\d+)/i);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+    return `WH-${String(maxNum + 1).padStart(2, '0')}`;
+  }
+
+  if (module === 'quotations') {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = `BBG-${yy}${mm}`;
+
+    const maxNum = collection.reduce((m, x) => {
+      if (!x.id) return m;
+      const regex = new RegExp(`^${prefix}-(\\d+)`, 'i');
+      const match = x.id.match(regex);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+
+    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
+  }
+
+  if (module === 'sales-orders') {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = `DHB-${yy}${mm}`;
+
+    const maxNum = collection.reduce((m, x) => {
+      if (!x.id) return m;
+      const regex = new RegExp(`^${prefix}-(\\d+)`, 'i');
+      const match = x.id.match(regex);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+
+    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
+  }
+
+  if (module === 'returns') {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = `DTHB-${yy}${mm}`;
+
+    const maxNum = collection.reduce((m, x) => {
+      if (!x.id) return m;
+      const regex = new RegExp(`^${prefix}-(\\d+)`, 'i');
+      const match = x.id.match(regex);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+
+    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
+  }
+
+  if (module === 'grn') {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const prefix = `PNK-${yy}${mm}`;
+
+    const list = Array.isArray(db.grns) ? db.grns : [];
+
+    const maxNum = list.reduce((m, x) => {
+      const currentId = String(x.id || '');
+      const regex = new RegExp(`^${prefix}-?(\\d+)`, 'i');
+      const match = currentId.match(regex);
+      return match ? Math.max(m, parseInt(match[1], 10)) : m;
+    }, 0);
+
+    return `${prefix}-${String(maxNum + 1).padStart(4, '0')}`;
+  }
+}
+
+function getMonthRange() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+
+  const firstDay = `${year}-${month}-01`;
+  const lastDayNum = new Date(year, now.getMonth() + 1, 0).getDate();
+  const lastDay = `${year}-${month}-${String(lastDayNum).padStart(2, '0')}`;
+
+  return { firstDay, lastDay };
+}
+
+function parseDateParts(dateStr) {
+  let dayStr = '02', monthStr = '10', yearStr = '2026';
+  if (dateStr) {
+    if (dateStr.includes('-')) {
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        yearStr = parts[0];
+        monthStr = parts[1];
+        dayStr = parts[2];
+      }
+    } else if (dateStr.includes('/')) {
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        dayStr = parts[0].padStart(2, '0');
+        monthStr = parts[1].padStart(2, '0');
+        yearStr = parts[2];
+      }
+    }
+  } else {
+    const today = new Date();
+    dayStr = String(today.getDate()).padStart(2, '0');
+    monthStr = String(today.getMonth() + 1).padStart(2, '0');
+    yearStr = String(today.getFullYear());
+  }
+  return { dayStr, monthStr, yearStr };
+}
+
+function getCustomerAddress(customerNameOrId) {
+  if (!customerNameOrId) return '—';
+  const cust = (db.customers || []).find(c =>
+    (c.name && c.name.trim().toLowerCase() === customerNameOrId.trim().toLowerCase()) ||
+    (c.id && c.id.trim().toLowerCase() === customerNameOrId.trim().toLowerCase())
+  );
+  return cust ? (cust.address || cust.diachi || '—') : '—';
+}
+
+function getTodayDateStr() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function getFirstDayOfMonthStr() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}-01`;
+}
+
+function getCurrentTimeStr() {
+  const d = new Date();
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${h}:${m}:${s}`;
+}
+
+function formatDateVN(dateStr) {
+  if (!dateStr) return '';
+  if (dateStr.includes('/')) return dateStr;
+
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+  }
+  return dateStr;
+}
+
+function parseNumberInput(val) {
+  if (val === null || val === undefined || val === '') return 0;
+  const str = String(val).trim();
+  const cleanStr = str.replace(/[^0-9-]/g, '');
+  return cleanStr ? Number(cleanStr) : 0;
+}
+
+function formatVNDInput(val) {
+  const num = parseNumberInput(val);
+  return num ? num.toLocaleString('vi-VN') : '0';
+}
+
+function fmt(n) { return new Intl.NumberFormat('en-US').format(n); }
+
+function fmtUSD(n) {
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
+}
+
+function updateHeaderDate() {
+  const dateElement = document.getElementById('header-date');
+  if (dateElement) {
+    const now = new Date();
+    const options = { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' };
+    dateElement.innerText = now.toLocaleDateString('vi-VN', options);
+  }
+}
+
+function toTitleCase(str) {
+  if (!str) return '';
+  return str.toLowerCase().replace(/(^|\s)\S/g, function (firstLetter) {
+    return firstLetter.toUpperCase();
+  });
+}
+
+function toUpperCaseStr(str) {
+  if (!str) return '';
+  return str.toUpperCase();
+}

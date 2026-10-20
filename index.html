@@ -14,21 +14,14 @@
     href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Jost:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
 
-  <!-- Supabase JS CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <!-- Custom CSS -->
   <link rel="stylesheet" href="index.css">
 
-  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Export by Excel -->
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-
-  <!-- Thư viện hỗ trợ chuyển đổi giao diện HTML sang PDF chuẩn nét -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
   <script type="text/javascript">
     (function (l) {
       if (l.search[1] === 'p') {
@@ -188,7 +181,11 @@
     </div>
   </div>
 
-  <script src="/minhkhue/index.js"></script>
+  <script src="config.js"></script>
+  <script src="services.js"></script>
+  <script src="render.js"></script>
+  <script src="handlers.js"></script>
+  <script src="app.js"></script>
 </body>
 
 </html>
