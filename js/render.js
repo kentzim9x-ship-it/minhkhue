@@ -1210,7 +1210,13 @@ function renderMaterialForm(c) {
             </div>
             <div class="form-group">
               <label class="form-label">Tồn kho ban đầu</label>
-              <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.stock ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'stock\', this.value, \'number\'); d.status = this.value==0?\'out\':(this.value<=(d.reorder||0)?\'low\':\'ok\');"'} >
+              <input 
+                type="number" 
+                step="any" 
+                inputmode="decimal" 
+                class="form-input" 
+                value="${d.stock ?? 0}" 
+                ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'stock\', this.value, \'number\')"'}>
             </div>
             <div class="form-group">
               <label class="form-label">Mức định mức</label>

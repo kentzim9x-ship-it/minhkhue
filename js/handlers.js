@@ -113,15 +113,28 @@ window.addEventListener('popstate', handleRouteChange);
 // 6. XỬ LÝ DỮ LIỆU & FORM (DATA HANDLERS)
 // ==========================================
 
-function updateField(field, value, type = 'text') {
-  if (!state.formData) return;
-  state.formData[field] = (type === 'number') ? Number(value) : value;
+function updateField(field, value, type = 'string') {
+  if (!state.formData) state.formData = {};
 
-  if (field === 'warehouseCode' && Array.isArray(state.formData.lineItems)) {
-    state.formData.lineItems.forEach(line => {
-      line.warehouseCode = value;
-    });
-    render();
+  let parsedValue = value;
+  if (type === 'number') {
+    parsedValue = value === '' ? 0 : Number(value);
+  }
+
+  state.formData[field] = parsedValue;
+
+  // Tự động tính toán lại trạng thái hàng hóa khi thay đổi tồn kho hoặc định mức
+  if (state.view === 'materials' && (field === 'stock' || field === 'reorder')) {
+    const stock = Number(state.formData.stock || 0);
+    const reorder = Number(state.formData.reorder || 0);
+
+    if (stock <= 0) {
+      state.formData.status = 'out';
+    } else if (stock <= reorder) {
+      state.formData.status = 'low';
+    } else {
+      state.formData.status = 'ok';
+    }
   }
 }
 
