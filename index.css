@@ -1377,28 +1377,35 @@ div[style*="overflow: auto"],
 .app-header .view-title,
 .header-title-container h1,
 .header-title-container h2 {
-  font-weight: 700 !important; /* Bôi đậm tiêu đề trang chính */
+  font-weight: 700 !important;
+  font-size: 16px !important; /* Cỡ chữ mặc định cũ là 14px */
 }
 
 /* 2. Header bên trong các Form, Panel, Card (Bên trong Form nhập liệu/chức năng) */
 .section-title,
 .section-header,
-.section-num,
 .card-title,
-.login-title,
-.form-label,
-.kpi-label {
-  font-weight: 700 !important; /* Bôi đậm tiêu đề các section/form */
+.login-title {
+  font-weight: 700 !important;
+  font-size: 13px !important; /* Cỡ chữ mặc định cũ là 11px */
+}
+
+/* Tiêu đề ô nhập (Form Label) */
+.form-label {
+  font-weight: 700 !important;
+  font-size: 11px !important; /* Cỡ chữ mặc định cũ là 10px */
 }
 
 /* 3. Tiêu đề các cột trong Bảng Danh Sách (List Header) */
 table th,
 .table th {
-  font-weight: 700 !important; /* Bôi đậm header của bảng danh sách */
+  font-weight: 700 !important;
+  font-size: 11px !important; /* Cỡ chữ mặc định cũ là 10px */
 }
 
 /* 4. Tiêu đề nhóm Menu Sidebar */
 .nav-section-title,
 .brand-title {
   font-weight: 700 !important;
+  font-size: 10px !important; /* Cỡ chữ mặc định cũ là 9px */
 }
