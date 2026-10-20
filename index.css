@@ -1372,40 +1372,34 @@ div[style*="overflow: auto"],
   }
 }
 
-/* 1. Header bên ngoài trang/danh mục (Báo Cáo Tồn Kho, Danh Mục Hàng Hóa,...) */
+/* ==============================================================
+   BÔI ĐẬM & TĂNG CỠ CHỮ TOÀN BỘ HEADER (GLOBAL)
+   ============================================================== */
+
+/* 1. Tiêu đề ngoài trang chính (Danh Mục Hàng Hóa, Báo Cáo Tồn Kho,...) */
 .view-title,
-.app-header .view-title,
-.header-title-container h1,
-.header-title-container h2 {
+.app-header .view-title {
   font-weight: 700 !important;
-  font-size: 16px !important; /* Cỡ chữ mặc định cũ là 14px */
+  font-size: 16px !important;
 }
 
-/* 2. Header bên trong các Form, Panel, Card (Bên trong Form nhập liệu/chức năng) */
+/* 2. Tiêu đề các khung Form (02 DANH MỤC SẢN PHẨM, 01 THÔNG TIN CHUNG,...) */
 .section-title,
 .section-header,
-.card-title,
-.login-title {
+.section-num {
   font-weight: 700 !important;
-  font-size: 13px !important; /* Cỡ chữ mặc định cũ là 11px */
+  font-size: 13px !important;
 }
 
-/* Tiêu đề ô nhập (Form Label) */
-.form-label {
-  font-weight: 700 !important;
-  font-size: 11px !important; /* Cỡ chữ mặc định cũ là 10px */
-}
-
-/* 3. Tiêu đề các cột trong Bảng Danh Sách (List Header) */
+/* 3. Tiêu đề các cột Bảng (MÃ HÀNG, TÊN SẢN PHẨM, ĐVT, SỐ LƯỢNG, ĐƠN GIÁ,...) */
 table th,
 .table th {
   font-weight: 700 !important;
-  font-size: 11px !important; /* Cỡ chữ mặc định cũ là 10px */
+  font-size: 12px !important;
 }
 
-/* 4. Tiêu đề nhóm Menu Sidebar */
-.nav-section-title,
-.brand-title {
+/* 4. Tiêu đề các ô nhập liệu (Form Label) */
+.form-label {
   font-weight: 700 !important;
-  font-size: 10px !important; /* Cỡ chữ mặc định cũ là 9px */
+  font-size: 11px !important;
 }
