@@ -1371,3 +1371,34 @@ div[style*="overflow: auto"],
     display: none !important;
   }
 }
+
+/* 1. Header bên ngoài trang/danh mục (Báo Cáo Tồn Kho, Danh Mục Hàng Hóa,...) */
+.view-title,
+.app-header .view-title,
+.header-title-container h1,
+.header-title-container h2 {
+  font-weight: 700 !important; /* Bôi đậm tiêu đề trang chính */
+}
+
+/* 2. Header bên trong các Form, Panel, Card (Bên trong Form nhập liệu/chức năng) */
+.section-title,
+.section-header,
+.section-num,
+.card-title,
+.login-title,
+.form-label,
+.kpi-label {
+  font-weight: 700 !important; /* Bôi đậm tiêu đề các section/form */
+}
+
+/* 3. Tiêu đề các cột trong Bảng Danh Sách (List Header) */
+table th,
+.table th {
+  font-weight: 700 !important; /* Bôi đậm header của bảng danh sách */
+}
+
+/* 4. Tiêu đề nhóm Menu Sidebar */
+.nav-section-title,
+.brand-title {
+  font-weight: 700 !important;
+}
