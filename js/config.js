@@ -44,9 +44,6 @@ overlayEl.className = 'mobile-overlay';
 overlayEl.onclick = toggleMobileMenu;
 document.body.appendChild(overlayEl);
 
-// Tạo lớp Overlay để bấm ra ngoài đóng Menu (Khởi tạo an toàn)
-let overlayEl = null;
-
 function initMobileOverlay() {
   if (overlayEl || !document.body) return;
   overlayEl = document.createElement('div');
