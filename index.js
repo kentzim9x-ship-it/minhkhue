@@ -2181,8 +2181,8 @@ function renderLoginForm(container) {
       box-sizing: border-box;
     ">
       
-      <!-- Background mờ toàn trang -->
-      <div class="login-bg-backdrop" style="
+      <!-- Background mờ toàn trang phủ kín 100% -->
+      <div style="
         position: absolute;
         top: -5%; left: -5%; width: 110%; height: 110%;
         background: radial-gradient(circle at center, rgba(12, 14, 18, 0.4) 0%, rgba(12, 14, 18, 0.85) 80%),
@@ -2193,33 +2193,65 @@ function renderLoginForm(container) {
       "></div>
 
       <!-- Card Login chính -->
-      <div class="login-split-card" style="position: relative; z-index: 1;">
+      <div style="
+        width: 100%; 
+        max-width: 900px; 
+        min-height: 520px;
+        background: var(--card, rgba(20, 24, 33, 0.9)); 
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-radius: 4px; 
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 1px rgba(240, 160, 48, 0.3); 
+        border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+        display: flex;
+        overflow: hidden;
+        position: relative;
+        z-index: 1;
+      " class="login-split-card">
 
-        <!-- Cột trái: Banner thông tin (Tỉ lệ 3/5 - 60%) -->
-        <div class="login-banner-col">
+        <!-- Cột trái: Banner thông tin -->
+        <div style="
+          flex: 1; 
+          background: radial-gradient(circle at center, rgba(20, 24, 33, 0.6) 0%, rgba(13, 16, 22, 0.95) 100%), 
+                      url('${bannerImg}') center/cover no-repeat; 
+          padding: 40px; 
+          display: flex; 
+          flex-direction: column; 
+          justify-content: center; 
+          align-items: center;
+          text-align: center;
+          position: relative;
+        " class="login-banner-col">
           
-          <div style="max-width: 380px; position: relative; z-index: 2;">
+          <div style="max-width: 320px; position: relative; z-index: 2;">
             <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(240, 160, 48, 0.15); border: 1px solid rgba(240, 160, 48, 0.35); border-radius: 4px; margin-bottom: 20px;">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f0a030" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             </div>
-            <h1 class="login-banner-h1" style="font-size: 30px; font-weight: 700; color: #ffffff; letter-spacing: 0.05em; margin: 0 0 10px 0;">
+            <h1 style="font-size: 30px; font-weight: 700; color: #ffffff; letter-spacing: 0.05em; margin: 0 0 10px 0;">
               MINH KHUÊ <span style="color: #f0a030;">LMS</span>
             </h1>
-            <p class="login-banner-p" style="font-size: 13px; color: #e4e4e7; font-family: var(--font-dm-mono, monospace); line-height: 1.6; margin: 0;">
+            <p style="font-size: 13px; color: #e4e4e7; font-family: var(--font-dm-mono, monospace); line-height: 1.6; margin: 0;">
               Hệ thống quản lý kho hàng, báo giá và theo dõi đơn bán hàng tập trung
             </p>
           </div>
         </div>
 
-        <!-- Cột phải: Form nhập liệu (Tỉ lệ 2/5 - 40%) -->
-        <div class="login-form-col">
+        <!-- Cột phải: Form nhập liệu -->
+        <div style="
+          flex: 1; 
+          padding: 48px 40px; 
+          display: flex; 
+          flex-direction: column; 
+          justify-content: center;
+          background: var(--card, rgba(20, 24, 33, 0.95));
+        " class="login-form-col">
           
-          <div style="margin-bottom: 24px;">
+          <div style="margin-bottom: 28px;">
             <h2 class="login-title" style="font-size: 22px; font-weight: 600; color: var(--foreground, #ffffff); margin: 0 0 6px 0;">Đăng Nhập Hệ Thống</h2>
             <p class="login-subtext" style="font-size: 12px; color: var(--muted-foreground, #8a94a6); font-family: var(--font-dm-mono, monospace);">Vui lòng nhập thông tin tài khoản của bạn</p>
           </div>
 
-          <form onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 18px;">
+          <form onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 20px;">
             
             <div style="position: relative;">
               <label style="display: block; font-size: 11px; font-family: var(--font-dm-mono, monospace); color: #f0a030; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.05em;">Tên tài khoản</label>
@@ -2288,7 +2320,7 @@ function renderLoginForm(container) {
               </div>
             </div>
 
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
               <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted-foreground, #a0aec0); cursor: pointer; user-select: none;">
                 <input 
                   type="checkbox" 
@@ -2298,17 +2330,6 @@ function renderLoginForm(container) {
                 >
                 Ghi nhớ đăng nhập
               </label>
-
-              <!-- Thêm tùy chọn Quên mật khẩu (Trang trí) -->
-              <a 
-                href="javascript:void(0)" 
-                onclick="return false;" 
-                style="font-size: 12px; color: #f0a030; text-decoration: none; font-weight: 500; transition: opacity 0.2s;"
-                onmouseover="this.style.opacity='0.8';"
-                onmouseout="this.style.opacity='1';"
-              >
-                Quên mật khẩu?
-              </a>
             </div>
 
             <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.2); padding: 8px 12px; border-radius: 2px; text-align: center;">
@@ -2319,8 +2340,8 @@ function renderLoginForm(container) {
               type="submit" 
               style="
                 width: 100%; 
-                padding: 11px; 
-                margin-top: 6px; 
+                padding: 12px; 
+                margin-top: 10px; 
                 background: linear-gradient(135deg, #f0a030 0%, #d98818 100%); 
                 border: none; 
                 border-radius: 2px; 
@@ -2338,37 +2359,6 @@ function renderLoginForm(container) {
               Đăng Nhập
             </button>
           </form>
-
-          <!-- Thêm Icon Mạng Xã Hội (Facebook, Zalo, Google, X - Trang trí) -->
-          <div style="margin-top: 24px; text-align: center;">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 14px;">
-              <span style="height: 1px; flex: 1; background: var(--border, rgba(255,255,255,0.1));"></span>
-              <span style="font-size: 11px; color: var(--muted-foreground, #8a94a6); font-family: var(--font-dm-mono, monospace); text-transform: uppercase;">Hoặc đăng nhập với</span>
-              <span style="height: 1px; flex: 1; background: var(--border, rgba(255,255,255,0.1));"></span>
-            </div>
-
-            <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
-              <!-- Facebook -->
-              <button class="social-btn" title="Facebook" style="width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border, rgba(255,255,255,0.15)); background: rgba(255,255,255,0.05); color: var(--foreground, #ffffff); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#f0a030'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border)'; this.style.transform='none';">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-              </button>
-
-              <!-- Zalo -->
-              <button class="social-btn" title="Zalo" style="width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border, rgba(255,255,255,0.15)); background: rgba(255,255,255,0.05); color: var(--foreground, #ffffff); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 700; font-size: 11px; font-family: var(--font-dm-mono); transition: all 0.2s;" onmouseover="this.style.borderColor='#f0a030'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border)'; this.style.transform='none';">
-                Zalo
-              </button>
-
-              <!-- Google -->
-              <button class="social-btn" title="Google" style="width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border, rgba(255,255,255,0.15)); background: rgba(255,255,255,0.05); color: var(--foreground, #ffffff); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#f0a030'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border)'; this.style.transform='none';">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg>
-              </button>
-
-              <!-- X / Twitter -->
-              <button class="social-btn" title="X (Twitter)" style="width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border, rgba(255,255,255,0.15)); background: rgba(255,255,255,0.05); color: var(--foreground, #ffffff); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='#f0a030'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--border)'; this.style.transform='none';">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              </button>
-            </div>
-          </div>
 
         </div>
 
