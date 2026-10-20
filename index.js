@@ -2232,7 +2232,7 @@ function renderLoginForm(container) {
               line-height: 1.5;
               margin: 0;
             ">
-              Vui lòng nhập thông tin tài khoản để truy cập hệ thống
+
             </p>
           </div>
 
