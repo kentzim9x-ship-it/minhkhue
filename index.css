@@ -1371,35 +1371,3 @@ div[style*="overflow: auto"],
     display: none !important;
   }
 }
-
-/* ==============================================================
-   BÔI ĐẬM & TĂNG CỠ CHỮ TOÀN BỘ HEADER (GLOBAL)
-   ============================================================== */
-
-/* 1. Tiêu đề ngoài trang chính (Danh Mục Hàng Hóa, Báo Cáo Tồn Kho,...) */
-.view-title,
-.app-header .view-title {
-  font-weight: 700 !important;
-  font-size: 16px !important;
-}
-
-/* 2. Tiêu đề các khung Form (02 DANH MỤC SẢN PHẨM, 01 THÔNG TIN CHUNG,...) */
-.section-title,
-.section-header,
-.section-num {
-  font-weight: 700 !important;
-  font-size: 13px !important;
-}
-
-/* 3. Bôi đậm và tăng cỡ chữ cho tiêu đề cột dạng CSS Grid (Mã hàng, Tên sản phẩm, ĐVT,...) */
-div[style*="grid-template-columns"] > span {
-  font-weight: 700 !important;
-  font-size: 12px !important; /* Thay đổi cỡ chữ mong muốn ở đây (ví dụ: 12px) */
-  color: var(--foreground) !important; /* Giúp chữ sáng/rõ hơn trên nền header */
-}
-
-/* 4. Tiêu đề các ô nhập liệu (Form Label) */
-.form-label {
-  font-weight: 700 !important;
-  font-size: 11px !important;
-}
