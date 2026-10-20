@@ -1391,11 +1391,11 @@ div[style*="overflow: auto"],
   font-size: 13px !important;
 }
 
-/* 3. Tiêu đề các cột Bảng (MÃ HÀNG, TÊN SẢN PHẨM, ĐVT, SỐ LƯỢNG, ĐƠN GIÁ,...) */
-table th,
-.table th {
+/* 3. Bôi đậm và tăng cỡ chữ cho tiêu đề cột dạng CSS Grid (Mã hàng, Tên sản phẩm, ĐVT,...) */
+div[style*="grid-template-columns"] > span {
   font-weight: 700 !important;
-  font-size: 12px !important;
+  font-size: 12px !important; /* Thay đổi cỡ chữ mong muốn ở đây (ví dụ: 12px) */
+  color: var(--foreground) !important; /* Giúp chữ sáng/rõ hơn trên nền header */
 }
 
 /* 4. Tiêu đề các ô nhập liệu (Form Label) */
