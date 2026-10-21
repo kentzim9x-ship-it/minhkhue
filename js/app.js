@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   await fetchDataFromSupabase();
+  subscribeAppRealtimeChanges();
   render();
   handleRouteChange();
   updateHeaderDate();

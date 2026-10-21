@@ -12,6 +12,7 @@ function navigate(view, mode = 'list', itemId = null) {
   state.mode = mode;
   state.filter = 'all';
   state.search = '';
+  state.page = 1;
 
   const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
   const tagEl = document.getElementById('view-tag');
@@ -81,6 +82,7 @@ function handleRouteChange() {
     state.mode = mode;
     state.filter = 'all';
     state.search = '';
+    state.page = 1;
 
     const meta = viewMeta[view];
     const tagEl = document.getElementById('view-tag');
@@ -453,6 +455,34 @@ async function saveForm(module) {
   }
 
   try {
+    // KIỂM TRA XUNG ĐỘT DỮ LIỆU ĐA NGƯỜI DÙNG KHI CHỈNH SỬA (MODE EDIT)
+    if (state.mode === 'edit') {
+      const { data: serverRecord } = await supabaseClient
+        .from(tableName)
+        .select('date2, time2, user_id2')
+        .eq('id', dbPayload.id)
+        .maybeSingle();
+
+      if (serverRecord && serverRecord.date2 && serverRecord.time2) {
+        const localLastUpdate = `${state.formData.date2 || ''} ${state.formData.time2 || ''}`.trim();
+        const serverLastUpdate = `${serverRecord.date2} ${serverRecord.time2}`.trim();
+
+        if (serverLastUpdate > localLastUpdate) {
+          const editorName = getUserFullName(serverRecord.user_id2);
+          const confirmOverwrite = await showConfirm(
+            `CẢNH BÁO XUNG ĐỘT DỮ LIỆU:\nBản ghi này vừa được cập nhật bởi [${editorName}] lúc ${serverLastUpdate}.\n\nBạn có muốn ghi đè dữ liệu của họ không?`,
+            'Xung đột dữ liệu đa người dùng'
+          );
+
+          if (!confirmOverwrite) {
+            await fetchDataFromSupabase();
+            render();
+            return; // Hủy thao tác lưu
+          }
+        }
+      }
+    }
+
     if (state.mode === 'add') {
       const { error } = await supabaseClient.from(tableName).insert([supabasePayload]);
       if (error) throw error;
@@ -491,6 +521,7 @@ async function saveForm(module) {
       db[targetKey].sort(sortDescById);
     }
 
+    invalidateStockCache();
     fetchDataFromSupabase();
     navigate(module, 'list');
   } catch (error) {

@@ -533,6 +533,15 @@ function renderMaterialsList(c) {
     return true;
   });
 
+  // TÍNH TOÁN PHÂN TRANG
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+  if (state.page > totalPages) state.page = totalPages;
+  if (state.page < 1) state.page = 1;
+
+  const startIndex = (state.page - 1) * state.pageSize;
+  const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
+
   const kpiHtml = [
     { label: 'Tổng số SKU', value: fmt(db.materials.length), color: 'var(--foreground)' },
     { label: 'Tổng tồn kho', value: fmt(db.materials.reduce((a, i) => a + i.stock, 0)), color: '#f0a030' },
@@ -551,7 +560,7 @@ function renderMaterialsList(c) {
     'Hành Động'
   ].map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tồn Kho Ban Đầu' || h === 'Đơn Giá' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`).join('');
 
-  const rowsHtml = filtered.map(m => `
+  const rowsHtml = paginatedItems.map(m => `
   <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
     <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
     <td style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
@@ -587,7 +596,7 @@ function renderMaterialsList(c) {
         <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã, tên hàng..." value="${state.search}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+            <input type="text" id="global-search" placeholder="Tìm theo mã, tên hàng..." value="${state.search}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('materials', 'add')">${Icons.plus} Thêm Mới Hàng Hóa</button>` : ''}
         </div>
@@ -605,6 +614,18 @@ function renderMaterialsList(c) {
           </tbody>
         </table>
         ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
+      </div>
+
+      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
+        </span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
+          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
+          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
+        </div>
       </div>
     </div>
   `;

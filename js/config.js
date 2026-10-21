@@ -10,7 +10,9 @@ let state = {
   mode: 'list',
   filter: 'all',
   search: '',
-  formData: null
+  formData: null,
+  page: 1,        // Trang hiện tại
+  pageSize: 15    // Số lượng bản ghi trên mỗi trang
 };
 
 const viewMeta = {
@@ -195,8 +197,22 @@ function syncRealtimeStockToSupabase(sku, warehouseCode, realStock) {
   }, 0);
 }
 
+let stockMemoCache = {};
+let isStockCacheValid = false;
+
+function invalidateStockCache() {
+  isStockCacheValid = false;
+  stockMemoCache = {};
+}
+
 function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
   if (!sku) return 0;
+
+  // Trả về dữ liệu đệm nếu cache còn hiệu lực
+  const cacheKey = `${sku}_${warehouseCode || 'all'}_${currentDocId || 'none'}`;
+  if (isStockCacheValid && stockMemoCache[cacheKey] !== undefined) {
+    return stockMemoCache[cacheKey];
+  }
 
   let initialStock = 0;
   if (warehouseCode && db.inventory && db.inventory.length > 0) {
@@ -262,6 +278,10 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
   if (warehouseCode) {
     syncRealtimeStockToSupabase(sku, warehouseCode, realtimeStock);
   }
+
+  // LƯU KẾT QUẢ VÀO CACHE
+  stockMemoCache[cacheKey] = realtimeStock;
+  isStockCacheValid = true;
 
   return realtimeStock;
 }

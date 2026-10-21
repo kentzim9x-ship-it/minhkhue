@@ -784,3 +784,21 @@ function markAllNotificationsAsRead() {
   const list = db.notifications || [];
   list.forEach(n => markNotifIdAsRead(n.id));
 }
+
+function subscribeAppRealtimeChanges() {
+  const tables = ['materials', 'customers', 'warehouses', 'quotations', 'orders', 'returns', 'grns'];
+
+  tables.forEach(tbl => {
+    supabaseClient
+      .channel(`public:${tbl}-changes`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: tbl }, async () => {
+        invalidateStockCache();
+        await fetchDataFromSupabase();
+        // Chỉ vẽ lại màn hình nếu người dùng đang đứng ở danh sách
+        if (state.mode === 'list') {
+          render();
+        }
+      })
+      .subscribe();
+  });
+}
