@@ -1428,7 +1428,7 @@ div[style*="overflow: auto"],
     box-sizing: border-box !important;
   }
 
-  /* 4. Định dạng từng hàng thông tin td: Căn sát 2 mép (Trái: Tiêu đề - Phải: Giá trị) */
+  /* 4. Định dạng ô td dạng Flexbox đẩy 2 phần tử về 2 đầu */
   table tbody tr td {
     display: flex !important;
     justify-content: space-between !important;
@@ -1438,10 +1438,9 @@ div[style*="overflow: auto"],
     font-size: 13px !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    text-align: right !important;
   }
 
-  /* 5. Tự động hiển thị Tên tiêu đề bên Trái dựa vào data-label */
+  /* 5. Tiêu đề cột nằm cố định bên trái */
   table tbody tr td::before {
     content: attr(data-label);
     font-family: var(--font-dm-mono);
@@ -1454,11 +1453,24 @@ div[style*="overflow: auto"],
     flex-shrink: 0 !important;
   }
 
-  /* 6. Ép TẤT CẢ văn bản / Badge dữ liệu dạt sát KỊCH LỀ PHẢI */
-  table tbody tr td > * {
+  /* 6. ÉP TẤT CẢ GIÁ TRỊ VĂN BẢN/SPAN/BADGE DẠT SÁT KỊCH LỀ PHẢI */
+  table tbody tr td {
+    text-align: right !important;
+  }
+
+  table tbody tr td>*:not(div) {
     margin-left: auto !important;
     text-align: right !important;
+    justify-content: flex-end !important;
+    display: inline-flex !important;
+    max-width: 65% !important;
     word-break: break-word !important;
+  }
+
+  /* Xử lý riêng cho thẻ span badge (CÒN HÀNG,...) dạt sát lề phải */
+  table tbody tr td>.badge {
+    margin-left: auto !important;
+    display: inline-block !important;
   }
 
   /* 7. Xử lý riêng cho dòng HÀNH ĐỘNG (Nút Xem, Sửa, Xóa) */
@@ -1472,9 +1484,9 @@ div[style*="overflow: auto"],
   }
 
   /* Ép cụm chứa nút bấm gom gọn sát về bên phải */
-  table tbody tr td:last-child > div,
-  table tbody tr td[data-label="HÀNH ĐỘNG"] > div,
-  table tbody tr td[data-label="Hành Động"] > div {
+  table tbody tr td:last-child>div,
+  table tbody tr td[data-label="HÀNH ĐỘNG"]>div,
+  table tbody tr td[data-label="Hành Động"]>div {
     display: flex !important;
     flex-direction: row !important;
     gap: 6px !important;
@@ -1569,16 +1581,38 @@ div[style*="overflow: auto"],
   animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1), toastOut 0.3s forwards 2.7s;
 }
 
-.toast-item.toast-success { border-left-color: #34d399; }
-.toast-item.toast-error { border-left-color: #f87171; }
-.toast-item.toast-warning { border-left-color: #fbbf24; }
+.toast-item.toast-success {
+  border-left-color: #34d399;
+}
+
+.toast-item.toast-error {
+  border-left-color: #f87171;
+}
+
+.toast-item.toast-warning {
+  border-left-color: #fbbf24;
+}
 
 @keyframes toastIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @keyframes toastOut {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(100%); opacity: 0; }
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }
