@@ -645,6 +645,15 @@ function renderCustomersList(c) {
     return matchStatus && matchSearch;
   });
 
+  // TÍNH TOÁN PHÂN TRANG
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+  if (state.page > totalPages) state.page = totalPages;
+  if (state.page < 1) state.page = 1;
+
+  const startIndex = (state.page - 1) * state.pageSize;
+  const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
+
   const totalCount = db.customers.length;
   const activeCount = db.customers.filter(c => c.status === 'active').length;
   const suspendedCount = db.customers.filter(c => c.status === 'suspended' || c.status === 'inactive').length;
@@ -668,7 +677,7 @@ function renderCustomersList(c) {
     </th>
   `).join('');
 
-  const rowsHtml = filtered.map(c => `
+  const rowsHtml = paginatedItems.map(c => `
     <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('customers', '${hasPermission ? 'edit' : 'view'}', '${c.id}')" onclick="navigate('customers', 'view', '${c.id}')">
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); text-align: left;">${c.id || '—'}</td>
       <td style="padding: 11px 16px; font-size: 13px; font-weight: 500; text-align: left;">${c.name || '—'}</td>
@@ -703,7 +712,7 @@ function renderCustomersList(c) {
         <div style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã, tên, liên hệ, địa chỉ..." value="${state.search}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+            <input type="text" id="global-search" placeholder="Tìm theo mã, tên, liên hệ, địa chỉ..." value="${state.search}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('customers', 'add')">${Icons.plus} Thêm Mới Khách Hàng</button>` : ''}
         </div>
@@ -721,6 +730,18 @@ function renderCustomersList(c) {
           </tbody>
         </table>
         ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
+      </div>
+
+      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
+        </span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
+          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
+          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
+        </div>
       </div>
     </div>
   `;
@@ -778,7 +799,6 @@ function renderQuotationsList(c) {
 
   const filtered = db.quotations.filter(q => {
     const matchStatus = (state.filter === 'all' || q.status === state.filter);
-
     const searchKey = (state.search || '').trim().toLowerCase();
     const custId = (q.customerId || q.customerid || '').toLowerCase();
     const custName = (q.customer || '').toLowerCase();
@@ -791,6 +811,15 @@ function renderQuotationsList(c) {
 
     return matchStatus && matchSearch;
   });
+
+  // TÍNH TOÁN PHÂN TRANG
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+  if (state.page > totalPages) state.page = totalPages;
+  if (state.page < 1) state.page = 1;
+
+  const startIndex = (state.page - 1) * state.pageSize;
+  const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
 
   const kpiHtml = [
     ['all', 'Tất cả'],
@@ -812,7 +841,7 @@ function renderQuotationsList(c) {
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
-  const rowsHtml = filtered.map(q => `
+  const rowsHtml = paginatedItems.map(q => `
     <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('quotations', '${hasPermission ? 'edit' : 'view'}', '${q.id}')" onclick="navigate('quotations', 'view', '${q.id}')">
       <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${q.id}</td>
       <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${q.customer}</td>
@@ -850,7 +879,7 @@ function renderQuotationsList(c) {
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã, tên khách hàng..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+            <input type="text" id="global-search" placeholder="Tìm theo mã, tên khách hàng..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Tạo Báo Giá Mới</button>` : ''}
         </div>
@@ -868,6 +897,18 @@ function renderQuotationsList(c) {
           </tbody>
         </table>
         ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu phù hợp</div>` : ''}
+      </div>
+
+      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
+        </span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
+          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
+          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
+        </div>
       </div>
     </div>
   `;
@@ -891,6 +932,15 @@ function renderOrdersList(c) {
     return matchStatus && matchSearch;
   });
 
+  // TÍNH TOÁN PHÂN TRANG
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+  if (state.page > totalPages) state.page = totalPages;
+  if (state.page < 1) state.page = 1;
+
+  const startIndex = (state.page - 1) * state.pageSize;
+  const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
+
   const kpiHtml = [
     { label: 'Tổng đơn hàng', val: db.orders.length, color: 'var(--foreground)' },
     { label: 'Hoàn thành', val: db.orders.filter(o => o.status === 'completed' || o.status === 'delivered').length, color: '#34d399' },
@@ -910,7 +960,7 @@ function renderOrdersList(c) {
     'Hành Động'
   ].map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`).join('');
 
-  const rowsHtml = filtered.map(o => `
+  const rowsHtml = paginatedItems.map(o => `
   <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', '${hasPermission ? 'edit' : 'view'}', '${o.id}')" onclick="navigate('sales-orders', 'view', '${o.id}')">
     <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${o.id}</td>
     <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${o.customer}</td>
@@ -947,7 +997,7 @@ function renderOrdersList(c) {
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã, tên khách hàng..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+            <input type="text" id="global-search" placeholder="Tìm theo mã, tên khách hàng..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('sales-orders', 'add')">${Icons.plus} Tạo Đơn Hàng Mới</button>` : ''}
         </div>
@@ -965,6 +1015,18 @@ function renderOrdersList(c) {
           </tbody>
         </table>
         ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu phù hợp</div>` : ''}
+      </div>
+
+      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
+        </span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
+          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
+          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
+        </div>
       </div>
     </div>
   `;
@@ -990,6 +1052,15 @@ function renderReturnsList(c) {
     return matchStatus && matchSearch;
   });
 
+  // TÍNH TOÁN PHÂN TRANG
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+  if (state.page > totalPages) state.page = totalPages;
+  if (state.page < 1) state.page = 1;
+
+  const startIndex = (state.page - 1) * state.pageSize;
+  const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
+
   const kpiHtml = [
     { label: 'Tổng số lượt đổi trả', val: db.returns.length, color: 'var(--foreground)' },
     { label: 'Đã xử lý', val: db.returns.filter(r => r.status === 'processed').length, color: '#34d399' },
@@ -1006,7 +1077,7 @@ function renderReturnsList(c) {
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Hoàn Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
-  const rowsHtml = filtered.map(r => {
+  const rowsHtml = paginatedItems.map(r => {
     const totalLines = (r.lineItems || r.lineitems || []).length;
     return `
       <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('returns', '${hasPermission ? 'edit' : 'view'}', '${r.id}')" onclick="navigate('returns', 'view', '${r.id}')">
@@ -1047,7 +1118,7 @@ function renderReturnsList(c) {
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã, khách hàng, lý do..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+            <input type="text" id="global-search" placeholder="Tìm theo mã, khách hàng, lý do..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Tạo Phiếu Đổi Trả</button>` : ''}
         </div>
@@ -1065,6 +1136,18 @@ function renderReturnsList(c) {
           </tbody>
         </table>
         ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
+      </div>
+
+      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
+        </span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
+          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
+          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
+        </div>
       </div>
     </div>
   `;
@@ -1088,6 +1171,15 @@ function renderGRNList(c) {
     return matchStatus && matchSearch;
   });
 
+  // TÍNH TOÁN PHÂN TRANG
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+  if (state.page > totalPages) state.page = totalPages;
+  if (state.page < 1) state.page = 1;
+
+  const startIndex = (state.page - 1) * state.pageSize;
+  const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
+
   const kpiHtml = [
     { label: 'Tổng số phiếu nhập', val: db.grns.length, color: 'var(--foreground)' },
     { label: 'Đã nhận hàng', val: db.grns.filter(g => g.status === 'Đã nhận' || g.status === 'received').length, color: '#fbbf24' },
@@ -1103,7 +1195,7 @@ function renderGRNList(c) {
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Giá Trị' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
-  const rowsHtml = filtered.map(g => {
+  const rowsHtml = paginatedItems.map(g => {
     const totalLines = (g.lineItems || []).length;
     const wCode = g.warehouseCode || g.warehouse_code || '—';
     return `
@@ -1144,7 +1236,7 @@ function renderGRNList(c) {
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã phiếu, nhà cung cấp..." value="${state.search || ''}" oninput="state.search=this.value; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+            <input type="text" id="global-search" placeholder="Tìm theo mã phiếu, nhà cung cấp..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Nhập Kho Mới</button>` : ''}
         </div>
@@ -1162,6 +1254,18 @@ function renderGRNList(c) {
           </tbody>
         </table>
         ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
+      </div>
+
+      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
+        </span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
+          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
+          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
+        </div>
       </div>
     </div>
   `;
@@ -2057,7 +2161,6 @@ function renderReportInventory(c) {
   const hasPermission = checkModulePermission('materials');
 
   if (state.reportInvSearch === undefined) state.reportInvSearch = '';
-  if (!state.reportInvLimit) state.reportInvLimit = 20;
 
   const getActualStock = (m) => {
     const invList = (db.inventory || []).filter(i => i.sku === m.id || i.material_id === m.id);
@@ -2079,7 +2182,15 @@ function renderReportInventory(c) {
   };
 
   const filtered = getFilteredList();
-  const visibleList = filtered.slice(0, state.reportInvLimit);
+
+  // TÍNH TOÁN PHÂN TRANG
+  const totalItems = filtered.length;
+  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+  if (state.page > totalPages) state.page = totalPages;
+  if (state.page < 1) state.page = 1;
+
+  const startIndex = (state.page - 1) * state.pageSize;
+  const visibleList = filtered.slice(startIndex, startIndex + state.pageSize);
 
   const totalVal = filtered.reduce((s, m) => s + getActualStock(m) * (m.cost || 0), 0);
   const reservedVal = filtered.reduce((s, m) => s + (m.reserved || 0) * (m.cost || 0), 0);
@@ -2181,7 +2292,6 @@ function renderReportInventory(c) {
           <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Báo Cáo Tồn Kho Chi Tiết & Định Giá</span>
           
           <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <!-- Ô TÌM KIẾM DÙNG SỰ KIỆN CẬP NHẬT ĐỘNG, GIỮ NGUYÊN FOCUS CON TRỎ -->
             <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 2px; width: 220px;">
               <span style="color: var(--muted-foreground);">${Icons.search}</span>
               <input type="text" id="report-inv-search-input" placeholder="Tìm mã, tên hàng..." value="${state.reportInvSearch}" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; padding: 6px 0;">
@@ -2189,7 +2299,7 @@ function renderReportInventory(c) {
 
             <div style="display: flex; gap: 1px;">
               ${['all', ...categories].map(cat => `
-                <button onclick="state.filter='${cat}'; state.reportInvLimit=20; render();" style="padding: 5px 12px; font-family: var(--font-dm-mono); font-size: 10px; text-transform: uppercase; background: ${state.filter === cat ? 'var(--primary)' : 'var(--muted)'}; color: ${state.filter === cat ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer;">${cat === 'all' ? 'Tất cả' : cat}</button>
+                <button onclick="state.filter='${cat}'; state.page=1; render();" style="padding: 5px 12px; font-family: var(--font-dm-mono); font-size: 10px; text-transform: uppercase; background: ${state.filter === cat ? 'var(--primary)' : 'var(--muted)'}; color: ${state.filter === cat ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer;">${cat === 'all' ? 'Tất cả' : cat}</button>
               `).join('')}
             </div>
           </div>
@@ -2197,7 +2307,7 @@ function renderReportInventory(c) {
 
         <div style="padding: 8px 20px 4px; display: flex; justify-content: flex-end; border-bottom: 1px solid var(--border); background: var(--secondary);">
           <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);" id="report-inv-summary-text">
-            Đang hiển thị <strong>${visibleList.length}/${filtered.length}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(totalVal)}</strong> · Đã tạm giữ: ${fmtUSD(reservedVal)} · Cảnh báo: ${alertCount}
+            Đang hiển thị <strong>${totalItems === 0 ? 0 : startIndex + 1}-${Math.min(startIndex + state.pageSize, totalItems)}/${totalItems}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(totalVal)}</strong> · Đã tạm giữ: ${fmtUSD(reservedVal)} · Cảnh báo: ${alertCount}
           </span>
         </div>
 
@@ -2216,67 +2326,31 @@ function renderReportInventory(c) {
           Không tìm thấy dữ liệu mặt hàng phù hợp
         </div>
 
-        <div id="report-inv-loadmore-btn" style="padding: 16px; text-align: center; border-top: 1px solid var(--border); background: var(--secondary); display: ${visibleList.length < filtered.length ? 'block' : 'none'};">
-          <button onclick="state.reportInvLimit += 10; render();" style="padding: 8px 24px; background: var(--primary); color: var(--primary-foreground); border: none; font-family: var(--font-dm-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: opacity 0.15s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-            Tải thêm 10 mã hàng ➔
-          </button>
-        </div>
+      </div>
 
+      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
+        </span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
+          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
+          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
+        </div>
       </div>
     </div>
   `;
 
-  // Xử lý ô Tìm kiếm không bị giật / mất focus khi nhập
+  // Xử lý ô Tìm kiếm
   const searchInput = document.getElementById('report-inv-search-input');
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       state.reportInvSearch = e.target.value;
-      state.reportInvLimit = 20;
-
-      const newFiltered = getFilteredList();
-      const newVisible = newFiltered.slice(0, state.reportInvLimit);
-      const newTotalVal = newFiltered.reduce((s, m) => s + getActualStock(m) * (m.cost || 0), 0);
-      const newReservedVal = newFiltered.reduce((s, m) => s + (m.reserved || 0) * (m.cost || 0), 0);
-      const newAlertCount = newFiltered.filter(m => ['low', 'critical', 'out'].includes(m.status)).length;
-
-      // Cập nhật tbody
-      const tbody = document.getElementById('report-inv-tbody');
-      if (tbody) tbody.innerHTML = renderRows(newVisible);
-
-      // Cập nhật dòng tổng kết
-      const summaryText = document.getElementById('report-inv-summary-text');
-      if (summaryText) {
-        summaryText.innerHTML = `Đang hiển thị <strong>${newVisible.length}/${newFiltered.length}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(newTotalVal)}</strong> · Đã tạm giữ: ${fmtUSD(newReservedVal)} · Cảnh báo: ${newAlertCount}`;
-      }
-
-      // Cập nhật ẩn/hiển thị thông báo rỗng & nút tải thêm
-      const emptyMsg = document.getElementById('report-inv-empty-msg');
-      if (emptyMsg) emptyMsg.style.display = newFiltered.length === 0 ? 'block' : 'none';
-
-      const loadMoreBtn = document.getElementById('report-inv-loadmore-btn');
-      if (loadMoreBtn) loadMoreBtn.style.display = newVisible.length < newFiltered.length ? 'block' : 'none';
+      state.page = 1;
+      render();
     });
   }
-
-  // Tự động lazy load khi cuộn trang
-  setTimeout(() => {
-    const contentBox = document.getElementById('app-content');
-    if (contentBox && !contentBox.dataset.lazyBound) {
-      contentBox.addEventListener('scroll', () => {
-        if (state.view === 'report-inventory') {
-          const scrollBottom = contentBox.scrollHeight - contentBox.scrollTop - contentBox.clientHeight;
-          if (scrollBottom < 100) {
-            const currentFiltered = getFilteredList();
-            if (state.reportInvLimit < currentFiltered.length) {
-              state.reportInvLimit += 10;
-              render();
-            }
-          }
-        }
-      });
-      contentBox.dataset.lazyBound = 'true';
-    }
-  }, 100);
 }
 
 function renderReportSales(c) {
@@ -2352,6 +2426,15 @@ function renderReportSales(c) {
 
   const detailItemsList = Object.values(itemSummaryMap).sort((a, b) => b.totalAmount - a.totalAmount);
 
+  // TÍNH TOÁN PHÂN TRANG CHO BẢNG THỐNG KÊ CHI TIẾT SẢN PHẨM BÁN
+  const totalItems = detailItemsList.length;
+  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
+  if (state.page > totalPages) state.page = totalPages;
+  if (state.page < 1) state.page = 1;
+
+  const startIndex = (state.page - 1) * state.pageSize;
+  const paginatedDetailItems = detailItemsList.slice(startIndex, startIndex + state.pageSize);
+
   const customersHtml = topCustomersReal.slice(0, 5).map((cus, i) => `
     <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
       <td style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); width: 28px;">${String(i + 1).padStart(2, '0')}</td>
@@ -2365,7 +2448,7 @@ function renderReportSales(c) {
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Tổng Số Lượng' || h === 'Tổng Số Tiền' ? 'right' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
-  const detailRows = detailItemsList.map(item => `
+  const detailRows = paginatedDetailItems.map(item => `
     <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
       <td style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${item.sku}</td>
       <td style="padding: 11px 16px; font-size: 13px; font-weight: 500;">${item.name}</td>
@@ -2405,7 +2488,7 @@ function renderReportSales(c) {
         </div>
       </div>
 
-      <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG (GỘP HEADER TIÊU ĐỀ & BỘ LỌC CẢM ỨNG) -->
+      <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG -->
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
         <div style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           
@@ -2421,13 +2504,13 @@ function renderReportSales(c) {
           <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
             <div style="display: flex; align-items: center; gap: 6px;">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
-              <select class="form-select" style="width: 110px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; render();">
+              <select class="form-select" style="width: 110px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; state.page=1; render();">
                 ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
               </select>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Khách hàng:</label>
-              <select class="form-select" style="width: 200px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesCustomer=this.value; render();">
+              <select class="form-select" style="width: 200px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesCustomer=this.value; state.page=1; render();">
                 <option value="">-- Tất cả khách hàng --</option>
                 ${customerSelectOptions}
               </select>
@@ -2447,6 +2530,18 @@ function renderReportSales(c) {
           </tbody>
         </table>
         ${detailItemsList.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không có dữ liệu đơn hàng trong tháng đã chọn</div>` : ''}
+      </div>
+
+      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
+        </span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
+          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
+          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
+        </div>
       </div>
 
     </div>
