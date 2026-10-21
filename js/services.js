@@ -668,6 +668,7 @@ function renderNotificationList() {
 
   if (!dropdown.dataset.swipeBound) {
     let dropStartX = 0, dropStartY = 0;
+
     dropdown.addEventListener('touchstart', (e) => {
       dropStartX = e.touches[0].clientX;
       dropStartY = e.touches[0].clientY;
@@ -676,9 +677,10 @@ function renderNotificationList() {
     dropdown.addEventListener('touchend', (e) => {
       const dropEndX = e.changedTouches[0].clientX;
       const dropEndY = e.changedTouches[0].clientY;
-      const diffX = dropEndX - dropStartX;
+      const diffX = dropEndX - dropStartX; // Dương: Vuốt từ Trái sang Phải
       const diffY = dropEndY - dropStartY;
 
+      // Vuốt từ trái sang phải trên 50px và là hướng vuốt ngang
       if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY)) {
         dropdown.classList.remove('open');
       }
@@ -700,6 +702,7 @@ function initNotificationHistoryDrawer() {
   drawer.id = 'notif-history-drawer';
   drawer.className = 'notif-history-drawer';
 
+  // Lắng nghe thao tác vuốt từ TRÁI sang PHẢI để đóng Form Lịch Sử Thông Báo
   let drawerStartX = 0, drawerStartY = 0;
   drawer.addEventListener('touchstart', (e) => {
     drawerStartX = e.touches[0].clientX;
@@ -709,9 +712,10 @@ function initNotificationHistoryDrawer() {
   drawer.addEventListener('touchend', (e) => {
     const drawerEndX = e.changedTouches[0].clientX;
     const drawerEndY = e.changedTouches[0].clientY;
-    const diffX = drawerEndX - drawerStartX;
+    const diffX = drawerEndX - drawerStartX; // Dương: Vuốt từ Trái sang Phải
     const diffY = drawerEndY - drawerStartY;
 
+    // Vuốt từ trái sang phải trên 50px và là hướng vuốt ngang
     if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY)) {
       closeNotificationHistory();
     }
