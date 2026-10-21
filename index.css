@@ -906,7 +906,7 @@ tr:hover {
   text-align: center;
   position: relative;
   background: radial-gradient(circle at center, rgba(20, 24, 33, 0.6) 0%, rgba(13, 16, 22, 0.95) 100%),
-    url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;
+    url('https://res.cloudinary.com/puyb3jyd/image/upload/v1792599496/BeautyPlus-OBJECT-REMOVER-1792599386313.jpg') center/cover no-repeat;
   transition: all 0.3s ease;
 }
 
@@ -940,7 +940,7 @@ tr:hover {
 
 [data-theme="light"] .login-banner-col {
   background: radial-gradient(circle at center, rgba(255, 255, 255, 0.75) 0%, rgba(244, 245, 247, 0.88) 100%),
-    url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat !important;
+    url('https://res.cloudinary.com/puyb3jyd/image/upload/v1792599496/BeautyPlus-OBJECT-REMOVER-1792599386313.jpg') center/cover no-repeat !important;
 }
 
 [data-theme="light"] .login-banner-h1 {
@@ -953,7 +953,7 @@ tr:hover {
 
 [data-theme="light"] .login-bg-backdrop {
   background: radial-gradient(circle at center, rgba(255, 255, 255, 0.5) 0%, rgba(244, 245, 247, 0.9) 80%),
-    url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat !important;
+    url('https://res.cloudinary.com/puyb3jyd/image/upload/v1792599496/BeautyPlus-OBJECT-REMOVER-1792599386313.jpg') center/cover no-repeat !important;
 }
 
 [data-theme="light"] .login-form-col {
