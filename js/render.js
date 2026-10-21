@@ -34,30 +34,6 @@ function renderLoginForm(container) {
       background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('${bannerImg}') center/cover no-repeat;
     ">
 
-      <!-- TÊN MINH KHUÊ LMS CẤU HÌNH KIỂU CHỮ "NATURE" Ở GÓC TRÊN BÊN TRÁI -->
-      <div style="
-        position: absolute;
-        top: 28px;
-        left: 36px;
-        z-index: 2;
-        pointer-events: none;
-        user-select: none;
-      ">
-        <h1 style="
-          font-family: var(--font-jost, 'Plus Jakarta Sans', sans-serif);
-          font-size: 32px; 
-          font-weight: 800; 
-          color: rgba(255, 255, 255, 0.85); 
-          letter-spacing: 0.18em; 
-          text-transform: uppercase;
-          margin: 0; 
-          line-height: 1;
-          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
-        ">
-          MINH KHUÊ <span style="color: rgba(240, 160, 48, 0.95);">LMS</span>
-        </h1>
-      </div>
-
       <!-- FORM ĐĂNG NHẬP CĂN GIỮA MÀN HÌNH -->
       <div style="
         width: 100%;
@@ -84,13 +60,13 @@ function renderLoginForm(container) {
               id="login-username" 
               required 
               value="${savedCreds.remember ? (savedCreds.username || '') : ''}"
-              placeholder="Username" 
+              placeholder="Nhập tên đăng nhập" 
               style="
                 width: 100%; 
                 padding: 13px 16px 13px 48px; 
                 background: rgba(0, 0, 0, 0.3); 
                 border: 1px solid rgba(255, 255, 255, 0.25); 
-                border-radius: 25px; 
+                border-radius: 2px; 
                 color: #ffffff; 
                 outline: none; 
                 font-size: 14px; 
@@ -116,13 +92,13 @@ function renderLoginForm(container) {
               id="login-password" 
               required 
               value="${savedCreds.remember ? (savedCreds.password || '') : ''}"
-              placeholder="Password" 
+              placeholder="Nhập mật khẩu" 
               style="
                 width: 100%; 
                 padding: 13px 48px 13px 48px; 
                 background: rgba(0, 0, 0, 0.3); 
                 border: 1px solid rgba(255, 255, 255, 0.25); 
-                border-radius: 25px; 
+                border-radius: 2px; 
                 color: #ffffff; 
                 outline: none; 
                 font-size: 14px; 
@@ -173,7 +149,7 @@ function renderLoginForm(container) {
           </div>
 
           <!-- Thông báo lỗi -->
-          <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(248, 113, 113, 0.3); padding: 8px 12px; border-radius: 20px; text-align: center;">
+          <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(0,0,0,0.45); border: 1px solid rgba(248, 113, 113, 0.3); padding: 8px 12px; border-radius: 2px; text-align: center;">
             Tài khoản hoặc mật khẩu không chính xác!
           </div>
 
@@ -186,7 +162,7 @@ function renderLoginForm(container) {
               margin-top: 4px; 
               background: #d9534f; 
               border: none; 
-              border-radius: 25px; 
+              border-radius: 2px; 
               color: #ffffff; 
               font-family: var(--font-jost, sans-serif); 
               font-size: 15px; 
@@ -198,7 +174,7 @@ function renderLoginForm(container) {
             onmouseover="this.style.background='#c9302c'; this.style.transform='translateY(-1px)';"
             onmouseout="this.style.background='#d9534f'; this.style.transform='none';"
           >
-            Log In
+            Đăng Nhập
           </button>
         </form>
 

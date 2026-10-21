@@ -40,7 +40,7 @@ function checkModulePermission(module) {
 
 async function handleLogin(e) {
   e.preventDefault();
-  const un = document.getElementById('login-username').value.trim();
+  const un = document.getElementById('login-username').value.trim().toLowerCase();
   const pw = document.getElementById('login-password').value;
   const remember = document.getElementById('login-remember').checked;
   const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';

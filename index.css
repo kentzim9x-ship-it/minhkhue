@@ -62,6 +62,7 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
+/* Container Đăng nhập cơ bản */
 #login-container {
   width: 100vw;
   min-height: 100vh;
@@ -875,119 +876,6 @@ tr:hover {
   background: rgba(0, 0, 0, 0.25);
 }
 
-/* ==============================================================
-   FORM LOGIN: CHIA TỈ LỆ 3/5 BANNER - 2/5 FORM & LIGHT/DARK MODE
-   ============================================================== */
-
-.login-split-card {
-  width: 100%;
-  max-width: 960px;
-  min-height: 540px;
-  background: var(--card, rgba(20, 24, 33, 0.92));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 4px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 1px rgba(240, 160, 48, 0.3);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
-  display: flex;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-}
-
-/* Banner Cột Trái chiếm 3/5 (60%) */
-.login-banner-col {
-  flex: 3;
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  position: relative;
-  background: radial-gradient(circle at center, rgba(20, 24, 33, 0.6) 0%, rgba(13, 16, 22, 0.95) 100%),
-    url('https://res.cloudinary.com/puyb3jyd/image/upload/v1792599496/BeautyPlus-OBJECT-REMOVER-1792599386313.jpg') center/cover no-repeat;
-  transition: all 0.3s ease;
-}
-
-/* Form Cột Phải chiếm 2/5 (40%) */
-.login-form-col {
-  flex: 2;
-  padding: 44px 36px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background: var(--card, rgba(20, 24, 33, 0.95));
-}
-
-/* Nút icon Mạng Xã Hội */
-.social-icon-btn {
-  transition: all 0.2s ease !important;
-}
-
-.social-icon-btn:hover {
-  transform: translateY(-2px) scale(1.05) !important;
-  border-color: #f0a030 !important;
-  background: rgba(240, 160, 48, 0.1) !important;
-}
-
-/* 🌟 CẤU HÌNH BẰNG LIGHT MODE 🌟 */
-[data-theme="light"] .login-split-card {
-  background: rgba(255, 255, 255, 0.98) !important;
-  border-color: var(--border, #e4e4e7) !important;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.1) !important;
-}
-
-[data-theme="light"] .login-banner-col {
-  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.75) 0%, rgba(244, 245, 247, 0.88) 100%),
-    url('https://res.cloudinary.com/puyb3jyd/image/upload/v1792599496/BeautyPlus-OBJECT-REMOVER-1792599386313.jpg') center/cover no-repeat !important;
-}
-
-[data-theme="light"] .login-banner-h1 {
-  color: #09090b !important;
-}
-
-[data-theme="light"] .login-banner-p {
-  color: #475569 !important;
-}
-
-[data-theme="light"] .login-bg-backdrop {
-  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.5) 0%, rgba(244, 245, 247, 0.9) 80%),
-    url('https://res.cloudinary.com/puyb3jyd/image/upload/v1792599496/BeautyPlus-OBJECT-REMOVER-1792599386313.jpg') center/cover no-repeat !important;
-}
-
-[data-theme="light"] .login-form-col {
-  background: rgba(255, 255, 255, 1) !important;
-}
-
-[data-theme="light"] .login-title {
-  color: #18181b !important;
-}
-
-[data-theme="light"] .login-subtext {
-  color: #64748b !important;
-}
-
-[data-theme="light"] .login-input {
-  color: #09090b !important;
-  border-bottom-color: #cbd5e1 !important;
-}
-
-[data-theme="light"] .login-input:-webkit-autofill {
-  -webkit-text-fill-color: #09090b !important;
-  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
-}
-
-[data-theme="light"] .social-icon-btn {
-  border-color: #e2e8f0 !important;
-  background: #f8fafc !important;
-}
-
-[data-theme="light"] .social-icon-btn:hover {
-  border-color: #d98818 !important;
-  background: rgba(217, 136, 24, 0.1) !important;
-}
-
 /* Sidebar Theme Buttons */
 .sidebar-header .logo-icon,
 .sidebar-header .home-logo-btn {
@@ -1093,21 +981,6 @@ div[style*="overflow: auto"],
 
 /* RESPONSIVE MOBILE (< 768px) */
 @media (max-width: 768px) {
-
-  .login-split-card {
-    flex-direction: column !important;
-  }
-
-  .login-banner-col {
-    padding: 30px 20px !important;
-    min-height: 180px !important;
-    flex: none !important;
-  }
-
-  .login-form-col {
-    flex: none !important;
-    padding: 30px 20px !important;
-  }
 
   html,
   body,
@@ -1355,7 +1228,7 @@ div[style*="overflow: auto"],
     white-space: nowrap !important;
   }
 
-  /* Cập nhật Popup Thông báo hiển thị Full Màn Hình trên Mobile với animation trượt từ bên phải */
+  /* Popup Thông báo Full Màn Hình trên Mobile */
   .notif-dropdown {
     position: fixed !important;
     top: 0 !important;
@@ -1394,25 +1267,20 @@ div[style*="overflow: auto"],
     align-items: center !important;
     justify-content: space-between !important;
     box-sizing: border-box !important;
-
-    /* Màu nền, viền và hiệu ứng đổ bóng mờ giống App Header chính */
     background-color: var(--background) !important;
     border-bottom: 1px solid var(--border) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
-
     position: relative !important;
     z-index: 2 !important;
   }
 
-  /* Đảm bảo danh sách item giãn hết chiều cao khả dụng */
   .notif-dropdown>div:nth-child(2) {
     flex: 1 !important;
     max-height: none !important;
   }
 
-  /* Nút xem lịch sử thông báo cố định ở đáy màn hình */
   .notif-dropdown>div:last-child {
     padding: 12px 16px !important;
     background: var(--card) !important;
@@ -1433,8 +1301,6 @@ div[style*="overflow: auto"],
     z-index: 99999 !important;
     background: var(--card) !important;
     border-left: none !important;
-
-    /* Animation trượt chuẩn GPU acceleration - Tránh nháy khung hình */
     transform: translateX(100%) !important;
     visibility: hidden !important;
     pointer-events: none !important;
@@ -1450,14 +1316,11 @@ div[style*="overflow: auto"],
     align-items: center !important;
     justify-content: space-between !important;
     box-sizing: border-box !important;
-
-    /* Màu nền, viền và hiệu ứng đổ bóng mờ giống App Header chính */
     background-color: var(--background) !important;
     border-bottom: 1px solid var(--border) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
     backdrop-filter: blur(8px) !important;
     -webkit-backdrop-filter: blur(8px) !important;
-
     position: relative !important;
     z-index: 2 !important;
   }
@@ -1485,7 +1348,6 @@ div[style*="overflow: auto"],
     -webkit-backdrop-filter: none !important;
   }
 
-  /* Ẩn hoàn toàn Drawer Lịch sử khi không ở trạng thái .open */
   .notif-history-drawer:not(.open) {
     right: 0 !important;
     visibility: hidden !important;
@@ -1507,21 +1369,17 @@ div[style*="overflow: auto"],
     white-space: nowrap !important;
   }
 
-  /* Ẩn tiêu đề cột bảng (thead) trên mobile */
   .main-content table thead {
     display: none !important;
   }
 
-  /* Đưa bảng và tbody về dạng container linh hoạt */
   .main-content table,
   .main-content table tbody {
     display: block !important;
     width: 100% !important;
     min-width: 0 !important;
-    /* Bỏ min-width 700px cũ */
   }
 
-  /* Mỗi dòng (tr) biến thành 1 THẺ (CARD) */
   .main-content table tr.hover-row,
   .main-content table tr {
     display: flex !important;
@@ -1536,7 +1394,6 @@ div[style*="overflow: auto"],
     box-sizing: border-box !important;
   }
 
-  /* Mỗi ô dữ liệu (td) biến thành 1 HÀNG trong Thẻ */
   .main-content table td {
     display: flex !important;
     justify-content: space-between !important;
@@ -1550,7 +1407,6 @@ div[style*="overflow: auto"],
     box-sizing: border-box !important;
   }
 
-  /* Dùng thuộc tính data-label để hiển thị tiêu đề bên TRÁI */
   .main-content table td::before {
     content: attr(data-label);
     font-family: var(--font-dm-mono, monospace);
@@ -1564,12 +1420,10 @@ div[style*="overflow: auto"],
     flex-shrink: 0;
   }
 
-  /* Giá trị dữ liệu nằm bên PHẢI */
   .main-content table td>* {
     text-align: right !important;
   }
 
-  /* Xử lý riêng cho HÀNG HÀNH ĐỘNG (Chứa 3 nút button Xem, Sửa, Xóa) */
   .main-content table td[data-label="Hành Động"] {
     border-bottom: none !important;
     padding-top: 8px !important;
@@ -1577,11 +1431,9 @@ div[style*="overflow: auto"],
   }
 
   .main-content table td[data-label="Hành Động"]::before {
-    /* Mẹo: Có thể để khoảng trống hoặc hiện chữ "Thao tác" */
     content: "Thao tác";
   }
 
-  /* Khung chứa 3 nút bấm căn lề PHẢI */
   .main-content table td[data-label="Hành Động"]>div {
     display: flex !important;
     justify-content: flex-end !important;
@@ -1590,14 +1442,12 @@ div[style*="overflow: auto"],
     width: auto !important;
   }
 
-  /* Tối ưu kích thước 3 nút bấm trên Mobile */
   .main-content table td[data-label="Hành Động"] .btn-action {
     padding: 6px 10px !important;
     font-size: 11px !important;
     min-height: 32px !important;
   }
 
-  /* Bỏ overflow cuộn ngang không cần thiết */
   div:has(> table),
   .table-container,
   .table-responsive {
@@ -1607,7 +1457,6 @@ div[style*="overflow: auto"],
 }
 
 @media (min-width: 769px) {
-
   .mobile-home-btn,
   .mobile-overlay {
     display: none !important;
