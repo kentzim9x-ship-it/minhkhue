@@ -2,11 +2,18 @@
 // 5. ĐIỀU HƯỚNG & ROUTING (NAVIGATION)
 // ==========================================
 
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
+
 function navigate(view, mode = 'list', itemId = null) {
   // --- BỔ SUNG: Lưu vị trí cuộn và trạng thái danh sách trước khi rời đi ---
   if (state.mode === 'list') {
     const contentBox = document.getElementById('app-content');
-    const scrollPos = contentBox ? contentBox.scrollTop : window.scrollY;
+    // Lấy vị trí cuộn lớn hơn giữa container và window
+    const scrollPos = (contentBox && contentBox.scrollTop > 0)
+      ? contentBox.scrollTop
+      : window.scrollY;
 
     sessionStorage.setItem(`scroll_pos_${state.view}`, scrollPos);
     sessionStorage.setItem(`list_state_${state.view}`, JSON.stringify({
@@ -158,27 +165,46 @@ function handleRouteChange() {
 
 function restoreScrollPosition(view) {
   const savedScroll = sessionStorage.getItem(`scroll_pos_${view}`);
-  if (savedScroll !== null) {
-    const targetY = parseInt(savedScroll, 10);
-    
-    // Sử dụng requestAnimationFrame hoặc setTimeout để đảm bảo UI đã render xong bảng
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        const contentBox = document.getElementById('app-content');
-        if (contentBox && contentBox.scrollHeight > targetY) {
-          contentBox.scrollTop = targetY;
-        }
-        window.scrollTo({ top: targetY, behavior: 'instant' });
-        
-        // Xóa vị trí sau khi đã phục hồi xong
-        sessionStorage.removeItem(`scroll_pos_${view}`);
-      }, 50);
-    });
-  } else {
+  if (savedScroll === null) {
     window.scrollTo({ top: 0, behavior: 'instant' });
     const contentBox = document.getElementById('app-content');
     if (contentBox) contentBox.scrollTop = 0;
+    return;
   }
+
+  const targetY = parseInt(savedScroll, 10);
+  const contentBox = document.getElementById('app-content');
+
+  // Hàm thực hiện cuộn
+  const doScroll = () => {
+    if (contentBox) {
+      contentBox.scrollTop = targetY;
+    }
+    window.scrollTo({ top: targetY, behavior: 'instant' });
+  };
+
+  // Thử cuộn qua nhiều chu kỳ render
+  requestAnimationFrame(() => {
+    doScroll();
+
+    // Dùng MutationObserver để đảm bảo khi bảng vẽ xong toàn bộ các dòng (HTML chèn xong) thì cuộn lại chuẩn xác
+    const targetNode = contentBox || document.body;
+    const observer = new MutationObserver((mutations, obs) => {
+      doScroll();
+      // Sau khi cuộn xong thì dọn dẹp observer và xóa lưu trữ
+      obs.disconnect();
+      sessionStorage.removeItem(`scroll_pos_${view}`);
+    });
+
+    observer.observe(targetNode, { childList: true, subtree: true });
+
+    // Fallback: Tự động ngắt observer sau 500ms nếu không có thay đổi DOM thêm
+    setTimeout(() => {
+      doScroll();
+      observer.disconnect();
+      sessionStorage.removeItem(`scroll_pos_${view}`);
+    }, 500);
+  });
 }
 
 window.addEventListener('popstate', handleRouteChange);

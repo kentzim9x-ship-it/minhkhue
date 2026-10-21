@@ -351,14 +351,16 @@ function getWarehouseStatusLabel(status) {
   return map[status?.toLowerCase()] || (status ? status.toUpperCase() : 'HOẠT ĐỘNG');
 }
 
-function getBreadcrumb(backLabel, current, module) {
+function getBreadcrumb(parentText, currentText, targetView) {
   return `
-    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px;">
-      <button onclick="navigate('${module}', 'list')" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 0; display: flex; align-items: center; gap: 6px;">
-        ${Icons.back}${backLabel}
-      </button>
-      <span style="color: var(--border); font-family: var(--font-dm-mono); font-size: 11px;">/</span>
-      <span style="font-family: var(--font-dm-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--foreground);">${current}</span>
+    <div class="breadcrumb" style="margin-bottom: 20px; font-size: 14px; font-weight: 600; text-transform: uppercase;">
+      <span 
+        onclick="navigate('${targetView}', 'list')" 
+        style="cursor: pointer; color: var(--muted-color, #666); margin-right: 8px;">
+        &lt; ${parentText}
+      </span>
+      <span style="color: #ccc; margin-right: 8px;">/</span>
+      <span style="color: var(--text-color, #333);">${currentText}</span>
     </div>
   `;
 }
