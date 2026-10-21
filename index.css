@@ -1374,6 +1374,18 @@ div[style*="overflow: auto"],
     background: var(--card) !important;
   }
 
+  .notif-dropdown>div:first-child {
+    height: 50px !important;
+    min-height: 50px !important;
+    max-height: 50px !important;
+    padding: 0 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+
   /* Đảm bảo danh sách item giãn hết chiều cao khả dụng */
   .notif-dropdown>div:nth-child(2) {
     flex: 1 !important;
@@ -1393,6 +1405,25 @@ div[style*="overflow: auto"],
     box-shadow: none !important;
   }
 
+  .notif-history-drawer>div:first-child {
+    height: 50px !important;
+    min-height: 50px !important;
+    max-height: 50px !important;
+    padding: 0 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  .notif-dropdown>div:nth-child(2),
+  .notif-history-drawer>div:nth-child(2) {
+    height: calc(100vh - 100px) !important;
+    height: calc(100dvh - 100px) !important;
+    overflow-y: auto !important;
+  }
+
   #notif-dropdown button[onclick*="markAllNotificationsAsRead"] {
     font-size: 10px !important;
     letter-spacing: -0.02em !important;
@@ -1403,6 +1434,104 @@ div[style*="overflow: auto"],
     font-size: 11px !important;
     letter-spacing: -0.02em !important;
     white-space: nowrap !important;
+  }
+
+  /* Ẩn tiêu đề cột bảng (thead) trên mobile */
+  .main-content table thead {
+    display: none !important;
+  }
+
+  /* Đưa bảng và tbody về dạng container linh hoạt */
+  .main-content table,
+  .main-content table tbody {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    /* Bỏ min-width 700px cũ */
+  }
+
+  /* Mỗi dòng (tr) biến thành 1 THẺ (CARD) */
+  .main-content table tr.hover-row,
+  .main-content table tr {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+    padding: 14px 16px !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Mỗi ô dữ liệu (td) biến thành 1 HÀNG trong Thẻ */
+  .main-content table td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 4px 0 !important;
+    border: none !important;
+    border-bottom: 1px dashed var(--border) !important;
+    font-size: 13px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Dùng thuộc tính data-label để hiển thị tiêu đề bên TRÁI */
+  .main-content table td::before {
+    content: attr(data-label);
+    font-family: var(--font-dm-mono, monospace);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: left !important;
+    padding-right: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Giá trị dữ liệu nằm bên PHẢI */
+  .main-content table td>* {
+    text-align: right !important;
+  }
+
+  /* Xử lý riêng cho HÀNG HÀNH ĐỘNG (Chứa 3 nút button Xem, Sửa, Xóa) */
+  .main-content table td[data-label="Hành Động"] {
+    border-bottom: none !important;
+    padding-top: 8px !important;
+    margin-top: 4px !important;
+  }
+
+  .main-content table td[data-label="Hành Động"]::before {
+    /* Mẹo: Có thể để khoảng trống hoặc hiện chữ "Thao tác" */
+    content: "Thao tác";
+  }
+
+  /* Khung chứa 3 nút bấm căn lề PHẢI */
+  .main-content table td[data-label="Hành Động"]>div {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: auto !important;
+  }
+
+  /* Tối ưu kích thước 3 nút bấm trên Mobile */
+  .main-content table td[data-label="Hành Động"] .btn-action {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    min-height: 32px !important;
+  }
+
+  /* Bỏ overflow cuộn ngang không cần thiết */
+  div:has(> table),
+  .table-container,
+  .table-responsive {
+    overflow-x: visible !important;
+    padding-bottom: 0 !important;
   }
 }
 
