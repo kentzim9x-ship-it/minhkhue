@@ -5,7 +5,7 @@
 // GIAO DIỆN ĐĂNG NHẬP SANG TRỌNG
 function renderLoginForm(container) {
   const savedCredsRaw = localStorage.getItem('remembered_user');
-  const savedCreds = savedCredsRaw ? JSON.parse(savedCredsRaw) : { username: '', password: '' };
+  const savedCreds = savedCredsRaw ? JSON.parse(savedCredsRaw) : { username: '', password: '', remember: false };
   const bannerImg = 'https://res.cloudinary.com/puyb3jyd/image/upload/v1792599496/BeautyPlus-OBJECT-REMOVER-1792599386313.jpg';
 
   container.innerHTML = `
@@ -15,7 +15,7 @@ function renderLoginForm(container) {
       input:-webkit-autofill:focus, 
       input:-webkit-autofill:active {
           -webkit-text-fill-color: #ffffff !important;
-          -webkit-box-shadow: 0 0 0px 1000px rgba(0, 0, 0, 0.25) inset !important;
+          -webkit-box-shadow: 0 0 0px 1000px rgba(0, 0, 0, 0.3) inset !important;
           transition: background-color 5000s ease-in-out 0s !important;
       }
     </style>
@@ -31,10 +31,34 @@ function renderLoginForm(container) {
       position: relative;
       overflow: hidden;
       box-sizing: border-box;
-      background: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('${bannerImg}') center/cover no-repeat;
+      background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('${bannerImg}') center/cover no-repeat;
     ">
 
-      <!-- Form Card căn giữa chính -->
+      <!-- TÊN MINH KHUÊ LMS CẤU HÌNH KIỂU CHỮ "NATURE" Ở GÓC TRÊN BÊN TRÁI -->
+      <div style="
+        position: absolute;
+        top: 28px;
+        left: 36px;
+        z-index: 2;
+        pointer-events: none;
+        user-select: none;
+      ">
+        <h1 style="
+          font-family: var(--font-jost, 'Plus Jakarta Sans', sans-serif);
+          font-size: 32px; 
+          font-weight: 800; 
+          color: rgba(255, 255, 255, 0.85); 
+          letter-spacing: 0.18em; 
+          text-transform: uppercase;
+          margin: 0; 
+          line-height: 1;
+          text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+        ">
+          MINH KHUÊ <span style="color: rgba(240, 160, 48, 0.95);">LMS</span>
+        </h1>
+      </div>
+
+      <!-- FORM ĐĂNG NHẬP CĂN GIỮA MÀN HÌNH -->
       <div style="
         width: 100%;
         max-width: 380px;
@@ -45,35 +69,9 @@ function renderLoginForm(container) {
         z-index: 1;
       ">
 
-        <!-- LOGO & TÊN MINH KHUÊ LMS -->
-        <div style="text-align: center; margin-bottom: 32px;">
-          <div style="
-            display: inline-flex; 
-            align-items: center; 
-            justify-content: center; 
-            width: 72px; 
-            height: 72px; 
-            background: rgba(240, 160, 48, 0.15); 
-            border: 1px solid rgba(240, 160, 48, 0.4); 
-            border-radius: 50%; 
-            margin-bottom: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-          ">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#f0a030" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <h1 style="font-size: 26px; font-weight: 700; color: #ffffff; letter-spacing: 0.05em; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-            MINH KHUÊ <span style="color: #f0a030;">LMS</span>
-          </h1>
-        </div>
-
-        <!-- FORM ĐĂNG NHẬP -->
         <form onsubmit="handleLogin(event)" style="width: 100%; display: flex; flex-direction: column; gap: 16px;">
           
-          <!-- Tên tài khoản -->
+          <!-- Username Input -->
           <div style="position: relative;">
             <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.7); display: flex;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -85,12 +83,12 @@ function renderLoginForm(container) {
               type="text" 
               id="login-username" 
               required 
-              value="${savedCreds.username || ''}"
+              value="${savedCreds.remember ? (savedCreds.username || '') : ''}"
               placeholder="Username" 
               style="
                 width: 100%; 
                 padding: 13px 16px 13px 48px; 
-                background: rgba(0, 0, 0, 0.25); 
+                background: rgba(0, 0, 0, 0.3); 
                 border: 1px solid rgba(255, 255, 255, 0.25); 
                 border-radius: 25px; 
                 color: #ffffff; 
@@ -100,12 +98,12 @@ function renderLoginForm(container) {
                 transition: all 0.2s ease;
                 box-sizing: border-box;
               "
-              onfocus="this.style.borderColor='#f0a030'; this.style.background='rgba(0,0,0,0.4)';"
-              onblur="this.style.borderColor='rgba(255, 255, 255, 0.25)'; this.style.background='rgba(0,0,0,0.25)';"
+              onfocus="this.style.borderColor='#f0a030'; this.style.background='rgba(0,0,0,0.45)';"
+              onblur="this.style.borderColor='rgba(255, 255, 255, 0.25)'; this.style.background='rgba(0,0,0,0.3)';"
             >
           </div>
 
-          <!-- Mật khẩu -->
+          <!-- Password Input kèm Icon Mắt -->
           <div style="position: relative;">
             <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.7); display: flex;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -117,12 +115,12 @@ function renderLoginForm(container) {
               type="password" 
               id="login-password" 
               required 
-              value="${savedCreds.password || ''}"
+              value="${savedCreds.remember ? (savedCreds.password || '') : ''}"
               placeholder="Password" 
               style="
                 width: 100%; 
-                padding: 13px 16px 13px 48px; 
-                background: rgba(0, 0, 0, 0.25); 
+                padding: 13px 48px 13px 48px; 
+                background: rgba(0, 0, 0, 0.3); 
                 border: 1px solid rgba(255, 255, 255, 0.25); 
                 border-radius: 25px; 
                 color: #ffffff; 
@@ -132,13 +130,50 @@ function renderLoginForm(container) {
                 transition: all 0.2s ease;
                 box-sizing: border-box;
               "
-              onfocus="this.style.borderColor='#f0a030'; this.style.background='rgba(0,0,0,0.4)';"
-              onblur="this.style.borderColor='rgba(255, 255, 255, 0.25)'; this.style.background='rgba(0,0,0,0.25)';"
+              onfocus="this.style.borderColor='#f0a030'; this.style.background='rgba(0,0,0,0.45)';"
+              onblur="this.style.borderColor='rgba(255, 255, 255, 0.25)'; this.style.background='rgba(0,0,0,0.3)';"
             >
+            <!-- Toggle Password Icon Button -->
+            <span 
+              id="toggle-password-btn"
+              onclick="togglePasswordVisibility()" 
+              style="
+                position: absolute; 
+                right: 18px; 
+                top: 50%; 
+                transform: translateY(-50%); 
+                cursor: pointer; 
+                color: rgba(255, 255, 255, 0.7); 
+                display: flex; 
+                align-items: center;
+                transition: color 0.2s;
+              "
+              onmouseover="this.style.color='#f0a030'"
+              onmouseout="this.style.color='rgba(255, 255, 255, 0.7)'"
+              title="Ẩn/Hiện mật khẩu"
+            >
+              <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </span>
+          </div>
+
+          <!-- Nút tích Ghi nhớ đăng nhập -->
+          <div style="display: flex; align-items: center; justify-content: flex-start; padding: 0 4px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255, 255, 255, 0.85); cursor: pointer; user-select: none;">
+              <input 
+                type="checkbox" 
+                id="login-remember" 
+                ${savedCreds.remember ? 'checked' : ''} 
+                style="cursor: pointer; accent-color: #f0a030; width: 16px; height: 16px;"
+              >
+              Ghi nhớ đăng nhập
+            </label>
           </div>
 
           <!-- Thông báo lỗi -->
-          <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(248, 113, 113, 0.3); padding: 8px 12px; border-radius: 20px; text-align: center;">
+          <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(248, 113, 113, 0.3); padding: 8px 12px; border-radius: 20px; text-align: center;">
             Tài khoản hoặc mật khẩu không chính xác!
           </div>
 
@@ -148,7 +183,7 @@ function renderLoginForm(container) {
             style="
               width: 100%; 
               padding: 13px; 
-              margin-top: 8px; 
+              margin-top: 4px; 
               background: #d9534f; 
               border: none; 
               border-radius: 25px; 
