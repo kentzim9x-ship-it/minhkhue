@@ -617,7 +617,7 @@ function renderMaterialsList(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
@@ -733,7 +733,7 @@ function renderCustomersList(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
@@ -900,7 +900,7 @@ function renderQuotationsList(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
@@ -1018,7 +1018,7 @@ function renderOrdersList(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
@@ -1139,7 +1139,7 @@ function renderReturnsList(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
@@ -1257,7 +1257,7 @@ function renderGRNList(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
@@ -2329,7 +2329,7 @@ function renderReportInventory(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
@@ -2533,8 +2533,8 @@ function renderReportSales(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
-        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+      <div style="display: flex; justify-content: flex-end; align-items: flex-end; flex-direction: column; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); gap: 10px;">
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); text-align: right;">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
         <div style="display: flex; gap: 6px; align-items: center;">
