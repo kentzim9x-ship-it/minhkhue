@@ -66,7 +66,7 @@ function renderLoginForm(container) {
                 padding: 13px 16px 13px 48px; 
                 background: rgba(0, 0, 0, 0.3); 
                 border: 1px solid rgba(255, 255, 255, 0.25); 
-                border-radius: 2px; 
+                border-radius: 25px; 
                 color: #ffffff; 
                 outline: none; 
                 font-size: 14px; 
@@ -98,7 +98,7 @@ function renderLoginForm(container) {
                 padding: 13px 48px 13px 48px; 
                 background: rgba(0, 0, 0, 0.3); 
                 border: 1px solid rgba(255, 255, 255, 0.25); 
-                border-radius: 2px; 
+                border-radius: 25px; 
                 color: #ffffff; 
                 outline: none; 
                 font-size: 14px; 
@@ -149,7 +149,7 @@ function renderLoginForm(container) {
           </div>
 
           <!-- Thông báo lỗi -->
-          <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(0,0,0,0.45); border: 1px solid rgba(248, 113, 113, 0.3); padding: 8px 12px; border-radius: 2px; text-align: center;">
+          <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(0,0,0,0.45); border: 1px solid rgba(248, 113, 113, 0.3); padding: 8px 12px; border-radius: 20px; text-align: center;">
             Tài khoản hoặc mật khẩu không chính xác!
           </div>
 
@@ -162,7 +162,7 @@ function renderLoginForm(container) {
               margin-top: 4px; 
               background: #d9534f; 
               border: none; 
-              border-radius: 2px; 
+              border-radius: 25px; 
               color: #ffffff; 
               font-family: var(--font-jost, sans-serif); 
               font-size: 15px; 
