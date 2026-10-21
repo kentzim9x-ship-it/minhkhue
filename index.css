@@ -1387,54 +1387,62 @@ div[style*="overflow: auto"],
     white-space: nowrap !important;
   }
 
-  /* Ẩn tiêu đề bảng */
-  table thead {
-    display: none !important;
-  }
-
-  table, table tbody, table tr, table td {
-    display: block !important;
-    width: 100% !important;
-  }
-
-  /* Biến mỗi dòng thành 1 Card */
-  table tbody tr {
-    margin-bottom: 12px;
-    border: 1px solid var(--border) !important;
-    background: var(--card);
-    padding: 12px 16px;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Định hình từng ô dữ liệu trong Card */
+  /* 1. Định dạng chung cho các ô dữ liệu trong Card */
   table tbody td {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
-    padding: 8px 0 !important;
+    padding: 10px 12px !important;
+    /* Tạo khoảng lùi an toàn 12px hai bên lề */
     border-bottom: 1px dashed var(--border) !important;
-    text-align: right !important;
     font-size: 13px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
   }
 
-  table tbody td:last-child {
+  /* 2. Căn chỉnh nội dung phía bên phải (Tên, Mã, Người tạo, Ngày...) */
+  table tbody td>* {
+    max-width: 60% !important;
+    /* Giới hạn độ rộng nội dung tối đa 60% */
+    text-align: right !important;
+    word-break: break-word !important;
+    /* Tự động xuống dòng nếu văn bản quá dài */
+    overflow-wrap: break-word !important;
+  }
+
+  /* 3. Riêng dòng HÀNH ĐỘNG (Nút Xem, Sửa, Xóa) */
+  table tbody td:last-child,
+  table tbody td[data-label="HÀNH ĐỘNG"],
+  table tbody td[data-label="Hành Động"] {
     border-bottom: none !important;
-    justify-content: flex-end !important;
-    gap: 8px;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
     padding-top: 12px !important;
+    padding-bottom: 12px !important;
   }
 
-  /* Hiển thị Tên cột bằng data-label */
-  table tbody td::before {
-    content: attr(data-label);
-    font-family: var(--font-dm-mono);
-    font-size: 11px;
-    color: var(--muted-foreground);
-    text-transform: uppercase;
-    font-weight: 500;
-    text-align: left;
-    padding-right: 12px;
+  /* Nhóm chứa các nút bấm Xem / Sửa / Xóa */
+  table tbody td:last-child>div,
+  table tbody td[data-label="HÀNH ĐỘNG"]>div,
+  table tbody td[data-label="Hành Động"]>div,
+  table tbody td:last-child {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    /* Tự xuống dòng nếu màn hình quá nhỏ */
+    gap: 6px !important;
+    justify-content: flex-end !important;
+    max-width: 70% !important;
+    /* Khống chế không cho tràn sát lề phải */
+  }
+
+  /* Căn chỉnh lại kích thước các nút bấm trên Mobile */
+  table tbody td:last-child .btn-action,
+  table tbody td[data-label="HÀNH ĐỘNG"] .btn-action,
+  table tbody td[data-label="Hành Động"] .btn-action {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
   }
 }
 
@@ -1508,16 +1516,38 @@ div[style*="overflow: auto"],
   animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1), toastOut 0.3s forwards 2.7s;
 }
 
-.toast-item.toast-success { border-left-color: #34d399; }
-.toast-item.toast-error { border-left-color: #f87171; }
-.toast-item.toast-warning { border-left-color: #fbbf24; }
+.toast-item.toast-success {
+  border-left-color: #34d399;
+}
+
+.toast-item.toast-error {
+  border-left-color: #f87171;
+}
+
+.toast-item.toast-warning {
+  border-left-color: #fbbf24;
+}
 
 @keyframes toastIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @keyframes toastOut {
-  from { transform: translateX(0); opacity: 1; }
-  to { transform: translateX(100%); opacity: 0; }
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }
