@@ -1387,16 +1387,15 @@ div[style*="overflow: auto"],
     white-space: nowrap !important;
   }
 
+  /* chỉ áp dụng điều chỉnh cho màn hình mobile (PC giữ nguyên) */
   @media screen and (max-width: 768px) {
 
-    /* 1. Ẩn hoàn toàn thanh tiêu đề của bảng trên Mobile */
-    table thead,
-    table thead tr,
-    table thead th {
-      display: none !important;
+    /* 1. Khung chứa bảng không bị giới hạn scroll tràn */
+    div[style*="overflow-x: auto"] {
+      overflow-x: visible !important;
     }
 
-    /* 2. Đưa bảng và dòng về dạng khối Card */
+    /* 2. Ép mỗi dòng tr thành 1 Card có độ rộng 100% full màn hình mobile */
     table,
     table tbody,
     table tr {
@@ -1409,12 +1408,12 @@ div[style*="overflow: auto"],
       margin-bottom: 12px !important;
       border: 1px solid var(--border) !important;
       background: var(--card) !important;
-      padding: 8px 12px !important;
+      padding: 6px 12px !important;
       border-radius: 4px !important;
     }
 
-    /* 3. Mỗi ô td thành 1 hàng flex chứa [Tiêu đề cột (bên trái)] và [Dữ liệu (bên phải)] */
-    table tbody td {
+    /* 3. Mỗi ô td làm 1 hàng flex căn sát 2 mép: Tiêu đề lề Trái - Giá trị lề Phải */
+    table tbody tr td {
       display: flex !important;
       justify-content: space-between !important;
       align-items: center !important;
@@ -1426,8 +1425,8 @@ div[style*="overflow: auto"],
       text-align: right !important;
     }
 
-    /* 4. Tự động hiển thị Tên tiêu đề bên trái nhờ data-label */
-    table tbody td::before {
+    /* 4. Căn lề Tên Tiêu đề bên trái */
+    table tbody tr td::before {
       content: attr(data-label);
       font-family: var(--font-dm-mono);
       font-size: 11px;
@@ -1435,30 +1434,53 @@ div[style*="overflow: auto"],
       text-transform: uppercase;
       font-weight: 500;
       text-align: left !important;
-      padding-right: 12px;
-      flex-shrink: 0;
+      padding-right: 8px !important;
+      flex-shrink: 0 !important;
     }
 
-    /* 5. Căn chỉnh dữ liệu cột bên phải */
-    table tbody td>* {
-      max-width: 65% !important;
+    /* 5. Căn lề Giá trị dữ liệu sát kịch mép PHẢI */
+    table tbody tr td>*:not(button):not(div) {
+      margin-left: auto !important;
       text-align: right !important;
       word-break: break-word !important;
     }
 
-    /* 6. Định dạng dòng HÀNH ĐỘNG cuối Card */
+    /* 6. Gom cụm các BUTTON HÀNH ĐỘNG co lại sát nhau ở góc phải */
     table tbody tr td:last-child {
       border-bottom: none !important;
       padding-top: 10px !important;
-      padding-bottom: 4px !important;
+      padding-bottom: 6px !important;
     }
 
+    /* Tạo container chứa các nút bấm nằm sát nhau */
+    table tbody tr td:last-child,
+    table tbody tr td[data-label="HÀNH ĐỘNG"],
+    table tbody tr td[data-label="Hành Động"] {
+      justify-content: space-between !important;
+    }
+
+    /* Gom nhóm nút Xem, Sửa, Xóa đứng cạnh nhau */
     table tbody tr td:last-child>div,
-    table tbody tr td[data-label="HÀNH ĐỘNG"]>div {
+    table tbody tr td:last-child {
       display: flex !important;
+      flex-direction: row !important;
       gap: 6px !important;
+      /* Khoảng cách nhỏ giữa các nút */
       justify-content: flex-end !important;
-      flex-wrap: wrap !important;
+      /* Đẩy nguyên cụm về bên phải */
+      align-items: center !important;
+      margin-left: auto !important;
+    }
+
+    /* Kích thước nút bấm gọn gàng trên mobile */
+    table tbody tr td .btn-action {
+      padding: 5px 10px !important;
+      font-size: 12px !important;
+      white-space: nowrap !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 4px !important;
+      margin: 0 !important;
     }
   }
 }

@@ -579,9 +579,11 @@ function renderMaterialsList(c) {
     <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
 
     <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-      <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>
-      ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : ''}
-      ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''}
+      <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>
+        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : ''}
+        ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''}
+      </div>
     </td>
   </tr>
 `).join('');
@@ -695,9 +697,11 @@ function renderCustomersList(c) {
       <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(c.time2)}</td>
     
       <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-        <button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'view', '${c.id}')">${Icons.view} Xem</button>
-        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'edit', '${c.id}')">${Icons.edit} Sửa</button>` : ''}
-        ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('customers', '${c.id}')">${Icons.trash} Xóa</button>` : ''}
+        <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+          <button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'view', '${c.id}')">${Icons.view} Xem</button>
+          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'edit', '${c.id}')">${Icons.edit} Sửa</button>` : ''}
+          ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('customers', '${c.id}')">${Icons.trash} Xóa</button>` : ''}
+        </div>
       </td>
     </tr>
   `).join('');
@@ -2570,7 +2574,7 @@ function renderReportSales(c) {
 }
 
 function renderTableSkeleton(columnsCount = 8, rowsCount = 5) {
-  const headers = Array.from({ length: columnsCount }).map(() => 
+  const headers = Array.from({ length: columnsCount }).map(() =>
     `<th style="padding: 11px 16px;"><div class="skeleton-box skeleton-row" style="width: 70%;"></div></th>`
   ).join('');
 
