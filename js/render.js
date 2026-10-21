@@ -2263,7 +2263,7 @@ function renderReportInventory(c) {
         <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
           <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
             ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>`}
-            ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''}
+            <!-- ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''} -->
           </div>
         </td>
       </tr>
