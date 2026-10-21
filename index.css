@@ -1355,18 +1355,36 @@ div[style*="overflow: auto"],
     white-space: nowrap !important;
   }
 
+  /* Cập nhật Popup Thông báo hiển thị Full Màn Hình trên Mobile */
   .notif-dropdown {
     position: fixed !important;
-    top: 56px !important;
-    right: 0 !important;
+    top: 0 !important;
     left: 0 !important;
+    right: 0 !important;
     bottom: 0 !important;
     width: 100vw !important;
-    max-height: calc(100vh - 56px) !important;
-    border-radius: 2px !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    border: none !important;
     box-shadow: none !important;
     clip-path: none !important;
-    z-index: 9990 !important;
+    z-index: 99999 !important;
+    background: var(--card) !important;
+  }
+
+  /* Đảm bảo danh sách item giãn hết chiều cao khả dụng */
+  .notif-dropdown>div:nth-child(2) {
+    flex: 1 !important;
+    max-height: none !important;
+  }
+
+  /* Nút xem lịch sử thông báo cố định ở đáy màn hình */
+  .notif-dropdown>div:last-child {
+    padding: 12px 16px !important;
+    background: var(--card) !important;
+    border-top: 1px solid var(--border) !important;
   }
 
   .notif-history-drawer {
