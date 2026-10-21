@@ -1387,44 +1387,37 @@ div[style*="overflow: auto"],
     white-space: nowrap !important;
   }
 
-  /* 1. Mở rộng khung chứa bảng để không bị xén tràn viền */
-  div[style*="overflow-x: auto"],
-  .table-responsive {
+  /* 1. Khung bao ngoài bảng mở rộng tràn full chiều rộng mobile */
+  div[style*="overflow-x: auto"] {
     overflow-x: visible !important;
     width: 100% !important;
   }
 
-  /* 2. Ẩn hoàn toàn thanh Header ngang của bảng trên mobile */
+  /* 2. ẨN HOÀN TOÀN thanh header ngang của bảng */
   table thead,
   table thead tr,
   table thead th {
     display: none !important;
   }
 
-  /* 3. Ép cấu trúc Table & Tr thành dạng Card dọc */
-  table {
-    display: block !important;
-    width: 100% !important;
-    border-collapse: collapse !important;
-  }
-
-  table tbody {
-    display: block !important;
-    width: 100% !important;
-  }
-
+  /* 3. Ép bảng và dòng tr thành khối Card */
+  table,
+  table tbody,
   table tbody tr {
     display: block !important;
     width: 100% !important;
-    margin-bottom: 12px !important;
-    border: 1px solid var(--border) !important;
-    background: var(--card) !important;
-    padding: 10px 14px !important;
-    border-radius: 4px !important;
     box-sizing: border-box !important;
   }
 
-  /* 4. Mỗi ô td trở thành 1 dòng Flex căn 2 đầu (Trái: Tiêu đề - Phải: Giá trị) */
+  table tbody tr {
+    margin-bottom: 12px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--card) !important;
+    padding: 8px 12px !important;
+    border-radius: 4px !important;
+  }
+
+  /* 4. Mỗi ô td thành 1 hàng Flex chứa: [Tiêu đề bên Trái] - [Giá trị bên Phải] */
   table tbody tr td {
     display: flex !important;
     justify-content: space-between !important;
@@ -1434,11 +1427,9 @@ div[style*="overflow: auto"],
     font-size: 13px !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    text-align: right !important;
-    min-height: 36px !important;
   }
 
-  /* 5. Hiển thị Tiêu đề bên trái dựa vào data-label */
+  /* 5. Hiển thị Tiêu đề bên Trái */
   table tbody tr td::before {
     content: attr(data-label);
     font-family: var(--font-dm-mono);
@@ -1447,18 +1438,18 @@ div[style*="overflow: auto"],
     text-transform: uppercase;
     font-weight: 500;
     text-align: left !important;
-    padding-right: 12px !important;
+    padding-right: 8px !important;
     flex-shrink: 0 !important;
   }
 
-  /* 6. Ép TẤT CẢ văn bản giá trị tự động dạt sát KỊCH LỀ PHẢI */
-  table tbody tr td>*:not(div) {
+  /* 6. Ép Giá trị dữ liệu sát kịch lề PHẢI */
+  table tbody tr td>*:not(div):not(button) {
     margin-left: auto !important;
     text-align: right !important;
     word-break: break-word !important;
   }
 
-  /* 7. Định dạng riêng cho dòng HÀNH ĐỘNG (cột cuối) */
+  /* 7. Định dạng riêng cho Dòng HÀNH ĐỘNG (Nút bấm) */
   table tbody tr td:last-child,
   table tbody tr td[data-label="HÀNH ĐỘNG"],
   table tbody tr td[data-label="Hành Động"] {
@@ -1468,7 +1459,7 @@ div[style*="overflow: auto"],
     justify-content: space-between !important;
   }
 
-  /* Ép cụm chứa nút bấm đứng liền kề ở góc dưới bên phải */
+  /* Gom toàn bộ nút bấm thành 1 cụm liền kề sát lề phải */
   table tbody tr td:last-child>div,
   table tbody tr td[data-label="HÀNH ĐỘNG"]>div,
   table tbody tr td[data-label="Hành Động"]>div {
@@ -1478,19 +1469,17 @@ div[style*="overflow: auto"],
     justify-content: flex-end !important;
     align-items: center !important;
     margin-left: auto !important;
-    flex-wrap: nowrap !important;
   }
 
-  /* Kích thước nút bấm nhỏ gọn, không bị che khuất */
+  /* Kích thước nút bấm gọn gàng trên Mobile */
   table tbody tr td .btn-action {
     padding: 5px 10px !important;
-    font-size: 11px !important;
+    font-size: 12px !important;
     white-space: nowrap !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 4px !important;
     margin: 0 !important;
-    height: 28px !important;
   }
 }
 
