@@ -521,6 +521,9 @@ async function saveForm(module) {
       db[targetKey].sort(sortDescById);
     }
 
+    // THÊM THÔNG BÁO TOAST THÀNH CÔNG TẠI ĐÂY
+    showToast(state.mode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
+
     invalidateStockCache();
     fetchDataFromSupabase();
     navigate(module, 'list');
@@ -561,6 +564,10 @@ async function deleteItem(module, id) {
       await showAlert('Xóa trên CSDL thất bại: ' + error.message, 'Lỗi kết nối');
       await fetchDataFromSupabase();
       render();
+    }
+    else {
+      // THÊM THÔNG BÁO TOAST THÀNH CÔNG KHI XÓA TRÊN DATABASE THÀNH CÔNG
+      showToast('Đã xóa bản ghi thành công!', 'success');
     }
   }
 }
@@ -837,7 +844,6 @@ async function handleCustomerSelectInOrder(customerName) {
 
   render();
 }
-
 
 // ==========================================
 // HÀM BỔ TRỢ CHUNG: TẠO VÀ CHIA SẺ FILE PDF QUA ZALO / TẢI VỀ PC

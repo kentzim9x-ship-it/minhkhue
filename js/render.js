@@ -2568,3 +2568,26 @@ function renderReportSales(c) {
     }
   });
 }
+
+function renderTableSkeleton(columnsCount = 8, rowsCount = 5) {
+  const headers = Array.from({ length: columnsCount }).map(() => 
+    `<th style="padding: 11px 16px;"><div class="skeleton-box skeleton-row" style="width: 70%;"></div></th>`
+  ).join('');
+
+  const rows = Array.from({ length: rowsCount }).map(() => `
+    <tr style="border-bottom: 1px solid var(--border);">
+      ${Array.from({ length: columnsCount }).map(() => `
+        <td style="padding: 11px 16px;"><div class="skeleton-box skeleton-row"></div></td>
+      `).join('')}
+    </tr>
+  `).join('');
+
+  return `
+    <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead><tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">${headers}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}

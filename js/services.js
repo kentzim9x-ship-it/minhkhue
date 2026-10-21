@@ -404,6 +404,36 @@ function showAlert(message, title = 'Thông báo hệ thống') {
   });
 }
 
+function showToast(message, type = 'success', duration = 3000) {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast-item toast-${type}`;
+
+  const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : '⚠';
+
+  toast.innerHTML = `
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-weight: bold; color: ${type === 'success' ? '#34d399' : type === 'error' ? '#f87171' : '#fbbf24'}">${icon}</span>
+      <span>${message}</span>
+    </div>
+    <button onclick="this.parentElement.remove()" style="background: none; border: none; color: var(--muted-foreground); cursor: pointer; font-size: 14px; padding: 0 4px;">✕</button>
+  `;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.remove();
+    }
+  }, duration);
+}
+
 function getReadNotifIds() {
   const saved = localStorage.getItem('app_read_notif_ids');
   return saved ? JSON.parse(saved) : [];
@@ -419,6 +449,12 @@ function markNotifIdAsRead(notifId) {
 }
 
 async function fetchNotificationsFromSupabase() {
+  // 1. Bật trạng thái loading trên giao diện
+  const container = document.getElementById('main-content') || document.getElementById('app');
+  if (container && state.mode === 'list') {
+    container.innerHTML = renderTableSkeleton(8, state.pageSize || 10);
+  }
+
   try {
     const { data, error } = await supabaseClient
       .from('notifications')
@@ -432,6 +468,9 @@ async function fetchNotificationsFromSupabase() {
     }
   } catch (err) {
     console.error('Lỗi lấy thông báo:', err);
+  } finally {
+    // 2. Render lại giao diện sau khi tải xong
+    render();
   }
 }
 
