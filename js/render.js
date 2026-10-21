@@ -136,7 +136,7 @@ function renderLoginForm(container) {
           </div>
 
           <!-- Nút tích Ghi nhớ đăng nhập -->
-          <div style="display: flex; align-items: center; justify-content: flex-start; padding: 0 4px;">
+          <div style="display: flex; align-items: center; justify-content: flex-end; padding: 0 4px;">
             <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255, 255, 255, 0.85); cursor: pointer; user-select: none;">
               <input 
                 type="checkbox" 
