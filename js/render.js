@@ -162,7 +162,7 @@ function renderLoginForm(container) {
               margin-top: 4px; 
               background: #d9534f; 
               border: none; 
-              border-radius: 25px; 
+              border-radius: 25px !important;; 
               color: #ffffff; 
               font-family: var(--font-jost, sans-serif); 
               font-size: 15px; 
