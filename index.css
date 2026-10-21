@@ -1383,7 +1383,16 @@ div[style*="overflow: auto"],
     align-items: center !important;
     justify-content: space-between !important;
     box-sizing: border-box !important;
+
+    /* Màu nền, viền và hiệu ứng đổ bóng mờ giống App Header chính */
+    background-color: var(--background) !important;
     border-bottom: 1px solid var(--border) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+
+    position: relative !important;
+    z-index: 2 !important;
   }
 
   /* Đảm bảo danh sách item giãn hết chiều cao khả dụng */
@@ -1414,7 +1423,16 @@ div[style*="overflow: auto"],
     align-items: center !important;
     justify-content: space-between !important;
     box-sizing: border-box !important;
+
+    /* Màu nền, viền và hiệu ứng đổ bóng mờ giống App Header chính */
+    background-color: var(--background) !important;
     border-bottom: 1px solid var(--border) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+
+    position: relative !important;
+    z-index: 2 !important;
   }
 
   .notif-dropdown>div:nth-child(2),
