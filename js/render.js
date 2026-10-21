@@ -2235,7 +2235,7 @@ function renderReportInventory(c) {
     </div>
   `).join('');
 
-  const headersHtml = ['Mã Hàng (SKU)', 'Tên Hàng', 'ĐVT', 'Danh Mục', 'Vị Trí', 'Tồn Đầu Kỳ', 'Tồn Thực Tế', 'Tạm Giữ', 'Có Thể Bán', 'Mức Cảnh Báo', 'Giá Vốn', 'Trạng Thái', 'Hành Động']
+  const headersHtml = ['Mã Hàng (SKU)', 'Tên Hàng', 'ĐVT', 'Danh Mục', 'Vị Trí', 'Tồn Đầu Kỳ', 'Tồn Thực Tế', 'Tạm Giữ', 'Có Thể Bán', 'Mức Cảnh Báo', 'Giá Vốn', 'Trạng Thái']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
@@ -2260,11 +2260,6 @@ function renderReportInventory(c) {
         <td data-label="Mức Cảnh Báo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${m.reorder ?? 0}</td>
         <td data-label="Giá Vốn" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
         <td data-label="Trạng Thái" style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'Đủ hàng' : m.status}</span></td>
-        <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-          <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
-            ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>`}
-          </div>
-        </td>
       </tr>
     `;
     }).join('');
