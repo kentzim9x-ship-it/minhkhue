@@ -1387,48 +1387,7 @@ div[style*="overflow: auto"],
     white-space: nowrap !important;
   }
 
-  /* 1. Mở rộng khung chứa bảng full độ rộng màn hình Mobile */
-  div:has(> table),
-  .table-container,
-  .table-responsive,
-  div[style*="overflow-x: auto"] {
-    overflow-x: visible !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  /* 2. ẨN HOÀN TOÀN thanh header ngang của bảng */
-  table thead,
-  table thead tr,
-  table thead th {
-    display: none !important;
-  }
-
-  /* 3. Ép bảng và dòng tr thành dạng Card */
-  table {
-    display: block !important;
-    width: 100% !important;
-    min-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  table tbody {
-    display: block !important;
-    width: 100% !important;
-  }
-
-  table tbody tr {
-    display: block !important;
-    width: 100% !important;
-    margin-bottom: 12px !important;
-    border: 1px solid var(--border) !important;
-    background: var(--card) !important;
-    padding: 8px 12px !important;
-    border-radius: 4px !important;
-    box-sizing: border-box !important;
-  }
-
-  /* 4. Định dạng ô td dạng Flexbox đẩy 2 phần tử về 2 đầu */
+  /* 1. Đưa thẻ td về dạng Flexbox căn 2 đầu chuẩn xác */
   table tbody tr td {
     display: flex !important;
     justify-content: space-between !important;
@@ -1438,9 +1397,11 @@ div[style*="overflow: auto"],
     font-size: 13px !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    text-align: right !important;
+    /* Ghi đè text-align: left inline */
   }
 
-  /* 5. Tiêu đề cột nằm cố định bên trái */
+  /* 2. Tiêu đề bên trái (data-label): Giới hạn tối đa 45% chiều rộng */
   table tbody tr td::before {
     content: attr(data-label);
     font-family: var(--font-dm-mono);
@@ -1449,31 +1410,37 @@ div[style*="overflow: auto"],
     text-transform: uppercase;
     font-weight: 500;
     text-align: left !important;
-    padding-right: 12px !important;
-    flex-shrink: 0 !important;
-  }
-
-  /* 6. ÉP TẤT CẢ GIÁ TRỊ VĂN BẢN/SPAN/BADGE DẠT SÁT KỊCH LỀ PHẢI */
-  table tbody tr td {
-    text-align: right !important;
-  }
-
-  table tbody tr td>*:not(div) {
-    margin-left: auto !important;
-    text-align: right !important;
-    justify-content: flex-end !important;
-    display: inline-flex !important;
-    max-width: 65% !important;
+    padding-right: 8px !important;
+    flex: 0 0 auto !important;
+    max-width: 45% !important;
     word-break: break-word !important;
   }
 
-  /* Xử lý riêng cho thẻ span badge (CÒN HÀNG,...) dạt sát lề phải */
-  table tbody tr td>.badge {
+  /* 3. Ép NỘI DUNG GIÁ TRỊ bên phải: Dạt kịch lề bên phải */
+  table tbody tr td>*:not(div) {
     margin-left: auto !important;
-    display: inline-block !important;
+    text-align: right !important;
+    display: block !important;
+    width: auto !important;
+    max-width: 55% !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
   }
 
-  /* 7. Xử lý riêng cho dòng HÀNH ĐỘNG (Nút Xem, Sửa, Xóa) */
+  /* Trường hợp nội dung là chuỗi văn bản thuần (không bọc thẻ HTML) */
+  table tbody tr td {
+    color: var(--foreground);
+  }
+
+  /* 4. Thẻ Trạng thái (Badge) ép dạt sát lề phải */
+  table tbody tr td>.badge,
+  table tbody tr td span.badge {
+    margin-left: auto !important;
+    display: inline-block !important;
+    text-align: right !important;
+  }
+
+  /* 5. Giữ nguyên cụm 3 Nút Hành Động căn sát bên phải */
   table tbody tr td:last-child,
   table tbody tr td[data-label="HÀNH ĐỘNG"],
   table tbody tr td[data-label="Hành Động"] {
@@ -1483,7 +1450,6 @@ div[style*="overflow: auto"],
     justify-content: space-between !important;
   }
 
-  /* Ép cụm chứa nút bấm gom gọn sát về bên phải */
   table tbody tr td:last-child>div,
   table tbody tr td[data-label="HÀNH ĐỘNG"]>div,
   table tbody tr td[data-label="Hành Động"]>div {
@@ -1494,10 +1460,8 @@ div[style*="overflow: auto"],
     align-items: center !important;
     margin-left: auto !important;
     width: auto !important;
-    max-width: 75% !important;
   }
 
-  /* Căn chỉnh kích thước 3 nút bấm nhỏ gọn trên mobile */
   table tbody tr td .btn-action {
     padding: 5px 10px !important;
     font-size: 11px !important;
@@ -1507,7 +1471,6 @@ div[style*="overflow: auto"],
     gap: 4px !important;
     margin: 0 !important;
     height: 28px !important;
-    line-height: 1 !important;
   }
 }
 
