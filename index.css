@@ -1419,7 +1419,7 @@ div[style*="overflow: auto"],
     border-radius: 4px !important;
   }
 
-  /* 2. Cấu hình thẻ td: BẮT BUỘC căn lề phải cho toàn bộ nội dung */
+  /* 2. Cấu trúc mỗi dòng td: Flexbox mở rộng full 100%, phân tách 2 đầu */
   table tbody tr td {
     display: flex !important;
     justify-content: space-between !important;
@@ -1429,11 +1429,12 @@ div[style*="overflow: auto"],
     font-size: 13px !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    text-align: right !important; /* Buộc văn bản căn phải */
+    margin: 0 !important;
+    /* Xóa bỏ margin-left: auto gây lệch card */
     gap: 12px !important;
   }
 
-  /* 3. Tiêu đề bên trái (::before): BÁM CHẶT KỊCH LỀ TRÁI */
+  /* 3. Tiêu đề cột (bên trái): CĂN BÁM SÁT LỀ TRÁI 100% */
   table tbody tr td::before {
     content: attr(data-label);
     font-family: var(--font-dm-mono);
@@ -1442,20 +1443,24 @@ div[style*="overflow: auto"],
     text-transform: uppercase;
     font-weight: 500;
     text-align: left !important;
-    margin-right: auto !important; /* Ép giá trị phía sau dạt hết sang phải */
+    margin-right: auto !important;
+    /* Đẩy giá trị phía sau sang kịch lề phải */
     flex: 0 0 auto !important;
-    max-width: 42% !important;
+    max-width: 45% !important;
     white-space: normal !important;
     word-break: break-word !important;
     line-height: 1.3 !important;
   }
 
-  /* 4. GIÁ TRỊ NẰM BÊN PHẢI: ÉP DẠT SÁT KỊCH LỀ PHẢI 100% */
-  table tbody tr td > * {
+  /* 4. Giá trị dữ liệu (bên phải): CĂN BÁM SÁT LỀ PHẢI 100% */
+  table tbody tr td {
+    text-align: right !important;
+  }
+
+  table tbody tr td>* {
     margin-left: auto !important;
     text-align: right !important;
-    display: block !important;
-    max-width: 58% !important;
+    max-width: 55% !important;
     word-break: break-word !important;
     overflow-wrap: break-word !important;
     line-height: 1.3 !important;
