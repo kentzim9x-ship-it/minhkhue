@@ -1355,11 +1355,11 @@ div[style*="overflow: auto"],
     white-space: nowrap !important;
   }
 
-  /* Cập nhật Popup Thông báo hiển thị Full Màn Hình trên Mobile */
+  /* Cập nhật Popup Thông báo hiển thị Full Màn Hình trên Mobile với animation trượt từ bên phải */
   .notif-dropdown {
     position: fixed !important;
     top: 0 !important;
-    left: 0 !important;
+    left: auto !important;
     right: 0 !important;
     bottom: 0 !important;
     width: 100vw !important;
@@ -1372,6 +1372,17 @@ div[style*="overflow: auto"],
     clip-path: none !important;
     z-index: 99999 !important;
     background: var(--card) !important;
+    transform: translateX(100%) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  .notif-dropdown.open {
+    transform: translateX(0) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
 
   .notif-dropdown>div:first-child {
@@ -1443,10 +1454,10 @@ div[style*="overflow: auto"],
   }
 
   .notif-dropdown:not(.open) {
-    display: none !important;
-    opacity: 0 !important;
+    transform: translateX(100%) !important;
+    opacity: 1 !important;
     pointer-events: none !important;
-    visibility: hidden !important;
+    visibility: visible !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
