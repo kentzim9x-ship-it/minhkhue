@@ -3,9 +3,40 @@
 // ==========================================
 
 function navigate(view, mode = 'list', itemId = null) {
+  // --- BỔ SUNG: Lưu vị trí cuộn và trạng thái danh sách trước khi rời đi ---
+  if (state.mode === 'list') {
+    const contentBox = document.getElementById('app-content');
+    const scrollPos = contentBox ? contentBox.scrollTop : window.scrollY;
+
+    sessionStorage.setItem(`scroll_pos_${state.view}`, scrollPos);
+    sessionStorage.setItem(`list_state_${state.view}`, JSON.stringify({
+      page: state.page,
+      filter: state.filter,
+      search: state.search
+    }));
+  }
+
   if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
     showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
     mode = 'list';
+  }
+
+  if (mode === 'list') {
+    const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
+    if (savedStateRaw) {
+      const savedState = JSON.parse(savedStateRaw);
+      state.page = savedState.page || 1;
+      state.filter = savedState.filter || 'all';
+      state.search = savedState.search || '';
+    } else {
+      state.filter = 'all';
+      state.search = '';
+      state.page = 1;
+    }
+  } else {
+    state.filter = 'all';
+    state.search = '';
+    state.page = 1;
   }
 
   state.view = view;
@@ -43,9 +74,14 @@ function navigate(view, mode = 'list', itemId = null) {
 
   render();
 
-  window.scrollTo({ top: 0, behavior: 'instant' });
-  const contentBox = document.getElementById('app-content');
-  if (contentBox) contentBox.scrollTop = 0;
+  // --- BỔ SUNG: Khôi phục vị trí cuộn sau khi render ---
+  if (mode === 'list') {
+    restoreScrollPosition(view);
+  } else {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const contentBox = document.getElementById('app-content');
+    if (contentBox) contentBox.scrollTop = 0;
+  }
 }
 
 function handleRouteChange() {
@@ -84,6 +120,17 @@ function handleRouteChange() {
     state.search = '';
     state.page = 1;
 
+    // Phục hồi phân trang & từ khóa tìm kiếm nếu quay lại danh sách
+    if (mode === 'list') {
+      const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
+      if (savedStateRaw) {
+        const savedState = JSON.parse(savedStateRaw);
+        state.page = savedState.page || 1;
+        state.filter = savedState.filter || 'all';
+        state.search = savedState.search || '';
+      }
+    }
+
     const meta = viewMeta[view];
     const tagEl = document.getElementById('view-tag');
     const titleEl = document.getElementById('view-title');
@@ -106,6 +153,31 @@ function handleRouteChange() {
     if (contentBox) contentBox.scrollTop = 0;
   } else {
     navigate('dashboard', 'list');
+  }
+}
+
+function restoreScrollPosition(view) {
+  const savedScroll = sessionStorage.getItem(`scroll_pos_${view}`);
+  if (savedScroll !== null) {
+    const targetY = parseInt(savedScroll, 10);
+    
+    // Sử dụng requestAnimationFrame hoặc setTimeout để đảm bảo UI đã render xong bảng
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const contentBox = document.getElementById('app-content');
+        if (contentBox && contentBox.scrollHeight > targetY) {
+          contentBox.scrollTop = targetY;
+        }
+        window.scrollTo({ top: targetY, behavior: 'instant' });
+        
+        // Xóa vị trí sau khi đã phục hồi xong
+        sessionStorage.removeItem(`scroll_pos_${view}`);
+      }, 50);
+    });
+  } else {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const contentBox = document.getElementById('app-content');
+    if (contentBox) contentBox.scrollTop = 0;
   }
 }
 
