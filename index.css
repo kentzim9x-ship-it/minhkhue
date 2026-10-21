@@ -1462,6 +1462,12 @@ div[style*="overflow: auto"],
     z-index: 2 !important;
   }
 
+  .notif-history-drawer.open {
+    transform: translateX(0) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+
   .notif-dropdown>div:nth-child(2),
   .notif-history-drawer>div:nth-child(2) {
     height: calc(100vh - 100px) !important;
@@ -1481,7 +1487,7 @@ div[style*="overflow: auto"],
 
   /* Ẩn hoàn toàn Drawer Lịch sử khi không ở trạng thái .open */
   .notif-history-drawer:not(.open) {
-    right: -100% !important;
+    right: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
     box-shadow: none !important;
