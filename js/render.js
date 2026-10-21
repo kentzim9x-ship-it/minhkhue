@@ -617,16 +617,17 @@ function renderMaterialsList(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
-        <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+        <div style="display: flex; gap: 6px; align-items: center;">
           <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
           <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
           <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
         </div>
       </div>
+    </div>
   `;
 }
 
@@ -732,16 +733,17 @@ function renderCustomersList(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
-        <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+        <div style="display: flex; gap: 6px; align-items: center;">
           <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
           <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
           <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
         </div>
       </div>
+    </div>
   `;
 }
 
@@ -898,16 +900,17 @@ function renderQuotationsList(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
-        <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+        <div style="display: flex; gap: 6px; align-items: center;">
           <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
           <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
           <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
         </div>
       </div>
+    </div>
   `;
 }
 
@@ -1015,16 +1018,17 @@ function renderOrdersList(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
-        <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+        <div style="display: flex; gap: 6px; align-items: center;">
           <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
           <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
           <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
         </div>
       </div>
+    </div>
   `;
 }
 
@@ -1135,16 +1139,17 @@ function renderReturnsList(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
-        <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+        <div style="display: flex; gap: 6px; align-items: center;">
           <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
           <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
           <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
         </div>
       </div>
+    </div>
   `;
 }
 
@@ -1252,16 +1257,17 @@ function renderGRNList(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
-        <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+        <div style="display: flex; gap: 6px; align-items: center;">
           <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
           <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
           <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
         </div>
       </div>
+    </div>
   `;
 }
 
@@ -2323,11 +2329,11 @@ function renderReportInventory(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
-        <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+        <div style="display: flex; gap: 6px; align-items: center;">
           <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
           <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
           <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
@@ -2527,11 +2533,11 @@ function renderReportSales(c) {
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-left: auto; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
         </span>
-        <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+        <div style="display: flex; gap: 6px; align-items: center;">
           <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
           <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
           <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>

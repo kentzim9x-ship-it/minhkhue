@@ -12,7 +12,7 @@ let state = {
   search: '',
   formData: null,
   page: 1,        // Trang hiện tại
-  pageSize: 15    // Số lượng bản ghi trên mỗi trang
+  pageSize: 20    // Số lượng bản ghi trên mỗi trang
 };
 
 const viewMeta = {
