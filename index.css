@@ -1387,18 +1387,25 @@ div[style*="overflow: auto"],
     white-space: nowrap !important;
   }
 
-  /* chỉ áp dụng điều chỉnh cho màn hình mobile (PC giữ nguyên) */
   @media screen and (max-width: 768px) {
 
-    /* 1. Khung chứa bảng không bị giới hạn scroll tràn */
+    /* 1. Khung bao ngoài bảng mở rộng tràn full chiều rộng mobile */
     div[style*="overflow-x: auto"] {
       overflow-x: visible !important;
+      width: 100% !important;
     }
 
-    /* 2. Ép mỗi dòng tr thành 1 Card có độ rộng 100% full màn hình mobile */
+    /* 2. ẨN HOÀN TOÀN thanh header ngang của bảng */
+    table thead,
+    table thead tr,
+    table thead th {
+      display: none !important;
+    }
+
+    /* 3. Ép bảng và dòng tr thành khối Card */
     table,
     table tbody,
-    table tr {
+    table tbody tr {
       display: block !important;
       width: 100% !important;
       box-sizing: border-box !important;
@@ -1408,11 +1415,11 @@ div[style*="overflow: auto"],
       margin-bottom: 12px !important;
       border: 1px solid var(--border) !important;
       background: var(--card) !important;
-      padding: 6px 12px !important;
+      padding: 8px 12px !important;
       border-radius: 4px !important;
     }
 
-    /* 3. Mỗi ô td làm 1 hàng flex căn sát 2 mép: Tiêu đề lề Trái - Giá trị lề Phải */
+    /* 4. Mỗi ô td thành 1 hàng Flex chứa: [Tiêu đề bên Trái] - [Giá trị bên Phải] */
     table tbody tr td {
       display: flex !important;
       justify-content: space-between !important;
@@ -1422,10 +1429,9 @@ div[style*="overflow: auto"],
       font-size: 13px !important;
       width: 100% !important;
       box-sizing: border-box !important;
-      text-align: right !important;
     }
 
-    /* 4. Căn lề Tên Tiêu đề bên trái */
+    /* 5. Hiển thị Tiêu đề bên Trái */
     table tbody tr td::before {
       content: attr(data-label);
       font-family: var(--font-dm-mono);
@@ -1438,41 +1444,36 @@ div[style*="overflow: auto"],
       flex-shrink: 0 !important;
     }
 
-    /* 5. Căn lề Giá trị dữ liệu sát kịch mép PHẢI */
-    table tbody tr td>*:not(button):not(div) {
+    /* 6. Ép Giá trị dữ liệu sát kịch lề PHẢI */
+    table tbody tr td>*:not(div):not(button) {
       margin-left: auto !important;
       text-align: right !important;
       word-break: break-word !important;
     }
 
-    /* 6. Gom cụm các BUTTON HÀNH ĐỘNG co lại sát nhau ở góc phải */
-    table tbody tr td:last-child {
-      border-bottom: none !important;
-      padding-top: 10px !important;
-      padding-bottom: 6px !important;
-    }
-
-    /* Tạo container chứa các nút bấm nằm sát nhau */
+    /* 7. Định dạng riêng cho Dòng HÀNH ĐỘNG (Nút bấm) */
     table tbody tr td:last-child,
     table tbody tr td[data-label="HÀNH ĐỘNG"],
     table tbody tr td[data-label="Hành Động"] {
+      border-bottom: none !important;
+      padding-top: 10px !important;
+      padding-bottom: 4px !important;
       justify-content: space-between !important;
     }
 
-    /* Gom nhóm nút Xem, Sửa, Xóa đứng cạnh nhau */
+    /* Gom toàn bộ nút bấm thành 1 cụm liền kề sát lề phải */
     table tbody tr td:last-child>div,
-    table tbody tr td:last-child {
+    table tbody tr td[data-label="HÀNH ĐỘNG"]>div,
+    table tbody tr td[data-label="Hành Động"]>div {
       display: flex !important;
       flex-direction: row !important;
       gap: 6px !important;
-      /* Khoảng cách nhỏ giữa các nút */
       justify-content: flex-end !important;
-      /* Đẩy nguyên cụm về bên phải */
       align-items: center !important;
       margin-left: auto !important;
     }
 
-    /* Kích thước nút bấm gọn gàng trên mobile */
+    /* Kích thước nút bấm gọn gàng trên Mobile */
     table tbody tr td .btn-action {
       padding: 5px 10px !important;
       font-size: 12px !important;
