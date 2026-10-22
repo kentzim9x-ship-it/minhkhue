@@ -6,6 +6,15 @@ if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
+window.addEventListener('beforeunload', function () {
+  // Lọc và xóa toàn bộ các key tạm lưu vị trí cuộn và trạng thái danh sách trong sessionStorage
+  Object.keys(sessionStorage).forEach(key => {
+    if (key.startsWith('scroll_pos_') || key.startsWith('list_state_')) {
+      sessionStorage.removeItem(key);
+    }
+  });
+});
+
 function navigate(view, mode = 'list', itemId = null) {
   // --- BỔ SUNG: Lưu vị trí cuộn và trạng thái danh sách trước khi rời đi ---
   if (state.mode === 'list') {
