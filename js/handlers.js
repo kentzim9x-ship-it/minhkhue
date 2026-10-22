@@ -48,6 +48,9 @@ function navigate(view, mode = 'list', itemId = null) {
 
   state.view = view;
   state.mode = mode;
+  state.filter = 'all';
+  state.search = '';
+  state.page = 1;
 
   const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
   const tagEl = document.getElementById('view-tag');
@@ -76,36 +79,6 @@ function navigate(view, mode = 'list', itemId = null) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
 
-// --- KHẮC PHỤC LỖI KẸT GIAO DIỆN KHI VUỐT BACK TRÊN MOBILE ---
-    
-    // 1. Đóng Menu Mobile và lớp phủ của nó nếu đang mở
-    if (document.body.classList.contains('mobile-menu-open')) {
-      if (typeof toggleMobileMenu === 'function') {
-        toggleMobileMenu();
-      } else {
-        document.body.classList.remove('mobile-menu-open');
-        const mobOverlay = document.querySelector('.mobile-overlay');
-        if (mobOverlay) mobOverlay.classList.remove('active');
-      }
-    }
-
-    // 2. Dọn dẹp Modal Overlay & Notif Overlay
-    const modalOverlay = document.getElementById('custom-modal-overlay');
-    if (modalOverlay) modalOverlay.style.display = 'none';
-    
-    const notifOverlay = document.getElementById('notif-history-overlay');
-    if (notifOverlay) notifOverlay.classList.remove('active');
-    
-    // 3. Ép mở khóa tương tác (Pointer Events) cho toàn bộ trang
-    document.body.style.pointerEvents = 'auto';
-    document.documentElement.style.pointerEvents = 'auto';
-    
-    const contentBox = document.getElementById('app-content');
-    if (contentBox) {
-      contentBox.style.opacity = '1';
-      contentBox.style.pointerEvents = 'auto';
-    }
-
   render();
 
   // --- BỔ SUNG: Khôi phục vị trí cuộn sau khi render ---
@@ -113,9 +86,8 @@ function navigate(view, mode = 'list', itemId = null) {
     restoreScrollPosition(view);
   } else {
     window.scrollTo({ top: 0, behavior: 'instant' });
-    if (contentBox) {
-      contentBox.scrollTop = 0;
-    }
+    const contentBox = document.getElementById('app-content');
+    if (contentBox) contentBox.scrollTop = 0;
   }
 }
 
@@ -126,8 +98,9 @@ function handleRouteChange() {
   }
   pathname = pathname.replace(/^\/+|\/+$/g, '');
 
+  // Nếu URL là /minhkhue/login hoặc trống
   if (pathname === 'login') {
-    localStorage.removeItem('app_session');
+    localStorage.removeItem('app_session'); // Mặc định đăng xuất khi truy cập URL /login
     render();
     return;
   }
@@ -154,6 +127,7 @@ function handleRouteChange() {
     state.search = '';
     state.page = 1;
 
+    // Phục hồi phân trang & từ khóa tìm kiếm nếu quay lại danh sách
     if (mode === 'list') {
       const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
       if (savedStateRaw) {
@@ -179,106 +153,61 @@ function handleRouteChange() {
       initFormData(view, itemId);
     }
 
-// --- KHẮC PHỤC LỖI KẸT GIAO DIỆN KHI VUỐT BACK TRÊN MOBILE ---
-    
-    // 1. Đóng Menu Mobile và lớp phủ của nó nếu đang mở
-    if (document.body.classList.contains('mobile-menu-open')) {
-      if (typeof toggleMobileMenu === 'function') {
-        toggleMobileMenu();
-      } else {
-        document.body.classList.remove('mobile-menu-open');
-        const mobOverlay = document.querySelector('.mobile-overlay');
-        if (mobOverlay) mobOverlay.classList.remove('active');
-      }
-    }
-
-    // 2. Dọn dẹp Modal Overlay & Notif Overlay
-    const modalOverlay = document.getElementById('custom-modal-overlay');
-    if (modalOverlay) modalOverlay.style.display = 'none';
-    
-    const notifOverlay = document.getElementById('notif-history-overlay');
-    if (notifOverlay) notifOverlay.classList.remove('active');
-    
-    // 3. Ép mở khóa tương tác (Pointer Events) cho toàn bộ trang
-    document.body.style.pointerEvents = 'auto';
-    document.documentElement.style.pointerEvents = 'auto';
-    
-    const contentBox = document.getElementById('app-content');
-    if (contentBox) {
-      contentBox.style.opacity = '1';
-      contentBox.style.pointerEvents = 'auto';
-    }
-
     render();
 
-    if (mode === 'list') {
-      restoreScrollPosition(view);
-    } else {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      if (contentBox) {
-        contentBox.scrollTop = 0;
-      }
-    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const contentBox = document.getElementById('app-content');
+    if (contentBox) contentBox.scrollTop = 0;
+  } else {
+    navigate('dashboard', 'list');
   }
 }
 
 function restoreScrollPosition(view) {
   const savedScroll = sessionStorage.getItem(`scroll_pos_${view}`);
-  const contentBox = document.getElementById('app-content');
-  
-  // 1. ÉP BUỘC MỞ KHÓA TƯƠNG TÁC VÀ HIỂN THỊ
-  if (contentBox) {
-    contentBox.style.opacity = '1';
-    contentBox.style.pointerEvents = 'auto';
-  }
-
   if (savedScroll === null) {
-    if (contentBox) contentBox.scrollTop = 0;
     window.scrollTo({ top: 0, behavior: 'instant' });
+    const contentBox = document.getElementById('app-content');
+    if (contentBox) contentBox.scrollTop = 0;
     return;
   }
 
   const targetY = parseInt(savedScroll, 10);
+  const contentBox = document.getElementById('app-content');
 
-  // 2. Cuộn ngay lập tức
-  if (contentBox) contentBox.scrollTop = targetY;
-  window.scrollTo({ top: targetY, behavior: 'instant' });
-
-  // 3. Chốt lại lần cuối (không dùng Timeout/Observer)
-  requestAnimationFrame(() => {
-    if (contentBox) contentBox.scrollTop = targetY;
+  // Hàm thực hiện cuộn
+  const doScroll = () => {
+    if (contentBox) {
+      contentBox.scrollTop = targetY;
+    }
     window.scrollTo({ top: targetY, behavior: 'instant' });
-    sessionStorage.removeItem(`scroll_pos_${view}`);
+  };
+
+  // Thử cuộn qua nhiều chu kỳ render
+  requestAnimationFrame(() => {
+    doScroll();
+
+    // Dùng MutationObserver để đảm bảo khi bảng vẽ xong toàn bộ các dòng (HTML chèn xong) thì cuộn lại chuẩn xác
+    const targetNode = contentBox || document.body;
+    const observer = new MutationObserver((mutations, obs) => {
+      doScroll();
+      // Sau khi cuộn xong thì dọn dẹp observer và xóa lưu trữ
+      obs.disconnect();
+      sessionStorage.removeItem(`scroll_pos_${view}`);
+    });
+
+    observer.observe(targetNode, { childList: true, subtree: true });
+
+    // Fallback: Tự động ngắt observer sau 500ms nếu không có thay đổi DOM thêm
+    setTimeout(() => {
+      doScroll();
+      observer.disconnect();
+      sessionStorage.removeItem(`scroll_pos_${view}`);
+    }, 500);
   });
 }
 
 window.addEventListener('popstate', handleRouteChange);
-
-// BỔ SUNG: Ép mở khóa toàn bộ thao tác khi người dùng dùng nút Back/Vuốt trên thiết bị di động
-window.addEventListener('pageshow', function (e) {
-  // 1. Mở khóa tương tác chuột và chạm trên toàn bộ trang
-  document.body.style.pointerEvents = 'auto';
-  document.documentElement.style.pointerEvents = 'auto';
-  
-  // 2. Gỡ bỏ lớp phủ menu di động nếu bị kẹt
-  const mobOverlay = document.querySelector('.mobile-overlay');
-  if (mobOverlay) mobOverlay.classList.remove('active');
-  document.body.classList.remove('mobile-menu-open');
-
-  // 3. Mở khóa vùng chứa nội dung chính
-  const contentBox = document.getElementById('app-content');
-  if (contentBox) {
-    contentBox.style.opacity = '1';
-    contentBox.style.pointerEvents = 'auto';
-  }
-
-  // 4. Đảm bảo các modal/overlay thông báo được ẩn đi hoàn toàn
-  const modalOverlay = document.getElementById('custom-modal-overlay');
-  if (modalOverlay) modalOverlay.style.display = 'none';
-
-  const notifOverlay = document.getElementById('notif-history-overlay');
-  if (notifOverlay) notifOverlay.classList.remove('active');
-});
 
 // ==========================================
 // 6. XỬ LÝ DỮ LIỆU & FORM (DATA HANDLERS)

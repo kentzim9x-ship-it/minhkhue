@@ -266,19 +266,16 @@ function render() {
     }
   }
 
- if (activeId && state.mode !== 'list') { // Thêm điều kiện && state.mode !== 'list'
+  if (activeId) {
     const el = document.getElementById(activeId);
     if (el) {
-      // Dùng setTimeout cực ngắn để tránh giật focus trang
-      setTimeout(() => {
-        el.focus({ preventScroll: true }); // Thêm preventScroll để trình duyệt không tự giật scroll
-        try {
-          if (typeof el.selectionStart !== 'undefined' && el.type !== 'number' && el.type !== 'email') {
-            const len = el.value ? el.value.length : 0;
-            el.setSelectionRange(len, len);
-          }
-        } catch (err) { }
-      }, 0);
+      el.focus();
+      try {
+        if (typeof el.selectionStart !== 'undefined' && el.type !== 'number' && el.type !== 'email') {
+          const len = el.value ? el.value.length : 0;
+          el.setSelectionRange(len, len);
+        }
+      } catch (err) { }
     }
   }
 }
