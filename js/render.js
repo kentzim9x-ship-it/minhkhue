@@ -205,71 +205,77 @@ function togglePasswordVisibility() {
   }
 }
 
-let currentRenderedView = null;
-let currentRenderedPage = null;
-let currentRenderedSearch = null;
-let currentRenderedFilter = null;
-
-let isListRendered = false;
-
-function render(forceRebuildList = false) {
+function render() {
+  const appContainer = document.querySelector('.app-container');
+  const c = document.getElementById('app-content');
   const session = getAuthSession();
-  if (!session.isLoggedIn) { /* ... giữ nguyên logic login ... */ return; }
 
-  const listContainer = document.getElementById('list-view-container');
-  const detailContainer = document.getElementById('detail-view-container');
+  // CHƯA ĐĂNG NHẬP: Hiển thị Form Login & Đẩy URL về /minhkhue/login
+  if (!session.isLoggedIn) {
+    if (appContainer) appContainer.style.display = 'none';
+    let loginBox = document.getElementById('login-container');
+    if (!loginBox) {
+      loginBox = document.createElement('div');
+      loginBox.id = 'login-container';
+      document.body.appendChild(loginBox);
+    }
+
+    // Tự động thay đổi URL trên thanh địa chỉ về /minhkhue/login nếu đang ở URL khác
+    const targetLoginUrl = `${BASE_PATH}/login`;
+    if (window.location.pathname !== targetLoginUrl) {
+      window.history.pushState({ view: 'login' }, '', targetLoginUrl);
+    }
+
+    renderLoginForm(loginBox);
+    return;
+  } else {
+    // ĐÃ ĐĂNG NHẬP: Gỡ Form Login và mở ứng dụng
+    const loginBox = document.getElementById('login-container');
+    if (loginBox) loginBox.remove();
+    if (appContainer) appContainer.style.display = 'flex';
+    updateUserInfoUI();
+  }
+
+  const activeId = document.activeElement ? document.activeElement.id : null;
+
+  c.innerHTML = '';
+  updateGlobalMaterialDatalist();
 
   if (state.mode !== 'list') {
-    // === CHẾ ĐỘ FORM CHI TIẾT ===
-    listContainer.style.display = 'none';
-    detailContainer.style.display = 'block';
-    detailContainer.innerHTML = '';
-
     switch (state.view) {
-      case 'materials': renderMaterialForm(detailContainer); break;
-      case 'customers': renderCustomerForm(detailContainer); break;
-      case 'warehouses': renderWarehouseForm(detailContainer); break;
-      case 'quotations': renderQuotationForm(detailContainer); break;
-      case 'sales-orders': renderSalesOrderForm(detailContainer); break;
-      case 'returns': renderReturnForm(detailContainer); break;
-      case 'grn': renderGRNForm(detailContainer); break;
+      case 'materials': renderMaterialForm(c); break;
+      case 'customers': renderCustomerForm(c); break;
+      case 'warehouses': renderWarehouseForm(c); break;
+      case 'quotations': renderQuotationForm(c); break;
+      case 'sales-orders': renderSalesOrderForm(c); break;
+      case 'returns': renderReturnForm(c); break;
+      case 'grn': renderGRNForm(c); break;
     }
   } else {
-    // === CHẾ ĐỘ DANH SÁCH ===
-    listContainer.style.display = 'block';
-    detailContainer.style.display = 'none';
-    detailContainer.innerHTML = '';
+    switch (state.view) {
+      case 'dashboard': renderDashboard(c); break;
+      case 'materials': renderMaterialsList(c); break;
+      case 'customers': renderCustomersList(c); break;
+      case 'warehouses': renderWarehousesList(c); break;
+      case 'quotations': renderQuotationsList(c); break;
+      case 'sales-orders': renderOrdersList(c); break;
+      case 'returns': renderReturnsList(c); break;
+      case 'grn': renderGRNList(c); break;
+      case 'report-inventory': renderReportInventory(c); break;
+      case 'report-sales': renderReportSales(c); break;
+    }
+  }
 
-    // Kiểm tra xem State có thay đổi so với lần render trước không
-    const stateChanged = currentRenderedView !== state.view ||
-      currentRenderedPage !== state.page ||
-      currentRenderedSearch !== state.search ||
-      currentRenderedFilter !== state.filter;
-
-    // Chỉ rebuild khi thực sự cần: Đổi trang, Đổi từ khóa search, Đổi tab filter, hoặc Đặt cờ isListRendered = false
-    const needRebuild = forceRebuildList || !isListRendered || stateChanged;
-
-    if (needRebuild) {
-      listContainer.innerHTML = '';
-      switch (state.view) {
-        case 'dashboard': renderDashboard(listContainer); break;
-        case 'materials': renderMaterialsList(listContainer); break;
-        case 'customers': renderCustomersList(listContainer); break;
-        case 'warehouses': renderWarehousesList(listContainer); break;
-        case 'quotations': renderQuotationsList(listContainer); break;
-        case 'sales-orders': renderOrdersList(listContainer); break;
-        case 'returns': renderReturnsList(listContainer); break;
-        case 'grn': renderGRNList(listContainer); break;
-        case 'report-inventory': renderReportInventory(listContainer); break;
-        case 'report-sales': renderReportSales(listContainer); break;
-      }
-
-      // Lưu lại trạng thái đã render
-      isListRendered = true;
-      currentRenderedView = state.view;
-      currentRenderedPage = state.page;
-      currentRenderedSearch = state.search;
-      currentRenderedFilter = state.filter;
+  if (activeId) {
+    const el = document.getElementById(activeId);
+    if (el) {
+      el.focus();
+      try {
+        if (typeof el.selectionStart !== 'undefined' && el.type !== 'number' && el.type !== 'email') {
+          const len = el.value ? el.value.length : 0;
+          el.setSelectionRange(len, len);
+        }
+      } catch (err) { }
     }
   }
 }

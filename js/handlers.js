@@ -624,11 +624,8 @@ async function saveForm(module) {
     // THÊM THÔNG BÁO TOAST THÀNH CÔNG TẠI ĐÂY
     showToast(state.mode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
 
-    isListRendered = false;
-
     invalidateStockCache();
     fetchDataFromSupabase();
-    currentRenderedView = null;
     navigate(module, 'list');
   } catch (error) {
     console.error('Lỗi lưu Supabase:', error);
@@ -660,21 +657,17 @@ async function deleteItem(module, id) {
     if (Array.isArray(db[targetKey])) {
       db[targetKey] = db[targetKey].filter(item => String(item.id) !== String(id));
     }
+    render();
 
     const { error } = await supabaseClient.from(tableName).delete().eq('id', id);
     if (error) {
       await showAlert('Xóa trên CSDL thất bại: ' + error.message, 'Lỗi kết nối');
       await fetchDataFromSupabase();
-
-      isListRendered = false;
       render();
     }
     else {
       // THÊM THÔNG BÁO TOAST THÀNH CÔNG KHI XÓA TRÊN DATABASE THÀNH CÔNG
       showToast('Đã xóa bản ghi thành công!', 'success');
-      isListRendered = false;
-      currentRenderedView = null; // Thêm dòng này
-      render(true);               // Cập nhật tham số true
     }
   }
 }

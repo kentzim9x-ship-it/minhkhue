@@ -837,10 +837,9 @@ function subscribeAppRealtimeChanges() {
       .on('postgres_changes', { event: '*', schema: 'public', table: tbl }, async () => {
         invalidateStockCache();
         await fetchDataFromSupabase();
-        isListRendered = false;
+        // Chỉ vẽ lại màn hình nếu người dùng đang đứng ở danh sách
         if (state.mode === 'list') {
-          currentRenderedView = null; // Xóa cache
-          render(true);               // Ép vẽ lại
+          render();
         }
       })
       .subscribe();
