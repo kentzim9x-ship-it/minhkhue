@@ -469,6 +469,10 @@ function renderMaterialsList(c) {
     return true;
   });
 
+  filtered.sort((a, b) =>
+    String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' })
+  );
+
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
@@ -582,6 +586,10 @@ function renderCustomersList(c) {
       (c.address && c.address.toLowerCase().includes(searchKey));
     return matchStatus && matchSearch;
   });
+
+  filtered.sort((a, b) =>
+    String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' })
+  );
 
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
@@ -752,6 +760,10 @@ function renderQuotationsList(c) {
     return matchStatus && matchSearch;
   });
 
+  filtered.sort((a, b) =>
+    String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' })
+  );
+
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
@@ -872,6 +884,10 @@ function renderOrdersList(c) {
     return matchStatus && matchSearch;
   });
 
+  filtered.sort((a, b) =>
+    String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' })
+  );
+
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
@@ -982,6 +998,10 @@ function renderReturnsList(c) {
     const orderId = (r.orderId || '').toLowerCase();
     const customer = (r.customer || '').toLowerCase();
     const reason = (r.reason || '').toLowerCase();
+
+    filtered.sort((a, b) =>
+      String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' })
+    );
 
     const matchSearch = !searchKey ||
       rId.includes(searchKey) ||
@@ -1110,6 +1130,10 @@ function renderGRNList(c) {
 
     return matchStatus && matchSearch;
   });
+
+  filtered.sort((a, b) =>
+    String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' })
+  );
 
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
