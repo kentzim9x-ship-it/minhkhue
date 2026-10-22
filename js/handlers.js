@@ -48,9 +48,9 @@ function navigate(view, mode = 'list', itemId = null) {
 
   state.view = view;
   state.mode = mode;
-  state.filter = 'all';
-  state.search = '';
-  state.page = 1;
+  // state.filter = 'all';
+  // state.search = '';
+  // state.page = 1;
 
   const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
   const tagEl = document.getElementById('view-tag');
@@ -155,11 +155,13 @@ function handleRouteChange() {
 
     render();
 
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    const contentBox = document.getElementById('app-content');
-    if (contentBox) contentBox.scrollTop = 0;
-  } else {
-    navigate('dashboard', 'list');
+    if (mode === 'list') {
+      restoreScrollPosition(view);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      const contentBox = document.getElementById('app-content');
+      if (contentBox) contentBox.scrollTop = 0;
+    }
   }
 }
 
