@@ -238,7 +238,7 @@ function render() {
 
   const activeId = document.activeElement ? document.activeElement.id : null;
 
-  c.innerHTML = '';
+  // c.innerHTML = '';
   updateGlobalMaterialDatalist();
 
   if (state.mode !== 'list') {
