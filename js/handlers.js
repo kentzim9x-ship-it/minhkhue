@@ -113,15 +113,17 @@ function navigate(view, mode = 'list', itemId = null) {
 }
 
 function handleRouteChange() {
-  let pathname = window.location.pathname;
+  const urlParams = new URLSearchParams(window.location.search);
+  let pathFromQuery = urlParams.get('p');
+
+  let pathname = pathFromQuery || window.location.pathname;
   if (pathname.startsWith(BASE_PATH)) {
     pathname = pathname.substring(BASE_PATH.length);
   }
   pathname = pathname.replace(/^\/+|\/+$/g, '');
 
-  // Nếu URL là /minhkhue/login hoặc trống
   if (pathname === 'login') {
-    localStorage.removeItem('app_session'); // Mặc định đăng xuất khi truy cập URL /login
+    localStorage.removeItem('app_session');
     render();
     return;
   }
@@ -136,53 +138,34 @@ function handleRouteChange() {
   let mode = parts[1] || 'list';
   const itemId = parts[2] || null;
 
+  // Nếu URL dẫn tới form Chi tiết (add/edit/view), tự động chuyển sang detail.html
+  if (mode !== 'list') {
+    openDetailForm(view, mode, itemId);
+    return;
+  }
+
   if (viewMeta[view]) {
-    if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
-      showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
-      mode = 'list';
-    }
-
     state.view = view;
-    state.mode = mode;
-    state.filter = 'all';
-    state.search = '';
-    state.page = 1;
-
-    // Phục hồi phân trang & từ khóa tìm kiếm nếu quay lại danh sách
-    if (mode === 'list') {
-      const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
-      if (savedStateRaw) {
-        const savedState = JSON.parse(savedStateRaw);
-        state.page = savedState.page || 1;
-        state.filter = savedState.filter || 'all';
-        state.search = savedState.search || '';
-      }
-    }
-
-    const meta = viewMeta[view];
-    const tagEl = document.getElementById('view-tag');
-    const titleEl = document.getElementById('view-title');
-
-    if (tagEl) tagEl.innerText = meta.tag;
-    if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
-
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.getAttribute('data-view') === view);
-    });
-
-    if (mode !== 'list') {
-      initFormData(view, itemId);
-    }
-
-    render();
-
-    if (mode === 'list') {
-      restoreScrollPosition(view);
+    state.mode = 'list';
+    
+    // Khôi phục bộ lọc/phân trang
+    const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
+    if (savedStateRaw) {
+      const savedState = JSON.parse(savedStateRaw);
+      state.page = savedState.page || 1;
+      state.filter = savedState.filter || 'all';
+      state.search = savedState.search || '';
     } else {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      const contentBox = document.getElementById('app-content');
-      if (contentBox) contentBox.scrollTop = 0;
+      state.filter = 'all';
+      state.search = '';
+      state.page = 1;
     }
+
+    updateNavigationUI(view, 'list');
+    render();
+    restoreScrollPosition(view);
+  } else {
+    navigate('dashboard', 'list');
   }
 }
 
@@ -241,7 +224,7 @@ function navigateToDetail(type, id = '') {
 }
 
 function openDetailForm(type, mode = 'add', id = '') {
-  let path = `/minhkhue/${encodeURIComponent(type)}/${encodeURIComponent(mode)}`;
+  let path = `${BASE_PATH}/detail.html?p=${encodeURIComponent(type)}/${encodeURIComponent(mode)}`;
   if (id && id !== 'undefined' && id !== 'null') {
     path += `/${encodeURIComponent(id)}`;
   }

@@ -2,12 +2,6 @@
 // APPCT.JS - KHỞI TẠO TRANG CHI TIẾT (MPA)
 // ==========================================
 
-const session = getAuthSession();
-if (!session || !session.isLoggedIn) {
-  window.location.href = '/minhkhue/index.html';
-  return;
-}
-
 const DETAIL_TITLE_MAP = {
   materials: { tag: 'DANH MỤC', title: 'Danh Mục Hàng Hóa' },
   customers: { tag: 'DANH MỤC', title: 'Danh Mục Khách Hàng' },
@@ -50,18 +44,23 @@ function backToList(moduleView) {
 
 // Đọc URL dạng: /minhkhue/materials/view/SKU-0064
 function parseUrlPath() {
-  const basePath = '/minhkhue/';
-  let path = window.location.pathname;
+  const urlParams = new URLSearchParams(window.location.search);
+  let path = urlParams.get('p'); // Đọc tham số ?p= do SPA Redirect hoặc openDetailForm truyền qua
 
-  if (path.startsWith(basePath)) {
-    path = path.substring(basePath.length);
+  if (!path) {
+    const basePath = '/minhkhue/';
+    path = window.location.pathname;
+    if (path.startsWith(basePath)) {
+      path = path.substring(basePath.length);
+    }
   }
 
-  // Tách chuỗi theo dấu '/'
-  const parts = path.replace(/^\/+|\/+$/g, '').split('/');
+  // Loại bỏ các ký tự thừa
+  path = path.replace(/^detail\.html\/?/i, '').replace(/^\/+|\/+$/g, '');
 
+  const parts = path.split('/');
   const rawType = parts[0] || 'materials';
-  const mode = parts[1] || 'add';
+  const mode = parts[1] || 'view';
   const itemId = parts[2] ? decodeURIComponent(parts[2]) : null;
 
   return {
@@ -112,33 +111,27 @@ function setupSidebarNavigation() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Kiểm tra Auth
-  const session = getAuthSession();
-  if (!session || !session.isLoggedIn) {
-    window.location.href = '/minhkhue/login';
-    return;
-  }
-
   setupSidebarNavigation();
 
   if (typeof fetchDataFromSupabase === 'function') {
     await fetchDataFromSupabase();
   }
 
-  // 2. Lấy tham số URL
+  // Phân tích URL pathname mới
   const { module, mode, itemId } = parseUrlPath();
 
-  // 3. Cập nhật state
   state.view = module;
   state.mode = mode;
   state.selectedId = itemId;
 
-  // 4. Khởi tạo dữ liệu form
   if (typeof initFormData === 'function') {
-    initFormData(module, itemId);
+    try {
+      initFormData(module, itemId);
+    } catch (err) {
+      console.warn('Lỗi initFormData:', err);
+    }
   }
 
-  // 5. Render form chi tiết (KHÔNG gọi render() của index.html ở đây)
   updateDetailHeader(module);
   renderDetailContent();
 
