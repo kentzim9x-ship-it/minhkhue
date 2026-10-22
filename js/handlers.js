@@ -79,13 +79,7 @@ function navigate(view, mode = 'list', itemId = null) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
 
-  if (mode === 'list') {
-    // Chỉ render lại phần nội dung của danh sách (ví dụ tbody của bảng)
-    renderListView(view, state); 
-} else {
-    // Chỉ render form (thêm mới hoặc chỉnh sửa)
-    renderFormView(view, mode, itemId);
-}
+  render();
 
   // --- BỔ SUNG: Khôi phục vị trí cuộn sau khi render ---
   if (mode === 'list') {
@@ -159,13 +153,7 @@ function handleRouteChange() {
       initFormData(view, itemId);
     }
 
-    if (mode === 'list') {
-    // Chỉ render lại phần nội dung của danh sách (ví dụ tbody của bảng)
-    renderListView(view, state); 
-} else {
-    // Chỉ render form (thêm mới hoặc chỉnh sửa)
-    renderFormView(view, mode, itemId);
-}
+    render();
 
     if (mode === 'list') {
       restoreScrollPosition(view);
