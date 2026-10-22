@@ -626,6 +626,7 @@ async function saveForm(module) {
 
     invalidateStockCache();
     fetchDataFromSupabase();
+    currentRenderedView = null;
     navigate(module, 'list');
   } catch (error) {
     console.error('Lỗi lưu Supabase:', error);
@@ -668,6 +669,8 @@ async function deleteItem(module, id) {
     else {
       // THÊM THÔNG BÁO TOAST THÀNH CÔNG KHI XÓA TRÊN DATABASE THÀNH CÔNG
       showToast('Đã xóa bản ghi thành công!', 'success');
+      currentRenderedView = null; // Thêm dòng này
+      render(true);               // Cập nhật tham số true
     }
   }
 }

@@ -839,7 +839,8 @@ function subscribeAppRealtimeChanges() {
         await fetchDataFromSupabase();
         // Chỉ vẽ lại màn hình nếu người dùng đang đứng ở danh sách
         if (state.mode === 'list') {
-          render();
+          currentRenderedView = null; // Xóa cache
+          render(true);               // Ép vẽ lại
         }
       })
       .subscribe();
