@@ -76,6 +76,19 @@ function navigate(view, mode = 'list', itemId = null) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
 
+  // --- BỔ SUNG: Dọn dẹp mọi overlay vô hình có thể chắn màn hình ---
+  const modalOverlay = document.getElementById('custom-modal-overlay');
+  if (modalOverlay) modalOverlay.style.display = 'none';
+  
+  const notifOverlay = document.getElementById('notif-history-overlay');
+  if (notifOverlay) notifOverlay.classList.remove('active');
+  
+  const contentBox = document.getElementById('app-content');
+  if (contentBox) {
+    contentBox.style.opacity = '1';
+    contentBox.style.pointerEvents = 'auto';
+  }
+
   render();
 
   // --- BỔ SUNG: Khôi phục vị trí cuộn sau khi render ---
@@ -83,7 +96,6 @@ function navigate(view, mode = 'list', itemId = null) {
     restoreScrollPosition(view);
   } else {
     window.scrollTo({ top: 0, behavior: 'instant' });
-    const contentBox = document.getElementById('app-content');
     if (contentBox) {
       contentBox.scrollTop = 0;
     }
@@ -151,13 +163,25 @@ function handleRouteChange() {
       initFormData(view, itemId);
     }
 
+    // --- BỔ SUNG: Dọn dẹp mọi overlay vô hình có thể chắn màn hình ---
+    const modalOverlay = document.getElementById('custom-modal-overlay');
+    if (modalOverlay) modalOverlay.style.display = 'none';
+    
+    const notifOverlay = document.getElementById('notif-history-overlay');
+    if (notifOverlay) notifOverlay.classList.remove('active');
+    
+    const contentBox = document.getElementById('app-content');
+    if (contentBox) {
+      contentBox.style.opacity = '1';
+      contentBox.style.pointerEvents = 'auto';
+    }
+
     render();
 
     if (mode === 'list') {
       restoreScrollPosition(view);
     } else {
       window.scrollTo({ top: 0, behavior: 'instant' });
-      const contentBox = document.getElementById('app-content');
       if (contentBox) {
         contentBox.scrollTop = 0;
       }
@@ -169,6 +193,12 @@ function restoreScrollPosition(view) {
   const savedScroll = sessionStorage.getItem(`scroll_pos_${view}`);
   const contentBox = document.getElementById('app-content');
   
+  // 1. ÉP BUỘC MỞ KHÓA TƯƠNG TÁC VÀ HIỂN THỊ
+  if (contentBox) {
+    contentBox.style.opacity = '1';
+    contentBox.style.pointerEvents = 'auto';
+  }
+
   if (savedScroll === null) {
     if (contentBox) contentBox.scrollTop = 0;
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -177,20 +207,14 @@ function restoreScrollPosition(view) {
 
   const targetY = parseInt(savedScroll, 10);
 
-  // 1. Ép cuộn ngay lập tức ở luồng đồng bộ (Synchronous)
-  if (contentBox) {
-    // Tạm thời tắt scroll-behavior mượt (nếu có trong CSS) để tránh giật
-    contentBox.style.scrollBehavior = 'auto'; 
-    contentBox.scrollTop = targetY;
-  }
+  // 2. Cuộn ngay lập tức
+  if (contentBox) contentBox.scrollTop = targetY;
   window.scrollTo({ top: targetY, behavior: 'instant' });
 
-  // 2. Chốt lại đúng 1 lần duy nhất ở Frame tiếp theo (không dùng MutationObserver để tránh loop gây giật)
+  // 3. Chốt lại lần cuối (không dùng Timeout/Observer)
   requestAnimationFrame(() => {
     if (contentBox) contentBox.scrollTop = targetY;
     window.scrollTo({ top: targetY, behavior: 'instant' });
-    
-    // Xóa vị trí đã lưu sau khi phục hồi xong
     sessionStorage.removeItem(`scroll_pos_${view}`);
   });
 }
