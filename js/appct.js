@@ -25,37 +25,20 @@ function normalizeModuleType(type) {
   return t;
 }
 
-function backToList(moduleView) {
-  const targetView = moduleView || state.view || 'dashboard';
-
-  // Nếu đang ở trang detail.html -> Chuyển về index.html theo dạng MPA
-  if (window.location.pathname.includes('detail.html')) {
-    window.location.href = `/minhkhue/${targetView}`;
-    return;
-  }
-
-  // Nếu đang ở trang index.html -> Điều hướng bằng hàm navigate chuẩn
-  if (typeof navigate === 'function') {
-    navigate(targetView, 'list');
-  } else {
-    window.location.href = `/minhkhue/${targetView}`;
-  }
-}
-
-// Đọc URL dạng: /minhkhue/materials/view/SKU-0064
-function parseUrlPath() {
+// Hàm phân tích URL và tự động làm sạch thanh địa chỉ browser
+function parseAndCleanUrlPath() {
   const urlParams = new URLSearchParams(window.location.search);
-  let path = urlParams.get('p'); // Đọc tham số ?p= do SPA Redirect hoặc openDetailForm truyền qua
+  let path = urlParams.get('p');
 
   if (!path) {
-    const basePath = '/minhkhue/';
-    path = window.location.pathname;
-    if (path.startsWith(basePath)) {
-      path = path.substring(basePath.length);
+    let rawPath = window.location.pathname;
+    if (rawPath.startsWith(BASE_PATH)) {
+      rawPath = rawPath.substring(BASE_PATH.length);
     }
+    path = rawPath;
   }
 
-  // Loại bỏ các ký tự thừa
+  // Bỏ chữ detail.html nếu có
   path = path.replace(/^detail\.html\/?/i, '').replace(/^\/+|\/+$/g, '');
 
   const parts = path.split('/');
@@ -63,11 +46,17 @@ function parseUrlPath() {
   const mode = parts[1] || 'view';
   const itemId = parts[2] ? decodeURIComponent(parts[2]) : null;
 
-  return {
-    module: normalizeModuleType(rawType),
-    mode: mode,
-    itemId: itemId
-  };
+  const module = normalizeModuleType(rawType);
+
+  // Đổi URL trên thanh địa chỉ hiển thị đẹp: /minhkhue/materials/view/SKU-0075
+  let prettyUrl = `${BASE_PATH}/${module}/${mode}`;
+  if (itemId) prettyUrl += `/${itemId}`;
+
+  if (window.location.href !== window.location.origin + prettyUrl) {
+    window.history.replaceState(null, '', prettyUrl);
+  }
+
+  return { module, mode, itemId };
 }
 
 function updateDetailHeader(module) {
@@ -117,8 +106,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchDataFromSupabase();
   }
 
-  // Phân tích URL pathname mới
-  const { module, mode, itemId } = parseUrlPath();
+  // Đọc và tự chuẩn hóa URL thanh địa chỉ
+  const { module, mode, itemId } = parseAndCleanUrlPath();
 
   state.view = module;
   state.mode = mode;

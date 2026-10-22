@@ -224,11 +224,18 @@ function navigateToDetail(type, id = '') {
 }
 
 function openDetailForm(type, mode = 'add', id = '') {
-  let path = `${BASE_PATH}/detail.html?p=${encodeURIComponent(type)}/${encodeURIComponent(mode)}`;
+  let path = `${BASE_PATH}/${encodeURIComponent(type)}/${encodeURIComponent(mode)}`;
   if (id && id !== 'undefined' && id !== 'null') {
     path += `/${encodeURIComponent(id)}`;
   }
   window.location.href = path;
+}
+
+function backToList(moduleView) {
+  const targetView = moduleView || state.view || 'materials';
+  const basePath = typeof BASE_PATH !== 'undefined' ? BASE_PATH : '/minhkhue';
+  
+  window.location.href = `${basePath}/${targetView}`;
 }
 
 async function handleFormSubmit(event, type) {
