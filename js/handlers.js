@@ -79,14 +79,26 @@ function navigate(view, mode = 'list', itemId = null) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
 
+  // --- BỔ SUNG FIX GIẬT: Khóa độ cao container trước khi xóa DOM ---
+  const contentBox = document.getElementById('app-content');
+  if (mode === 'list' && contentBox) {
+    const savedScrollStr = sessionStorage.getItem(`scroll_pos_${view}`);
+    if (savedScrollStr) {
+      const targetY = parseInt(savedScrollStr, 10);
+      // Đặt min-height đủ dài để giữ thanh cuộn ở vị trí cũ, không bị sụp về 0
+      contentBox.style.minHeight = (targetY + window.innerHeight) + 'px';
+    }
+  }
+
   render();
 
-  // --- BỔ SUNG: Khôi phục vị trí cuộn sau khi render ---
+  // --- BỔ SUNG FIX GIẬT: Khôi phục cuộn và dọn dẹp min-height ---
   if (mode === 'list') {
     restoreScrollPosition(view);
+    // Nhả min-height để layout hoạt động tự nhiên trở lại
+    if (contentBox) contentBox.style.minHeight = '';
   } else {
     window.scrollTo({ top: 0, behavior: 'instant' });
-    const contentBox = document.getElementById('app-content');
     if (contentBox) contentBox.scrollTop = 0;
   }
 }
@@ -153,11 +165,26 @@ function handleRouteChange() {
       initFormData(view, itemId);
     }
 
+    // --- BỔ SUNG FIX GIẬT: Khóa độ cao container ---
+    const contentBox = document.getElementById('app-content');
+    if (mode === 'list' && contentBox) {
+      const savedScrollStr = sessionStorage.getItem(`scroll_pos_${view}`);
+      if (savedScrollStr) {
+        const targetY = parseInt(savedScrollStr, 10);
+        contentBox.style.minHeight = (targetY + window.innerHeight) + 'px';
+      }
+    }
+
     render();
 
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    const contentBox = document.getElementById('app-content');
-    if (contentBox) contentBox.scrollTop = 0;
+    // --- BỔ SUNG FIX GIẬT: Khôi phục cuộn khi ấn Back ---
+    if (mode === 'list') {
+      restoreScrollPosition(view);
+      if (contentBox) contentBox.style.minHeight = '';
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      if (contentBox) contentBox.scrollTop = 0;
+    }
   } else {
     navigate('dashboard', 'list');
   }
@@ -183,28 +210,25 @@ function restoreScrollPosition(view) {
     window.scrollTo({ top: targetY, behavior: 'instant' });
   };
 
-  // Thử cuộn qua nhiều chu kỳ render
-  requestAnimationFrame(() => {
+  // 1. THỰC HIỆN CUỘN NGAY LẬP TỨC (ĐỒNG BỘ) ĐỂ TRÁNH GIẬT FLASH MÀN HÌNH
+  doScroll();
+
+  // 2. Vẫn giữ lại MutationObserver để phòng hờ các ảnh hoặc component load chậm làm lệch layout
+  const targetNode = contentBox || document.body;
+  const observer = new MutationObserver((mutations, obs) => {
     doScroll();
-
-    // Dùng MutationObserver để đảm bảo khi bảng vẽ xong toàn bộ các dòng (HTML chèn xong) thì cuộn lại chuẩn xác
-    const targetNode = contentBox || document.body;
-    const observer = new MutationObserver((mutations, obs) => {
-      doScroll();
-      // Sau khi cuộn xong thì dọn dẹp observer và xóa lưu trữ
-      obs.disconnect();
-      sessionStorage.removeItem(`scroll_pos_${view}`);
-    });
-
-    observer.observe(targetNode, { childList: true, subtree: true });
-
-    // Fallback: Tự động ngắt observer sau 500ms nếu không có thay đổi DOM thêm
-    setTimeout(() => {
-      doScroll();
-      observer.disconnect();
-      sessionStorage.removeItem(`scroll_pos_${view}`);
-    }, 500);
+    obs.disconnect();
+    sessionStorage.removeItem(`scroll_pos_${view}`);
   });
+
+  observer.observe(targetNode, { childList: true, subtree: true });
+
+  // Fallback: Tự động ngắt observer sau 500ms
+  setTimeout(() => {
+    doScroll();
+    observer.disconnect();
+    sessionStorage.removeItem(`scroll_pos_${view}`);
+  }, 500);
 }
 
 window.addEventListener('popstate', handleRouteChange);
