@@ -61,9 +61,11 @@ function toggleMobileMenu() {
     if (isMenuOpen) {
       overlayEl.classList.add('active');
       overlayEl.style.pointerEvents = 'auto';
+      overlayEl.style.display = 'block'; // Bổ sung hiện lớp overlay
     } else {
       overlayEl.classList.remove('active');
       overlayEl.style.pointerEvents = 'none';
+      overlayEl.style.display = 'none'; // Bổ sung ẩn triệt để lớp overlay
     }
   }
 }

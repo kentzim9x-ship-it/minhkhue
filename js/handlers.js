@@ -56,16 +56,15 @@ function navigate(view, mode = 'list', itemId = null) {
   state.view = view;
   state.mode = mode;
 
-  // Đảm bảo đóng menu di động & gỡ bỏ overlay hoàn toàn để tránh đóng băng cảm ứng
   document.body.classList.remove('mobile-menu-open', 'sidebar-open');
   const overlay = document.querySelector('.mobile-overlay');
   if (overlay) {
     overlay.classList.remove('active');
     overlay.style.pointerEvents = 'none';
+    overlay.style.display = 'none'; // Bổ sung để ẩn triệt để lớp màng vô hình
   }
 
-  // Đảm bảo ép nội dung hiển thị rõ và nhận tương tác click lập tức
-  const contentBox = document.getElementById('app-content');
+ const contentBox = document.getElementById('app-content');
   if (contentBox) {
     contentBox.style.opacity = '1';
     contentBox.style.pointerEvents = 'auto';
@@ -93,15 +92,17 @@ function navigate(view, mode = 'list', itemId = null) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
 
-  // Chạy Render lại DOM
-  render();
+  setTimeout(() => {
+    // Chạy Render lại DOM
+    render();
 
-  if (mode === 'list') {
-    restoreScrollPosition(view);
-  } else {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    if (contentBox) contentBox.scrollTop = 0;
-  }
+    if (mode === 'list') {
+      restoreScrollPosition(view);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      if (contentBox) contentBox.scrollTop = 0;
+    }
+  }, 20);
 }
 
 function handleRouteChange() {
@@ -168,15 +169,17 @@ function handleRouteChange() {
       initFormData(view, itemId);
     }
 
-    render();
+    setTimeout(() => {
+      render();
 
-    if (mode === 'list') {
-      restoreScrollPosition(view);
-    } else {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      const contentBox = document.getElementById('app-content');
-      if (contentBox) contentBox.scrollTop = 0;
-    }
+      if (mode === 'list') {
+        restoreScrollPosition(view);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        const contentBox = document.getElementById('app-content');
+        if (contentBox) contentBox.scrollTop = 0;
+      }
+    }, 20);
   } else {
     navigate('dashboard', 'list');
   }
@@ -1530,13 +1533,3 @@ async function downloadOrShareXLSX(workbook, fileName) {
     showAlert('Có lỗi xảy ra trong quá trình tạo file Excel!', 'Lỗi');
   }
 }
-
-document.addEventListener('click', function (e) {
-  const btn = e.target.closest('.btn-action, .btn-primary, .nav-btn, .btn-action-del');
-  if (!btn) return;
-
-  // Giải phóng khóa touch nếu trình duyệt mobile bị trễ
-  if (btn.onclick) {
-    btn.style.pointerEvents = 'auto';
-  }
-}, true);
