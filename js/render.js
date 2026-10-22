@@ -281,6 +281,7 @@ function render() {
       }, 0);
     }
   }
+}
 
 // BÁO CÁO DOANH THU & DASHBOARD
 function getSalesAnalyticsData() {
