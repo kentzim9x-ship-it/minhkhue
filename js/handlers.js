@@ -178,23 +178,45 @@ function handleRouteChange() {
 
 function restoreScrollPosition(view) {
   const savedScroll = sessionStorage.getItem(`scroll_pos_${view}`);
-  const contentBox = document.getElementById('app-content');
-
   if (savedScroll === null) {
     window.scrollTo({ top: 0, behavior: 'instant' });
+    const contentBox = document.getElementById('app-content');
     if (contentBox) contentBox.scrollTop = 0;
     return;
   }
 
   const targetY = parseInt(savedScroll, 10);
+  const contentBox = document.getElementById('app-content');
 
-  // Chờ DOM cập nhật xong khung hình tiếp theo rồi mới thực hiện cuộn 1 lần
-  requestAnimationFrame(() => {
+  // Hàm thực hiện cuộn
+  const doScroll = () => {
     if (contentBox) {
       contentBox.scrollTop = targetY;
     }
     window.scrollTo({ top: targetY, behavior: 'instant' });
-    sessionStorage.removeItem(`scroll_pos_${view}`);
+  };
+
+  // Thử cuộn qua nhiều chu kỳ render
+  requestAnimationFrame(() => {
+    doScroll();
+
+    // Dùng MutationObserver để đảm bảo khi bảng vẽ xong toàn bộ các dòng (HTML chèn xong) thì cuộn lại chuẩn xác
+    const targetNode = contentBox || document.body;
+    const observer = new MutationObserver((mutations, obs) => {
+      doScroll();
+      // Sau khi cuộn xong thì dọn dẹp observer và xóa lưu trữ
+      obs.disconnect();
+      sessionStorage.removeItem(`scroll_pos_${view}`);
+    });
+
+    observer.observe(targetNode, { childList: true, subtree: true });
+
+    // Fallback: Tự động ngắt observer sau 500ms nếu không có thay đổi DOM thêm
+    setTimeout(() => {
+      doScroll();
+      observer.disconnect();
+      sessionStorage.removeItem(`scroll_pos_${view}`);
+    }, 500);
   });
 }
 
