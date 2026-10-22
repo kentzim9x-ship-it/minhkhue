@@ -61,13 +61,18 @@ function navigate(view, mode = 'list', itemId = null) {
   // state.search = '';
   // state.page = 1;
 
-  const contentBox = document.getElementById('app-content');
+ const contentBox = document.getElementById('app-content');
   if (contentBox) {
     contentBox.style.opacity = '0';
     contentBox.style.transition = 'opacity 0.15s ease-out';
-    setTimeout(() => {
-      contentBox.style.opacity = '1';
-    }, 50);
+    
+    // Đảm bảo bật lại opacity và khôi phục pointer-events
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        contentBox.style.opacity = '1';
+        contentBox.style.pointerEvents = 'auto'; // Cho phép tương tác lại
+      }, 50);
+    });
   }
 
   const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
@@ -188,7 +193,6 @@ function restoreScrollPosition(view) {
   const savedScroll = sessionStorage.getItem(`scroll_pos_${view}`);
   const contentBox = document.getElementById('app-content');
 
-  // Dọn dẹp cache cuộn ngay sau khi lấy ra
   sessionStorage.removeItem(`scroll_pos_${view}`);
 
   if (savedScroll === null) {
@@ -199,14 +203,13 @@ function restoreScrollPosition(view) {
 
   const targetY = parseInt(savedScroll, 10);
 
-  // Sử dụng setTimeout ngắn để chờ Browser Render (Paint) xong DOM hoàn toàn
-  // giúp gán lại vị trí cuộn chuẩn xác mà không cần dùng MutationObserver gây đóng băng UI
+  // Tăng lên 60ms để CPU Mobile hoàn tất render các dòng dữ liệu
   setTimeout(() => {
     if (contentBox) {
       contentBox.scrollTop = targetY;
     }
     window.scrollTo({ top: targetY, behavior: 'instant' });
-  }, 30);
+  }, 60);
 }
 
 window.addEventListener('popstate', handleRouteChange);
