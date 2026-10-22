@@ -90,8 +90,7 @@ function navigate(view, mode = 'list', itemId = null) {
 
   render();
 
-  // --- BỔ SUNG: Khôi phục vị trí cuộn sau khi render ---
-  if (mode === 'list') {
+ if (mode === 'list') {
     restoreScrollPosition(view);
   } else {
     window.scrollTo({ top: 0, behavior: 'instant' });
@@ -178,46 +177,27 @@ function handleRouteChange() {
 
 function restoreScrollPosition(view) {
   const savedScroll = sessionStorage.getItem(`scroll_pos_${view}`);
+  const contentBox = document.getElementById('app-content');
+
+  // Dọn dẹp cache cuộn ngay sau khi lấy ra
+  sessionStorage.removeItem(`scroll_pos_${view}`);
+
   if (savedScroll === null) {
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    const contentBox = document.getElementById('app-content');
     if (contentBox) contentBox.scrollTop = 0;
+    window.scrollTo({ top: 0, behavior: 'instant' });
     return;
   }
 
   const targetY = parseInt(savedScroll, 10);
-  const contentBox = document.getElementById('app-content');
 
-  // Hàm thực hiện cuộn
-  const doScroll = () => {
+  // Sử dụng setTimeout ngắn để chờ Browser Render (Paint) xong DOM hoàn toàn
+  // giúp gán lại vị trí cuộn chuẩn xác mà không cần dùng MutationObserver gây đóng băng UI
+  setTimeout(() => {
     if (contentBox) {
       contentBox.scrollTop = targetY;
     }
     window.scrollTo({ top: targetY, behavior: 'instant' });
-  };
-
-  // Thử cuộn qua nhiều chu kỳ render
-  requestAnimationFrame(() => {
-    doScroll();
-
-    // Dùng MutationObserver để đảm bảo khi bảng vẽ xong toàn bộ các dòng (HTML chèn xong) thì cuộn lại chuẩn xác
-    const targetNode = contentBox || document.body;
-    const observer = new MutationObserver((mutations, obs) => {
-      doScroll();
-      // Sau khi cuộn xong thì dọn dẹp observer và xóa lưu trữ
-      obs.disconnect();
-      sessionStorage.removeItem(`scroll_pos_${view}`);
-    });
-
-    observer.observe(targetNode, { childList: true, subtree: true });
-
-    // Fallback: Tự động ngắt observer sau 500ms nếu không có thay đổi DOM thêm
-    setTimeout(() => {
-      doScroll();
-      observer.disconnect();
-      sessionStorage.removeItem(`scroll_pos_${view}`);
-    }, 500);
-  });
+  }, 30);
 }
 
 window.addEventListener('popstate', handleRouteChange);
