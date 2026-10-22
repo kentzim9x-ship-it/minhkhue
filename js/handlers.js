@@ -219,9 +219,9 @@ function navigateToDetail(type, id = '') {
   window.location.href = url;
 }
 
-function openDetailForm(type, id = '') {
-  let url = `/minhkhue/detail.html?type=${type}`;
-  if (id) {
+function openDetailForm(type, mode = 'add', id = '') {
+  let url = `/minhkhue/detail.html?type=${encodeURIComponent(type)}&mode=${encodeURIComponent(mode)}`;
+  if (id && id !== 'undefined' && id !== 'null') {
     url += `&id=${encodeURIComponent(id)}`;
   }
   window.location.href = url;

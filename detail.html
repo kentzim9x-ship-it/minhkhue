@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="./assets/vite.svg" />
-  <title>MINHKHUE - LMS (Chi Tiết)</title>
+  <title>MINHKHUE - LMS</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,7 +26,7 @@
 
 <body>
   <div class="app-container">
-    <!-- Sidebar (Đồng bộ 100% trang chính) -->
+    <!-- Sidebar giữ nguyên chuẩn 100% -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="brand-logo">
@@ -148,15 +148,13 @@
       </div>
     </aside>
 
-    <!-- Main Content Wrapper -->
+    <!-- Main Content -->
     <div class="main-wrapper">
+      <!-- HEADER GIỐNG HỆT INDEX.HTML -->
       <header class="app-header" style="display: flex; justify-content: space-between; align-items: center;">
         <div class="app-header-left" style="display: flex; align-items: center; gap: 8px;">
-          <button class="btn-action" onclick="backToList()" title="Quay về danh sách" style="margin-right: 8px; padding: 6px 12px;">
-            ❮ Quay lại
-          </button>
-          <span id="view-tag" class="view-tag">CHI TIẾT</span>
-          <h1 id="view-title" class="view-title">Biểu Mẫu Chi Tiết</h1>
+          <span id="view-tag" class="view-tag">DANH MỤC</span>
+          <h1 id="view-title" class="view-title">Danh Mục Hàng Hóa</h1>
         </div>
 
         <div class="app-header-right" style="display: flex; align-items: center; gap: 8px;">
@@ -168,7 +166,6 @@
     </div>
   </div>
 
-  <!-- Scripts hỗ trợ cho trang Detail -->
   <script src="/minhkhue/js/config.js"></script>
   <script src="/minhkhue/js/services.js"></script>
   <script src="/minhkhue/js/renderct.js"></script>
