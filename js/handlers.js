@@ -7,7 +7,6 @@ if ('scrollRestoration' in history) {
 }
 
 window.addEventListener('beforeunload', function () {
-  // Lọc và xóa toàn bộ các key tạm lưu vị trí cuộn và trạng thái danh sách trong sessionStorage
   Object.keys(sessionStorage).forEach(key => {
     if (key.startsWith('scroll_pos_') || key.startsWith('list_state_')) {
       sessionStorage.removeItem(key);
@@ -57,6 +56,14 @@ function navigate(view, mode = 'list', itemId = null) {
   state.view = view;
   state.mode = mode;
 
+  // Đảm bảo đóng menu di động & gỡ bỏ overlay hoàn toàn để tránh đóng băng cảm ứng
+  document.body.classList.remove('mobile-menu-open', 'sidebar-open');
+  const overlay = document.querySelector('.mobile-overlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+    overlay.style.pointerEvents = 'none';
+  }
+
   // Đảm bảo ép nội dung hiển thị rõ và nhận tương tác click lập tức
   const contentBox = document.getElementById('app-content');
   if (contentBox) {
@@ -77,15 +84,10 @@ function navigate(view, mode = 'list', itemId = null) {
 
   if (mode !== 'list') initFormData(view, itemId);
 
-  // Tạo URL dạng /minhkhue/view/mode/id
   let targetPath = `${BASE_PATH}/${view}`;
   if (mode === 'add') targetPath += '/add';
   if (mode === 'edit' && itemId) targetPath += `/edit/${itemId}`;
   if (mode === 'view' && itemId) targetPath += `/view/${itemId}`;
-
-  if (document.body.classList.contains('mobile-menu-open')) {
-    toggleMobileMenu();
-  }
 
   if (window.location.pathname !== targetPath) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
@@ -93,12 +95,6 @@ function navigate(view, mode = 'list', itemId = null) {
 
   // Chạy Render lại DOM
   render();
-
-  // Đảm bảo ép dọn dẹp lớp phủ Mobile nếu có
-  const overlay = document.querySelector('.mobile-overlay');
-  if (overlay) {
-    overlay.classList.remove('active');
-  }
 
   if (mode === 'list') {
     restoreScrollPosition(view);
@@ -115,9 +111,8 @@ function handleRouteChange() {
   }
   pathname = pathname.replace(/^\/+|\/+$/g, '');
 
-  // Nếu URL là /minhkhue/login hoặc trống
   if (pathname === 'login') {
-    localStorage.removeItem('app_session'); // Mặc định đăng xuất khi truy cập URL /login
+    localStorage.removeItem('app_session');
     render();
     return;
   }
@@ -140,11 +135,14 @@ function handleRouteChange() {
 
     state.view = view;
     state.mode = mode;
-    state.filter = 'all';
-    state.search = '';
-    state.page = 1;
 
-    // Phục hồi phân trang & từ khóa tìm kiếm nếu quay lại danh sách
+    document.body.classList.remove('mobile-menu-open', 'sidebar-open');
+    const overlay = document.querySelector('.mobile-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.style.pointerEvents = 'none';
+    }
+
     if (mode === 'list') {
       const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
       if (savedStateRaw) {

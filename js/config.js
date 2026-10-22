@@ -60,8 +60,10 @@ function toggleMobileMenu() {
   if (overlayEl) {
     if (isMenuOpen) {
       overlayEl.classList.add('active');
+      overlayEl.style.pointerEvents = 'auto';
     } else {
       overlayEl.classList.remove('active');
+      overlayEl.style.pointerEvents = 'none';
     }
   }
 }
