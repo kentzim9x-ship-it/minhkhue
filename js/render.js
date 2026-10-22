@@ -469,10 +469,6 @@ function renderMaterialsList(c) {
     return true;
   });
 
-  filtered.sort((a, b) => 
-    String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' })
-  );
-
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
@@ -586,10 +582,6 @@ function renderCustomersList(c) {
       (c.address && c.address.toLowerCase().includes(searchKey));
     return matchStatus && matchSearch;
   });
-
-  filtered.sort((a, b) => 
-    String(a.id || '').localeCompare(String(b.id || ''), undefined, { numeric: true, sensitivity: 'base' })
-  );
 
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;

@@ -90,8 +90,8 @@ let db = {
 async function fetchDataFromSupabase() {
   try {
     const [custRes, matRes, whRes, invRes, quoRes, ordRes, retRes, grnRes, userRes] = await Promise.all([
-      supabaseClient.from('customers').select('*'),
-      supabaseClient.from('materials').select('*'),
+      supabaseClient.from('customers').select('*').order('id', { ascending: false }),
+      supabaseClient.from('materials').select('*').order('id', { ascending: false }),
       supabaseClient.from('warehouses').select('*'),
       supabaseClient.from('inventory').select('*'),
       supabaseClient.from('quotations').select('*'),
