@@ -205,17 +205,66 @@ function togglePasswordVisibility() {
   }
 }
 
+function unlockMobileScreen() {
+    const body = document.body;
+    const html = document.documentElement;
+
+    // 1. Gỡ bỏ TẤT CẢ class có thể gây khóa màn hình, khóa cuộn hoặc làm mờ
+    const classesToRemove = [
+        'modal-open', 'sidebar-open', 'mobile-menu-open', 'menu-open', 
+        'form-open', 'overlay-active', 'nav-open', 'no-scroll', 'locked'
+    ];
+    body.classList.remove(...classesToRemove);
+    html.classList.remove(...classesToRemove);
+
+    // 2. Khôi phục hoàn toàn khả năng cuộn và chạm (touch) ở cấp độ cao nhất
+    body.style.overflow = '';
+    body.style.overflowY = 'auto';
+    body.style.pointerEvents = 'auto';
+    body.style.touchAction = 'auto'; // Sửa lại thành auto (tốt nhất cho Mobile)
+
+    html.style.overflow = '';
+    html.style.pointerEvents = 'auto';
+    html.style.touchAction = 'auto';
+
+    // 3. Quét và ép ẩn triệt để mọi lớp phủ (overlay) tàng hình
+    const overlays = document.querySelectorAll('.mobile-overlay, .modal-backdrop, .form-overlay, .loading-overlay, .sidebar-overlay');
+    overlays.forEach(overlay => {
+        overlay.style.display = 'none';
+        overlay.style.opacity = '0';
+        overlay.style.visibility = 'hidden'; // Ẩn hoàn toàn khỏi DOM tree rendering
+        overlay.style.pointerEvents = 'none'; // Cấm nhận click
+        overlay.style.zIndex = '-1'; // Đẩy chìm xuống dưới cùng
+    });
+
+    // 4. Mở khóa triệt để cho khu vực render nội dung chính
+    const appContent = document.getElementById('app-content') || document.querySelector('.main-content');
+    if (appContent) {
+        appContent.style.pointerEvents = 'auto';
+        appContent.style.touchAction = 'auto';
+        appContent.style.opacity = '1';
+        appContent.style.visibility = 'visible';
+    }
+}
+
 function render() {
+  // 1. Dọn dẹp hoàn toàn trạng thái "đóng băng" trên Mobile ngay trước khi chuyển trang
+  unlockMobileScreen();
+  
   const appContainer = document.querySelector('.app-container');
   const c = document.getElementById('app-content');
+  
+  // Xóa nội dung Form cũ ngay lập tức để ngắt các event listener rác (nếu có)
+  if (c) c.innerHTML = ''; 
+  
   const session = getAuthSession();
 
-  // BỎ FOCUS CŨ TRÁNH KẸT TRẠNG THÁI TRÊN MOBILE
+  // 2. BỎ FOCUS CŨ TRÁNH KẸT BÀN PHÍM VÀ TRẠNG THÁI CHẠM TRÊN ĐIỆN THOẠI
   if (document.activeElement && typeof document.activeElement.blur === 'function') {
     document.activeElement.blur();
   }
 
-  // CHƯA ĐĂNG NHẬP: Hiển thị Form Login & Đẩy URL về /minhkhue/login
+  // CHƯA ĐĂNG NHẬP: Hiển thị Form Login & Đẩy URL về /login
   if (!session.isLoggedIn) {
     if (appContainer) appContainer.style.display = 'none';
     let loginBox = document.getElementById('login-container');
@@ -242,12 +291,13 @@ function render() {
 
   updateGlobalMaterialDatalist();
 
-  // Ép buộc dọn dẹp toàn bộ pointer-events và z-index thừa ở container
+  // Đảm bảo vùng chứa luôn mở khóa (gỡ bỏ code pan-x pan-y cũ vì dễ gây kẹt click trên iOS)
   if (c) {
     c.style.pointerEvents = 'auto';
-    c.style.touchAction = 'pan-x pan-y';
+    c.style.touchAction = 'auto'; 
   }
 
+  // 3. RENDER MÀN HÌNH TƯƠNG ỨNG
   if (state.mode !== 'list') {
     switch (state.view) {
       case 'materials': renderMaterialForm(c); break;
@@ -257,6 +307,8 @@ function render() {
       case 'sales-orders': renderSalesOrderForm(c); break;
       case 'returns': renderReturnForm(c); break;
       case 'grn': renderGRNForm(c); break;
+      default:
+        console.warn("View form không tồn tại:", state.view);
     }
   } else {
     switch (state.view) {
@@ -270,6 +322,8 @@ function render() {
       case 'grn': renderGRNList(c); break;
       case 'report-inventory': renderReportInventory(c); break;
       case 'report-sales': renderReportSales(c); break;
+      default:
+        console.warn("View list không tồn tại:", state.view);
     }
   }
 }

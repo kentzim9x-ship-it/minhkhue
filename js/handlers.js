@@ -56,12 +56,12 @@ function navigate(view, mode = 'list', itemId = null) {
   state.view = view;
   state.mode = mode;
 
-document.body.classList.remove('mobile-menu-open', 'sidebar-open');
+  document.body.classList.remove('mobile-menu-open', 'sidebar-open');
   const overlay = document.querySelector('.mobile-overlay');
   if (overlay) {
     overlay.classList.remove('active');
   }
- const contentBox = document.getElementById('app-content');
+  const contentBox = document.getElementById('app-content');
   if (contentBox) {
     contentBox.style.opacity = '1';
     contentBox.style.pointerEvents = 'auto';
@@ -135,10 +135,10 @@ function handleRouteChange() {
     state.mode = mode;
 
     document.body.classList.remove('mobile-menu-open', 'sidebar-open');
-  const overlay = document.querySelector('.mobile-overlay');
-  if (overlay) {
-    overlay.classList.remove('active');
-  }
+    const overlay = document.querySelector('.mobile-overlay');
+    if (overlay) {
+      overlay.classList.remove('active');
+    }
 
     if (mode === 'list') {
       const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
