@@ -137,7 +137,6 @@ function handleRouteChange() {
     state.search = '';
     state.page = 1;
 
-    // Phục hồi phân trang & từ khóa tìm kiếm nếu quay lại danh sách
     if (mode === 'list') {
       const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
       if (savedStateRaw) {
@@ -163,12 +162,29 @@ function handleRouteChange() {
       initFormData(view, itemId);
     }
 
-    // --- BỔ SUNG: Dọn dẹp mọi overlay vô hình có thể chắn màn hình ---
+    // --- KHẮC PHỤC LỖI KẸT GIAO DIỆN KHI VUỐT BACK TRÊN MOBILE ---
+    
+    // 1. Đóng Menu Mobile và lớp phủ của nó nếu đang mở
+    if (document.body.classList.contains('mobile-menu-open')) {
+      if (typeof toggleMobileMenu === 'function') {
+        toggleMobileMenu();
+      } else {
+        document.body.classList.remove('mobile-menu-open');
+        const mobOverlay = document.querySelector('.mobile-overlay');
+        if (mobOverlay) mobOverlay.classList.remove('active');
+      }
+    }
+
+    // 2. Dọn dẹp Modal Overlay & Notif Overlay
     const modalOverlay = document.getElementById('custom-modal-overlay');
     if (modalOverlay) modalOverlay.style.display = 'none';
     
     const notifOverlay = document.getElementById('notif-history-overlay');
     if (notifOverlay) notifOverlay.classList.remove('active');
+    
+    // 3. Ép mở khóa tương tác (Pointer Events) cho toàn bộ trang
+    document.body.style.pointerEvents = 'auto';
+    document.documentElement.style.pointerEvents = 'auto';
     
     const contentBox = document.getElementById('app-content');
     if (contentBox) {
@@ -220,6 +236,15 @@ function restoreScrollPosition(view) {
 }
 
 window.addEventListener('popstate', handleRouteChange);
+window.addEventListener('pageshow', function (e) {
+  if (e.persisted) {
+    document.body.style.pointerEvents = 'auto';
+    document.documentElement.style.pointerEvents = 'auto';
+    const mobOverlay = document.querySelector('.mobile-overlay');
+    if (mobOverlay) mobOverlay.classList.remove('active');
+    document.body.classList.remove('mobile-menu-open');
+  }
+});
 
 // ==========================================
 // 6. XỬ LÝ DỮ LIỆU & FORM (DATA HANDLERS)
