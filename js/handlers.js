@@ -98,15 +98,25 @@ function handleRouteChange() {
   }
   pathname = pathname.replace(/^\/+|\/+$/g, '');
 
-  // Nếu URL là /minhkhue/login hoặc trống
   if (pathname === 'login') {
-    localStorage.removeItem('app_session'); // Mặc định đăng xuất khi truy cập URL /login
+    localStorage.removeItem('app_session');
     render();
     return;
   }
 
+  // ✅ SỬA TẠI ĐÂY: Cập nhật state trực tiếp, không gọi navigate() để tránh pushState đè lịch sử
   if (!pathname) {
-    navigate('dashboard', 'list');
+    state.view = 'dashboard';
+    state.mode = 'list';
+    state.filter = 'all';
+    state.search = '';
+    state.page = 1;
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-view') === 'dashboard');
+    });
+
+    render();
     return;
   }
 
@@ -123,11 +133,7 @@ function handleRouteChange() {
 
     state.view = view;
     state.mode = mode;
-    state.filter = 'all';
-    state.search = '';
-    state.page = 1;
 
-    // Phục hồi phân trang & từ khóa tìm kiếm nếu quay lại danh sách
     if (mode === 'list') {
       const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
       if (savedStateRaw) {
@@ -135,6 +141,10 @@ function handleRouteChange() {
         state.page = savedState.page || 1;
         state.filter = savedState.filter || 'all';
         state.search = savedState.search || '';
+      } else {
+        state.filter = 'all';
+        state.search = '';
+        state.page = 1;
       }
     }
 
