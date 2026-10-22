@@ -32,6 +32,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.addEventListener('click', () => navigate(btn.getAttribute('data-view')));
   });
 
+  window.addEventListener('resize', () => {
+    const newSize = getResponsivePageSize();
+    if (state.pageSize !== newSize) {
+      state.pageSize = newSize;
+      state.page = 1; // Reset về trang 1 để tránh lỗi vượt quá tổng số trang
+      if (typeof currentRenderedView !== 'undefined') {
+        currentRenderedView = null; // Xóa cache DOM nếu bạn đang dùng giải pháp DOM Caching
+      }
+      render(true);
+    }
+  });
+
   // VUỐT SANG TRÁI ĐỂ ĐÓNG MENU (MOBILE SIDEBAR)
   const sidebar = document.querySelector('.sidebar') || document.getElementById('sidebar');
   if (sidebar) {
