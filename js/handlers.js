@@ -76,18 +76,35 @@ function navigate(view, mode = 'list', itemId = null) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
 
-  // --- BỔ SUNG: Dọn dẹp mọi overlay vô hình có thể chắn màn hình ---
-  const modalOverlay = document.getElementById('custom-modal-overlay');
-  if (modalOverlay) modalOverlay.style.display = 'none';
-  
-  const notifOverlay = document.getElementById('notif-history-overlay');
-  if (notifOverlay) notifOverlay.classList.remove('active');
-  
-  const contentBox = document.getElementById('app-content');
-  if (contentBox) {
-    contentBox.style.opacity = '1';
-    contentBox.style.pointerEvents = 'auto';
-  }
+// --- KHẮC PHỤC LỖI KẸT GIAO DIỆN KHI VUỐT BACK TRÊN MOBILE ---
+    
+    // 1. Đóng Menu Mobile và lớp phủ của nó nếu đang mở
+    if (document.body.classList.contains('mobile-menu-open')) {
+      if (typeof toggleMobileMenu === 'function') {
+        toggleMobileMenu();
+      } else {
+        document.body.classList.remove('mobile-menu-open');
+        const mobOverlay = document.querySelector('.mobile-overlay');
+        if (mobOverlay) mobOverlay.classList.remove('active');
+      }
+    }
+
+    // 2. Dọn dẹp Modal Overlay & Notif Overlay
+    const modalOverlay = document.getElementById('custom-modal-overlay');
+    if (modalOverlay) modalOverlay.style.display = 'none';
+    
+    const notifOverlay = document.getElementById('notif-history-overlay');
+    if (notifOverlay) notifOverlay.classList.remove('active');
+    
+    // 3. Ép mở khóa tương tác (Pointer Events) cho toàn bộ trang
+    document.body.style.pointerEvents = 'auto';
+    document.documentElement.style.pointerEvents = 'auto';
+    
+    const contentBox = document.getElementById('app-content');
+    if (contentBox) {
+      contentBox.style.opacity = '1';
+      contentBox.style.pointerEvents = 'auto';
+    }
 
   render();
 
@@ -162,7 +179,7 @@ function handleRouteChange() {
       initFormData(view, itemId);
     }
 
-    // --- KHẮC PHỤC LỖI KẸT GIAO DIỆN KHI VUỐT BACK TRÊN MOBILE ---
+// --- KHẮC PHỤC LỖI KẸT GIAO DIỆN KHI VUỐT BACK TRÊN MOBILE ---
     
     // 1. Đóng Menu Mobile và lớp phủ của nó nếu đang mở
     if (document.body.classList.contains('mobile-menu-open')) {
@@ -236,14 +253,31 @@ function restoreScrollPosition(view) {
 }
 
 window.addEventListener('popstate', handleRouteChange);
+
+// BỔ SUNG: Ép mở khóa toàn bộ thao tác khi người dùng dùng nút Back/Vuốt trên thiết bị di động
 window.addEventListener('pageshow', function (e) {
-  if (e.persisted) {
-    document.body.style.pointerEvents = 'auto';
-    document.documentElement.style.pointerEvents = 'auto';
-    const mobOverlay = document.querySelector('.mobile-overlay');
-    if (mobOverlay) mobOverlay.classList.remove('active');
-    document.body.classList.remove('mobile-menu-open');
+  // 1. Mở khóa tương tác chuột và chạm trên toàn bộ trang
+  document.body.style.pointerEvents = 'auto';
+  document.documentElement.style.pointerEvents = 'auto';
+  
+  // 2. Gỡ bỏ lớp phủ menu di động nếu bị kẹt
+  const mobOverlay = document.querySelector('.mobile-overlay');
+  if (mobOverlay) mobOverlay.classList.remove('active');
+  document.body.classList.remove('mobile-menu-open');
+
+  // 3. Mở khóa vùng chứa nội dung chính
+  const contentBox = document.getElementById('app-content');
+  if (contentBox) {
+    contentBox.style.opacity = '1';
+    contentBox.style.pointerEvents = 'auto';
   }
+
+  // 4. Đảm bảo các modal/overlay thông báo được ẩn đi hoàn toàn
+  const modalOverlay = document.getElementById('custom-modal-overlay');
+  if (modalOverlay) modalOverlay.style.display = 'none';
+
+  const notifOverlay = document.getElementById('notif-history-overlay');
+  if (notifOverlay) notifOverlay.classList.remove('active');
 });
 
 // ==========================================
