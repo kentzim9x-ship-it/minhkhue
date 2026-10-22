@@ -16,10 +16,9 @@ window.addEventListener('beforeunload', function () {
 });
 
 function navigate(view, mode = 'list', itemId = null) {
-  // --- BỔ SUNG: Lưu vị trí cuộn và trạng thái danh sách trước khi rời đi ---
+  // --- 1. Lưu vị trí cuộn và trạng thái danh sách trước khi rời đi ---
   if (state.mode === 'list') {
     const contentBox = document.getElementById('app-content');
-    // Lấy vị trí cuộn lớn hơn giữa container và window
     const scrollPos = (contentBox && contentBox.scrollTop > 0)
       ? contentBox.scrollTop
       : window.scrollY;
@@ -57,22 +56,12 @@ function navigate(view, mode = 'list', itemId = null) {
 
   state.view = view;
   state.mode = mode;
-  // state.filter = 'all';
-  // state.search = '';
-  // state.page = 1;
 
- const contentBox = document.getElementById('app-content');
+  // Đảm bảo ép nội dung hiển thị rõ và nhận tương tác click lập tức
+  const contentBox = document.getElementById('app-content');
   if (contentBox) {
-    contentBox.style.opacity = '0';
-    contentBox.style.transition = 'opacity 0.15s ease-out';
-    
-    // Đảm bảo bật lại opacity và khôi phục pointer-events
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        contentBox.style.opacity = '1';
-        contentBox.style.pointerEvents = 'auto'; // Cho phép tương tác lại
-      }, 50);
-    });
+    contentBox.style.opacity = '1';
+    contentBox.style.pointerEvents = 'auto';
   }
 
   const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
@@ -102,13 +91,19 @@ function navigate(view, mode = 'list', itemId = null) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
 
+  // Chạy Render lại DOM
   render();
 
- if (mode === 'list') {
+  // Đảm bảo ép dọn dẹp lớp phủ Mobile nếu có
+  const overlay = document.querySelector('.mobile-overlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
+
+  if (mode === 'list') {
     restoreScrollPosition(view);
   } else {
     window.scrollTo({ top: 0, behavior: 'instant' });
-    const contentBox = document.getElementById('app-content');
     if (contentBox) contentBox.scrollTop = 0;
   }
 }
@@ -1537,3 +1532,13 @@ async function downloadOrShareXLSX(workbook, fileName) {
     showAlert('Có lỗi xảy ra trong quá trình tạo file Excel!', 'Lỗi');
   }
 }
+
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('.btn-action, .btn-primary, .nav-btn, .btn-action-del');
+  if (!btn) return;
+
+  // Giải phóng khóa touch nếu trình duyệt mobile bị trễ
+  if (btn.onclick) {
+    btn.style.pointerEvents = 'auto';
+  }
+}, true);
