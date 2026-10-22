@@ -5,7 +5,7 @@
 const BASE_PATH = '/minhkhue'; // Đường dẫn gốc trên GitHub Pages
 
 function getResponsivePageSize() {
-  return window.innerWidth <= 768 ? 10 : 15;
+  return window.innerWidth <= 768 ? 8 : 15;
 }
 
 // STATE MANAGEMENT
