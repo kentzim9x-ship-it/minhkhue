@@ -49,7 +49,7 @@ body,
   width: 100%;
   height: 100%;
   overflow-x: hidden;
-  overscroll-behavior: auto;
+  overscroll-behavior: none;
 }
 
 body {
@@ -162,7 +162,6 @@ body {
   font-size: 13px;
   font-family: var(--font-jost);
   transition: all 0.12s;
-  touch-action: manipulation;
 }
 
 .nav-btn:hover {
@@ -252,7 +251,6 @@ input:-webkit-autofill:active {
   border-radius: 2px !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
-  touch-action: manipulation;
 }
 
 #logout-btn:hover {
@@ -323,7 +321,6 @@ input:-webkit-autofill:active {
   padding: 4px;
   transform: scale(1.15);
   transition: opacity 0.15s;
-  touch-action: manipulation;
 }
 
 .bell-btn:hover {
@@ -341,16 +338,10 @@ input:-webkit-autofill:active {
   border: 1.5px solid var(--background);
 }
 
-/* Khung hiển thị nội dung chính trên PC */
-#app-content,
-.app-content,
 .main-content {
   flex: 1;
   overflow: auto;
   padding: 24px 28px;
-  pointer-events: auto !important;
-  touch-action: pan-x pan-y !important;
-  -webkit-overflow-scrolling: touch !important;
 }
 
 /* Grid, Card, Layout Components */
@@ -500,7 +491,6 @@ input:-webkit-autofill:active {
   outline: none;
   width: 100%;
   border-radius: 2px;
-  touch-action: manipulation;
 }
 
 .form-input:focus,
@@ -527,7 +517,6 @@ input:-webkit-autofill:active {
   padding: 10px 24px;
   cursor: pointer;
   transition: all 0.15s;
-  touch-action: manipulation;
 }
 
 .btn-cancel:hover {
@@ -545,7 +534,6 @@ input:-webkit-autofill:active {
   padding: 10px 28px;
   cursor: pointer;
   transition: opacity 0.15s;
-  touch-action: manipulation;
 }
 
 .btn-submit:hover {
@@ -581,7 +569,6 @@ td {
 tr.hover-row {
   cursor: pointer;
   transition: background-color 0.12s;
-  touch-action: manipulation;
 }
 
 tr:hover {
@@ -636,7 +623,6 @@ tr:hover {
   padding: 4px 8px;
   cursor: pointer;
   transition: all 0.15s;
-  touch-action: manipulation;
 }
 
 .btn-action:hover {
@@ -662,7 +648,6 @@ tr:hover {
   align-items: center;
   gap: 7px;
   transition: opacity 0.15s;
-  touch-action: manipulation;
 }
 
 .btn-primary:hover {
@@ -678,7 +663,6 @@ tr:hover {
   padding: 8px 12px;
   outline: none;
   width: 260px;
-  touch-action: manipulation;
 }
 
 ::-webkit-scrollbar {
@@ -727,7 +711,6 @@ tr:hover {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  touch-action: manipulation;
 }
 
 .notif-item:hover {
@@ -813,7 +796,6 @@ tr:hover {
   cursor: pointer;
   box-sizing: border-box !important;
   transition: all 0.2s ease;
-  touch-action: manipulation;
 }
 
 .header-icon-btn svg {
@@ -833,7 +815,6 @@ tr:hover {
   align-items: center;
   justify-content: center;
   transition: background 0.2s;
-  touch-action: manipulation;
 }
 
 .notif-bell-btn:hover {
@@ -869,6 +850,32 @@ tr:hover {
   overflow: visible !important;
 }
 
+.mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 998;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.mobile-overlay.active {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+[data-theme="light"] .mobile-overlay {
+  background: rgba(0, 0, 0, 0.25);
+}
+
 /* Sidebar Theme Buttons */
 .sidebar-header .logo-icon,
 .sidebar-header .home-logo-btn {
@@ -901,7 +908,6 @@ tr:hover {
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
-  touch-action: manipulation;
 }
 
 #theme-toggle-btn-sidebar svg {
@@ -919,12 +925,19 @@ input[type=number] {
   appearance: textfield !important;
 }
 
+#app-content,
+.app-content,
 div[style*="overflow-x: auto"],
 div[style*="overflow: auto"],
 .table-responsive {
   -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-perspective: 1000px;
   overscroll-behavior: auto;
-  pointer-events: auto !important;
 }
 
 @keyframes bellRing {
@@ -989,11 +1002,6 @@ div[style*="overflow: auto"],
     padding: 70px 10px 30px 10px !important;
     background-color: inherit !important;
     -webkit-overflow-scrolling: touch !important;
-    pointer-events: auto !important;
-    touch-action: auto !important;
-    /* ĐÃ SỬA: Loại bỏ pan-x pan-y */
-    position: relative !important;
-    z-index: 1 !important;
   }
 
   .app-content {
@@ -1010,10 +1018,9 @@ div[style*="overflow: auto"],
     background-color: var(--background) !important;
     border-bottom: 1px solid var(--border) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
-    clip-path: none !important;
-    padding-left: 16px !important;
-    padding-right: 16px !important;
-    pointer-events: auto !important;
+    clip-path: inset(0 0 -20px 0) !important;
+    padding-left: 28px !important;
+    padding-right: 28px !important;
   }
 
   .app-header>div:first-child {
@@ -1098,7 +1105,6 @@ div[style*="overflow: auto"],
     justify-content: center !important;
     color: var(--foreground) !important;
     cursor: pointer;
-    touch-action: manipulation;
   }
 
   div[style*="background: var(--muted)"][style*="overflow-x: auto"] {
@@ -1114,7 +1120,6 @@ div[style*="overflow: auto"],
     padding: 6px 12px !important;
     white-space: nowrap !important;
     background-color: var(--card) !important;
-    touch-action: manipulation;
   }
 
   div[style*="background: var(--muted)"][style*="overflow-x: auto"]>button[style*="background: var(--primary)"] {
@@ -1207,92 +1212,20 @@ div[style*="overflow: auto"],
   div:has(> table),
   .table-container,
   .table-responsive {
-    overflow-x: visible !important;
+    overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     width: 100% !important;
-    padding-bottom: 0 !important;
+    padding-bottom: 8px !important;
   }
 
-  /* Chuyển đổi bảng thành Card Layout trên Mobile */
-  .main-content table thead {
-    display: none !important;
+  table {
+    min-width: 700px !important;
+    width: max-content !important;
   }
 
-  .main-content table,
-  .main-content table tbody {
-    display: block !important;
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  .main-content table tr.hover-row,
-  .main-content table tr {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
-    background: var(--card) !important;
-    border: 1px solid var(--border) !important;
-    border-radius: 4px !important;
-    padding: 14px 16px !important;
-    margin-bottom: 12px !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    touch-action: manipulation !important;
-  }
-
-  .main-content table td {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    padding: 4px 0 !important;
-    border: none !important;
-    border-bottom: 1px dashed var(--border) !important;
-    font-size: 13px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .main-content table td::before {
-    content: attr(data-label);
-    font-family: var(--font-dm-mono, monospace);
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--muted-foreground);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    text-align: left !important;
-    padding-right: 12px;
-    flex-shrink: 0;
-  }
-
-  .main-content table td>* {
-    text-align: right !important;
-  }
-
-  .main-content table td[data-label="Hành Động"] {
-    border-bottom: none !important;
-    padding-top: 8px !important;
-    margin-top: 4px !important;
-  }
-
-  .main-content table td[data-label="Hành Động"]::before {
-    content: "Thao tác";
-  }
-
-  .main-content table td[data-label="Hành Động"]>div {
-    display: flex !important;
-    justify-content: flex-end !important;
-    align-items: center !important;
-    gap: 8px !important;
-    width: auto !important;
-  }
-
-  .main-content table td[data-label="Hành Động"] .btn-action {
-    padding: 6px 10px !important;
-    font-size: 11px !important;
-    min-height: 32px !important;
-    touch-action: manipulation !important;
+  table th,
+  table td {
+    white-space: nowrap !important;
   }
 
   /* Popup Thông báo Full Màn Hình trên Mobile */
@@ -1407,34 +1340,12 @@ div[style*="overflow: auto"],
 
   .notif-dropdown:not(.open) {
     transform: translateX(100%) !important;
-    opacity: 0 !important;
+    opacity: 1 !important;
     pointer-events: none !important;
-    visibility: hidden !important;
-    /* ĐÃ SỬA: Ẩn triệt để khi không mở */
+    visibility: visible !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-  }
-
-  /* BỔ SUNG: Class cho lớp màng tối trên Mobile (khi mở Sidebar) */
-  .mobile-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 9998;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-  }
-
-  .mobile-overlay.active {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
   }
 
   .notif-history-drawer:not(.open) {
@@ -1450,19 +1361,102 @@ div[style*="overflow: auto"],
     font-size: 10px !important;
     letter-spacing: -0.02em !important;
     white-space: nowrap !important;
-    touch-action: manipulation;
   }
 
   #notif-dropdown button[onclick*="openNotificationHistory"] {
     font-size: 11px !important;
     letter-spacing: -0.02em !important;
     white-space: nowrap !important;
-    touch-action: manipulation;
+  }
+
+  .main-content table thead {
+    display: none !important;
+  }
+
+  .main-content table,
+  .main-content table tbody {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .main-content table tr.hover-row,
+  .main-content table tr {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 4px !important;
+    padding: 14px 16px !important;
+    margin-bottom: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .main-content table td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 4px 0 !important;
+    border: none !important;
+    border-bottom: 1px dashed var(--border) !important;
+    font-size: 13px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .main-content table td::before {
+    content: attr(data-label);
+    font-family: var(--font-dm-mono, monospace);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: left !important;
+    padding-right: 12px;
+    flex-shrink: 0;
+  }
+
+  .main-content table td>* {
+    text-align: right !important;
+  }
+
+  .main-content table td[data-label="Hành Động"] {
+    border-bottom: none !important;
+    padding-top: 8px !important;
+    margin-top: 4px !important;
+  }
+
+  .main-content table td[data-label="Hành Động"]::before {
+    content: "Thao tác";
+  }
+
+  .main-content table td[data-label="Hành Động"]>div {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: auto !important;
+  }
+
+  .main-content table td[data-label="Hành Động"] .btn-action {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+    min-height: 32px !important;
+  }
+
+  div:has(> table),
+  .table-container,
+  .table-responsive {
+    overflow-x: visible !important;
+    padding-bottom: 0 !important;
   }
 }
 
 @media (min-width: 769px) {
-
   .mobile-home-btn,
   .mobile-overlay {
     display: none !important;
@@ -1565,46 +1559,4 @@ div[style*="overflow: auto"],
     transform: translateX(100%);
     opacity: 0;
   }
-}
-
-/* ==========================================================================
-   CỨU CÁNH DI ĐỘNG: CƯỠNG CHẾ MỞ KHÓA BẢNG CHẠM & TIÊU HỦY OVERLAY TÀNG HÌNH
-   ========================================================================== */
-
-/* 1. Ép tất cả vùng chứa chính luôn nhận tương tác cảm ứng */
-html,
-body,
-.app-container,
-#app-content {
-  pointer-events: auto !important;
-  touch-action: manipulation !important;
-  -webkit-overflow-scrolling: touch !important;
-}
-
-/* 2. Ép triệt tiêu mọi Overlay khi body không có class mở Menu/Modal */
-body:not(.modal-open):not(.mobile-menu-open):not(.sidebar-open) .mobile-overlay,
-body:not(.modal-open):not(.mobile-menu-open):not(.sidebar-open) .modal-backdrop,
-body:not(.modal-open):not(.mobile-menu-open):not(.sidebar-open) .sidebar-overlay,
-body:not(.modal-open):not(.mobile-menu-open):not(.sidebar-open) .form-overlay,
-body:not(.modal-open):not(.mobile-menu-open):not(.sidebar-open) [class*="overlay"] {
-  display: none !important;
-  pointer-events: none !important;
-  visibility: hidden !important;
-  z-index: -9999 !important;
-  opacity: 0 !important;
-}
-
-/* 3. Ép nhận diện điểm chạm (Touch Target) cho mọi phần tử tương tác trên Mobile */
-button,
-a,
-input,
-select,
-textarea,
-tr,
-.btn,
-[onclick],
-[data-action] {
-  cursor: pointer !important;
-  pointer-events: auto !important;
-  touch-action: manipulation !important;
 }

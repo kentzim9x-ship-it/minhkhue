@@ -1,86 +1,107 @@
 // ==========================================
-// 5. ĐIỀU HƯỚNG & ROUTING (KHẮC PHỤC TRIỆT ĐỂ LỖI KẸT CẢM ỨNG KHI THAO TÁC LIÊN TỤC)
+// 5. ĐIỀU HƯỚNG & ROUTING (NAVIGATION)
 // ==========================================
 
 if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
-// Biến quản lý Timer toàn cục để tiêu hủy các tác vụ Render bị chồng lấp
-let globalNavTimer = null;
-let isNavigatingFlag = false;
+function navigate(view, mode = 'list', itemId = null) {
+  // --- BỔ SUNG: Lưu vị trí cuộn và trạng thái danh sách trước khi rời đi ---
+  if (state.mode === 'list') {
+    const contentBox = document.getElementById('app-content');
+    // Lấy vị trí cuộn lớn hơn giữa container và window
+    const scrollPos = (contentBox && contentBox.scrollTop > 0)
+      ? contentBox.scrollTop
+      : window.scrollY;
 
-// Hàm hỗ trợ Mở khóa & Khôi phục Cảm ứng tuyệt đối
-function forceResetTouchState() {
-  if (typeof unlockMobileScreen === 'function') unlockMobileScreen();
-  
-  const body = document.body;
-  const contentBox = document.getElementById('app-content');
-  
-  body.style.pointerEvents = 'auto';
-  body.style.touchAction = 'auto';
-  
-  if (contentBox) {
-    contentBox.style.pointerEvents = 'auto';
-    contentBox.style.touchAction = 'auto';
-    contentBox.style.opacity = '1';
+    sessionStorage.setItem(`scroll_pos_${state.view}`, scrollPos);
+    sessionStorage.setItem(`list_state_${state.view}`, JSON.stringify({
+      page: state.page,
+      filter: state.filter,
+      search: state.search
+    }));
+  }
+
+  if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
+    showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
+    mode = 'list';
+  }
+
+  if (mode === 'list') {
+    const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
+    if (savedStateRaw) {
+      const savedState = JSON.parse(savedStateRaw);
+      state.page = savedState.page || 1;
+      state.filter = savedState.filter || 'all';
+      state.search = savedState.search || '';
+    } else {
+      state.filter = 'all';
+      state.search = '';
+      state.page = 1;
+    }
+  } else {
+    state.filter = 'all';
+    state.search = '';
+    state.page = 1;
+  }
+
+  state.view = view;
+  state.mode = mode;
+  // state.filter = 'all';
+  // state.search = '';
+  // state.page = 1;
+
+  const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
+  const tagEl = document.getElementById('view-tag');
+  const titleEl = document.getElementById('view-title');
+
+  if (tagEl) tagEl.innerText = meta.tag;
+  if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
+
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-view') === view);
+  });
+
+  if (mode !== 'list') initFormData(view, itemId);
+
+  // Tạo URL dạng /minhkhue/view/mode/id
+  let targetPath = `${BASE_PATH}/${view}`;
+  if (mode === 'add') targetPath += '/add';
+  if (mode === 'edit' && itemId) targetPath += `/edit/${itemId}`;
+  if (mode === 'view' && itemId) targetPath += `/view/${itemId}`;
+
+  if (document.body.classList.contains('mobile-menu-open')) {
+    toggleMobileMenu();
+  }
+
+  if (window.location.pathname !== targetPath) {
+    window.history.pushState({ view, mode, itemId }, '', targetPath);
+  }
+
+  render();
+
+  // --- BỔ SUNG: Khôi phục vị trí cuộn sau khi render ---
+  if (mode === 'list') {
+    restoreScrollPosition(view);
+  } else {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const contentBox = document.getElementById('app-content');
+    if (contentBox) contentBox.scrollTop = 0;
   }
 }
 
-// 1. XỬ LÝ SỰ KIỆN POPSTATE (VUỐT BACK / BẤM BACK)
-window.addEventListener('popstate', function (event) {
-  // HỦY LẬP TỨC các lệnh Render dở dang từ những lần vuốt trước đó (Chống Race Condition)
-  if (globalNavTimer) {
-    clearTimeout(globalNavTimer);
-    globalNavTimer = null;
-  }
-
-  // Bỏ Focus khỏi mọi ô nhập liệu / nút bấm ngay lập tức
-  if (document.activeElement && typeof document.activeElement.blur === 'function') {
-    document.activeElement.blur();
-  }
-
-  // Ép khôi phục nhận cảm ứng
-  forceResetTouchState();
-
-  // Đợi 70ms để ngón tay nhấc hẳn khỏi màn hình (Xóa sạch Touch Target cũ)
-  globalNavTimer = setTimeout(function () {
-    // Dùng requestAnimationFrame kép để chờ GPU di động vẽ (Paint) xong DOM
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        handleRouteChange();
-        isNavigatingFlag = false;
-        forceResetTouchState();
-      });
-    });
-  }, 70);
-});
-
-// 2. XỬ LÝ KHÔI PHỤC TỪ BFCACHE (IOS SAFARI / CHROME MOBILE)
-window.addEventListener('pageshow', function (event) {
-  if (event.persisted) {
-    if (globalNavTimer) clearTimeout(globalNavTimer);
-    forceResetTouchState();
-    setTimeout(function () {
-      if (typeof render === 'function') render();
-      forceResetTouchState();
-    }, 100);
-  }
-});
-
-// 3. XỬ LÝ CHUYỂN ROUTE / VIEW KHI LÙI TRANG
 function handleRouteChange() {
-  forceResetTouchState();
-
   let pathname = window.location.pathname;
-  if (typeof BASE_PATH !== 'undefined' && pathname.startsWith(BASE_PATH)) {
+  if (pathname.startsWith(BASE_PATH)) {
     pathname = pathname.substring(BASE_PATH.length);
   }
   pathname = pathname.replace(/^\/+|\/+$/g, '');
 
+  // Nếu URL là /minhkhue/login hoặc trống
   if (pathname === 'login') {
-    localStorage.removeItem('app_session');
-    if (typeof render === 'function') render();
+    localStorage.removeItem('app_session'); // Mặc định đăng xuất khi truy cập URL /login
+    render();
     return;
   }
 
@@ -94,24 +115,26 @@ function handleRouteChange() {
   let mode = parts[1] || 'list';
   const itemId = parts[2] || null;
 
-  if (typeof viewMeta !== 'undefined' && viewMeta[view]) {
-    if ((mode === 'add' || mode === 'edit') && typeof checkModulePermission === 'function' && !checkModulePermission(view)) {
-      if (typeof showAlert === 'function') showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
+  if (viewMeta[view]) {
+    if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
+      showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
       mode = 'list';
     }
 
-    if (typeof state !== 'undefined') {
-      state.view = view;
-      state.mode = mode;
+    state.view = view;
+    state.mode = mode;
+    state.filter = 'all';
+    state.search = '';
+    state.page = 1;
 
-      if (mode === 'list') {
-        const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
-        if (savedStateRaw) {
-          const savedState = JSON.parse(savedStateRaw);
-          state.page = savedState.page || 1;
-          state.filter = savedState.filter || 'all';
-          state.search = savedState.search || '';
-        }
+    // Phục hồi phân trang & từ khóa tìm kiếm nếu quay lại danh sách
+    if (mode === 'list') {
+      const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
+      if (savedStateRaw) {
+        const savedState = JSON.parse(savedStateRaw);
+        state.page = savedState.page || 1;
+        state.filter = savedState.filter || 'all';
+        state.search = savedState.search || '';
       }
     }
 
@@ -126,11 +149,11 @@ function handleRouteChange() {
       btn.classList.toggle('active', btn.getAttribute('data-view') === view);
     });
 
-    if (mode !== 'list' && typeof initFormData === 'function') {
+    if (mode !== 'list') {
       initFormData(view, itemId);
     }
 
-    if (typeof render === 'function') render();
+    render();
 
     if (mode === 'list') {
       restoreScrollPosition(view);
@@ -139,134 +162,54 @@ function handleRouteChange() {
       const contentBox = document.getElementById('app-content');
       if (contentBox) contentBox.scrollTop = 0;
     }
-  } else {
-    navigate('dashboard', 'list');
   }
-}
-
-// 4. HÀM NAVIGATE CHUẨN ĐÃ ĐƯỢC BẢO VỆ CHỐNG SPAM CLICK
-function navigate(view, mode = 'list', itemId = null) {
-  // Hủy Timer pending cũ nếu người dùng bấm chuyển trang nhanh
-  if (globalNavTimer) {
-    clearTimeout(globalNavTimer);
-    globalNavTimer = null;
-  }
-
-  forceResetTouchState();
-
-  if (typeof state !== 'undefined' && state.mode === 'list') {
-    const contentBox = document.getElementById('app-content');
-    const scrollPos = (contentBox && contentBox.scrollTop > 0)
-      ? contentBox.scrollTop
-      : window.scrollY;
-
-    sessionStorage.setItem(`scroll_pos_${state.view}`, scrollPos);
-    sessionStorage.setItem(`list_state_${state.view}`, JSON.stringify({
-      page: state.page,
-      filter: state.filter,
-      search: state.search
-    }));
-  }
-
-  if ((mode === 'add' || mode === 'edit') && typeof checkModulePermission === 'function' && !checkModulePermission(view)) {
-    if (typeof showAlert === 'function') showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
-    mode = 'list';
-  }
-
-  if (typeof state !== 'undefined') {
-    if (mode === 'list') {
-      const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
-      if (savedStateRaw) {
-        const savedState = JSON.parse(savedStateRaw);
-        state.page = savedState.page || 1;
-        state.filter = savedState.filter || 'all';
-        state.search = savedState.search || '';
-      } else {
-        state.filter = 'all';
-        state.search = '';
-        state.page = 1;
-      }
-    } else {
-      state.filter = 'all';
-      state.search = '';
-      state.page = 1;
-    }
-
-    state.view = view;
-    state.mode = mode;
-  }
-
-  document.body.classList.remove('mobile-menu-open', 'sidebar-open');
-  const overlay = document.querySelector('.mobile-overlay');
-  if (overlay) overlay.classList.remove('active');
-
-  if (typeof viewMeta !== 'undefined') {
-    const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
-    const tagEl = document.getElementById('view-tag');
-    const titleEl = document.getElementById('view-title');
-
-    if (tagEl) tagEl.innerText = meta.tag;
-    if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
-  }
-
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('data-view') === view);
-  });
-
-  if (mode !== 'list' && typeof initFormData === 'function') initFormData(view, itemId);
-
-  const basePath = typeof BASE_PATH !== 'undefined' ? BASE_PATH : '';
-  let targetPath = `${basePath}/${view}`;
-  if (mode === 'add') targetPath += '/add';
-  if (mode === 'edit' && itemId) targetPath += `/edit/${itemId}`;
-  if (mode === 'view' && itemId) targetPath += `/view/${itemId}`;
-
-  if (window.location.pathname !== targetPath) {
-    window.history.pushState({ view, mode, itemId }, '', targetPath);
-  }
-
-  // Trì hoãn nhỏ để đảm bảo đồng bộ
-  globalNavTimer = setTimeout(() => {
-    if (typeof render === 'function') render();
-
-    if (mode === 'list') {
-      restoreScrollPosition(view);
-    } else {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      const contentBox = document.getElementById('app-content');
-      if (contentBox) contentBox.scrollTop = 0;
-    }
-    forceResetTouchState();
-  }, 30);
 }
 
 function restoreScrollPosition(view) {
   const savedScroll = sessionStorage.getItem(`scroll_pos_${view}`);
-  const contentBox = document.getElementById('app-content');
-
-  sessionStorage.removeItem(`scroll_pos_${view}`);
-
   if (savedScroll === null) {
-    if (contentBox) contentBox.scrollTop = 0;
     window.scrollTo({ top: 0, behavior: 'instant' });
+    const contentBox = document.getElementById('app-content');
+    if (contentBox) contentBox.scrollTop = 0;
     return;
   }
 
   const targetY = parseInt(savedScroll, 10);
+  const contentBox = document.getElementById('app-content');
 
-  setTimeout(() => {
-    if (contentBox) contentBox.scrollTop = targetY;
+  // Hàm thực hiện cuộn
+  const doScroll = () => {
+    if (contentBox) {
+      contentBox.scrollTop = targetY;
+    }
     window.scrollTo({ top: targetY, behavior: 'instant' });
-  }, 60);
+  };
+
+  // Thử cuộn qua nhiều chu kỳ render
+  requestAnimationFrame(() => {
+    doScroll();
+
+    // Dùng MutationObserver để đảm bảo khi bảng vẽ xong toàn bộ các dòng (HTML chèn xong) thì cuộn lại chuẩn xác
+    const targetNode = contentBox || document.body;
+    const observer = new MutationObserver((mutations, obs) => {
+      doScroll();
+      // Sau khi cuộn xong thì dọn dẹp observer và xóa lưu trữ
+      obs.disconnect();
+      sessionStorage.removeItem(`scroll_pos_${view}`);
+    });
+
+    observer.observe(targetNode, { childList: true, subtree: true });
+
+    // Fallback: Tự động ngắt observer sau 500ms nếu không có thay đổi DOM thêm
+    setTimeout(() => {
+      doScroll();
+      observer.disconnect();
+      sessionStorage.removeItem(`scroll_pos_${view}`);
+    }, 500);
+  });
 }
 
-window.addEventListener('beforeunload', function () {
-  Object.keys(sessionStorage).forEach(key => {
-    if (key.startsWith('scroll_pos_') || key.startsWith('list_state_')) {
-      sessionStorage.removeItem(key);
-    }
-  });
-});
+window.addEventListener('popstate', handleRouteChange);
 
 // ==========================================
 // 6. XỬ LÝ DỮ LIỆU & FORM (DATA HANDLERS)

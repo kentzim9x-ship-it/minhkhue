@@ -41,22 +41,17 @@ const Icons = {
 };
 
 // Tạo lớp Overlay để bấm ra ngoài đóng Menu
-let overlayEl = document.querySelector('.mobile-overlay');
-if (!overlayEl) {
+const overlayEl = document.createElement('div');
+overlayEl.className = 'mobile-overlay';
+overlayEl.onclick = toggleMobileMenu;
+document.body.appendChild(overlayEl);
+
+function initMobileOverlay() {
+  if (overlayEl || !document.body) return;
   overlayEl = document.createElement('div');
   overlayEl.className = 'mobile-overlay';
   overlayEl.onclick = toggleMobileMenu;
   document.body.appendChild(overlayEl);
-}
-
-function initMobileOverlay() {
-  if (!document.body) return;
-  if (!overlayEl) {
-    overlayEl = document.createElement('div');
-    overlayEl.className = 'mobile-overlay';
-    overlayEl.onclick = toggleMobileMenu;
-    document.body.appendChild(overlayEl);
-  }
 }
 
 function toggleMobileMenu() {
