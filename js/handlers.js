@@ -232,10 +232,20 @@ function openDetailForm(type, mode = 'add', id = '') {
 }
 
 function backToList(moduleView) {
-  const targetView = moduleView || state.view || 'materials';
-  const basePath = typeof BASE_PATH !== 'undefined' ? BASE_PATH : '/minhkhue';
-  
-  window.location.href = `${basePath}/${targetView}`;
+  const targetView = moduleView || state.view || 'dashboard';
+
+  // Nếu đang ở trang detail.html -> Chuyển về index.html theo dạng MPA
+  if (window.location.pathname.includes('detail.html')) {
+    window.location.href = `/minhkhue/${targetView}`;
+    return;
+  }
+
+  // Nếu đang ở trang index.html -> Điều hướng bằng hàm navigate chuẩn
+  if (typeof navigate === 'function') {
+    navigate(targetView, 'list');
+  } else {
+    window.location.href = `/minhkhue/${targetView}`;
+  }
 }
 
 async function handleFormSubmit(event, type) {
