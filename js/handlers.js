@@ -6,28 +6,25 @@ if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
-function navigate(view, mode = 'list', itemId = null) {
-  // --- BỔ SUNG: Lưu vị trí cuộn và trạng thái danh sách trước khi rời đi ---
-  if (state.mode === 'list') {
-    const contentBox = document.getElementById('app-content');
-    // Lấy vị trí cuộn lớn hơn giữa container và window
-    const scrollPos = (contentBox && contentBox.scrollTop > 0)
-      ? contentBox.scrollTop
-      : window.scrollY;
+// 1. Lưu vị trí cuộn & trạng thái lọc/phân trang
+function saveCurrentPageSnapshot() {
+  if (state.mode !== 'list') return;
 
-    sessionStorage.setItem(`scroll_pos_${state.view}`, scrollPos);
-    sessionStorage.setItem(`list_state_${state.view}`, JSON.stringify({
-      page: state.page,
-      filter: state.filter,
-      search: state.search
-    }));
-  }
+  const contentBox = document.getElementById('app-content');
+  const scrollPos = (contentBox && contentBox.scrollTop > 0)
+    ? contentBox.scrollTop
+    : window.scrollY;
 
-  if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
-    showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
-    mode = 'list';
-  }
+  sessionStorage.setItem(`scroll_pos_${state.view}`, scrollPos);
+  sessionStorage.setItem(`list_state_${state.view}`, JSON.stringify({
+    page: state.page,
+    filter: state.filter,
+    search: state.search
+  }));
+}
 
+// 2. Khôi phục hoặc khởi tạo lại trạng thái danh sách
+function restoreOrResetListState(view, mode) {
   if (mode === 'list') {
     const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
     if (savedStateRaw) {
@@ -35,53 +32,77 @@ function navigate(view, mode = 'list', itemId = null) {
       state.page = savedState.page || 1;
       state.filter = savedState.filter || 'all';
       state.search = savedState.search || '';
-    } else {
-      state.filter = 'all';
-      state.search = '';
-      state.page = 1;
+      return;
     }
-  } else {
-    state.filter = 'all';
-    state.search = '';
-    state.page = 1;
   }
+  state.filter = 'all';
+  state.search = '';
+  state.page = 1;
+}
 
-  state.view = view;
-  state.mode = mode;
-  // state.filter = 'all';
-  // state.search = '';
-  // state.page = 1;
-
+// 3. Cập nhật tiêu đề & Nút bấm Active trên Header/Sidebar
+function updateNavigationUI(view, mode) {
   const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
   const tagEl = document.getElementById('view-tag');
   const titleEl = document.getElementById('view-title');
 
   if (tagEl) tagEl.innerText = meta.tag;
-  if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
+  if (titleEl) {
+    titleEl.innerText = mode === 'list'
+      ? meta.title
+      : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
+  }
 
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-view') === view);
   });
+}
 
-  if (mode !== 'list') initFormData(view, itemId);
-
-  // Tạo URL dạng /minhkhue/view/mode/id
+// 4. Xử lý đường dẫn URL
+function updateBrowserUrl(view, mode, itemId) {
   let targetPath = `${BASE_PATH}/${view}`;
   if (mode === 'add') targetPath += '/add';
   if (mode === 'edit' && itemId) targetPath += `/edit/${itemId}`;
   if (mode === 'view' && itemId) targetPath += `/view/${itemId}`;
 
+  if (window.location.pathname !== targetPath) {
+    window.history.pushState({ view, mode, itemId }, '', targetPath);
+  }
+}
+
+// HÀM NAVIGATE BẢN ĐIỀU CHỈNH GỌN GÀNG
+function navigate(view, mode = 'list', itemId = null) {
+  // Bàn giao việc cho các hàm chức năng nhỏ
+  saveCurrentPageSnapshot();
+
+  if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
+    showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
+    mode = 'list';
+  }
+
+  restoreOrResetListState(view, mode);
+
+  state.view = view;
+  state.mode = mode;
+
+  updateNavigationUI(view, mode);
+
+  if (mode !== 'list') {
+    initFormData(view, itemId);
+  }
+
   if (document.body.classList.contains('mobile-menu-open')) {
     toggleMobileMenu();
   }
 
-  if (window.location.pathname !== targetPath) {
-    window.history.pushState({ view, mode, itemId }, '', targetPath);
+  updateBrowserUrl(view, mode, itemId);
+
+  // Render lại giao diện (nếu đang ở index.html)
+  if (typeof render === 'function') {
+    render();
   }
 
-  render();
-
-  // --- BỔ SUNG: Khôi phục vị trí cuộn sau khi render ---
+  // Khôi phục ví trí cuộn trang
   if (mode === 'list') {
     restoreScrollPosition(view);
   } else {
@@ -220,11 +241,11 @@ function navigateToDetail(type, id = '') {
 }
 
 function openDetailForm(type, mode = 'add', id = '') {
-  let url = `/minhkhue/detail.html?type=${encodeURIComponent(type)}&mode=${encodeURIComponent(mode)}`;
+  let path = `/minhkhue/${encodeURIComponent(type)}/${encodeURIComponent(mode)}`;
   if (id && id !== 'undefined' && id !== 'null') {
-    url += `&id=${encodeURIComponent(id)}`;
+    path += `/${encodeURIComponent(id)}`;
   }
-  window.location.href = url;
+  window.location.href = path;
 }
 
 async function handleFormSubmit(event, type) {

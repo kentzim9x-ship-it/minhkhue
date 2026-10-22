@@ -27,7 +27,42 @@ function normalizeModuleType(type) {
 
 function backToList(moduleView) {
   const targetView = moduleView || state.view || 'dashboard';
-  window.location.href = `/minhkhue/index.html?view=${targetView}`;
+
+  // Nếu đang ở trang detail.html -> Chuyển về index.html theo dạng MPA
+  if (window.location.pathname.includes('detail.html')) {
+    window.location.href = `/minhkhue/${targetView}`;
+    return;
+  }
+
+  // Nếu đang ở trang index.html -> Điều hướng bằng hàm navigate chuẩn
+  if (typeof navigate === 'function') {
+    navigate(targetView, 'list');
+  } else {
+    window.location.href = `/minhkhue/${targetView}`;
+  }
+}
+
+// Đọc URL dạng: /minhkhue/materials/view/SKU-0064
+function parseUrlPath() {
+  const basePath = '/minhkhue/';
+  let path = window.location.pathname;
+
+  if (path.startsWith(basePath)) {
+    path = path.substring(basePath.length);
+  }
+
+  // Tách chuỗi theo dấu '/'
+  const parts = path.replace(/^\/+|\/+$/g, '').split('/');
+
+  const rawType = parts[0] || 'materials';
+  const mode = parts[1] || 'add';
+  const itemId = parts[2] ? decodeURIComponent(parts[2]) : null;
+
+  return {
+    module: normalizeModuleType(rawType),
+    mode: mode,
+    itemId: itemId
+  };
 }
 
 function updateDetailHeader(module) {
@@ -77,27 +112,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchDataFromSupabase();
   }
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const rawType = urlParams.get('type') || 'materials';
-  let mode = urlParams.get('mode');
-  let itemId = urlParams.get('id');
-
-  // XỬ LÝ AN TOÀN TRÁNH LỖI id="view" HOẶC CHỮ LẠ TRÊN URL
-  if (itemId === 'view' || itemId === 'edit' || itemId === 'add') {
-    mode = itemId;
-    itemId = null;
-  }
-  if (!mode) {
-    mode = itemId ? 'edit' : 'add';
-  }
-
-  const module = normalizeModuleType(rawType);
+  // Phân tích URL pathname mới
+  const { module, mode, itemId } = parseUrlPath();
 
   state.view = module;
   state.mode = mode;
   state.selectedId = itemId;
 
-  // Tải dữ liệu vào form an toàn
   if (typeof initFormData === 'function') {
     try {
       initFormData(module, itemId);

@@ -351,16 +351,14 @@ function getWarehouseStatusLabel(status) {
   return map[status?.toLowerCase()] || (status ? status.toUpperCase() : 'HOẠT ĐỘNG');
 }
 
-function getBreadcrumb(parentText, currentText, targetView) {
+function getBreadcrumb(moduleLabel, actionLabel, moduleKey) {
   return `
-    <div class="breadcrumb" style="margin-bottom: 20px; font-size: 14px; font-weight: 600; text-transform: uppercase;">
-      <span 
-        onclick="navigate('${targetView}', 'list')" 
-        style="cursor: pointer; color: var(--muted-color, #666); margin-right: 8px;">
-        &lt; ${parentText}
+    <div class="breadcrumb" style="margin-bottom: 16px; font-size: 13px; color: var(--muted-foreground);">
+      <span onclick="backToList('${moduleKey}')" style="cursor: pointer; text-decoration: underline; color: var(--primary);">
+        &laquo; ${moduleLabel.toUpperCase()}
       </span>
-      <span style="color: #ccc; margin-right: 8px;">/</span>
-      <span style="color: var(--text-color, #333);">${currentText}</span>
+      <span style="margin: 0 6px;">/</span>
+      <span>${actionLabel}</span>
     </div>
   `;
 }
