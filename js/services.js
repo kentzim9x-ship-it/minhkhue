@@ -520,7 +520,6 @@ function initNotificationUI() {
   if (!bellBtn) {
     bellBtn = document.createElement('button');
     bellBtn.id = 'notif-bell-btn';
-    // Chèn sau phần hiển thị Ngày Tháng
     headerRight.appendChild(bellBtn);
   }
 
@@ -550,13 +549,17 @@ function initNotificationUI() {
     renderNotificationList();
   };
 
-  document.addEventListener('click', (e) => {
-    const dropdown = document.getElementById('notif-dropdown');
-    const bell = document.getElementById('notif-bell-btn');
-    if (dropdown && !dropdown.contains(e.target) && !bell.contains(e.target)) {
-      dropdown.classList.remove('open');
-    }
-  });
+  // Lắng nghe sự kiện một lần duy nhất, tránh bọc lại liên tục gây treo touch trên Mobile
+  if (!window._notifClickOutsideBound) {
+    document.addEventListener('click', (e) => {
+      const dropdown = document.getElementById('notif-dropdown');
+      const bell = document.getElementById('notif-bell-btn');
+      if (dropdown && dropdown.classList.contains('open') && !dropdown.contains(e.target) && bell && !bell.contains(e.target)) {
+        dropdown.classList.remove('open');
+      }
+    });
+    window._notifClickOutsideBound = true;
+  }
 
   fetchNotificationsFromSupabase();
   subscribeRealtimeNotifications();

@@ -210,6 +210,11 @@ function render() {
   const c = document.getElementById('app-content');
   const session = getAuthSession();
 
+  // BỎ FOCUS CŨ TRÁNH KẸT TRẠNG THÁI TRÊN MOBILE
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur();
+  }
+
   // CHƯA ĐĂNG NHẬP: Hiển thị Form Login & Đẩy URL về /minhkhue/login
   if (!session.isLoggedIn) {
     if (appContainer) appContainer.style.display = 'none';
@@ -220,7 +225,6 @@ function render() {
       document.body.appendChild(loginBox);
     }
 
-    // Tự động thay đổi URL trên thanh địa chỉ về /minhkhue/login nếu đang ở URL khác
     const targetLoginUrl = `${BASE_PATH}/login`;
     if (window.location.pathname !== targetLoginUrl) {
       window.history.pushState({ view: 'login' }, '', targetLoginUrl);
@@ -236,10 +240,13 @@ function render() {
     updateUserInfoUI();
   }
 
-  const activeId = document.activeElement ? document.activeElement.id : null;
-
-  // c.innerHTML = '';
   updateGlobalMaterialDatalist();
+
+  // Ép buộc dọn dẹp toàn bộ pointer-events và z-index thừa ở container
+  if (c) {
+    c.style.pointerEvents = 'auto';
+    c.style.touchAction = 'pan-x pan-y';
+  }
 
   if (state.mode !== 'list') {
     switch (state.view) {
@@ -263,19 +270,6 @@ function render() {
       case 'grn': renderGRNList(c); break;
       case 'report-inventory': renderReportInventory(c); break;
       case 'report-sales': renderReportSales(c); break;
-    }
-  }
-
-  if (activeId) {
-    const el = document.getElementById(activeId);
-    if (el) {
-      el.focus();
-      try {
-        if (typeof el.selectionStart !== 'undefined' && el.type !== 'number' && el.type !== 'email') {
-          const len = el.value ? el.value.length : 0;
-          el.setSelectionRange(len, len);
-        }
-      } catch (err) { }
     }
   }
 }

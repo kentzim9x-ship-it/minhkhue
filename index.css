@@ -62,15 +62,6 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Fix lỗi đóng băng cảm ứng & cuộn trang trên thiết bị di động */
-#app-content,
-.app-content,
-.main-content {
-  pointer-events: auto !important;
-  touch-action: pan-x pan-y !important;
-  -webkit-overflow-scrolling: touch !important;
-}
-
 /* Container Đăng nhập cơ bản */
 #login-container {
   width: 100vw;
@@ -350,10 +341,16 @@ input:-webkit-autofill:active {
   border: 1.5px solid var(--background);
 }
 
+/* Khung hiển thị nội dung chính trên PC */
+#app-content,
+.app-content,
 .main-content {
   flex: 1;
   overflow: auto;
   padding: 24px 28px;
+  pointer-events: auto !important;
+  touch-action: pan-x pan-y !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 /* Grid, Card, Layout Components */
@@ -872,32 +869,6 @@ tr:hover {
   overflow: visible !important;
 }
 
-.mobile-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  z-index: 998;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  transition: opacity 0.25s ease, visibility 0.25s ease;
-}
-
-.mobile-overlay.active {
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-}
-
-[data-theme="light"] .mobile-overlay {
-  background: rgba(0, 0, 0, 0.25);
-}
-
 /* Sidebar Theme Buttons */
 .sidebar-header .logo-icon,
 .sidebar-header .home-logo-btn {
@@ -948,8 +919,6 @@ input[type=number] {
   appearance: textfield !important;
 }
 
-#app-content,
-.app-content,
 div[style*="overflow-x: auto"],
 div[style*="overflow: auto"],
 .table-responsive {
@@ -959,37 +928,14 @@ div[style*="overflow: auto"],
 }
 
 @keyframes bellRing {
-  0% {
-    transform: rotate(0);
-  }
-
-  10% {
-    transform: rotate(15deg);
-  }
-
-  20% {
-    transform: rotate(-15deg);
-  }
-
-  30% {
-    transform: rotate(10deg);
-  }
-
-  40% {
-    transform: rotate(-10deg);
-  }
-
-  50% {
-    transform: rotate(5deg);
-  }
-
-  60% {
-    transform: rotate(-5deg);
-  }
-
-  100% {
-    transform: rotate(0);
-  }
+  0% { transform: rotate(0); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-15deg); }
+  30% { transform: rotate(10deg); }
+  40% { transform: rotate(-10deg); }
+  50% { transform: rotate(5deg); }
+  60% { transform: rotate(-5deg); }
+  100% { transform: rotate(0); }
 }
 
 .bell-ring-active {
@@ -1010,6 +956,7 @@ div[style*="overflow: auto"],
     background-color: var(--background) !important;
   }
 
+  /* Khung hiển thị nội dung chính trên Mobile */
   #app-content,
   .app-main,
   .main-content {
@@ -1022,6 +969,8 @@ div[style*="overflow: auto"],
     -webkit-overflow-scrolling: touch !important;
     pointer-events: auto !important;
     touch-action: pan-x pan-y !important;
+    position: relative !important;
+    z-index: 1 !important;
   }
 
   .app-content {
@@ -1038,9 +987,10 @@ div[style*="overflow: auto"],
     background-color: var(--background) !important;
     border-bottom: 1px solid var(--border) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
-    clip-path: inset(0 0 -20px 0) !important;
-    padding-left: 28px !important;
-    padding-right: 28px !important;
+    clip-path: none !important; 
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    pointer-events: auto !important;
   }
 
   .app-header>div:first-child {
