@@ -35,7 +35,7 @@ function backToList(moduleView) {
 }
 
 /**
- * Cập nhật Header trang chi tiết
+ * Cập nhật Header & trạng thái Active nút Sidebar
  */
 function updateDetailHeader(module, mode) {
   const config = DETAIL_TITLE_MAP[module] || { tag: 'CHI TIẾT', title: 'Biểu Mẫu Chi Tiết' };
@@ -48,6 +48,11 @@ function updateDetailHeader(module, mode) {
     const actionText = mode === 'add' ? 'Thêm Mới' : (mode === 'edit' ? 'Chỉnh Sửa' : 'Xem Chi Tiết');
     titleEl.textContent = `${config.title} (${actionText})`;
   }
+
+  // Active đúng nút trên Sidebar
+  document.querySelectorAll('.sidebar .nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-view') === module);
+  });
 }
 
 /**
@@ -90,31 +95,28 @@ function renderDetailContent() {
   }
 }
 
-// ==========================================
-// KHỞI TẠO TRANG DETAIL (EVENT LISTENERS)
-// ==========================================
-
-document.addEventListener('keydown', function (e) {
-  if (e.key === 'Escape' || e.key === 'Esc') {
-    if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') return;
-    backToList();
-  }
-
-  if (e.key === 'Enter') {
-    if (e.target.tagName === 'TEXTAREA') return;
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+// Gắn sự kiện click cho các nút Sidebar trên trang detail
+function setupSidebarNavigation() {
+  document.querySelectorAll('.sidebar .nav-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
       e.preventDefault();
-    }
-  }
-});
+      const targetView = btn.getAttribute('data-view');
+      backToList(targetView);
+    });
+  });
+}
 
+// Khởi tạo trang khi tải DOM
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Tải dữ liệu từ Supabase
+  // 1. Gắn sự kiện chuyển trang cho Sidebar
+  setupSidebarNavigation();
+
+  // 2. Tải dữ liệu từ Supabase
   if (typeof fetchDataFromSupabase === 'function') {
     await fetchDataFromSupabase();
   }
 
-  // 2. Đọc thông số từ URL
+  // 3. Đọc thông số từ URL
   const urlParams = new URLSearchParams(window.location.search);
   const rawType = urlParams.get('type') || 'materials';
   const itemId = urlParams.get('id');
@@ -122,20 +124,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const module = normalizeModuleType(rawType);
 
-  // 3. Khởi tạo State cho trang Chi tiết
+  // 4. Khởi tạo State cho trang Chi tiết
   state.view = module;
   state.mode = mode;
 
-  // 4. Khởi tạo formData (dùng hàm có sẵn trong handlers.js)
+  // 5. Khởi tạo formData từ dữ liệu đã tải
   if (typeof initFormData === 'function') {
     initFormData(module, itemId);
   }
 
-  // 5. Render Giao diện Form
+  // 6. Cập nhật giao diện Header & Render Form tương ứng
   updateDetailHeader(module, mode);
   renderDetailContent();
 
-  // 6. Cập nhật các tiện ích UI
+  // 7. Cập nhật các tiện ích UI (Theme, Date, User Info)
   if (typeof updateHeaderDate === 'function') updateHeaderDate();
   if (typeof initTheme === 'function') initTheme();
   if (typeof updateUserInfoUI === 'function') updateUserInfoUI();
