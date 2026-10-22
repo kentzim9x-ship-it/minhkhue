@@ -79,6 +79,9 @@ function navigate(view, mode = 'list', itemId = null) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
 
+  const contentBox = document.getElementById('app-content');
+  if (contentBox) contentBox.style.opacity = '0';
+
   render();
 
   // --- BỔ SUNG: Khôi phục vị trí cuộn sau khi render ---
@@ -87,7 +90,11 @@ function navigate(view, mode = 'list', itemId = null) {
   } else {
     window.scrollTo({ top: 0, behavior: 'instant' });
     const contentBox = document.getElementById('app-content');
-    if (contentBox) contentBox.scrollTop = 0;
+    if (contentBox) 
+      {
+        contentBox.scrollTop = 0;
+        contentBox.style.opacity = '1';
+      }
   }
 }
 
@@ -153,6 +160,9 @@ function handleRouteChange() {
       initFormData(view, itemId);
     }
 
+    const contentBox = document.getElementById('app-content');
+    if (contentBox) contentBox.style.opacity = '0';
+
     render();
 
     if (mode === 'list') {
@@ -160,7 +170,11 @@ function handleRouteChange() {
     } else {
       window.scrollTo({ top: 0, behavior: 'instant' });
       const contentBox = document.getElementById('app-content');
-      if (contentBox) contentBox.scrollTop = 0;
+      if (contentBox) 
+        {
+          contentBox.scrollTop = 0;
+          contentBox.style.opacity = '1';
+        }
     }
   }
 }
@@ -170,7 +184,10 @@ function restoreScrollPosition(view) {
   if (savedScroll === null) {
     window.scrollTo({ top: 0, behavior: 'instant' });
     const contentBox = document.getElementById('app-content');
-    if (contentBox) contentBox.scrollTop = 0;
+    if (contentBox) {
+      contentBox.scrollTop = 0;
+      contentBox.style.opacity = '1';
+    }
     return;
   }
 
@@ -181,6 +198,7 @@ function restoreScrollPosition(view) {
   const doScroll = () => {
     if (contentBox) {
       contentBox.scrollTop = targetY;
+      contentBox.style.opacity = '1';
     }
     window.scrollTo({ top: targetY, behavior: 'instant' });
   };
