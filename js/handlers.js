@@ -48,9 +48,6 @@ function navigate(view, mode = 'list', itemId = null) {
 
   state.view = view;
   state.mode = mode;
-  // state.filter = 'all';
-  // state.search = '';
-  // state.page = 1;
 
   const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
   const tagEl = document.getElementById('view-tag');
@@ -79,9 +76,6 @@ function navigate(view, mode = 'list', itemId = null) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
 
-  const contentBox = document.getElementById('app-content');
-  if (contentBox) contentBox.style.opacity = '0';
-
   render();
 
   // --- BỔ SUNG: Khôi phục vị trí cuộn sau khi render ---
@@ -90,11 +84,9 @@ function navigate(view, mode = 'list', itemId = null) {
   } else {
     window.scrollTo({ top: 0, behavior: 'instant' });
     const contentBox = document.getElementById('app-content');
-    if (contentBox) 
-      {
-        contentBox.scrollTop = 0;
-        contentBox.style.opacity = '1';
-      }
+    if (contentBox) {
+      contentBox.scrollTop = 0;
+    }
   }
 }
 
@@ -105,9 +97,8 @@ function handleRouteChange() {
   }
   pathname = pathname.replace(/^\/+|\/+$/g, '');
 
-  // Nếu URL là /minhkhue/login hoặc trống
   if (pathname === 'login') {
-    localStorage.removeItem('app_session'); // Mặc định đăng xuất khi truy cập URL /login
+    localStorage.removeItem('app_session');
     render();
     return;
   }
@@ -160,9 +151,6 @@ function handleRouteChange() {
       initFormData(view, itemId);
     }
 
-    const contentBox = document.getElementById('app-content');
-    if (contentBox) contentBox.style.opacity = '0';
-
     render();
 
     if (mode === 'list') {
@@ -170,60 +158,56 @@ function handleRouteChange() {
     } else {
       window.scrollTo({ top: 0, behavior: 'instant' });
       const contentBox = document.getElementById('app-content');
-      if (contentBox) 
-        {
-          contentBox.scrollTop = 0;
-          contentBox.style.opacity = '1';
-        }
+      if (contentBox) {
+        contentBox.scrollTop = 0;
+      }
     }
   }
 }
 
 function restoreScrollPosition(view) {
   const savedScroll = sessionStorage.getItem(`scroll_pos_${view}`);
+  const contentBox = document.getElementById('app-content');
+  
   if (savedScroll === null) {
     window.scrollTo({ top: 0, behavior: 'instant' });
-    const contentBox = document.getElementById('app-content');
     if (contentBox) {
       contentBox.scrollTop = 0;
-      contentBox.style.opacity = '1';
     }
     return;
   }
 
   const targetY = parseInt(savedScroll, 10);
-  const contentBox = document.getElementById('app-content');
 
   // Hàm thực hiện cuộn
   const doScroll = () => {
     if (contentBox) {
       contentBox.scrollTop = targetY;
-      contentBox.style.opacity = '1';
     }
     window.scrollTo({ top: targetY, behavior: 'instant' });
   };
 
-  // Thử cuộn qua nhiều chu kỳ render
+  // Cuộn ngay lập tức sau khi render đồng bộ
+  doScroll();
+
+  // Dùng AnimationFrame & Observer để bắt các trường hợp load ảnh chậm làm đổi chiều cao
   requestAnimationFrame(() => {
     doScroll();
-
-    // Dùng MutationObserver để đảm bảo khi bảng vẽ xong toàn bộ các dòng (HTML chèn xong) thì cuộn lại chuẩn xác
+    
     const targetNode = contentBox || document.body;
     const observer = new MutationObserver((mutations, obs) => {
       doScroll();
-      // Sau khi cuộn xong thì dọn dẹp observer và xóa lưu trữ
       obs.disconnect();
-      sessionStorage.removeItem(`scroll_pos_${view}`);
     });
 
     observer.observe(targetNode, { childList: true, subtree: true });
 
-    // Fallback: Tự động ngắt observer sau 500ms nếu không có thay đổi DOM thêm
+    // Fallback: Tự động ngắt observer sau 100ms để tránh nhảy trang trễ
     setTimeout(() => {
       doScroll();
       observer.disconnect();
       sessionStorage.removeItem(`scroll_pos_${view}`);
-    }, 500);
+    }, 100);
   });
 }
 
