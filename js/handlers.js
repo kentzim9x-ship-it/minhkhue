@@ -170,44 +170,28 @@ function restoreScrollPosition(view) {
   const contentBox = document.getElementById('app-content');
   
   if (savedScroll === null) {
+    if (contentBox) contentBox.scrollTop = 0;
     window.scrollTo({ top: 0, behavior: 'instant' });
-    if (contentBox) {
-      contentBox.scrollTop = 0;
-    }
     return;
   }
 
   const targetY = parseInt(savedScroll, 10);
 
-  // Hàm thực hiện cuộn
-  const doScroll = () => {
-    if (contentBox) {
-      contentBox.scrollTop = targetY;
-    }
-    window.scrollTo({ top: targetY, behavior: 'instant' });
-  };
+  // 1. Ép cuộn ngay lập tức ở luồng đồng bộ (Synchronous)
+  if (contentBox) {
+    // Tạm thời tắt scroll-behavior mượt (nếu có trong CSS) để tránh giật
+    contentBox.style.scrollBehavior = 'auto'; 
+    contentBox.scrollTop = targetY;
+  }
+  window.scrollTo({ top: targetY, behavior: 'instant' });
 
-  // Cuộn ngay lập tức sau khi render đồng bộ
-  doScroll();
-
-  // Dùng AnimationFrame & Observer để bắt các trường hợp load ảnh chậm làm đổi chiều cao
+  // 2. Chốt lại đúng 1 lần duy nhất ở Frame tiếp theo (không dùng MutationObserver để tránh loop gây giật)
   requestAnimationFrame(() => {
-    doScroll();
+    if (contentBox) contentBox.scrollTop = targetY;
+    window.scrollTo({ top: targetY, behavior: 'instant' });
     
-    const targetNode = contentBox || document.body;
-    const observer = new MutationObserver((mutations, obs) => {
-      doScroll();
-      obs.disconnect();
-    });
-
-    observer.observe(targetNode, { childList: true, subtree: true });
-
-    // Fallback: Tự động ngắt observer sau 100ms để tránh nhảy trang trễ
-    setTimeout(() => {
-      doScroll();
-      observer.disconnect();
-      sessionStorage.removeItem(`scroll_pos_${view}`);
-    }, 100);
+    // Xóa vị trí đã lưu sau khi phục hồi xong
+    sessionStorage.removeItem(`scroll_pos_${view}`);
   });
 }
 

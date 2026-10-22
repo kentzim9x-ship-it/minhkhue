@@ -266,19 +266,21 @@ function render() {
     }
   }
 
-  if (activeId) {
+ if (activeId && state.mode !== 'list') { // Thêm điều kiện && state.mode !== 'list'
     const el = document.getElementById(activeId);
     if (el) {
-      el.focus();
-      try {
-        if (typeof el.selectionStart !== 'undefined' && el.type !== 'number' && el.type !== 'email') {
-          const len = el.value ? el.value.length : 0;
-          el.setSelectionRange(len, len);
-        }
-      } catch (err) { }
+      // Dùng setTimeout cực ngắn để tránh giật focus trang
+      setTimeout(() => {
+        el.focus({ preventScroll: true }); // Thêm preventScroll để trình duyệt không tự giật scroll
+        try {
+          if (typeof el.selectionStart !== 'undefined' && el.type !== 'number' && el.type !== 'email') {
+            const len = el.value ? el.value.length : 0;
+            el.setSelectionRange(len, len);
+          }
+        } catch (err) { }
+      }, 0);
     }
   }
-}
 
 // BÁO CÁO DOANH THU & DASHBOARD
 function getSalesAnalyticsData() {
