@@ -6,112 +6,42 @@ if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
-window.addEventListener('beforeunload', function () {
-  Object.keys(sessionStorage).forEach(key => {
-    if (key.startsWith('scroll_pos_') || key.startsWith('list_state_')) {
-      sessionStorage.removeItem(key);
-    }
-  });
+// 1. CHỈ SỬ DỤNG 1 LISTENER POPSTATE DUY NHẤT (HOÃN 60MS CHỐNG KẸT TOUCH)
+window.addEventListener('popstate', function (event) {
+  // Bỏ focus bàn phím ảo & giải phóng touch target cũ
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur();
+  }
+
+  // TRÌ HOÃN 60MS: Chờ ngón tay nhấc khỏi màn hình sau khi vuốt Back
+  setTimeout(function () {
+    handleRouteChange();
+  }, 60);
 });
 
-function navigate(view, mode = 'list', itemId = null) {
-  // --- 1. Lưu vị trí cuộn và trạng thái danh sách trước khi rời đi ---
-  if (state.mode === 'list') {
-    const contentBox = document.getElementById('app-content');
-    const scrollPos = (contentBox && contentBox.scrollTop > 0)
-      ? contentBox.scrollTop
-      : window.scrollY;
-
-    sessionStorage.setItem(`scroll_pos_${state.view}`, scrollPos);
-    sessionStorage.setItem(`list_state_${state.view}`, JSON.stringify({
-      page: state.page,
-      filter: state.filter,
-      search: state.search
-    }));
+// 2. XỬ LÝ KHÔI PHỤC TỪ BFCACHE (SAFARI / CHROME MOBILE)
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted) {
+    setTimeout(function () {
+      if (typeof unlockMobileScreen === 'function') unlockMobileScreen();
+      if (typeof render === 'function') render();
+    }, 100);
   }
+});
 
-  if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
-    showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
-    mode = 'list';
-  }
-
-  if (mode === 'list') {
-    const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
-    if (savedStateRaw) {
-      const savedState = JSON.parse(savedStateRaw);
-      state.page = savedState.page || 1;
-      state.filter = savedState.filter || 'all';
-      state.search = savedState.search || '';
-    } else {
-      state.filter = 'all';
-      state.search = '';
-      state.page = 1;
-    }
-  } else {
-    state.filter = 'all';
-    state.search = '';
-    state.page = 1;
-  }
-
-  state.view = view;
-  state.mode = mode;
-
-  document.body.classList.remove('mobile-menu-open', 'sidebar-open');
-  const overlay = document.querySelector('.mobile-overlay');
-  if (overlay) {
-    overlay.classList.remove('active');
-  }
-  const contentBox = document.getElementById('app-content');
-  if (contentBox) {
-    contentBox.style.opacity = '1';
-    contentBox.style.pointerEvents = 'auto';
-  }
-
-  const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
-  const tagEl = document.getElementById('view-tag');
-  const titleEl = document.getElementById('view-title');
-
-  if (tagEl) tagEl.innerText = meta.tag;
-  if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
-
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.getAttribute('data-view') === view);
-  });
-
-  if (mode !== 'list') initFormData(view, itemId);
-
-  let targetPath = `${BASE_PATH}/${view}`;
-  if (mode === 'add') targetPath += '/add';
-  if (mode === 'edit' && itemId) targetPath += `/edit/${itemId}`;
-  if (mode === 'view' && itemId) targetPath += `/view/${itemId}`;
-
-  if (window.location.pathname !== targetPath) {
-    window.history.pushState({ view, mode, itemId }, '', targetPath);
-  }
-
-  setTimeout(() => {
-    // Chạy Render lại DOM
-    render();
-
-    if (mode === 'list') {
-      restoreScrollPosition(view);
-    } else {
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      if (contentBox) contentBox.scrollTop = 0;
-    }
-  }, 20);
-}
-
+// 3. XỬ LÝ CHUYỂN ROUTE/VIEW KHI LÙI TRANG
 function handleRouteChange() {
+  if (typeof unlockMobileScreen === 'function') unlockMobileScreen();
+
   let pathname = window.location.pathname;
-  if (pathname.startsWith(BASE_PATH)) {
+  if (typeof BASE_PATH !== 'undefined' && pathname.startsWith(BASE_PATH)) {
     pathname = pathname.substring(BASE_PATH.length);
   }
   pathname = pathname.replace(/^\/+|\/+$/g, '');
 
   if (pathname === 'login') {
     localStorage.removeItem('app_session');
-    render();
+    if (typeof render === 'function') render();
     return;
   }
 
@@ -125,28 +55,24 @@ function handleRouteChange() {
   let mode = parts[1] || 'list';
   const itemId = parts[2] || null;
 
-  if (viewMeta[view]) {
-    if ((mode === 'add' || mode === 'edit') && !checkModulePermission(view)) {
-      showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
+  if (typeof viewMeta !== 'undefined' && viewMeta[view]) {
+    if ((mode === 'add' || mode === 'edit') && typeof checkModulePermission === 'function' && !checkModulePermission(view)) {
+      if (typeof showAlert === 'function') showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
       mode = 'list';
     }
 
-    state.view = view;
-    state.mode = mode;
+    if (typeof state !== 'undefined') {
+      state.view = view;
+      state.mode = mode;
 
-    document.body.classList.remove('mobile-menu-open', 'sidebar-open');
-    const overlay = document.querySelector('.mobile-overlay');
-    if (overlay) {
-      overlay.classList.remove('active');
-    }
-
-    if (mode === 'list') {
-      const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
-      if (savedStateRaw) {
-        const savedState = JSON.parse(savedStateRaw);
-        state.page = savedState.page || 1;
-        state.filter = savedState.filter || 'all';
-        state.search = savedState.search || '';
+      if (mode === 'list') {
+        const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
+        if (savedStateRaw) {
+          const savedState = JSON.parse(savedStateRaw);
+          state.page = savedState.page || 1;
+          state.filter = savedState.filter || 'all';
+          state.search = savedState.search || '';
+        }
       }
     }
 
@@ -161,24 +87,115 @@ function handleRouteChange() {
       btn.classList.toggle('active', btn.getAttribute('data-view') === view);
     });
 
-    if (mode !== 'list') {
+    if (mode !== 'list' && typeof initFormData === 'function') {
       initFormData(view, itemId);
     }
 
-    setTimeout(() => {
-      render();
+    if (typeof render === 'function') render();
 
-      if (mode === 'list') {
-        restoreScrollPosition(view);
-      } else {
-        window.scrollTo({ top: 0, behavior: 'instant' });
-        const contentBox = document.getElementById('app-content');
-        if (contentBox) contentBox.scrollTop = 0;
-      }
-    }, 20);
+    if (mode === 'list') {
+      restoreScrollPosition(view);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      const contentBox = document.getElementById('app-content');
+      if (contentBox) contentBox.scrollTop = 0;
+    }
   } else {
     navigate('dashboard', 'list');
   }
+}
+
+// 4. HÀM NAVIGATE CHUẨN DUY NHẤT
+function navigate(view, mode = 'list', itemId = null) {
+  if (typeof unlockMobileScreen === 'function') unlockMobileScreen();
+
+  if (typeof state !== 'undefined' && state.mode === 'list') {
+    const contentBox = document.getElementById('app-content');
+    const scrollPos = (contentBox && contentBox.scrollTop > 0)
+      ? contentBox.scrollTop
+      : window.scrollY;
+
+    sessionStorage.setItem(`scroll_pos_${state.view}`, scrollPos);
+    sessionStorage.setItem(`list_state_${state.view}`, JSON.stringify({
+      page: state.page,
+      filter: state.filter,
+      search: state.search
+    }));
+  }
+
+  if ((mode === 'add' || mode === 'edit') && typeof checkModulePermission === 'function' && !checkModulePermission(view)) {
+    if (typeof showAlert === 'function') showAlert('Tài khoản của bạn chỉ có quyền xem, không được phép thực hiện thao tác này!', 'Cảnh báo quyền');
+    mode = 'list';
+  }
+
+  if (typeof state !== 'undefined') {
+    if (mode === 'list') {
+      const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
+      if (savedStateRaw) {
+        const savedState = JSON.parse(savedStateRaw);
+        state.page = savedState.page || 1;
+        state.filter = savedState.filter || 'all';
+        state.search = savedState.search || '';
+      } else {
+        state.filter = 'all';
+        state.search = '';
+        state.page = 1;
+      }
+    } else {
+      state.filter = 'all';
+      state.search = '';
+      state.page = 1;
+    }
+
+    state.view = view;
+    state.mode = mode;
+  }
+
+  document.body.classList.remove('mobile-menu-open', 'sidebar-open');
+  const overlay = document.querySelector('.mobile-overlay');
+  if (overlay) overlay.classList.remove('active');
+
+  const contentBox = document.getElementById('app-content');
+  if (contentBox) {
+    contentBox.style.opacity = '1';
+    contentBox.style.pointerEvents = 'auto';
+  }
+
+  if (typeof viewMeta !== 'undefined') {
+    const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
+    const tagEl = document.getElementById('view-tag');
+    const titleEl = document.getElementById('view-title');
+
+    if (tagEl) tagEl.innerText = meta.tag;
+    if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
+  }
+
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-view') === view);
+  });
+
+  if (mode !== 'list' && typeof initFormData === 'function') initFormData(view, itemId);
+
+  const basePath = typeof BASE_PATH !== 'undefined' ? BASE_PATH : '';
+  let targetPath = `${basePath}/${view}`;
+  if (mode === 'add') targetPath += '/add';
+  if (mode === 'edit' && itemId) targetPath += `/edit/${itemId}`;
+  if (mode === 'view' && itemId) targetPath += `/view/${itemId}`;
+
+  if (window.location.pathname !== targetPath) {
+    window.history.pushState({ view, mode, itemId }, '', targetPath);
+  }
+
+  setTimeout(() => {
+    if (typeof render === 'function') render();
+
+    if (mode === 'list') {
+      restoreScrollPosition(view);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      if (contentBox) contentBox.scrollTop = 0;
+    }
+  }, 20);
 }
 
 function restoreScrollPosition(view) {
@@ -195,16 +212,19 @@ function restoreScrollPosition(view) {
 
   const targetY = parseInt(savedScroll, 10);
 
-  // Tăng lên 60ms để CPU Mobile hoàn tất render các dòng dữ liệu
   setTimeout(() => {
-    if (contentBox) {
-      contentBox.scrollTop = targetY;
-    }
+    if (contentBox) contentBox.scrollTop = targetY;
     window.scrollTo({ top: targetY, behavior: 'instant' });
   }, 60);
 }
 
-window.addEventListener('popstate', handleRouteChange);
+window.addEventListener('beforeunload', function () {
+  Object.keys(sessionStorage).forEach(key => {
+    if (key.startsWith('scroll_pos_') || key.startsWith('list_state_')) {
+      sessionStorage.removeItem(key);
+    }
+  });
+});
 
 // ==========================================
 // 6. XỬ LÝ DỮ LIỆU & FORM (DATA HANDLERS)
