@@ -48,9 +48,9 @@ function navigate(view, mode = 'list', itemId = null) {
 
   state.view = view;
   state.mode = mode;
-  state.filter = 'all';
-  state.search = '';
-  state.page = 1;
+  // state.filter = 'all';
+  // state.search = '';
+  // state.page = 1;
 
   const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
   const tagEl = document.getElementById('view-tag');
@@ -79,7 +79,13 @@ function navigate(view, mode = 'list', itemId = null) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
 
-  render();
+  if (mode === 'list') {
+    // Chỉ render lại phần nội dung của danh sách (ví dụ tbody của bảng)
+    renderListView(view, state); 
+} else {
+    // Chỉ render form (thêm mới hoặc chỉnh sửa)
+    renderFormView(view, mode, itemId);
+}
 
   // --- BỔ SUNG: Khôi phục vị trí cuộn sau khi render ---
   if (mode === 'list') {
@@ -153,11 +159,21 @@ function handleRouteChange() {
       initFormData(view, itemId);
     }
 
-    render();
+    if (mode === 'list') {
+    // Chỉ render lại phần nội dung của danh sách (ví dụ tbody của bảng)
+    renderListView(view, state); 
+} else {
+    // Chỉ render form (thêm mới hoặc chỉnh sửa)
+    renderFormView(view, mode, itemId);
+}
 
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    const contentBox = document.getElementById('app-content');
-    if (contentBox) contentBox.scrollTop = 0;
+    if (mode === 'list') {
+      restoreScrollPosition(view);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      const contentBox = document.getElementById('app-content');
+      if (contentBox) contentBox.scrollTop = 0;
+    }
   } else {
     navigate('dashboard', 'list');
   }
