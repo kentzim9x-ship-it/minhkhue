@@ -206,45 +206,50 @@ function togglePasswordVisibility() {
 }
 
 function unlockMobileScreen() {
-    const body = document.body;
-    const html = document.documentElement;
+  const body = document.body;
+  const html = document.documentElement;
 
-    // 1. Gỡ bỏ TẤT CẢ class có thể gây khóa màn hình, khóa cuộn hoặc làm mờ
-    const classesToRemove = [
-        'modal-open', 'sidebar-open', 'mobile-menu-open', 'menu-open', 
-        'form-open', 'overlay-active', 'nav-open', 'no-scroll', 'locked'
-    ];
-    body.classList.remove(...classesToRemove);
-    html.classList.remove(...classesToRemove);
+  // 1. Xóa sạch class gây khóa màn hình
+  const lockedClasses = ['modal-open', 'sidebar-open', 'mobile-menu-open', 'menu-open', 'no-scroll', 'locked'];
+  body.classList.remove(...lockedClasses);
+  html.classList.remove(...lockedClasses);
 
-    // 2. Khôi phục hoàn toàn khả năng cuộn và chạm (touch) ở cấp độ cao nhất
-    body.style.overflow = '';
-    body.style.overflowY = 'auto';
-    body.style.pointerEvents = 'auto';
-    body.style.touchAction = 'auto'; // Sửa lại thành auto (tốt nhất cho Mobile)
+  // 2. Ép ẩn tất cả thẻ Overlay / Backdrop
+  const overlays = document.querySelectorAll('.mobile-overlay, .modal-backdrop, .sidebar-overlay, .form-overlay, [class*="overlay"]');
+  overlays.forEach(el => {
+    el.classList.remove('active', 'show', 'open');
+    el.style.setProperty('display', 'none', 'important');
+    el.style.setProperty('pointer-events', 'none', 'important');
+    el.style.setProperty('visibility', 'hidden', 'important');
+    el.style.setProperty('z-index', '-9999', 'important');
+  });
 
-    html.style.overflow = '';
-    html.style.pointerEvents = 'auto';
-    html.style.touchAction = 'auto';
+  // 3. Khôi phục lại vùng nội dung chính
+  const appContent = document.getElementById('app-content') || document.querySelector('.main-content');
+  if (appContent) {
+    appContent.style.setProperty('pointer-events', 'auto', 'important');
+    appContent.style.setProperty('touch-action', 'manipulation', 'important');
+    appContent.style.setProperty('opacity', '1', 'important');
+    appContent.style.setProperty('visibility', 'visible', 'important');
+  }
 
-    // 3. Quét và ép ẩn triệt để mọi lớp phủ (overlay) tàng hình
-    const overlays = document.querySelectorAll('.mobile-overlay, .modal-backdrop, .form-overlay, .loading-overlay, .sidebar-overlay');
-    overlays.forEach(overlay => {
-        overlay.style.display = 'none';
-        overlay.style.opacity = '0';
-        overlay.style.visibility = 'hidden'; // Ẩn hoàn toàn khỏi DOM tree rendering
-        overlay.style.pointerEvents = 'none'; // Cấm nhận click
-        overlay.style.zIndex = '-1'; // Đẩy chìm xuống dưới cùng
-    });
+  // 4. THUẬT TOÁN ĐIỀU TRA: Tự động tiêu hủy vật thể đè màn hình (Hit-Test)
+  try {
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    const topElement = document.elementFromPoint(centerX, centerY);
 
-    // 4. Mở khóa triệt để cho khu vực render nội dung chính
-    const appContent = document.getElementById('app-content') || document.querySelector('.main-content');
-    if (appContent) {
-        appContent.style.pointerEvents = 'auto';
-        appContent.style.touchAction = 'auto';
-        appContent.style.opacity = '1';
-        appContent.style.visibility = 'visible';
+    // Nếu phần tử nằm trên cùng không phải Body, HTML hay vùng chứa App -> Xóa điểm chặn của nó ngay
+    if (topElement && topElement !== body && topElement !== html) {
+      const isInsideApp = appContent && (appContent === topElement || appContent.contains(topElement));
+      if (!isInsideApp) {
+        topElement.style.setProperty('display', 'none', 'important');
+        topElement.style.setProperty('pointer-events', 'none', 'important');
+      }
     }
+  } catch (e) {
+    // Bỏ qua nếu môi trường không hỗ trợ hit-test
+  }
 }
 
 function render() {

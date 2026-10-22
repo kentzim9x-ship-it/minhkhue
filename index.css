@@ -928,14 +928,37 @@ div[style*="overflow: auto"],
 }
 
 @keyframes bellRing {
-  0% { transform: rotate(0); }
-  10% { transform: rotate(15deg); }
-  20% { transform: rotate(-15deg); }
-  30% { transform: rotate(10deg); }
-  40% { transform: rotate(-10deg); }
-  50% { transform: rotate(5deg); }
-  60% { transform: rotate(-5deg); }
-  100% { transform: rotate(0); }
+  0% {
+    transform: rotate(0);
+  }
+
+  10% {
+    transform: rotate(15deg);
+  }
+
+  20% {
+    transform: rotate(-15deg);
+  }
+
+  30% {
+    transform: rotate(10deg);
+  }
+
+  40% {
+    transform: rotate(-10deg);
+  }
+
+  50% {
+    transform: rotate(5deg);
+  }
+
+  60% {
+    transform: rotate(-5deg);
+  }
+
+  100% {
+    transform: rotate(0);
+  }
 }
 
 .bell-ring-active {
@@ -967,7 +990,8 @@ div[style*="overflow: auto"],
     background-color: inherit !important;
     -webkit-overflow-scrolling: touch !important;
     pointer-events: auto !important;
-    touch-action: auto !important; /* ĐÃ SỬA: Loại bỏ pan-x pan-y */
+    touch-action: auto !important;
+    /* ĐÃ SỬA: Loại bỏ pan-x pan-y */
     position: relative !important;
     z-index: 1 !important;
   }
@@ -986,7 +1010,7 @@ div[style*="overflow: auto"],
     background-color: var(--background) !important;
     border-bottom: 1px solid var(--border) !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
-    clip-path: none !important; 
+    clip-path: none !important;
     padding-left: 16px !important;
     padding-right: 16px !important;
     pointer-events: auto !important;
@@ -1385,24 +1409,28 @@ div[style*="overflow: auto"],
     transform: translateX(100%) !important;
     opacity: 0 !important;
     pointer-events: none !important;
-    visibility: hidden !important; /* ĐÃ SỬA: Ẩn triệt để khi không mở */
+    visibility: hidden !important;
+    /* ĐÃ SỬA: Ẩn triệt để khi không mở */
     box-shadow: none !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
-  
+
   /* BỔ SUNG: Class cho lớp màng tối trên Mobile (khi mở Sidebar) */
   .mobile-overlay {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
     z-index: 9998;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
     transition: opacity 0.3s ease, visibility 0.3s ease;
   }
-  
+
   .mobile-overlay.active {
     opacity: 1;
     visibility: visible;
@@ -1434,6 +1462,7 @@ div[style*="overflow: auto"],
 }
 
 @media (min-width: 769px) {
+
   .mobile-home-btn,
   .mobile-overlay {
     display: none !important;
@@ -1536,4 +1565,46 @@ div[style*="overflow: auto"],
     transform: translateX(100%);
     opacity: 0;
   }
+}
+
+/* ==========================================================================
+   CỨU CÁNH DI ĐỘNG: CƯỠNG CHẾ MỞ KHÓA BẢNG CHẠM & TIÊU HỦY OVERLAY TÀNG HÌNH
+   ========================================================================== */
+
+/* 1. Ép tất cả vùng chứa chính luôn nhận tương tác cảm ứng */
+html,
+body,
+.app-container,
+#app-content {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* 2. Ép triệt tiêu mọi Overlay khi body không có class mở Menu/Modal */
+body:not(.modal-open):not(.mobile-menu-open):not(.sidebar-open) .mobile-overlay,
+body:not(.modal-open):not(.mobile-menu-open):not(.sidebar-open) .modal-backdrop,
+body:not(.modal-open):not(.mobile-menu-open):not(.sidebar-open) .sidebar-overlay,
+body:not(.modal-open):not(.mobile-menu-open):not(.sidebar-open) .form-overlay,
+body:not(.modal-open):not(.mobile-menu-open):not(.sidebar-open) [class*="overlay"] {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  z-index: -9999 !important;
+  opacity: 0 !important;
+}
+
+/* 3. Ép nhận diện điểm chạm (Touch Target) cho mọi phần tử tương tác trên Mobile */
+button,
+a,
+input,
+select,
+textarea,
+tr,
+.btn,
+[onclick],
+[data-action] {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
 }
