@@ -82,7 +82,7 @@ function renderMaterialForm(c) {
         </div>
 
         <div class="action-bar">
-          <button type="button" class="btn-cancel" onclick="backToList('materials')">${isView ? 'Quay lại' : 'Hủy'}</button>
+          <button type="button" class="btn-cancel" onclick="navigate('materials')">${isView ? 'Quay lại' : 'Hủy'}</button>
           ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu sản phẩm' : 'Cập nhật'}</button>` : ''}
         </div>
       </form>
@@ -168,7 +168,7 @@ function renderCustomerForm(c) {
         </div>
 
         <div class="action-bar">
-          <button type="button" class="btn-cancel" onclick="backToList('customers')">${isView ? 'Quay lại' : 'Hủy'}</button>
+          <button type="button" class="btn-cancel" onclick="navigate('customers')">${isView ? 'Quay lại' : 'Hủy'}</button>
           ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu khách hàng' : 'Cập nhật'}</button>` : ''}
         </div>
       </form>
@@ -237,7 +237,7 @@ function renderWarehouseForm(c) {
         </div>
 
         <div class="action-bar">
-          <button type="button" class="btn-cancel" onclick="backToList('warehouses')">${isView ? 'Quay lại' : 'Hủy'}</button>
+          <button type="button" class="btn-cancel" onclick="navigate('warehouses')">${isView ? 'Quay lại' : 'Hủy'}</button>
           ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu kho hàng' : 'Cập nhật'}</button>` : ''}
         </div>
       </form>
@@ -396,7 +396,7 @@ function renderQuotationForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" onclick="backToList('quotations')">${isView ? 'Quay lại' : 'Hủy'}</button>
+          <button type="button" class="btn-cancel" onclick="navigate('quotations')">${isView ? 'Quay lại' : 'Hủy'}</button>
           <div style="display: flex; gap: 8px;">
           <!-- Nút xuất PDF & Chia sẻ Zalo -->
             ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
@@ -579,7 +579,7 @@ function renderSalesOrderForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" onclick="backToList('sales-orders')">${isView ? 'Quay lại' : 'Hủy'}</button>
+          <button type="button" class="btn-cancel" onclick="navigate('sales-orders')">${isView ? 'Quay lại' : 'Hủy'}</button>
           <div style="display: flex; gap: 8px;">
             ${isView ? `<button type="button" class="btn-primary" onclick="exportSalesOrderToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
               Xuất PDF
@@ -742,7 +742,7 @@ function renderReturnForm(c) {
         </div>
 
         <div class="action-bar">
-          <button type="button" class="btn-cancel" onclick="backToList('returns')">${isView ? 'Quay lại' : 'Hủy'}</button>
+          <button type="button" class="btn-cancel" onclick="navigate('returns')">${isView ? 'Quay lại' : 'Hủy'}</button>
           ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
         </div>
       </form>
@@ -877,7 +877,7 @@ function renderGRNForm(c) {
           </div>
         </div>
 
-        <div class="action-bar"><button type="button" class="btn-cancel" onclick="backToList('grn')">${isView ? 'Quay lại' : 'Hủy'}</button>${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}</div>
+        <div class="action-bar"><button type="button" class="btn-cancel" onclick="navigate('grn')">${isView ? 'Quay lại' : 'Hủy'}</button>${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}</div>
       </form>
     </div>
   `;

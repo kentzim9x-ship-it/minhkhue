@@ -162,7 +162,7 @@ function renderLoginForm(container) {
               margin-top: 4px; 
               background: #d9534f; 
               border: none; 
-              border-radius: 25px; 
+              border-radius: 25px !important;; 
               color: #ffffff; 
               font-family: var(--font-jost, sans-serif); 
               font-size: 15px; 
@@ -220,6 +220,7 @@ function render() {
       document.body.appendChild(loginBox);
     }
 
+    // Tự động thay đổi URL trên thanh địa chỉ về /minhkhue/login nếu đang ở URL khác
     const targetLoginUrl = `${BASE_PATH}/login`;
     if (window.location.pathname !== targetLoginUrl) {
       window.history.pushState({ view: 'login' }, '', targetLoginUrl);
@@ -235,29 +236,34 @@ function render() {
     updateUserInfoUI();
   }
 
-  // Nếu ở giao diện MPA mà state.mode khác 'list', điều hướng ngay sang trang detail.html
-  if (state.mode !== 'list') {
-    openDetailForm(state.view, state.mode, state.selectedId || '');
-    state.mode = 'list';
-    return;
-  }
-
   const activeId = document.activeElement ? document.activeElement.id : null;
 
   c.innerHTML = '';
   updateGlobalMaterialDatalist();
 
-  switch (state.view) {
-    case 'dashboard': renderDashboard(c); break;
-    case 'materials': renderMaterialsList(c); break;
-    case 'customers': renderCustomersList(c); break;
-    case 'warehouses': renderWarehousesList(c); break;
-    case 'quotations': renderQuotationsList(c); break;
-    case 'sales-orders': renderOrdersList(c); break;
-    case 'returns': renderReturnsList(c); break;
-    case 'grn': renderGRNList(c); break;
-    case 'report-inventory': renderReportInventory(c); break;
-    case 'report-sales': renderReportSales(c); break;
+  if (state.mode !== 'list') {
+    switch (state.view) {
+      case 'materials': renderMaterialForm(c); break;
+      case 'customers': renderCustomerForm(c); break;
+      case 'warehouses': renderWarehouseForm(c); break;
+      case 'quotations': renderQuotationForm(c); break;
+      case 'sales-orders': renderSalesOrderForm(c); break;
+      case 'returns': renderReturnForm(c); break;
+      case 'grn': renderGRNForm(c); break;
+    }
+  } else {
+    switch (state.view) {
+      case 'dashboard': renderDashboard(c); break;
+      case 'materials': renderMaterialsList(c); break;
+      case 'customers': renderCustomersList(c); break;
+      case 'warehouses': renderWarehousesList(c); break;
+      case 'quotations': renderQuotationsList(c); break;
+      case 'sales-orders': renderOrdersList(c); break;
+      case 'returns': renderReturnsList(c); break;
+      case 'grn': renderGRNList(c); break;
+      case 'report-inventory': renderReportInventory(c); break;
+      case 'report-sales': renderReportSales(c); break;
+    }
   }
 
   if (activeId) {
@@ -491,7 +497,7 @@ function renderMaterialsList(c) {
   ].map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tồn Kho Ban Đầu' || h === 'Đơn Giá' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`).join('');
 
   const rowsHtml = paginatedItems.map(m => `
-  <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="openDetailForm('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="openDetailForm('materials', 'view', '${m.id}')">
+  <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
     <td data-label="Mã Hàng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
     <td data-label="Tên Hàng" style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
     <td data-label="Đơn Vị" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
@@ -503,15 +509,15 @@ function renderMaterialsList(c) {
     
     <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
     <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
-    <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
+    <td data-label="Giờ Táo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
     <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
     <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
     <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
 
     <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
       <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
-        <button class="btn-action" onclick="event.stopPropagation(); openDetailForm('materials', 'view', '${m.id}')">${Icons.view} Xem</button>
-        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); openDetailForm('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : ''}
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>
+        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : ''}
         ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''}
       </div>
     </td>
@@ -530,7 +536,7 @@ function renderMaterialsList(c) {
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã, tên hàng..." value="${state.search}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="openDetailForm('materials', 'add')">${Icons.plus} Thêm Mới Hàng Hóa</button>` : ''}
+          ${hasPermission ? `<button class="btn-primary" onclick="navigate('materials', 'add')">${Icons.plus} Thêm Mới Hàng Hóa</button>` : ''}
         </div>
       </div>     
 
@@ -610,7 +616,7 @@ function renderCustomersList(c) {
   `).join('');
 
   const rowsHtml = paginatedItems.map(c => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="openDetailForm('customers', '${hasPermission ? 'edit' : 'view'}', '${c.id}')" onclick="openDetailForm('customers', 'view', '${c.id}')">
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('customers', '${hasPermission ? 'edit' : 'view'}', '${c.id}')" onclick="navigate('customers', 'view', '${c.id}')">
       <td data-label="Mã Khách Hàng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); text-align: left;">${c.id || '—'}</td>
       <td data-label="Tên Công Ty / Khách Hàng" style="padding: 11px 16px; font-size: 13px; font-weight: 500; text-align: left;">${c.name || '—'}</td>
       <td data-label="Người Liên Hệ" style="padding: 11px 16px; font-size: 13px; text-align: left;">${c.contact || '—'}</td>
@@ -628,8 +634,8 @@ function renderCustomersList(c) {
     
       <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
         <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
-          <button class="btn-action" onclick="event.stopPropagation(); openDetailForm('customers', 'view', '${c.id}')">${Icons.view} Xem</button>
-          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); openDetailForm('customers', 'edit', '${c.id}')">${Icons.edit} Sửa</button>` : ''}
+          <button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'view', '${c.id}')">${Icons.view} Xem</button>
+          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('customers', 'edit', '${c.id}')">${Icons.edit} Sửa</button>` : ''}
           ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('customers', '${c.id}')">${Icons.trash} Xóa</button>` : ''}
         </div>
       </td>
@@ -648,7 +654,7 @@ function renderCustomersList(c) {
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã, tên, liên hệ, địa chỉ..." value="${state.search}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="openDetailForm('customers', 'add')">${Icons.plus} Thêm Mới Khách Hàng</button>` : ''}
+          ${hasPermission ? `<button class="btn-primary" onclick="navigate('customers', 'add')">${Icons.plus} Thêm Mới Khách Hàng</button>` : ''}
         </div>
       </div>     
 
@@ -688,7 +694,7 @@ function renderWarehousesList(c) {
     const pct = Math.round((w.used / w.capacity) * 100);
     const barColor = pct > 90 ? '#f87171' : pct > 75 ? '#fbbf24' : 'var(--primary)';
     return `
-      <div style="border: 1px solid var(--border); background: var(--card); position: relative; cursor: pointer;" ondblclick="openDetailForm('warehouses', '${hasPermission ? 'edit' : 'view'}', '${w.id}')" onclick="openDetailForm('warehouses', 'view', '${w.id}')">
+      <div style="border: 1px solid var(--border); background: var(--card); position: relative; cursor: pointer;" ondblclick="navigate('warehouses', '${hasPermission ? 'edit' : 'view'}', '${w.id}')" onclick="navigate('warehouses', 'view', '${w.id}')">
         <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
           <div style="display: flex; align-items: center; gap: 10px;">
             <span style="color: var(--primary); font-family: var(--font-dm-mono); font-size: 14px; font-weight: 500;">${w.code || w.id}</span>
@@ -708,8 +714,8 @@ function renderWarehousesList(c) {
           </div>
         </div>
         <div style="padding: 10px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;">
-          <button class="btn-action" onclick="event.stopPropagation(); openDetailForm('warehouses', 'view', '${w.id}')">${Icons.view} Xem</button>
-          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); openDetailForm('warehouses', 'edit', '${w.id}')">${Icons.edit} Sửa</button>` : ''}
+          <button class="btn-action" onclick="event.stopPropagation(); navigate('warehouses', 'view', '${w.id}')">${Icons.view} Xem</button>
+          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('warehouses', 'edit', '${w.id}')">${Icons.edit} Sửa</button>` : ''}
           ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('warehouses', '${w.id}')">${Icons.trash} Xóa</button>` : ''}
         </div>
       </div>
@@ -719,7 +725,7 @@ function renderWarehousesList(c) {
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
       <div style="display: flex; justify-content: flex-end;">
-        ${hasPermission ? `<button class="btn-primary" onclick="openDetailForm('warehouses', 'add')">${Icons.plus} Thêm Mới Kho</button>` : ''}
+        ${hasPermission ? `<button class="btn-primary" onclick="navigate('warehouses', 'add')">${Icons.plus} Thêm Mới Kho</button>` : ''}
       </div>
       <div class="grid-2">
         ${cardsHtml}
@@ -776,7 +782,7 @@ function renderQuotationsList(c) {
     .join('');
 
   const rowsHtml = paginatedItems.map(q => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="openDetailForm('quotations', '${hasPermission ? 'edit' : 'view'}', '${q.id}')" onclick="openDetailForm('quotations', 'view', '${q.id}')">
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('quotations', '${hasPermission ? 'edit' : 'view'}', '${q.id}')" onclick="navigate('quotations', 'view', '${q.id}')">
       <td data-label="Mã Báo Giá" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${q.id}</td>
       <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${q.customer}</td>
       <td data-label="Ngày Lập" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.date || '—'}</td>
@@ -794,8 +800,8 @@ function renderQuotationsList(c) {
       <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(q.time2)}</td>
 
       <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-        <button class="btn-action" onclick="event.stopPropagation(); openDetailForm('quotations', 'view', '${q.id}')">${Icons.view} Xem</button>
-        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); openDetailForm('quotations', 'edit', '${q.id}')">${Icons.edit} Sửa</button>` : ''}
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('quotations', 'view', '${q.id}')">${Icons.view} Xem</button>
+        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('quotations', 'edit', '${q.id}')">${Icons.edit} Sửa</button>` : ''}
         ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('quotations', '${q.id}')">${Icons.trash} Xóa</button>` : ''}
       </td>
     </tr>
@@ -815,7 +821,7 @@ function renderQuotationsList(c) {
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã, tên khách hàng..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="openDetailForm('quotations', 'add')">${Icons.plus} Tạo Báo Giá Mới</button>` : ''}
+          ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Tạo Báo Giá Mới</button>` : ''}
         </div>
       </div>
 
@@ -895,7 +901,7 @@ function renderOrdersList(c) {
   ].map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`).join('');
 
   const rowsHtml = paginatedItems.map(o => `
-  <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="openDetailForm('sales-orders', '${hasPermission ? 'edit' : 'view'}', '${o.id}')" onclick="openDetailForm('sales-orders', 'view', '${o.id}')">
+  <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', '${hasPermission ? 'edit' : 'view'}', '${o.id}')" onclick="navigate('sales-orders', 'view', '${o.id}')">
     <td data-label="Mã Đơn Hàng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${o.id}</td>
     <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${o.customer}</td>
     <td data-label="Ngày Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${o.date}</td>
@@ -912,8 +918,8 @@ function renderOrdersList(c) {
     <td data-label="Giờ Sửa" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(o.time2)}</td>
 
     <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-      <button class="btn-action" onclick="event.stopPropagation(); openDetailForm('sales-orders', 'view', '${o.id}')">${Icons.view} Xem</button>
-      ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); openDetailForm('sales-orders', 'edit', '${o.id}')">${Icons.edit} Sửa</button>` : ''}
+      <button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'view', '${o.id}')">${Icons.view} Xem</button>
+      ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'edit', '${o.id}')">${Icons.edit} Sửa</button>` : ''}
       ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('sales-orders', '${o.id}')">${Icons.trash} Xóa</button>` : ''}
     </td>
   </tr>
@@ -933,7 +939,7 @@ function renderOrdersList(c) {
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã, tên khách hàng..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="openDetailForm('sales-orders', 'add')">${Icons.plus} Tạo Đơn Hàng Mới</button>` : ''}
+          ${hasPermission ? `<button class="btn-primary" onclick="navigate('sales-orders', 'add')">${Icons.plus} Tạo Đơn Hàng Mới</button>` : ''}
         </div>
       </div>
 
@@ -1014,7 +1020,7 @@ function renderReturnsList(c) {
   const rowsHtml = paginatedItems.map(r => {
     const totalLines = (r.lineItems || r.lineitems || []).length;
     return `
-      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="openDetailForm('returns', '${hasPermission ? 'edit' : 'view'}', '${r.id}')" onclick="openDetailForm('returns', 'view', '${r.id}')">
+      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('returns', '${hasPermission ? 'edit' : 'view'}', '${r.id}')" onclick="navigate('returns', 'view', '${r.id}')">
         <td data-label="Mã Đổi Trả" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${r.id}</td>
         <td data-label="Tham Chiếu Đơn" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${r.orderId || '—'}</td>
         <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${r.customer}</td>
@@ -1032,10 +1038,9 @@ function renderReturnsList(c) {
       <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(r.time2)}</td>
 
         <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-          <button class="btn-action" onclick="event.stopPropagation(); openDetailForm('returns', 'view', '${r.id}')">${Icons.view} Xem</button>
-          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); openDetailForm('returns', 'edit', '${r.id}')">${Icons.edit} Sửa</button>` : ''}
+          <button class="btn-action" onclick="event.stopPropagation(); navigate('returns', 'view', '${r.id}')">${Icons.view} Xem</button>
+          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('returns', 'edit', '${r.id}')">${Icons.edit} Sửa</button>` : ''}
           ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('returns', '${r.id}')">${Icons.trash} Xóa</button>` : ''}
-        </div>
         </td>
       </tr>
     `;
@@ -1055,7 +1060,7 @@ function renderReturnsList(c) {
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã, khách hàng, lý do..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="openDetailForm('returns', 'add')">${Icons.plus} Tạo Phiếu Đổi Trả</button>` : ''}
+          ${hasPermission ? `<button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Tạo Phiếu Đổi Trả</button>` : ''}
         </div>
       </div>
 
@@ -1134,7 +1139,7 @@ function renderGRNList(c) {
     const totalLines = (g.lineItems || []).length;
     const wCode = g.warehouseCode || g.warehouse_code || '—';
     return `
-      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="openDetailForm('grn', '${hasPermission ? 'edit' : 'view'}', '${g.id}')" onclick="openDetailForm('grn', 'view', '${g.id}')">
+      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('grn', '${hasPermission ? 'edit' : 'view'}', '${g.id}')" onclick="navigate('grn', 'view', '${g.id}')">
         <td data-label="Mã Nhập Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${g.id}</td>
         <td data-label="Nhà Cung Cấp" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${g.supplier || '—'}</td>      
         <td data-label="Ngày Nhập" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${g.date}</td>
@@ -1148,11 +1153,11 @@ function renderGRNList(c) {
       <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(g.time0)}</td>
       <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(g.user_id2)}</td>
       <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(g.date2)}</td>
-      <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(g.time2)}</td>
+      <td data-label="Người Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(g.time2)}</td>
 
         <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-          <button class="btn-action" onclick="event.stopPropagation(); openDetailForm('grn', 'view', '${g.id}')">${Icons.view} Xem</button>
-          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); openDetailForm('grn', 'edit', '${g.id}')">${Icons.edit} Sửa</button>` : ''}
+          <button class="btn-action" onclick="event.stopPropagation(); navigate('grn', 'view', '${g.id}')">${Icons.view} Xem</button>
+          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('grn', 'edit', '${g.id}')">${Icons.edit} Sửa</button>` : ''}
           ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('grn', '${g.id}')">${Icons.trash} Xóa</button>` : ''}
         </td>
       </tr>
@@ -1173,7 +1178,7 @@ function renderGRNList(c) {
             <span style="color: var(--muted-foreground);">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm theo mã phiếu, nhà cung cấp..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="openDetailForm('grn', 'add')">${Icons.plus} Nhập Kho Mới</button>` : ''}
+          ${hasPermission ? `<button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Nhập Kho Mới</button>` : ''}
         </div>
       </div>
 
@@ -1293,7 +1298,7 @@ function renderReportInventory(c) {
       const coTheBan = tonThucTe - tamGiu;
 
       return `
-      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="openDetailForm('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="openDetailForm('materials', 'view', '${m.id}')">
+      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
         <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
         <td data-label="Tên Hàng" style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
         <td data-label="ĐVT" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>

@@ -28,14 +28,6 @@ document.addEventListener('keydown', function (e) {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const defaultView = urlParams.get('view') || 'dashboard';
-
-  // Chuyển tới view tương ứng
-  if (typeof navigate === 'function') {
-    navigate(defaultView);
-  }
-
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => navigate(btn.getAttribute('data-view')));
   });
