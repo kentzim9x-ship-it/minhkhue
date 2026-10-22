@@ -4,6 +4,10 @@
 
 const BASE_PATH = '/minhkhue'; // Đường dẫn gốc trên GitHub Pages
 
+function getResponsivePageSize() {
+  return window.innerWidth <= 768 ? 8 : 15;
+}
+
 // STATE MANAGEMENT
 let state = {
   view: 'dashboard',
@@ -12,7 +16,7 @@ let state = {
   search: '',
   formData: null,
   page: 1,        // Trang hiện tại
-  pageSize: 15    // Số lượng bản ghi trên mỗi trang
+  pageSize: getResponsivePageSize()    // Số lượng bản ghi trên mỗi trang
 };
 
 const viewMeta = {
