@@ -56,14 +56,11 @@ function navigate(view, mode = 'list', itemId = null) {
   state.view = view;
   state.mode = mode;
 
-  document.body.classList.remove('mobile-menu-open', 'sidebar-open');
+document.body.classList.remove('mobile-menu-open', 'sidebar-open');
   const overlay = document.querySelector('.mobile-overlay');
   if (overlay) {
     overlay.classList.remove('active');
-    overlay.style.pointerEvents = 'none';
-    overlay.style.display = 'none'; // Bổ sung để ẩn triệt để lớp màng vô hình
   }
-
  const contentBox = document.getElementById('app-content');
   if (contentBox) {
     contentBox.style.opacity = '1';
@@ -138,11 +135,10 @@ function handleRouteChange() {
     state.mode = mode;
 
     document.body.classList.remove('mobile-menu-open', 'sidebar-open');
-    const overlay = document.querySelector('.mobile-overlay');
-    if (overlay) {
-      overlay.classList.remove('active');
-      overlay.style.pointerEvents = 'none';
-    }
+  const overlay = document.querySelector('.mobile-overlay');
+  if (overlay) {
+    overlay.classList.remove('active');
+  }
 
     if (mode === 'list') {
       const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);

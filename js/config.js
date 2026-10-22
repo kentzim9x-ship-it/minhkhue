@@ -41,17 +41,22 @@ const Icons = {
 };
 
 // Tạo lớp Overlay để bấm ra ngoài đóng Menu
-const overlayEl = document.createElement('div');
-overlayEl.className = 'mobile-overlay';
-overlayEl.onclick = toggleMobileMenu;
-document.body.appendChild(overlayEl);
-
-function initMobileOverlay() {
-  if (overlayEl || !document.body) return;
+let overlayEl = document.querySelector('.mobile-overlay');
+if (!overlayEl) {
   overlayEl = document.createElement('div');
   overlayEl.className = 'mobile-overlay';
   overlayEl.onclick = toggleMobileMenu;
   document.body.appendChild(overlayEl);
+}
+
+function initMobileOverlay() {
+  if (!document.body) return;
+  if (!overlayEl) {
+    overlayEl = document.createElement('div');
+    overlayEl.className = 'mobile-overlay';
+    overlayEl.onclick = toggleMobileMenu;
+    document.body.appendChild(overlayEl);
+  }
 }
 
 function toggleMobileMenu() {
@@ -60,12 +65,8 @@ function toggleMobileMenu() {
   if (overlayEl) {
     if (isMenuOpen) {
       overlayEl.classList.add('active');
-      overlayEl.style.pointerEvents = 'auto';
-      overlayEl.style.display = 'block'; // Bổ sung hiện lớp overlay
     } else {
       overlayEl.classList.remove('active');
-      overlayEl.style.pointerEvents = 'none';
-      overlayEl.style.display = 'none'; // Bổ sung ẩn triệt để lớp overlay
     }
   }
 }
