@@ -1,37 +1,76 @@
 // ==========================================
-// 5. ĐIỀU HƯỚNG & ROUTING (NAVIGATION)
+// 5. ĐIỀU HƯỚNG & ROUTING (KHẮC PHỤC TRIỆT ĐỂ LỖI KẸT CẢM ỨNG KHI THAO TÁC LIÊN TỤC)
 // ==========================================
 
 if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
-// 1. CHỈ SỬ DỤNG 1 LISTENER POPSTATE DUY NHẤT (HOÃN 60MS CHỐNG KẸT TOUCH)
+// Biến quản lý Timer toàn cục để tiêu hủy các tác vụ Render bị chồng lấp
+let globalNavTimer = null;
+let isNavigatingFlag = false;
+
+// Hàm hỗ trợ Mở khóa & Khôi phục Cảm ứng tuyệt đối
+function forceResetTouchState() {
+  if (typeof unlockMobileScreen === 'function') unlockMobileScreen();
+  
+  const body = document.body;
+  const contentBox = document.getElementById('app-content');
+  
+  body.style.pointerEvents = 'auto';
+  body.style.touchAction = 'auto';
+  
+  if (contentBox) {
+    contentBox.style.pointerEvents = 'auto';
+    contentBox.style.touchAction = 'auto';
+    contentBox.style.opacity = '1';
+  }
+}
+
+// 1. XỬ LÝ SỰ KIỆN POPSTATE (VUỐT BACK / BẤM BACK)
 window.addEventListener('popstate', function (event) {
-  // Bỏ focus bàn phím ảo & giải phóng touch target cũ
+  // HỦY LẬP TỨC các lệnh Render dở dang từ những lần vuốt trước đó (Chống Race Condition)
+  if (globalNavTimer) {
+    clearTimeout(globalNavTimer);
+    globalNavTimer = null;
+  }
+
+  // Bỏ Focus khỏi mọi ô nhập liệu / nút bấm ngay lập tức
   if (document.activeElement && typeof document.activeElement.blur === 'function') {
     document.activeElement.blur();
   }
 
-  // TRÌ HOÃN 60MS: Chờ ngón tay nhấc khỏi màn hình sau khi vuốt Back
-  setTimeout(function () {
-    handleRouteChange();
-  }, 60);
+  // Ép khôi phục nhận cảm ứng
+  forceResetTouchState();
+
+  // Đợi 70ms để ngón tay nhấc hẳn khỏi màn hình (Xóa sạch Touch Target cũ)
+  globalNavTimer = setTimeout(function () {
+    // Dùng requestAnimationFrame kép để chờ GPU di động vẽ (Paint) xong DOM
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        handleRouteChange();
+        isNavigatingFlag = false;
+        forceResetTouchState();
+      });
+    });
+  }, 70);
 });
 
-// 2. XỬ LÝ KHÔI PHỤC TỪ BFCACHE (SAFARI / CHROME MOBILE)
+// 2. XỬ LÝ KHÔI PHỤC TỪ BFCACHE (IOS SAFARI / CHROME MOBILE)
 window.addEventListener('pageshow', function (event) {
   if (event.persisted) {
+    if (globalNavTimer) clearTimeout(globalNavTimer);
+    forceResetTouchState();
     setTimeout(function () {
-      if (typeof unlockMobileScreen === 'function') unlockMobileScreen();
       if (typeof render === 'function') render();
+      forceResetTouchState();
     }, 100);
   }
 });
 
-// 3. XỬ LÝ CHUYỂN ROUTE/VIEW KHI LÙI TRANG
+// 3. XỬ LÝ CHUYỂN ROUTE / VIEW KHI LÙI TRANG
 function handleRouteChange() {
-  if (typeof unlockMobileScreen === 'function') unlockMobileScreen();
+  forceResetTouchState();
 
   let pathname = window.location.pathname;
   if (typeof BASE_PATH !== 'undefined' && pathname.startsWith(BASE_PATH)) {
@@ -105,9 +144,15 @@ function handleRouteChange() {
   }
 }
 
-// 4. HÀM NAVIGATE CHUẨN DUY NHẤT
+// 4. HÀM NAVIGATE CHUẨN ĐÃ ĐƯỢC BẢO VỆ CHỐNG SPAM CLICK
 function navigate(view, mode = 'list', itemId = null) {
-  if (typeof unlockMobileScreen === 'function') unlockMobileScreen();
+  // Hủy Timer pending cũ nếu người dùng bấm chuyển trang nhanh
+  if (globalNavTimer) {
+    clearTimeout(globalNavTimer);
+    globalNavTimer = null;
+  }
+
+  forceResetTouchState();
 
   if (typeof state !== 'undefined' && state.mode === 'list') {
     const contentBox = document.getElementById('app-content');
@@ -155,12 +200,6 @@ function navigate(view, mode = 'list', itemId = null) {
   const overlay = document.querySelector('.mobile-overlay');
   if (overlay) overlay.classList.remove('active');
 
-  const contentBox = document.getElementById('app-content');
-  if (contentBox) {
-    contentBox.style.opacity = '1';
-    contentBox.style.pointerEvents = 'auto';
-  }
-
   if (typeof viewMeta !== 'undefined') {
     const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
     const tagEl = document.getElementById('view-tag');
@@ -186,16 +225,19 @@ function navigate(view, mode = 'list', itemId = null) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
 
-  setTimeout(() => {
+  // Trì hoãn nhỏ để đảm bảo đồng bộ
+  globalNavTimer = setTimeout(() => {
     if (typeof render === 'function') render();
 
     if (mode === 'list') {
       restoreScrollPosition(view);
     } else {
       window.scrollTo({ top: 0, behavior: 'instant' });
+      const contentBox = document.getElementById('app-content');
       if (contentBox) contentBox.scrollTop = 0;
     }
-  }, 20);
+    forceResetTouchState();
+  }, 30);
 }
 
 function restoreScrollPosition(view) {
