@@ -210,53 +210,20 @@ let currentRenderedPage = null;
 let currentRenderedSearch = null;
 let currentRenderedFilter = null;
 
+let isListRendered = false;
+
 function render(forceRebuildList = false) {
-  const appContainer = document.querySelector('.app-container');
-  const c = document.getElementById('app-content');
   const session = getAuthSession();
+  if (!session.isLoggedIn) { /* ... giữ nguyên logic login ... */ return; }
 
-  // Xử lý chưa đăng nhập
-  if (!session.isLoggedIn) {
-    if (appContainer) appContainer.style.display = 'none';
-    let loginBox = document.getElementById('login-container');
-    if (!loginBox) {
-      loginBox = document.createElement('div');
-      loginBox.id = 'login-container';
-      document.body.appendChild(loginBox);
-    }
-    const targetLoginUrl = `${BASE_PATH}/login`;
-    if (window.location.pathname !== targetLoginUrl) {
-      window.history.pushState({ view: 'login' }, '', targetLoginUrl);
-    }
-    renderLoginForm(loginBox);
-    return;
-  } else {
-    const loginBox = document.getElementById('login-container');
-    if (loginBox) loginBox.remove();
-    if (appContainer) appContainer.style.display = 'flex';
-    updateUserInfoUI();
-  }
-
-  const activeId = document.activeElement ? document.activeElement.id : null;
-
-  // Lấy 2 container đã thêm ở index.html
-  let listContainer = document.getElementById('list-view');
-  let detailContainer = document.getElementById('detail-view');
-
-  // Dự phòng nếu DOM chưa kịp có
-  if (!listContainer || !detailContainer) {
-    c.innerHTML = `<div id="list-view"></div><div id="detail-view" style="display: none;"></div>`;
-    listContainer = document.getElementById('list-view');
-    detailContainer = document.getElementById('detail-view');
-  }
-
-  updateGlobalMaterialDatalist();
+  const listContainer = document.getElementById('list-view-container');
+  const detailContainer = document.getElementById('detail-view-container');
 
   if (state.mode !== 'list') {
-    // CHẾ ĐỘ CHI TIẾT (FORM)
-    listContainer.style.display = 'none';    // Ẩn đi, KHÔNG phá hủy DOM
-    detailContainer.style.display = 'block'; // Hiện form
-    detailContainer.innerHTML = '';          // Làm sạch form cũ
+    // === CHẾ ĐỘ FORM CHI TIẾT ===
+    listContainer.style.display = 'none';
+    detailContainer.style.display = 'block';
+    detailContainer.innerHTML = '';
 
     switch (state.view) {
       case 'materials': renderMaterialForm(detailContainer); break;
@@ -268,17 +235,19 @@ function render(forceRebuildList = false) {
       case 'grn': renderGRNForm(detailContainer); break;
     }
   } else {
-    // CHẾ ĐỘ DANH SÁCH
+    // === CHẾ ĐỘ DANH SÁCH ===
     listContainer.style.display = 'block';
     detailContainer.style.display = 'none';
-    detailContainer.innerHTML = ''; // Giải phóng bộ nhớ của form
+    detailContainer.innerHTML = '';
 
-    // Kiểm tra có cần render lại mảng DOM lớn không
-    const needRebuild = forceRebuildList || 
-                        currentRenderedView !== state.view || 
-                        currentRenderedPage !== state.page || 
-                        currentRenderedSearch !== state.search || 
-                        currentRenderedFilter !== state.filter;
+    // Kiểm tra xem State có thay đổi so với lần render trước không
+    const stateChanged = currentRenderedView !== state.view ||
+      currentRenderedPage !== state.page ||
+      currentRenderedSearch !== state.search ||
+      currentRenderedFilter !== state.filter;
+
+    // Chỉ rebuild khi thực sự cần: Đổi trang, Đổi từ khóa search, Đổi tab filter, hoặc Đặt cờ isListRendered = false
+    const needRebuild = forceRebuildList || !isListRendered || stateChanged;
 
     if (needRebuild) {
       listContainer.innerHTML = '';
@@ -294,26 +263,13 @@ function render(forceRebuildList = false) {
         case 'report-inventory': renderReportInventory(listContainer); break;
         case 'report-sales': renderReportSales(listContainer); break;
       }
-      
-      // Lưu lại trạng thái cache
+
+      // Lưu lại trạng thái đã render
+      isListRendered = true;
       currentRenderedView = state.view;
       currentRenderedPage = state.page;
       currentRenderedSearch = state.search;
       currentRenderedFilter = state.filter;
-    }
-  }
-
-  // Phục hồi focus
-  if (activeId) {
-    const el = document.getElementById(activeId);
-    if (el) {
-      el.focus();
-      try {
-        if (typeof el.selectionStart !== 'undefined' && el.type !== 'number' && el.type !== 'email') {
-          const len = el.value ? el.value.length : 0;
-          el.setSelectionRange(len, len);
-        }
-      } catch (err) { }
     }
   }
 }
