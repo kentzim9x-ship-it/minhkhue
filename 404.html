@@ -4,20 +4,17 @@
   <meta charset="utf-8">
   <title>MINHKHUE - LMS Redirecting...</title>
   <script type="text/javascript">
-    // Tự động phân tích đường dẫn URL bị 404 và rewrite lại đường dẫn gốc
-    var pathSegmentsToKeep = 1; // Giữ lại 1 segment "/minhkhue/"
+    var pathSegmentsToKeep = 1; // Giữ lại tiền tố /minhkhue/
     var l = window.location;
     
-    // Tách đường dẫn bị 404
     var path = l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/');
-    
-    // Nếu đường dẫn chứa các action của chi tiết (add, edit, view) -> Chuyển về detail.html
     var isDetail = /\/(add|edit|view)(\/|$)/i.test(path);
-    var redirectTarget = isDetail ? 'detail.html' : '';
+    var targetPage = isDetail ? 'detail.html' : '';
 
+    // Đẩy URL thành dạng /minhkhue/?p=materials hoặc /minhkhue/detail.html?p=materials/view/SKU-0075
     l.replace(
       l.protocol + '//' + l.host + '/' +
-      l.pathname.split('/')[1] + '/' + redirectTarget +
+      l.pathname.split('/')[1] + '/' + targetPage +
       '?p=' + encodeURIComponent(path + l.search) + l.hash
     );
   </script>

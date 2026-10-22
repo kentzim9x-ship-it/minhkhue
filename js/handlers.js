@@ -117,17 +117,20 @@ function handleRouteChange() {
   let pathFromQuery = urlParams.get('p');
 
   let pathname = pathFromQuery || window.location.pathname;
+  
   if (pathname.startsWith(BASE_PATH)) {
     pathname = pathname.substring(BASE_PATH.length);
   }
   pathname = pathname.replace(/^\/+|\/+$/g, '');
 
+  // Xử lý trang Đăng nhập
   if (pathname === 'login') {
     localStorage.removeItem('app_session');
     render();
     return;
   }
 
+  // Nếu URL trống -> Mặc định về Dashboard
   if (!pathname) {
     navigate('dashboard', 'list');
     return;
@@ -138,17 +141,18 @@ function handleRouteChange() {
   let mode = parts[1] || 'list';
   const itemId = parts[2] || null;
 
-  // Nếu URL dẫn tới form Chi tiết (add/edit/view), tự động chuyển sang detail.html
+  // 1. Nếu URL chứa action chi tiết (add/edit/view) -> Chuyển sang detail.html
   if (mode !== 'list') {
     openDetailForm(view, mode, itemId);
     return;
   }
 
+  // 2. Nếu URL là trang danh sách (materials, customers, sales-orders,...)
   if (viewMeta[view]) {
     state.view = view;
     state.mode = 'list';
-    
-    // Khôi phục bộ lọc/phân trang
+
+    // Khôi phục phân trang & bộ lọc
     const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
     if (savedStateRaw) {
       const savedState = JSON.parse(savedStateRaw);
@@ -161,10 +165,18 @@ function handleRouteChange() {
       state.page = 1;
     }
 
+    // Làm sạch URL trên thanh địa chỉ trình duyệt thành /minhkhue/materials (xóa ?p=)
+    const cleanUrl = `${BASE_PATH}/${view}`;
+    if (window.location.pathname + window.location.search !== cleanUrl) {
+      window.history.replaceState({ view, mode: 'list' }, '', cleanUrl);
+    }
+
+    // Cập nhật giao diện Header, Sidebar và Render danh sách
     updateNavigationUI(view, 'list');
     render();
     restoreScrollPosition(view);
   } else {
+    // Nếu view không tồn tại -> Về Dashboard
     navigate('dashboard', 'list');
   }
 }
