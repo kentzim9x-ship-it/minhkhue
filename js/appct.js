@@ -2,6 +2,12 @@
 // APPCT.JS - KHỞI TẠO TRANG CHI TIẾT (MPA)
 // ==========================================
 
+const session = getAuthSession();
+if (!session || !session.isLoggedIn) {
+  window.location.href = '/minhkhue/index.html';
+  return;
+}
+
 const DETAIL_TITLE_MAP = {
   materials: { tag: 'DANH MỤC', title: 'Danh Mục Hàng Hóa' },
   customers: { tag: 'DANH MỤC', title: 'Danh Mục Khách Hàng' },
@@ -106,27 +112,33 @@ function setupSidebarNavigation() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // 1. Kiểm tra Auth
+  const session = getAuthSession();
+  if (!session || !session.isLoggedIn) {
+    window.location.href = '/minhkhue/login';
+    return;
+  }
+
   setupSidebarNavigation();
 
   if (typeof fetchDataFromSupabase === 'function') {
     await fetchDataFromSupabase();
   }
 
-  // Phân tích URL pathname mới
+  // 2. Lấy tham số URL
   const { module, mode, itemId } = parseUrlPath();
 
+  // 3. Cập nhật state
   state.view = module;
   state.mode = mode;
   state.selectedId = itemId;
 
+  // 4. Khởi tạo dữ liệu form
   if (typeof initFormData === 'function') {
-    try {
-      initFormData(module, itemId);
-    } catch (err) {
-      console.warn('Lỗi initFormData:', err);
-    }
+    initFormData(module, itemId);
   }
 
+  // 5. Render form chi tiết (KHÔNG gọi render() của index.html ở đây)
   updateDetailHeader(module);
   renderDetailContent();
 
