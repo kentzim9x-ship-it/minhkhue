@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <base href="/minhkhue/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="./assets/vite.svg" />
+  <title>MINHKHUE - Chi Tiết Biểu Mẫu</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Jost:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="index.css">
+
+  <!-- External Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+
+<body class="detail-page-body">
+  <div class="app-container single-layout">
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper" style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 20px;">
+      <!-- Header -->
+      <header class="app-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div class="app-header-left" style="display: flex; align-items: center; gap: 12px;">
+          <button class="btn btn-secondary" onclick="backToList()" style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M10 3L5 8l5 5" />
+            </svg>
+            Quay lại
+          </button>
+          <span id="view-tag" class="view-tag">CHI TIẾT</span>
+          <h1 id="view-title" class="view-title">Biểu Mẫu Chi Tiết</h1>
+        </div>
+
+        <div class="app-header-right" style="display: flex; align-items: center; gap: 8px;">
+          <span id="header-date" class="header-date"></span>
+        </div>
+      </header>
+
+      <!-- Main Content Container for Forms -->
+      <main id="app-content" class="main-content"></main>
+    </div>
+  </div>
+
+  <!-- JS Modules -->
+  <script src="/minhkhue/js/config.js"></script>
+  <script src="/minhkhue/js/services.js"></script>
+  <script src="/minhkhue/js/renderct.js"></script>
+  <script src="/minhkhue/js/handlers.js"></script>
+  <script src="/minhkhue/js/appct.js"></script>
+</body>
+
+</html>

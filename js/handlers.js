@@ -211,6 +211,40 @@ function restoreScrollPosition(view) {
 
 window.addEventListener('popstate', handleRouteChange);
 
+function navigateToDetail(type, id = '') {
+  let url = `/minhkhue/detail.html?type=${type}`;
+  if (id) {
+    url += `&id=${id}`;
+  }
+  window.location.href = url;
+}
+
+function openDetailForm(type, id = '') {
+  let url = `/minhkhue/detail.html?type=${type}`;
+  if (id) {
+    url += `&id=${encodeURIComponent(id)}`;
+  }
+  window.location.href = url;
+}
+
+async function handleFormSubmit(event, type) {
+  event.preventDefault();
+
+  // 1. Thu thập dữ liệu từ Form và gọi Service lưu vào Supabase
+  const formData = getFormData(event.target);
+  const isSuccess = await services.save(type, formData);
+
+  // 2. Nếu thành công -> Chuyển về trang danh sách tương ứng
+  if (isSuccess) {
+    alert('Đã lưu dữ liệu thành công!');
+    window.location.href = `/minhkhue/index.html?view=${type}`;
+  }
+}
+
+function handleCancel() {
+  window.location.href = '/minhkhue/index.html';
+}
+
 // ==========================================
 // 6. XỬ LÝ DỮ LIỆU & FORM (DATA HANDLERS)
 // ==========================================
@@ -625,8 +659,15 @@ async function saveForm(module) {
     showToast(state.mode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
 
     invalidateStockCache();
-    fetchDataFromSupabase();
-    navigate(module, 'list');
+
+    if (window.location.pathname.includes('detail.html')) {
+      setTimeout(() => {
+        window.location.href = `/minhkhue/index.html?view=${module}`;
+      }, 500);
+    } else {
+      await fetchDataFromSupabase();
+      navigate(module, 'list');
+    }
   } catch (error) {
     console.error('Lỗi lưu Supabase:', error);
     showAlert('Lưu thất bại: ' + (error.message || error), 'Lỗi');
