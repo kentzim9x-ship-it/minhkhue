@@ -1575,7 +1575,7 @@ function renderQuotationForm(c) {
 
                 <div class="section-panel">
     <div class="section-header" style="justify-content: space-between;">
-      <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh mục sản phẩm</span></div>
+      <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
       <!-- Nút Header: Tự động ẩn trên PC -->
       ${getAddLineButton('quotations', isDetailsDisabled, 'header')}
     </div>
@@ -1601,7 +1601,7 @@ function renderQuotationForm(c) {
                   <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
     <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
       <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
-      <div style="width: 90px; flex-shrink: 0;">
+      <div style="width: 110px; flex-shrink: 0;">
         ${getAddLineButton('quotations', isDetailsDisabled, 'footer')}
       </div>
                     <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
@@ -1763,7 +1763,7 @@ function renderSalesOrderForm(c) {
 
                                   <div class="section-panel">
     <div class="section-header" style="justify-content: space-between;">
-      <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh mục sản phẩm</span></div>
+      <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
       <!-- Nút Header: Tự động ẩn trên PC -->
       ${getAddLineButton('sales-orders', isDetailsDisabled, 'header')}
     </div>
@@ -1791,7 +1791,7 @@ function renderSalesOrderForm(c) {
                                     <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
     <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
       <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
-      <div style="width: 90px; flex-shrink: 0;">
+      <div style="width: 110px; flex-shrink: 0;">
         ${getAddLineButton('sales-orders', isDetailsDisabled, 'footer')}
       </div>
                                       <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
@@ -1969,7 +1969,7 @@ function renderReturnForm(c) {
 
                                                 <!-- NÚT THÊM DÒNG RỘNG BẰNG CỘT MÃ HÀNG VÀ THẲNG HÀNG DỌC -->
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
-      <div style="width: 90px; flex-shrink: 0;">
+      <div style="width: 110px; flex-shrink: 0;">
         ${getAddLineButton('returns', isDetailsDisabled, 'footer')}
       </div>
                                                   <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;"><span class="form-label" style="font-weight: 600; margin:0;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
@@ -2100,7 +2100,7 @@ function renderGRNForm(c) {
 
                                                             <div class="section-panel">
     <div class="section-header" style="justify-content: space-between;">
-      <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng thực nhận</span></div>
+      <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
       ${getAddLineButton('grn', isDetailsDisabled, 'header')}
     </div>
                                                               <div style="overflow-x: auto;">
@@ -2123,7 +2123,7 @@ function renderGRNForm(c) {
 
                                                               <!-- BỐ TRÍ KHU VỰC TỔNG TIỀN VÀ NÚT THÊM DÒNG TRÊN PC -->
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
-      <div style="width: 90px; flex-shrink: 0;">
+      <div style="width: 110px; flex-shrink: 0;">
         ${getAddLineButton('grn', isDetailsDisabled, 'footer')}
       </div>
             
