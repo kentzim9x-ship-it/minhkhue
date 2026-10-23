@@ -763,17 +763,30 @@ function renderQuotationsList(c) {
   const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
 
   const kpiHtml = [
-    { label: 'Tổng Báo Giá', val: db.orders.length, color: 'var(--foreground)' },
-    { label: 'Duyệt', val: db.orders.filter(o => o.status === 'accepted' || o.status === 'approved').length, color: '#34d399' },
-    { label: 'Chờ Duyệt', val: db.orders.filter(o => o.status === 'pending' || o.status === 'draft').length, color: '#fbbf24' },
-    { label: 'Từ Chối', val: db.orders.filter(o => o.status === 'rejected' ).length, color: 'var(--muted-foreground)' },
-    { label: 'Hết Hạn', val: db.orders.filter(o => o.status === 'expired').length, color: '#f87171' },
-  ].map(s => `
-    <div style="background-color: var(--card); padding: 16px 20px;">
-      <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
-      <div style="font-family: var(--font-dm-mono); font-size: 24px; font-weight: 300; color: ${s.color};">${s.val}</div>
-    </div>
-  `).join('');
+    ['all', 'Tổng Báo Giá'],
+    ['accepted', 'Duyệt'],
+    ['pending', 'Chờ Duyệt'],
+    ['rejected', 'Từ Chối'],
+    ['expired', 'Hết Hạn']
+  ].map(([s, label]) => {
+    const count = s === 'all'
+      ? db.quotations.length
+      : db.quotations.filter(q => q.status === s || (s === 'accepted' && q.status === 'approved') || (s === 'pending' && q.status === 'draft')).length;
+
+    // Màu sắc tương ứng từng thẻ: Tổng (Trắng/Mặc định), Duyệt (Xanh lá), Chờ duyệt (Cam), Từ chối (Xám), Hết hạn (Đỏ)
+    const color = s === 'all' ? 'var(--foreground)'
+      : s === 'accepted' ? '#34d399'
+        : s === 'pending' ? '#fbbf24'
+          : s === 'rejected' ? 'var(--muted-foreground)'
+            : '#f87171';
+
+    return `
+      <div style="background-color: var(--card); padding: 16px 20px;">
+        <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${label}</div>
+        <div style="font-family: var(--font-dm-mono); font-size: 24px; font-weight: 300; color: ${color};">${count}</div>
+      </div>
+    `;
+  }).join('');
 
   const headersHtml = ['Mã Báo Giá', 'Khách Hàng', 'Ngày Lập', 'Phát Hành', 'Hiệu Lực Đến', 'Số Dòng', 'Tổng Tiền', 'Trạng Thái', 'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', 'Hành Động']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
@@ -807,7 +820,7 @@ function renderQuotationsList(c) {
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
 
