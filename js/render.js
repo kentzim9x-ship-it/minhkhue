@@ -764,8 +764,9 @@ function renderQuotationsList(c) {
 
   const kpiHtml = [
     ['all', 'Tất cả'],
-    ['draft', 'Bản nháp'],
-    ['accepted', 'Đã chấp nhận'],
+    ['accepted', 'Duyệt'],
+    ['pending', 'Chờ Duyệt'],
+    ['rejected', 'Từ Chối'],
     ['expired', 'Hết hạn']
   ].map(([s, label]) => {
     const count = s === 'all' ? db.quotations.length : db.quotations.filter(q => q.status === s).length;
@@ -815,7 +816,7 @@ function renderQuotationsList(c) {
       </div>
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Đã chấp nhận'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
+        ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
@@ -1549,9 +1550,10 @@ function renderQuotationForm(c) {
                     <div class="form-group">
                       <label class="form-label">Trạng thái</label>
                       <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                        <option value="accepted" ${d.status === 'accepted' ? 'selected' : ''}>Đã chấp nhận</option>
-                        <option value="draft" ${d.status === 'draft' ? 'selected' : ''}>Bản nháp</option>
-                        <option value="expired" ${d.status === 'expired' ? 'selected' : ''}>Hết hạn</option>
+                        <option value="accepted" ${['accepted', 'approved', 'đã chấp nhận'].includes(d.status) ? 'selected' : ''}>Duyệt</option>
+                        <option value="pending" ${['pending', 'draft', 'bản nháp', 'chờ duyệt'].includes(d.status) || !d.status ? 'selected' : ''}>Chờ Duyệt</option>
+                        <option value="rejected" ${['rejected', 'từ chối'].includes(d.status) ? 'selected' : ''}>Từ Chối</option>
+                        <option value="expired" ${['expired', 'hết hạn'].includes(d.status) ? 'selected' : ''}>Hết Hạn</option>
                       </select>
                     </div>
                     <div class="form-group">
