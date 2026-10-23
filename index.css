@@ -982,26 +982,46 @@ div[style*="overflow: auto"],
 /* RESPONSIVE MOBILE (< 768px) */
 @media (max-width: 768px) {
 
-  /* Khung chứa Tìm kiếm + Nút bấm ở màn hình mobile */
-  .filter-search-action-wrap {
+  /* Khung chứa Tìm kiếm & Nút Thêm Mới */
+  .mobile-search-action-group {
     display: flex !important;
     flex-direction: row-reverse !important;
-    /* Đảo thứ tự: Nút trước, Ô tìm kiếm sau */
+    /* Đặt Nút Thêm Mới bên trái, Ô Tìm Kiếm bên phải */
+    align-items: center !important;
+    /* Căn thẳng hàng ngang tuyệt đối giữa 2 phần tử */
     gap: 8px !important;
     width: 100% !important;
-    align-items: center !important;
   }
 
-  .filter-search-action-wrap>button {
+  /* Ép Nút Thêm Mới trên Mobile có cùng chiều cao 38px */
+  .mobile-search-action-group>button,
+  .mobile-search-action-group>.btn-primary {
+    height: 38px !important;
+    padding: 0 12px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
-    padding: 8px 12px !important;
-    font-size: 13px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
   }
 
-  .filter-search-action-wrap>div {
+  /* Ép Khung chứa Ô Tìm Kiếm trên Mobile có cùng chiều cao 38px */
+  .mobile-search-action-group>div {
+    height: 38px !important;
     flex: 1 !important;
     min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+  }
+
+  /* Căn ô input bên trong khớp 100% chiều cao */
+  .mobile-search-action-group>div>input {
+    height: 100% !important;
+    padding: 0 !important;
   }
 
   html,
