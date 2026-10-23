@@ -1601,7 +1601,7 @@ function renderQuotationForm(c) {
                   <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
     <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
       <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
-      <div style="width: 110px; flex-shrink: 0;">
+      <div style="width: 90px; flex-shrink: 0;">
         ${getAddLineButton('quotations', isDetailsDisabled, 'footer')}
       </div>
                     <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
@@ -1789,9 +1789,9 @@ function renderSalesOrderForm(c) {
                                     </div>
 
                                     <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
       <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
-      <div style="width: 110px; flex-shrink: 0;">
+      <div style="width: 90px; flex-shrink: 0;">
         ${getAddLineButton('sales-orders', isDetailsDisabled, 'footer')}
       </div>
                                       <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
@@ -1968,8 +1968,8 @@ function renderReturnForm(c) {
                                                 </div>
 
                                                 <!-- NÚT THÊM DÒNG RỘNG BẰNG CỘT MÃ HÀNG VÀ THẲNG HÀNG DỌC -->
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
-      <div style="width: 110px; flex-shrink: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
+      <div style="width: 90px; flex-shrink: 0;">
         ${getAddLineButton('returns', isDetailsDisabled, 'footer')}
       </div>
                                                   <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;"><span class="form-label" style="font-weight: 600; margin:0;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
@@ -2122,8 +2122,8 @@ function renderGRNForm(c) {
                                                               </div>
 
                                                               <!-- BỐ TRÍ KHU VỰC TỔNG TIỀN VÀ NÚT THÊM DÒNG TRÊN PC -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
-      <div style="width: 110px; flex-shrink: 0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
+      <div style="width: 90px; flex-shrink: 0;">
         ${getAddLineButton('grn', isDetailsDisabled, 'footer')}
       </div>
             
@@ -2555,19 +2555,19 @@ function renderReportSales(c) {
 
 function getAddLineButton(moduleName, isDetailsDisabled, position) {
   if (state.mode === 'view' || isDetailsDisabled) return '';
-  
-  const isMobile = window.innerWidth <= 768;
-  
-  // Ẩn ở Header nếu là PC, ẩn ở Footer nếu là Mobile
-  if (position === 'header' && !isMobile) return ''; 
-  if (position === 'footer' && isMobile) return '';  
 
-  const buttonStyle = position === 'footer' 
-    ? 'width: 100%; height: 36px; padding: 0 8px; justify-content: center; box-sizing: border-box; font-size: 13px;'
+  const isMobile = window.innerWidth <= 768;
+
+  if (position === 'header' && !isMobile) return '';
+  if (position === 'footer' && isMobile) return '';
+
+  // SỬA: Đặt width: 100% để lấp đầy container 90px phía ngoài
+  const buttonStyle = position === 'footer'
+    ? 'width: 100%; height: 36px; padding: 0 4px; justify-content: center; box-sizing: border-box; font-size: 13px;'
     : '';
 
   return `
-    <button type="button" class="btn-action btn-add-line-${position}" onclick="addLineItem('${moduleName}')" style="display: inline-flex; align-items: center; gap: 6px; ${buttonStyle}">
+    <button type="button" class="btn-action btn-add-line-${position}" onclick="addLineItem('${moduleName}')" style="display: inline-flex; align-items: center; gap: 4px; ${buttonStyle}">
       ${Icons.plus} Thêm dòng
     </button>
   `;
