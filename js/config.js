@@ -360,7 +360,7 @@ function getBadgeClass(status) {
     'completed': 'badge-blue', 'Hoàn thành': 'badge-blue',
 
     // 🟪 XANH CHÀM / INDIGO
-    'rejected': 'badge-red', 'từ chối': 'badge-red'
+    'rejected': 'badge-indigo', 'từ chối': 'badge-indigo'
   };
   return map[s] || 'badge-zinc';
 }
