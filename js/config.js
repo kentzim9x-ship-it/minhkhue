@@ -327,36 +327,31 @@ function fmtTimeStr(timeStr) {
 function getBadgeClass(status) {
   const s = String(status || '').toLowerCase().trim();
   const map = {
-    // 🟢 XANH LÁ (Thành công / Hoạt động / Đã duyệt / Đủ hàng)
-    'completed': 'badge-emerald', 'hoàn thành': 'badge-emerald',
+    // 🟢 XANH LÁ (Thành công / Hoàn thành / Duyệt / Đã xác minh / Hoạt động)
+    'completed': 'badge-emerald', 'hoàn thành': 'badge-emerald', 
     'approved': 'badge-emerald', 'đã duyệt': 'badge-emerald',
-    'processed': 'badge-emerald', 'đã xử lý': 'badge-emerald',
-    'accepted': 'badge-emerald', 'đã chấp nhận': 'badge-emerald',
-    'verified': 'badge-emerald', 'đã xác minh': 'badge-emerald',
+    'accepted': 'badge-emerald', 'duyệt': 'badge-emerald', 'đã chấp nhận': 'badge-emerald',
+    'verified': 'badge-emerald', 'đã xác minh': 'badge-emerald', 
     'active': 'badge-emerald', 'hoạt động': 'badge-emerald', 'đang hoạt động': 'badge-emerald',
     'ok': 'badge-emerald', 'đủ hàng': 'badge-emerald', 'còn hàng': 'badge-emerald',
 
-    // 🟡 VÀNG / CAM (Đang xử lý / Chờ duyệt / Nhận hàng / Cảnh báo nhẹ)
+    // 🟡 VÀNG / CAM (Đang xử lý / Chờ duyệt / Đã nhận / Sắp hết)
     'processing': 'badge-amber', 'đang xử lý': 'badge-amber',
-    'received': 'badge-amber', 'đã nhận': 'badge-amber',
+    'pending': 'badge-amber', 'chờ duyệt': 'badge-amber', 'chờ xử lý': 'badge-amber',
+    'received': 'badge-amber', 'đã nhận': 'badge-amber', 
     'maintenance': 'badge-amber', 'bảo trì': 'badge-amber',
     'low': 'badge-amber', 'sắp hết': 'badge-amber',
 
-    // 🔵 XANH DƯƠNG (Đã giao hàng / Đang vận chuyển)
-    'shipped': 'badge-blue',
-    'delivered': 'badge-blue',
-
-    // 🔘 XÁM (Chờ xử lý / Nháp / Tạm ngưng)
-    'pending': 'badge-zinc', 'chờ xử lý': 'badge-zinc', 'chờ duyệt': 'badge-zinc',
-    'draft': 'badge-zinc', 'bản nháp': 'badge-zinc',
+    // 🔘 XÁM (Ngừng hoạt động / Bản nháp)
     'inactive': 'badge-zinc', 'ngừng hoạt động': 'badge-zinc',
+    'draft': 'badge-zinc', 'bản nháp': 'badge-zinc',
 
-    // 🔴 ĐỎ (Nguy cấp / Hết hàng / Lỗi / Hủy / Từ chối / Khóa / Đóng cửa)
+    // 🔴 ĐỎ (Đã hủy / Từ chối / Tạm khóa / Hết hạn)
+    'cancelled': 'badge-red', 'đã hủy': 'badge-red', 
+    'rejected': 'badge-red', 'từ chối': 'badge-red', 
+    'suspended': 'badge-red', 'tạm khóa': 'badge-red', 
     'expired': 'badge-red', 'hết hạn': 'badge-red',
-    'cancelled': 'badge-red', 'đã hủy': 'badge-red',
-    'rejected': 'badge-red', 'từ chối': 'badge-red',
-    'suspended': 'badge-red', 'tạm khóa': 'badge-red',
-    'closed': 'badge-red', 'đóng cửa': 'badge-red',
+    'closed': 'badge-red', 'đóng cửa': 'badge-red', 
     'critical': 'badge-red', 'nguy cấp': 'badge-red',
     'out': 'badge-red', 'hết hàng': 'badge-red'
   };
@@ -366,24 +361,27 @@ function getBadgeClass(status) {
 function getStatusLabel(status) {
   const s = String(status || '').toLowerCase().trim();
   const map = {
-    // Báo giá & Đơn hàng & Đổi trả
-    'accepted': 'Duyệt',
-    'approved': 'Đã duyệt',
-    'processed': 'Đã xử lý',
-    'processing': 'Đang xử lý',
+    // Đơn hàng bán & Báo giá
     'completed': 'Hoàn thành',
+    'hoàn thành': 'Hoàn thành',
+    'accepted': 'Duyệt',
+    'approved': 'Duyệt',
+    'duyệt': 'Duyệt',
     'pending': 'Chờ duyệt',
-    'draft': 'Bản nháp',
-    'bản nháp': 'Bản nháp',
-    'expired': 'Hết hạn',
-    'rejected': 'Từ chối',
+    'chờ duyệt': 'Chờ duyệt',
+    'processing': 'Đang xử lý',
     'cancelled': 'Đã hủy',
+    'đã hủy': 'Đã hủy',
+    'rejected': 'Từ chối',
+    'expired': 'Hết hạn',
+    'draft': 'Bản nháp',
+
+    // Đổi trả hàng bán
+    'processed': 'Hoàn thành',
 
     // Phiếu nhập kho (GRN)
     'received': 'Đã nhận',
-    'đã nhận': 'Đã nhận',
     'verified': 'Đã xác minh',
-    'đã xác minh': 'Đã xác minh',
 
     // Khách hàng & Kho hàng
     'active': 'Đang hoạt động',
@@ -398,7 +396,7 @@ function getStatusLabel(status) {
     'critical': 'Nguy cấp',
     'out': 'Hết hàng'
   };
-
+  
   return map[s] || (status ? String(status).toUpperCase() : '—');
 }
 

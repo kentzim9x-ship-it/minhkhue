@@ -583,7 +583,6 @@ function renderCustomersList(c) {
     return matchStatus && matchSearch;
   });
 
-  // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
   if (state.page > totalPages) state.page = totalPages;
@@ -594,12 +593,15 @@ function renderCustomersList(c) {
 
   const totalCount = db.customers.length;
   const activeCount = db.customers.filter(c => c.status === 'active').length;
-  const suspendedCount = db.customers.filter(c => c.status === 'suspended' || c.status === 'inactive').length;
+  const inactiveCount = db.customers.filter(c => c.status === 'inactive').length;
+  const suspendedCount = db.customers.filter(c => c.status === 'suspended').length;
 
+  // TÁCH THÀNH 4 Ô KPI VỚI MÀU SẮC CHUẨN
   const kpiHtml = [
     { label: 'TỔNG KHÁCH HÀNG', value: fmt(totalCount), color: 'var(--foreground)' },
     { label: 'ĐANG HOẠT ĐỘNG', value: fmt(activeCount), color: '#34d399' },
-    { label: 'TẠM KHÓA / NGỪNG', value: fmt(suspendedCount), color: '#f87171' }
+    { label: 'NGỪNG HOẠT ĐỘNG', value: fmt(inactiveCount), color: 'var(--muted-foreground)' },
+    { label: 'TẠM KHÓA', value: fmt(suspendedCount), color: '#f87171' }
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
@@ -623,7 +625,7 @@ function renderCustomersList(c) {
       <td data-label="Email" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); text-align: left;">${c.email || '—'}</td>
       <td data-label="Số Điện Thoại" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: left;">${c.phone || '—'}</td>
       <td data-label="Địa Chỉ" style="padding: 11px 16px; font-size: 13px; text-align: left;">${c.address || c.diachi || '—'}</td>
-      <td data-label="Trạng Thái" style="padding: 11px 16px; text-align: left;"><span class="badge ${getBadgeClass(c.status)}">${c.status === 'active' ? 'hoạt động' : (c.status === 'suspended' ? 'tạm khóa' : (c.status || 'hoạt động'))}</span></td>
+      <td data-label="Trạng Thái" style="padding: 11px 16px; text-align: left;"><span class="badge ${getBadgeClass(c.status)}">${getStatusLabel(c.status)}</span></td>
 
       <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(c.user_id0)}</td>
       <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(c.date0)}</td>
@@ -644,7 +646,7 @@ function renderCustomersList(c) {
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
@@ -672,7 +674,6 @@ function renderCustomersList(c) {
         ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
       </div>
 
-      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
@@ -883,7 +884,6 @@ function renderOrdersList(c) {
     return matchStatus && matchSearch;
   });
 
-  // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
   if (state.page > totalPages) state.page = totalPages;
@@ -892,12 +892,13 @@ function renderOrdersList(c) {
   const startIndex = (state.page - 1) * state.pageSize;
   const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
 
+  // ĐỒNG BỘ KPI ĐỜN BÁN HÀNG
   const kpiHtml = [
     { label: 'Tổng đơn hàng', val: db.orders.length, color: 'var(--foreground)' },
-    { label: 'Hoàn thành', val: db.orders.filter(o => o.status === 'completed' || o.status === 'delivered').length, color: '#34d399' },
-    { label: 'Đang xử lý', val: db.orders.filter(o => o.status === 'processing').length, color: '#fbbf24' },
-    { label: 'Chờ xử lý', val: db.orders.filter(o => o.status === 'pending').length, color: 'var(--muted-foreground)' },
-    { label: 'Đã Hủy', val: db.orders.filter(o => o.status === 'cancelled').length, color: '#f87171' },
+    { label: 'Hoàn thành', val: db.orders.filter(o => ['completed', 'hoàn thành'].includes((o.status || '').toLowerCase())).length, color: '#34d399' },
+    { label: 'Duyệt', val: db.orders.filter(o => ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((o.status || '').toLowerCase())).length, color: '#34d399' },
+    { label: 'Chờ duyệt', val: db.orders.filter(o => ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((o.status || '').toLowerCase())).color = '#fbbf24', val: db.orders.filter(o => ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((o.status || '').toLowerCase())).length },
+    { label: 'Đã Hủy', val: db.orders.filter(o => ['cancelled', 'đã hủy'].includes((o.status || '').toLowerCase())).length, color: '#f87171' },
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
@@ -943,7 +944,7 @@ function renderOrdersList(c) {
       </div>
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['completed', 'Hoàn thành'], ['processing', 'Đang xử lý'], ['pending', 'Chờ xử lý'], ['cancelled', 'Đã hủy']])}
+        ${getFilterBar([['all', 'Tất cả'], ['completed', 'Hoàn thành'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['cancelled', 'Đã hủy']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
@@ -968,7 +969,6 @@ function renderOrdersList(c) {
         ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu phù hợp</div>` : ''}
       </div>
 
-      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
@@ -1003,7 +1003,6 @@ function renderReturnsList(c) {
     return matchStatus && matchSearch;
   });
 
-  // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
   if (state.page > totalPages) state.page = totalPages;
@@ -1012,12 +1011,12 @@ function renderReturnsList(c) {
   const startIndex = (state.page - 1) * state.pageSize;
   const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
 
-  // ĐỒNG BỘ MÀU CÁC THẺ KPI VỚI MÀU BADGE TRẠNG THÁI (Đã xử lý: Xanh lá, Đã duyệt: Xanh lá, Chờ duyệt: Xám, Từ chối: Đỏ)
+  // ĐỒNG BỘ ĐỔI TRẢ HÀNG BÁN: ĐÃ XỬ LÝ -> HOÀN THÀNH
   const kpiHtml = [
     { label: 'Tổng số lượt đổi trả', val: db.returns.length, color: 'var(--foreground)' },
-    { label: 'Đã xử lý', val: db.returns.filter(r => ['processed', 'đã xử lý'].includes((r.status || '').toLowerCase())).length, color: '#34d399' },
-    { label: 'Đã duyệt', val: db.returns.filter(r => ['approved', 'đã duyệt'].includes((r.status || '').toLowerCase())).length, color: '#34d399' },
-    { label: 'Chờ duyệt', val: db.returns.filter(r => ['pending', 'chờ duyệt'].includes((r.status || '').toLowerCase())).length, color: 'var(--muted-foreground)' },
+    { label: 'Hoàn thành', val: db.returns.filter(r => ['processed', 'hoàn thành', 'đã xử lý'].includes((r.status || '').toLowerCase())).length, color: '#34d399' },
+    { label: 'Duyệt', val: db.returns.filter(r => ['approved', 'duyệt', 'đã duyệt'].includes((r.status || '').toLowerCase())).length, color: '#34d399' },
+    { label: 'Chờ duyệt', val: db.returns.filter(r => ['pending', 'chờ duyệt'].includes((r.status || '').toLowerCase())).length, color: '#fbbf24' },
     { label: 'Từ chối', val: db.returns.filter(r => ['rejected', 'từ chối'].includes((r.status || '').toLowerCase())).length, color: '#f87171' }
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
@@ -1066,7 +1065,7 @@ function renderReturnsList(c) {
       </div>
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['processed', 'Đã xử lý'], ['approved', 'Đã duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối']])}
+        ${getFilterBar([['all', 'Tất cả'], ['processed', 'Hoàn thành'], ['approved', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
@@ -1091,7 +1090,6 @@ function renderReturnsList(c) {
         ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
       </div>
 
-      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
       <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
         <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
           Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
@@ -1136,7 +1134,7 @@ function renderGRNList(c) {
   // ĐỒNG BỘ 4 THẺ KPI ĐÚNG THỨ TỰ VÀ MÀU SẮC CHUẨN (Tổng số -> Đã nhận -> Bản nháp -> Đã xác minh)
   const kpiHtml = [
     { label: 'Tổng số phiếu nhập', val: db.grns.length, color: 'var(--foreground)' },
-    { label: 'Đã nhận hàng', val: db.grns.filter(g => ['Đã nhận', 'received'].includes(g.status)).length, color: '#fbbf24' },
+    { label: 'Đã nhận', val: db.grns.filter(g => ['Đã nhận', 'received'].includes(g.status)).length, color: '#fbbf24' },
     { label: 'Bản nháp', val: db.grns.filter(g => ['Bản nháp', 'draft'].includes(g.status)).length, color: 'var(--muted-foreground)' },
     { label: 'Đã xác minh', val: db.grns.filter(g => ['Đã xác minh', 'verified'].includes(g.status)).length, color: '#34d399' }
   ].map(s => `
@@ -1244,30 +1242,30 @@ function renderMaterialForm(c) {
             <div class="form-group" style="grid-column: span 2;">
               <label class="form-label">Tên sản phẩm *</label>
               <input 
-  type="text" 
-  class="form-input" 
-  value="${d.name || ''}" 
-  ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-    oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
-    onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
-  `} 
-  placeholder="Nhập tên sản phẩm..." 
-  required
->
+                  type="text" 
+                  class="form-input" 
+                  value="${d.name || ''}" 
+                  ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+                    oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
+                    onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
+                  `} 
+                  placeholder="Nhập tên sản phẩm..." 
+                  required
+                >
             </div>
             <div class="form-group">
               <label class="form-label">Đơn vị tính *</label>
               <input 
-  type="text" 
-  class="form-input" 
-  value="${d.unit || ''}" 
-  ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-    oninput="this.value = toUpperCaseStr(this.value); updateField('unit', this.value);"
-    onchange="this.value = toUpperCaseStr(this.value); updateField('unit', this.value);"
-  `} 
-  placeholder="CÁI, HỘP, BỘ, KG..." 
-  required
->
+                type="text" 
+                class="form-input" 
+                value="${d.unit || ''}" 
+                ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+                  oninput="this.value = toUpperCaseStr(this.value); updateField('unit', this.value);"
+                  onchange="this.value = toUpperCaseStr(this.value); updateField('unit', this.value);"
+                `} 
+                placeholder="CÁI, HỘP, BỘ, KG..." 
+                required
+              >
             </div>
             <div class="form-group">
               <label class="form-label">Danh mục</label>
@@ -1336,9 +1334,9 @@ function renderCustomerForm(c) {
             <div class="form-group" style="grid-column: span 2;">
               <label class="form-label">Tên công ty / Khách hàng *</label>
               <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-    oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
-    onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
-  `} placeholder="Nhập tên công ty hoặc tên khách hàng..." required>
+                oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
+                onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
+              `} placeholder="Nhập tên công ty hoặc tên khách hàng..." required>
             </div>
             <div class="form-group">
               <label class="form-label">Loại khách hàng</label>
@@ -1349,9 +1347,9 @@ function renderCustomerForm(c) {
             <div class="form-group">
               <label class="form-label">Người liên hệ</label>
               <input type="text" class="form-input" value="${d.contact || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-    oninput="this.value = toTitleCase(this.value); updateField('contact', this.value);"
-    onchange="this.value = toTitleCase(this.value); updateField('contact', this.value);"
-  `} placeholder="Tên người đại diện...">
+                oninput="this.value = toTitleCase(this.value); updateField('contact', this.value);"
+                onchange="this.value = toTitleCase(this.value); updateField('contact', this.value);"
+              `} placeholder="Tên người đại diện...">
             </div>
             <div class="form-group">
               <label class="form-label">Email</label>
@@ -1590,11 +1588,11 @@ function renderQuotationForm(c) {
                 </div>
 
                 <div class="section-panel">
-    <div class="section-header" style="justify-content: space-between;">
-      <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
-      <!-- Nút Header: Tự động ẩn trên PC -->
-      ${getAddLineButton('quotations', isDetailsDisabled, 'header')}
-    </div>
+                  <div class="section-header" style="justify-content: space-between;">
+                    <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
+                    <!-- Nút Header: Tự động ẩn trên PC -->
+                    ${getAddLineButton('quotations', isDetailsDisabled, 'header')}
+                  </div>
 
                   <div style="overflow-x: auto;">
                     <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 8px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 900px;">
@@ -1615,11 +1613,11 @@ function renderQuotationForm(c) {
                   </div>
 
                   <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
-      <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
-      <div style="width: 110px; flex-shrink: 0;">
-        ${getAddLineButton('quotations', isDetailsDisabled, 'footer')}
-      </div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
+                    <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
+                    <div style="width: 110px; flex-shrink: 0;">
+                      ${getAddLineButton('quotations', isDetailsDisabled, 'footer')}
+                    </div>
                     <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
                       <div style="display: flex; justify-content: space-between; align-items: center; height: 36px;"><span class="form-label" style="margin:0;">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
                       <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
@@ -1760,10 +1758,10 @@ function renderSalesOrderForm(c) {
                                       <div class="form-group">
                                         <label class="form-label">Trạng thái</label>
                                         <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                                          <option value="completed" ${d.status === 'completed' ? 'selected' : ''}>Hoàn thành</option>
-                                          <option value="processing" ${d.status === 'processing' ? 'selected' : ''}>Đang xử lý</option>
-                                          <option value="pending" ${d.status === 'pending' ? 'selected' : ''}>Chờ xử lý</option>
-                                          <option value="cancelled" ${d.status === 'cancelled' ? 'selected' : ''}>Đã hủy</option>
+                                          <option value="completed" ${['completed', 'hoàn thành'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
+                                          <option value="accepted" ${['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Duyệt</option>
+                                          <option value="pending" ${['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Chờ duyệt</option>
+                                          <option value="cancelled" ${['cancelled', 'đã hủy'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Đã hủy</option>
                                         </select>
                                       </div>
                                       <div class="form-group">
@@ -1778,11 +1776,11 @@ function renderSalesOrderForm(c) {
                                   </div>
 
                                   <div class="section-panel">
-    <div class="section-header" style="justify-content: space-between;">
-      <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
-      <!-- Nút Header: Tự động ẩn trên PC -->
-      ${getAddLineButton('sales-orders', isDetailsDisabled, 'header')}
-    </div>
+                                    <div class="section-header" style="justify-content: space-between;">
+                                      <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
+                                      <!-- Nút Header: Tự động ẩn trên PC -->
+                                      ${getAddLineButton('sales-orders', isDetailsDisabled, 'header')}
+                                    </div>
 
                                     <div style="overflow-x: auto;">
                                       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 1000px;">
@@ -1805,11 +1803,11 @@ function renderSalesOrderForm(c) {
                                     </div>
 
                                     <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
-      <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
-      <div style="width: 110px; flex-shrink: 0;">
-        ${getAddLineButton('sales-orders', isDetailsDisabled, 'footer')}
-      </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
+                                      <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
+                                      <div style="width: 110px; flex-shrink: 0;">
+                                        ${getAddLineButton('sales-orders', isDetailsDisabled, 'footer')}
+                                      </div>
                                       <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
                                         <div style="display: flex; justify-content: space-between; align-items: center; height: 36px;"><span class="form-label" style="margin:0;">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
                                         <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
@@ -1822,15 +1820,15 @@ function renderSalesOrderForm(c) {
                                   <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
                                     <button type="button" class="btn-cancel" onclick="navigate('sales-orders')">${isView ? 'Quay lại' : 'Hủy'}</button>
                                     <div style="display: flex; gap: 8px;">
-            ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>` : ''}
-            
-            <!-- KHÓA NÚT TẠO PHIẾU / CẬP NHẬT KHI CHƯA CHỌN KHÁCH HÀNG -->
-            ${!isView ? `
-              <button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>
-                ${state.mode === 'add' ? 'Tạo đơn hàng' : 'Cập nhật'}
-              </button>
-            ` : ''}
-          </div>
+                                      ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>` : ''}
+                                      
+                                      <!-- KHÓA NÚT TẠO PHIẾU / CẬP NHẬT KHI CHƯA CHỌN KHÁCH HÀNG -->
+                                      ${!isView ? `
+                                        <button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>
+                                          ${state.mode === 'add' ? 'Tạo đơn hàng' : 'Cập nhật'}
+                                        </button>
+                                      ` : ''}
+                                    </div>
                                   </div>
                               </form>
                             </div>
@@ -1924,9 +1922,9 @@ function renderReturnForm(c) {
                                                   <div class="form-group">
                                                     <label class="form-label">Tên khách hàng *</label>
                                                     <select class="form-select" ${(isView || isEdit || hasOrder) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'customer\', this.value); render();"'} required>
-                <option value="">-- Chọn khách hàng --</option>
-                ${customerOptions}
-              </select>
+                                                      <option value="">-- Chọn khách hàng --</option>
+                                                      ${customerOptions}
+                                                    </select>
                                                   </div>
                                                   <div class="form-group">
                                                     <label class="form-label">Mã kho *</label>
@@ -1946,11 +1944,11 @@ function renderReturnForm(c) {
                                                   </div>
                                                   <div class="form-group">
                                                     <label class="form-label">Trạng thái</label>
-                                                    <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>                                                      
-                                                      <option value="approved" ${d.status === 'approved' ? 'selected' : ''}>Đã duyệt</option>
-                                                      <option value="pending" ${d.status === 'pending' ? 'selected' : ''}>Chờ duyệt</option>
-                                                      <option value="processed" ${d.status === 'processed' ? 'selected' : ''}>Đã xử lý</option>
-                                                      <option value="rejected" ${d.status === 'rejected' ? 'selected' : ''}>Từ chối</option>
+                                                    <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
+                                                      <option value="processed" ${['processed', 'hoàn thành', 'đã xử lý'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
+                                                      <option value="approved" ${['approved', 'duyệt', 'đã duyệt'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Duyệt</option>
+                                                      <option value="pending" ${['pending', 'chờ duyệt'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Chờ duyệt</option>
+                                                      <option value="rejected" ${['rejected', 'từ chối'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Từ chối</option>
                                                     </select>
                                                   </div>
                                                   <div class="form-group" style="grid-column: span 3;">
@@ -1961,10 +1959,10 @@ function renderReturnForm(c) {
                                               </div>
 
                                               <div class="section-panel">
-    <div class="section-header" style="justify-content: space-between;">
-      <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng đổi trả</span></div>
-      ${getAddLineButton('returns', isDetailsDisabled, 'header')}
-    </div>
+                                                <div class="section-header" style="justify-content: space-between;">
+                                                  <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng đổi trả</span></div>
+                                                  ${getAddLineButton('returns', isDetailsDisabled, 'header')}
+                                                </div>
                                                 <div style="overflow-x: auto;">
                                                   <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
                                                     <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
@@ -1984,19 +1982,19 @@ function renderReturnForm(c) {
                                                 </div>
 
                                                 <!-- NÚT THÊM DÒNG RỘNG BẰNG CỘT MÃ HÀNG VÀ THẲNG HÀNG DỌC -->
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
-      <div style="width: 110px; flex-shrink: 0;">
-        ${getAddLineButton('returns', isDetailsDisabled, 'footer')}
-      </div>
+                                                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
+                                                    <div style="width: 110px; flex-shrink: 0;">
+                                                      ${getAddLineButton('returns', isDetailsDisabled, 'footer')}
+                                                    </div>
                                                   <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;"><span class="form-label" style="font-weight: 600; margin:0;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
                                                 </div>
                                               </div>
 
                                               <div class="action-bar">
-          <button type="button" class="btn-cancel" onclick="navigate('returns')">${isView ? 'Quay lại' : 'Hủy'}</button>
-          <!-- KHÓA NÚT TẠO PHIẾU ĐỔI TRẢ -->
-          ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
-        </div>
+                                                <button type="button" class="btn-cancel" onclick="navigate('returns')">${isView ? 'Quay lại' : 'Hủy'}</button>
+                                                <!-- KHÓA NÚT TẠO PHIẾU ĐỔI TRẢ -->
+                                                ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
+                                              </div>
                                             </form>
                                           </div>
                                           `;
@@ -2077,17 +2075,17 @@ function renderGRNForm(c) {
                                                                 <div class="form-group" style="grid-column: span 2;">
                                                                   <label class="form-label">Nhà cung cấp *</label>
                                                                   <input 
-                type="text" 
-                class="form-input" 
-                value="${d.supplier || ''}" 
-                ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-                  oninput="updateField('supplier', this.value);" 
-                  onblur="if(this.value.trim()) render();"
-                  onchange="updateField('supplier', this.value); render();"
-                `} 
-                placeholder="Nhập tên nhà cung cấp..." 
-                required
-              >
+                                                                      type="text" 
+                                                                      class="form-input" 
+                                                                      value="${d.supplier || ''}" 
+                                                                      ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+                                                                        oninput="updateField('supplier', this.value);" 
+                                                                        onblur="if(this.value.trim()) render();"
+                                                                        onchange="updateField('supplier', this.value); render();"
+                                                                      `} 
+                                                                      placeholder="Nhập tên nhà cung cấp..." 
+                                                                      required
+                                                                    >
                                                                 </div>
                                                                 <div class="form-group">
                                                                   <label class="form-label">Mã kho *</label>
@@ -2115,10 +2113,10 @@ function renderGRNForm(c) {
                                                             </div>
 
                                                             <div class="section-panel">
-    <div class="section-header" style="justify-content: space-between;">
-      <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
-      ${getAddLineButton('grn', isDetailsDisabled, 'header')}
-    </div>
+                                                              <div class="section-header" style="justify-content: space-between;">
+                                                                <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
+                                                                ${getAddLineButton('grn', isDetailsDisabled, 'header')}
+                                                              </div>
                                                               <div style="overflow-x: auto;">
                                                                 <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
                                                                   <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
@@ -2138,23 +2136,23 @@ function renderGRNForm(c) {
                                                               </div>
 
                                                               <!-- BỐ TRÍ KHU VỰC TỔNG TIỀN VÀ NÚT THÊM DÒNG TRÊN PC -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
-      <div style="width: 110px; flex-shrink: 0;">
-        ${getAddLineButton('grn', isDetailsDisabled, 'footer')}
-      </div>
+                                                              <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
+                                                                <div style="width: 110px; flex-shrink: 0;">
+                                                                  ${getAddLineButton('grn', isDetailsDisabled, 'footer')}
+                                                                </div>
             
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;">
-              <span class="form-label" style="font-weight: 600; margin: 0;">Tổng giá trị</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.totalValue)}</span>
-            </div>
-          </div>
+                                                                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;">
+                                                                  <span class="form-label" style="font-weight: 600; margin: 0;">Tổng giá trị</span>
+                                                                  <span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.totalValue)}</span>
+                                                                </div>
+                                                              </div>
                                                             </div>
 
                                                             <div class="action-bar">
-          <button type="button" class="btn-cancel" onclick="navigate('grn')">${isView ? 'Quay lại' : 'Hủy'}</button>
-          <!-- KHÓA NÚT TẠO PHIẾU NHẬP -->
-          ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}
-        </div>
+                                                              <button type="button" class="btn-cancel" onclick="navigate('grn')">${isView ? 'Quay lại' : 'Hủy'}</button>
+                                                              <!-- KHÓA NÚT TẠO PHIẾU NHẬP -->
+                                                              ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}
+                                                            </div>
                                                           </form>
                                                         </div>
                                                         `;
@@ -2299,8 +2297,8 @@ function renderReportInventory(c) {
 
                                                                 <div style="display: flex; gap: 1px;">
                                                                   ${['all', ...categories].map(cat => `
-                <button onclick="state.filter='${cat}'; state.page=1; render();" style="padding: 5px 12px; font-family: var(--font-dm-mono); font-size: 10px; text-transform: uppercase; background: ${state.filter === cat ? 'var(--primary)' : 'var(--muted)'}; color: ${state.filter === cat ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer;">${cat === 'all' ? 'Tất cả' : cat}</button>
-              `).join('')}
+                                                                  <button onclick="state.filter='${cat}'; state.page=1; render();" style="padding: 5px 12px; font-family: var(--font-dm-mono); font-size: 10px; text-transform: uppercase; background: ${state.filter === cat ? 'var(--primary)' : 'var(--muted)'}; color: ${state.filter === cat ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer;">${cat === 'all' ? 'Tất cả' : cat}</button>
+                                                                `).join('')}
                                                                 </div>
                                                               </div>
                                                             </div>
