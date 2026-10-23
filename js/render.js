@@ -1559,10 +1559,10 @@ function renderQuotationForm(c) {
                     <div class="form-group">
                       <label class="form-label">Trạng thái</label>
                       <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                        <option value="accepted" ${['accepted', 'approved', 'đã chấp nhận'].includes(d.status) ? 'selected' : ''}>Duyệt</option>
-                        <option value="pending" ${['pending', 'draft', 'bản nháp', 'chờ duyệt'].includes(d.status) || !d.status ? 'selected' : ''}>Chờ Duyệt</option>
-                        <option value="rejected" ${['rejected', 'từ chối'].includes(d.status) ? 'selected' : ''}>Từ Chối</option>
-                        <option value="expired" ${['expired', 'hết hạn'].includes(d.status) ? 'selected' : ''}>Hết Hạn</option>
+                        <option value="accepted" ${['accepted', 'approved', 'Duyệt'].includes(d.status) ? 'selected' : ''}>Duyệt</option>
+                        <option value="pending" ${['pending', 'draft', 'bản nháp', 'Chờ Duyệt'].includes(d.status) || !d.status ? 'selected' : ''}>Chờ Duyệt</option>
+                        <option value="rejected" ${['rejected', 'Từ Chối'].includes(d.status) ? 'selected' : ''}>Từ Chối</option>
+                        <option value="expired" ${['expired', 'Hết Hạn'].includes(d.status) ? 'selected' : ''}>Hết Hạn</option>
                       </select>
                     </div>
                     <div class="form-group">

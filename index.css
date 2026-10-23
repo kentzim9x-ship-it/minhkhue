@@ -982,46 +982,55 @@ div[style*="overflow: auto"],
 /* RESPONSIVE MOBILE (< 768px) */
 @media (max-width: 768px) {
 
+  /* Ép khung chứa thành flexbox dòng ngang, căn thẳng lề trên (top) */
   .mobile-search-action-group {
     display: flex !important;
     flex-direction: row-reverse !important;
-    align-items: center !important;
-    /* Đổi align-items: stretch thành center */
+    align-items: flex-start !important;
+    /* Căn thẳng hàng lề trên cùng */
     gap: 8px !important;
     width: 100% !important;
+    box-sizing: border-box !important;
   }
 
-  /* Khung chứa Ô Tìm Kiếm - Nâng chiều cao lên 44px để đồng bộ tiêu chuẩn touch trên mobile */
+  /* Ô Tìm Kiếm */
   .mobile-search-action-group>div {
     display: flex !important;
     align-items: center !important;
     flex: 1 !important;
     min-width: 0 !important;
-    height: 44px !important;
-    /* <--- Đổi từ 38px thành 44px */
-    min-height: 44px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
     box-sizing: border-box !important;
   }
 
-  /* Input bên trong ô tìm kiếm */
+  /* Input tìm kiếm bên trong */
   .mobile-search-action-group>div>input {
     height: 100% !important;
+    margin: 0 !important;
     padding: 0 !important;
+    line-height: normal !important;
   }
 
-  /* Nút Thêm Mới - Đảm bảo đồng bộ chuẩn 44px */
+  /* Nút Thêm Mới */
   .mobile-search-action-group>button,
   .mobile-search-action-group>.btn-primary {
-    height: 44px !important;
-    /* <--- Đổi từ 38px thành 44px */
-    min-height: 44px !important;
-    padding: 0 16px !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    margin: 0 !important;
+    /* Xóa bỏ mọi margin làm lệch nút */
+    padding: 0 14px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     box-sizing: border-box !important;
+    line-height: 1 !important;
   }
 
   html,
