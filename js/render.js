@@ -778,7 +778,7 @@ function renderQuotationsList(c) {
     const color = s === 'all' ? 'var(--foreground)'
       : s === 'accepted' ? '#34d399'
         : s === 'pending' ? '#fbbf24'
-          : s === 'rejected' ? 'var(--muted-foreground)'
+          : s === 'rejected' ? '#f87171'
             : '#f87171';
 
     return `
@@ -895,7 +895,7 @@ function renderOrdersList(c) {
   // ĐỒNG BỘ KPI ĐỜN BÁN HÀNG
   const kpiHtml = [
     { label: 'Tổng đơn hàng', val: db.orders.length, color: 'var(--foreground)' },
-    { label: 'Hoàn thành', val: db.orders.filter(o => ['completed', 'hoàn thành'].includes((o.status || '').toLowerCase())).length, color: '#34d399' },
+    { label: 'Hoàn thành', val: db.orders.filter(o => ['completed', 'hoàn thành'].includes((o.status || '').toLowerCase())).length, color: '#60a5fa' },
     { label: 'Duyệt', val: db.orders.filter(o => ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((o.status || '').toLowerCase())).length, color: '#34d399' },
     { label: 'Chờ duyệt', val: db.orders.filter(o => ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((o.status || '').toLowerCase())).color = '#fbbf24', val: db.orders.filter(o => ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((o.status || '').toLowerCase())).length },
     { label: 'Đã Hủy', val: db.orders.filter(o => ['cancelled', 'đã hủy'].includes((o.status || '').toLowerCase())).length, color: '#f87171' },
@@ -1014,7 +1014,7 @@ function renderReturnsList(c) {
   // ĐỒNG BỘ ĐỔI TRẢ HÀNG BÁN: ĐÃ XỬ LÝ -> HOÀN THÀNH
   const kpiHtml = [
     { label: 'Tổng số lượt đổi trả', val: db.returns.length, color: 'var(--foreground)' },
-    { label: 'Hoàn thành', val: db.returns.filter(r => ['processed', 'hoàn thành', 'đã xử lý'].includes((r.status || '').toLowerCase())).length, color: '#34d399' },
+    { label: 'Hoàn thành', val: db.returns.filter(r => ['processed', 'hoàn thành', 'đã xử lý'].includes((r.status || '').toLowerCase())).length, color: '#60a5fa' },
     { label: 'Duyệt', val: db.returns.filter(r => ['approved', 'duyệt', 'đã duyệt'].includes((r.status || '').toLowerCase())).length, color: '#34d399' },
     { label: 'Chờ duyệt', val: db.returns.filter(r => ['pending', 'chờ duyệt'].includes((r.status || '').toLowerCase())).length, color: '#fbbf24' },
     { label: 'Từ chối', val: db.returns.filter(r => ['rejected', 'từ chối'].includes((r.status || '').toLowerCase())).length, color: '#f87171' }

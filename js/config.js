@@ -328,32 +328,36 @@ function getBadgeClass(status) {
   const s = String(status || '').toLowerCase().trim();
   const map = {
     // 🟢 XANH LÁ (Thành công / Hoàn thành / Duyệt / Đã xác minh / Hoạt động)
-    'completed': 'badge-emerald', 'hoàn thành': 'badge-emerald', 
+    'completed': 'badge-emerald', 'hoàn thành': 'badge-emerald',
     'approved': 'badge-emerald', 'đã duyệt': 'badge-emerald',
     'accepted': 'badge-emerald', 'duyệt': 'badge-emerald', 'đã chấp nhận': 'badge-emerald',
-    'verified': 'badge-emerald', 'đã xác minh': 'badge-emerald', 
+    'verified': 'badge-emerald', 'đã xác minh': 'badge-emerald',
     'active': 'badge-emerald', 'hoạt động': 'badge-emerald', 'đang hoạt động': 'badge-emerald',
     'ok': 'badge-emerald', 'đủ hàng': 'badge-emerald', 'còn hàng': 'badge-emerald',
 
     // 🟡 VÀNG / CAM (Đang xử lý / Chờ duyệt / Đã nhận / Sắp hết)
     'processing': 'badge-amber', 'đang xử lý': 'badge-amber',
-    'pending': 'badge-amber', 'chờ duyệt': 'badge-amber', 'chờ xử lý': 'badge-amber',
-    'received': 'badge-amber', 'đã nhận': 'badge-amber', 
+    'received': 'badge-amber', 'đã nhận': 'badge-amber',
     'maintenance': 'badge-amber', 'bảo trì': 'badge-amber',
     'low': 'badge-amber', 'sắp hết': 'badge-amber',
 
     // 🔘 XÁM (Ngừng hoạt động / Bản nháp)
     'inactive': 'badge-zinc', 'ngừng hoạt động': 'badge-zinc',
     'draft': 'badge-zinc', 'bản nháp': 'badge-zinc',
+    'pending': 'badge-zinc', 'chờ duyệt': 'badge-zinc', 'chờ xử lý': 'badge-zinc',
 
     // 🔴 ĐỎ (Đã hủy / Từ chối / Tạm khóa / Hết hạn)
-    'cancelled': 'badge-red', 'đã hủy': 'badge-red', 
-    'rejected': 'badge-red', 'từ chối': 'badge-red', 
-    'suspended': 'badge-red', 'tạm khóa': 'badge-red', 
+    'cancelled': 'badge-red', 'đã hủy': 'badge-red',
+    'suspended': 'badge-red', 'tạm khóa': 'badge-red',
     'expired': 'badge-red', 'hết hạn': 'badge-red',
-    'closed': 'badge-red', 'đóng cửa': 'badge-red', 
+    'closed': 'badge-red', 'đóng cửa': 'badge-red',
     'critical': 'badge-red', 'nguy cấp': 'badge-red',
-    'out': 'badge-red', 'hết hàng': 'badge-red'
+    'out': 'badge-red', 'hết hàng': 'badge-red',
+    'rejected': 'badge-red', 'từ chối': 'badge-red',
+
+    // #60a5fa XANH DƯƠNG / BLUE (Dành riêng cho Hoàn thành / Đã xử lý)
+    'processed': 'badge-blue', 'Hoàn thành': 'badge-blue',
+    'completed': 'badge-blue', 'Hoàn thành': 'badge-blue'
   };
   return map[s] || 'badge-zinc';
 }
@@ -396,7 +400,7 @@ function getStatusLabel(status) {
     'critical': 'Nguy cấp',
     'out': 'Hết hàng'
   };
-  
+
   return map[s] || (status ? String(status).toUpperCase() : '—');
 }
 
