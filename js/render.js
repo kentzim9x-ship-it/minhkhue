@@ -1012,11 +1012,13 @@ function renderReturnsList(c) {
   const startIndex = (state.page - 1) * state.pageSize;
   const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
 
+  // ĐỒNG BỘ MÀU CÁC THẺ KPI VỚI MÀU BADGE TRẠNG THÁI (Đã xử lý: Xanh lá, Đã duyệt: Xanh lá, Chờ duyệt: Xám, Từ chối: Đỏ)
   const kpiHtml = [
     { label: 'Tổng số lượt đổi trả', val: db.returns.length, color: 'var(--foreground)' },
-    { label: 'Đã xử lý', val: db.returns.filter(r => r.status === 'processed').length, color: '#34d399' },
-    { label: 'Đã duyệt', val: db.returns.filter(r => r.status === 'approved').length, color: '#60a5fa' },
-    { label: 'Chờ duyệt', val: db.returns.filter(r => r.status === 'pending').length, color: '#fbbf24' }
+    { label: 'Đã xử lý', val: db.returns.filter(r => ['processed', 'đã xử lý'].includes((r.status || '').toLowerCase())).length, color: '#34d399' },
+    { label: 'Đã duyệt', val: db.returns.filter(r => ['approved', 'đã duyệt'].includes((r.status || '').toLowerCase())).length, color: '#34d399' },
+    { label: 'Chờ duyệt', val: db.returns.filter(r => ['pending', 'chờ duyệt'].includes((r.status || '').toLowerCase())).length, color: 'var(--muted-foreground)' },
+    { label: 'Từ chối', val: db.returns.filter(r => ['rejected', 'từ chối'].includes((r.status || '').toLowerCase())).length, color: '#f87171' }
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
@@ -1041,12 +1043,12 @@ function renderReturnsList(c) {
         <td data-label="Tổng Hoàn Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; color: #f87171; text-align: right;">${fmtUSD(r.total)}</td>
         <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(r.status)}">${getStatusLabel(r.status)}</span></td>
 
-      <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(r.user_id0)}</td>
-      <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(r.date0)}</td>
-      <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(r.time0)}</td>
-      <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(r.user_id2)}</td>
-      <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(r.date2)}</td>
-      <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(r.time2)}</td>
+        <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(r.user_id0)}</td>
+        <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(r.date0)}</td>
+        <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(r.time0)}</td>
+        <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(r.user_id2)}</td>
+        <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(r.date2)}</td>
+        <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(r.time2)}</td>
 
         <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
           <button class="btn-action" onclick="event.stopPropagation(); navigate('returns', 'view', '${r.id}')">${Icons.view} Xem</button>
@@ -1059,7 +1061,7 @@ function renderReturnsList(c) {
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
 
@@ -1131,10 +1133,12 @@ function renderGRNList(c) {
   const startIndex = (state.page - 1) * state.pageSize;
   const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
 
+  // ĐỒNG BỘ 4 THẺ KPI ĐÚNG THỨ TỰ VÀ MÀU SẮC CHUẨN (Tổng số -> Đã nhận -> Bản nháp -> Đã xác minh)
   const kpiHtml = [
     { label: 'Tổng số phiếu nhập', val: db.grns.length, color: 'var(--foreground)' },
-    { label: 'Đã nhận hàng', val: db.grns.filter(g => g.status === 'Đã nhận' || g.status === 'received').length, color: '#fbbf24' },
-    { label: 'Đã xác minh', val: db.grns.filter(g => g.status === 'Đã xác minh' || g.status === 'verified').length, color: '#34d399' }
+    { label: 'Đã nhận hàng', val: db.grns.filter(g => ['Đã nhận', 'received'].includes(g.status)).length, color: '#fbbf24' },
+    { label: 'Bản nháp', val: db.grns.filter(g => ['Bản nháp', 'draft'].includes(g.status)).length, color: 'var(--muted-foreground)' },
+    { label: 'Đã xác minh', val: db.grns.filter(g => ['Đã xác minh', 'verified'].includes(g.status)).length, color: '#34d399' }
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
@@ -1159,12 +1163,12 @@ function renderGRNList(c) {
         <td data-label="Tổng Giá Trị" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(g.totalValue)}</td>
         <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(g.status)}">${getStatusLabel(g.status)}</span></td>
 
-      <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(g.user_id0)}</td>
-      <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(g.date0)}</td>
-      <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(g.time0)}</td>
-      <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(g.user_id2)}</td>
-      <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(g.date2)}</td>
-      <td data-label="Người Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(g.time2)}</td>
+        <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(g.user_id0)}</td>
+        <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(g.date0)}</td>
+        <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(g.time0)}</td>
+        <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(g.user_id2)}</td>
+        <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(g.date2)}</td>
+        <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(g.time2)}</td>
 
         <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
           <button class="btn-action" onclick="event.stopPropagation(); navigate('grn', 'view', '${g.id}')">${Icons.view} Xem</button>
@@ -1177,12 +1181,12 @@ function renderGRNList(c) {
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
-      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
         ${kpiHtml}
       </div>
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['Bản nháp', 'Bản nháp'], ['Đã nhận', 'Đã nhận'], ['Đã xác minh', 'Đã xác minh']])}
+        ${getFilterBar([['all', 'Tất cả'], ['Đã nhận', 'Đã nhận'], ['Bản nháp', 'Bản nháp'], ['Đã xác minh', 'Đã xác minh']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
@@ -1942,10 +1946,10 @@ function renderReturnForm(c) {
                                                   </div>
                                                   <div class="form-group">
                                                     <label class="form-label">Trạng thái</label>
-                                                    <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                                                      <option value="processed" ${d.status === 'processed' ? 'selected' : ''}>Đã xử lý</option>
+                                                    <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>                                                      
                                                       <option value="approved" ${d.status === 'approved' ? 'selected' : ''}>Đã duyệt</option>
                                                       <option value="pending" ${d.status === 'pending' ? 'selected' : ''}>Chờ duyệt</option>
+                                                      <option value="processed" ${d.status === 'processed' ? 'selected' : ''}>Đã xử lý</option>
                                                       <option value="rejected" ${d.status === 'rejected' ? 'selected' : ''}>Từ chối</option>
                                                     </select>
                                                   </div>
