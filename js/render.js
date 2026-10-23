@@ -1579,8 +1579,9 @@ function renderQuotationForm(c) {
                       <span class="section-num">02</span>
                       <span class="section-title">Danh mục sản phẩm</span>
                     </div>
-                    ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('quotations')">${Icons.plus} Thêm dòng</button>` : ''}
-                  </div>
+            <!-- KHÓA NÚT THÊM DÒNG KHI CHƯA CHỌN KHÁCH HÀNG -->
+            ${(!isView && !isDetailsDisabled) ? `<button type="button" class="btn-action" onclick="addLineItem('quotations')">${Icons.plus} Thêm dòng</button>` : ''}
+          </div>
 
                   <div style="overflow-x: auto;">
                     <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 8px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 900px;">
@@ -1613,13 +1614,15 @@ function renderQuotationForm(c) {
                 <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
                   <button type="button" class="btn-cancel" onclick="navigate('quotations')">${isView ? 'Quay lại' : 'Hủy'}</button>
                   <div style="display: flex; gap: 8px;">
-                    <!-- Nút xuất PDF & Chia sẻ Zalo -->
-                    ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
-              Xuất PDF
-            </button>` : ''}
-                    ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo báo giá' : 'Cập nhật'}</button>` : ''}
-                  </div>
-                </div>
+            ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>` : ''}
+            
+            <!-- KHÓA NÚT TẠO PHIẾU / CẬP NHẬT KHI CHƯA CHỌN KHÁCH HÀNG -->
+            ${!isView ? `
+              <button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>
+                ${state.mode === 'add' ? 'Tạo báo giá' : 'Cập nhật'}
+              </button>
+            ` : ''}
+          </div>
             </form>
           </div>
           `;
@@ -1762,8 +1765,9 @@ function renderSalesOrderForm(c) {
                                         <span class="section-num">02</span>
                                         <span class="section-title">Danh mục sản phẩm</span>
                                       </div>
-                                      ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('sales-orders')">${Icons.plus} Thêm dòng</button>` : ''}
-                                    </div>
+            <!-- KHÓA NÚT THÊM DÒNG KHI CHƯA CHỌN KHÁCH HÀNG -->
+            ${(!isView && !isDetailsDisabled) ? `<button type="button" class="btn-action" onclick="addLineItem('quotations')">${Icons.plus} Thêm dòng</button>` : ''}
+          </div>
 
                                     <div style="overflow-x: auto;">
                                       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 1000px;">
@@ -1798,11 +1802,15 @@ function renderSalesOrderForm(c) {
                                   <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
                                     <button type="button" class="btn-cancel" onclick="navigate('sales-orders')">${isView ? 'Quay lại' : 'Hủy'}</button>
                                     <div style="display: flex; gap: 8px;">
-                                      ${isView ? `<button type="button" class="btn-primary" onclick="exportSalesOrderToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
-              Xuất PDF
-            </button>` : ''}
-                                      ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo đơn hàng' : 'Cập nhật'}</button>` : ''}
-                                    </div>
+            ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>` : ''}
+            
+            <!-- KHÓA NÚT TẠO PHIẾU / CẬP NHẬT KHI CHƯA CHỌN KHÁCH HÀNG -->
+            ${!isView ? `
+              <button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>
+                ${state.mode === 'add' ? 'Tạo đơn hàng' : 'Cập nhật'}
+              </button>
+            ` : ''}
+          </div>
                                   </div>
                               </form>
                             </div>
@@ -1895,10 +1903,10 @@ function renderReturnForm(c) {
                                                   </div>
                                                   <div class="form-group">
                                                     <label class="form-label">Tên khách hàng *</label>
-                                                    <select class="form-select" ${(isView || isEdit || hasOrder) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'customer\', this.value)"'} required>
-                                                      <option value="">-- Chọn khách hàng --</option>
-                                                      ${customerOptions}
-                                                    </select>
+                                                    <select class="form-select" ${(isView || isEdit || hasOrder) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'customer\', this.value); render();"'} required>
+                <option value="">-- Chọn khách hàng --</option>
+                ${customerOptions}
+              </select>
                                                   </div>
                                                   <div class="form-group">
                                                     <label class="form-label">Mã kho *</label>
@@ -1934,9 +1942,10 @@ function renderReturnForm(c) {
 
                                               <div class="section-panel">
                                                 <div class="section-header" style="justify-content: space-between;">
-                                                  <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng đổi trả</span></div>
-                                                  ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('returns')">${Icons.plus} Thêm dòng</button>` : ''}
-                                                </div>
+                                                 <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng đổi trả</span></div>
+            <!-- KHÓA NÚT THÊM DÒNG -->
+            ${(!isView && !isDetailsDisabled) ? `<button type="button" class="btn-action" onclick="addLineItem('returns')">${Icons.plus} Thêm dòng</button>` : ''}
+          </div>
                                                 <div style="overflow-x: auto;">
                                                   <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
                                                     <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
@@ -1961,9 +1970,10 @@ function renderReturnForm(c) {
                                               </div>
 
                                               <div class="action-bar">
-                                                <button type="button" class="btn-cancel" onclick="navigate('returns')">${isView ? 'Quay lại' : 'Hủy'}</button>
-                                                ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
-                                              </div>
+          <button type="button" class="btn-cancel" onclick="navigate('returns')">${isView ? 'Quay lại' : 'Hủy'}</button>
+          <!-- KHÓA NÚT TẠO PHIẾU ĐỔI TRẢ -->
+          ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
+        </div>
                                             </form>
                                           </div>
                                           `;
@@ -2043,7 +2053,17 @@ function renderGRNForm(c) {
                                                               <div class="section-body grid-3">
                                                                 <div class="form-group" style="grid-column: span 2;">
                                                                   <label class="form-label">Nhà cung cấp *</label>
-                                                                  <input type="text" class="form-input" value="${d.supplier || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'supplier\', this.value)"'} placeholder="Nhập tên nhà cung cấp..." required>
+                                                                  <input 
+                type="text" 
+                class="form-input" 
+                value="${d.supplier || ''}" 
+                ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+                  oninput="updateField('supplier', this.value); render();" 
+                  onchange="updateField('supplier', this.value); render();"
+                `} 
+                placeholder="Nhập tên nhà cung cấp..." 
+                required
+              >
                                                                 </div>
                                                                 <div class="form-group">
                                                                   <label class="form-label">Mã kho *</label>
@@ -2073,8 +2093,9 @@ function renderGRNForm(c) {
                                                             <div class="section-panel">
                                                               <div class="section-header" style="justify-content: space-between;">
                                                                 <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng thực nhận</span></div>
-                                                                ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('grn')">${Icons.plus} Thêm dòng</button>` : ''}
-                                                              </div>
+            <!-- KHÓA NÚT THÊM DÒNG -->
+            ${(!isView && !isDetailsDisabled) ? `<button type="button" class="btn-action" onclick="addLineItem('grn')">${Icons.plus} Thêm dòng</button>` : ''}
+          </div>
                                                               <div style="overflow-x: auto;">
                                                                 <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
                                                                   <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
@@ -2098,7 +2119,11 @@ function renderGRNForm(c) {
                                                               </div>
                                                             </div>
 
-                                                            <div class="action-bar"><button type="button" class="btn-cancel" onclick="navigate('grn')">${isView ? 'Quay lại' : 'Hủy'}</button>${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}</div>
+                                                            <div class="action-bar">
+          <button type="button" class="btn-cancel" onclick="navigate('grn')">${isView ? 'Quay lại' : 'Hủy'}</button>
+          <!-- KHÓA NÚT TẠO PHIẾU NHẬP -->
+          ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}
+        </div>
                                                           </form>
                                                         </div>
                                                         `;

@@ -828,37 +828,64 @@ function markAllNotificationsAsRead() {
   list.forEach(n => markNotifIdAsRead(n.id));
 }
 
+// ==========================================
+// ĐỒNG BỘ REALTIME DỮ LIỆU ĐA TAB & ĐA MÁY
+// ==========================================
+
 function subscribeAppRealtimeChanges() {
-  const tables = ['materials', 'customers', 'warehouses', 'quotations', 'orders', 'returns', 'grns', 'notifications'];
+  const tables = ['materials', 'customers', 'warehouses', 'quotations', 'orders', 'returns', 'grns', 'notifications', 'userinfo'];
 
-  // 1. Kênh đồng bộ giữa các Tab/Cửa sổ trên cùng trình duyệt
-  const appChannel = new BroadcastChannel('app_data_sync_channel');
-  appChannel.onmessage = async (event) => {
-    if (event.data === 'REFRESH_DATA') {
-      invalidateStockCache();
-      await fetchDataFromSupabase();
-      if (state.mode === 'list') {
-        render();
+  // 1. Lắng nghe và đồng bộ giữa các Tab/Cửa sổ trên CÙNG MỘT TRÌNH DUYỆT
+  if (typeof BroadcastChannel !== 'undefined') {
+    const appChannel = new BroadcastChannel('app_data_sync_channel');
+    appChannel.onmessage = async (event) => {
+      if (event.data === 'REFRESH_DATA') {
+        invalidateStockCache();
+        await fetchDataFromSupabase();
+        // Cập nhật lại UI nếu đang đứng ở danh sách
+        if (state.mode === 'list') {
+          render();
+        }
       }
-    }
-  };
+    };
+  }
 
-  // 2. Kênh Lắng nghe Realtime trực tiếp từ Supabase Database
+  // 2. Lắng nghe sự kiện Realtime trực tiếp từ CƠ SỞ DỮ LIỆU SUPABASE (ĐA MÁY / KHÁC TRÌNH DUYỆT)
   tables.forEach(tbl => {
     supabaseClient
       .channel(`public:${tbl}-changes-global`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: tbl }, async () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: tbl }, async (payload) => {
+        // Xóa bộ nhớ đệm tồn kho
         invalidateStockCache();
-        // Bắt buộc AWAIT để chờ dữ liệu mới nạp vào biến db xong mới vẽ lại UI
+
+        // Nạp lại toàn bộ dữ liệu mới nhất từ Supabase
         await fetchDataFromSupabase();
 
+        // Nếu đang chỉnh sửa/xem một bản ghi mà bản ghi đó vừa bị XÓA từ máy khác -> Báo lỗi & Đẩy về danh sách
+        if (state.mode !== 'list' && state.formData && String(state.formData.id) === String(payload.old?.id)) {
+          if (payload.eventType === 'DELETE') {
+            showAlert('Bản ghi bạn đang mở đã bị xóa bởi người dùng khác!', 'Thông báo');
+            state.formData = null;
+            navigate(state.view, 'list');
+            return;
+          }
+        }
+
+        // Nếu đang ở màn hình danh sách (list), tự động render lại bảng
         if (state.mode === 'list') {
           render();
         }
 
-        // Thông báo cho các Tab khác biết để cùng cập nhật
-        appChannel.postMessage('REFRESH_DATA');
+        // Bắn tín hiệu đồng bộ sang các Tab khác trên cùng thiết bị
+        if (typeof BroadcastChannel !== 'undefined') {
+          const appChannel = new BroadcastChannel('app_data_sync_channel');
+          appChannel.postMessage('REFRESH_DATA');
+        }
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log(`Đã kết nối Realtime thành công cho bảng: ${tbl}`);
+        }
+      });
   });
 }
