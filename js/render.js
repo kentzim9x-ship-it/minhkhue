@@ -1577,7 +1577,7 @@ function renderQuotationForm(c) {
                   <div class="section-header" style="justify-content: space-between;">
                     <div style="display:flex; gap:10px;">
                       <span class="section-num">02</span>
-                      <span class="section-title">Danh mục sản phẩm</span>
+                      <span class="section-title">Danh sách sản phẩm</span>
                     </div>
             <!-- KHÓA NÚT THÊM DÒNG KHI CHƯA CHỌN KHÁCH HÀNG -->
             ${(!isView && !isDetailsDisabled) ? `<button type="button" class="btn-action" onclick="addLineItem('quotations')">${Icons.plus} Thêm dòng</button>` : ''}
@@ -1601,7 +1601,11 @@ function renderQuotationForm(c) {
                     </div>
                   </div>
 
-                  <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
+                  <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
+  <div>
+    <!-- Nút Thêm dòng cho PC (Phía dưới cột Mã Hàng) -->
+    ${getAddLineButton('quotations', isDetailsDisabled, 'footer')}
+  </div>
                     <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
                       <div style="display: flex; justify-content: space-between;"><span class="form-label">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
                       <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
@@ -1763,7 +1767,7 @@ function renderSalesOrderForm(c) {
                                     <div class="section-header" style="justify-content: space-between;">
                                       <div style="display:flex; gap:10px;">
                                         <span class="section-num">02</span>
-                                        <span class="section-title">Danh mục sản phẩm</span>
+                                        <span class="section-title">Danh sách sản phẩm</span>
                                       </div>
             <!-- KHÓA NÚT THÊM DÒNG KHI CHƯA CHỌN KHÁCH HÀNG -->
             ${(!isView && !isDetailsDisabled) ? `<button type="button" class="btn-action" onclick="addLineItem('quotations')">${Icons.plus} Thêm dòng</button>` : ''}
@@ -1789,7 +1793,11 @@ function renderSalesOrderForm(c) {
                                       </div>
                                     </div>
 
-                                    <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
+  <div>
+    <!-- Nút Thêm dòng cho PC (Phía dưới cột Mã Hàng) -->
+    ${getAddLineButton('quotations', isDetailsDisabled, 'footer')}
+  </div>
                                       <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
                                         <div style="display: flex; justify-content: space-between;"><span class="form-label">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
                                         <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
@@ -1942,7 +1950,7 @@ function renderReturnForm(c) {
 
                                               <div class="section-panel">
                                                 <div class="section-header" style="justify-content: space-between;">
-                                                 <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng đổi trả</span></div>
+                                                 <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách đổi trả</span></div>
             <!-- KHÓA NÚT THÊM DÒNG -->
             ${(!isView && !isDetailsDisabled) ? `<button type="button" class="btn-action" onclick="addLineItem('returns')">${Icons.plus} Thêm dòng</button>` : ''}
           </div>
@@ -1964,7 +1972,10 @@ function renderReturnForm(c) {
                                                   </div>
                                                 </div>
 
-                                                <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
+                                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
+  <div>
+    ${getAddLineButton('returns', isDetailsDisabled, 'footer')}
+  </div>
                                                   <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px;"><span class="form-label" style="font-weight: 600;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
                                                 </div>
                                               </div>
@@ -2058,7 +2069,8 @@ function renderGRNForm(c) {
                 class="form-input" 
                 value="${d.supplier || ''}" 
                 ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-                  oninput="updateField('supplier', this.value); render();" 
+                  oninput="updateField('supplier', this.value);" 
+                  onblur="if(this.value.trim()) render();"
                   onchange="updateField('supplier', this.value); render();"
                 `} 
                 placeholder="Nhập tên nhà cung cấp..." 
@@ -2092,9 +2104,9 @@ function renderGRNForm(c) {
 
                                                             <div class="section-panel">
                                                               <div class="section-header" style="justify-content: space-between;">
-                                                                <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng thực nhận</span></div>
-            <!-- KHÓA NÚT THÊM DÒNG -->
-            ${(!isView && !isDetailsDisabled) ? `<button type="button" class="btn-action" onclick="addLineItem('grn')">${Icons.plus} Thêm dòng</button>` : ''}
+            <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng thực nhận</span></div>
+            <!-- Nút Thêm Dòng cho Mobile ở Header -->
+            ${getAddLineButton('grn', isDetailsDisabled, 'header')}
           </div>
                                                               <div style="overflow-x: auto;">
                                                                 <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
@@ -2114,9 +2126,18 @@ function renderGRNForm(c) {
                                                                 </div>
                                                               </div>
 
-                                                              <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
-                                                                <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px;"><span class="form-label" style="font-weight: 600;">Tổng giá trị</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.totalValue)}</span></div>
-                                                              </div>
+                                                              <!-- BỐ TRÍ KHU VỰC TỔNG TIỀN VÀ NÚT THÊM DÒNG TRÊN PC -->
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <!-- Nút Thêm Dòng cho PC (Cùng khu vực ô mã hàng/tổng giá trị bên dưới) -->
+              ${getAddLineButton('grn', isDetailsDisabled, 'footer')}
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px;">
+              <span class="form-label" style="font-weight: 600;">Tổng giá trị</span>
+              <span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.totalValue)}</span>
+            </div>
+          </div>
                                                             </div>
 
                                                             <div class="action-bar">
@@ -2559,4 +2580,20 @@ function renderTableSkeleton(columnsCount = 8, rowsCount = 5) {
                                                           </table>
                                                         </div>
                                                         `;
+}
+
+function getAddLineButton(module, isDetailsDisabled, position) {
+  if (state.mode === 'view' || isDetailsDisabled) return '';
+
+  // position: 'header' (Giao diện Mobile) | 'footer' (Giao diện PC)
+  const isMobile = window.innerWidth <= 768;
+
+  if (position === 'header' && !isMobile) return ''; // PC thì ẩn ở Header
+  if (position === 'footer' && isMobile) return '';  // Mobile thì ẩn ở Footer
+
+  return `
+    <button type="button" class="btn-action btn-add-line-${position}" onclick="addLineItem('${module}')" style="display: inline-flex; align-items: center; gap: 6px;">
+      ${Icons.plus} Thêm dòng
+    </button>
+  `;
 }
