@@ -682,20 +682,31 @@ async function deleteItem(module, id) {
     const tableName = tableMap[module];
     const targetKey = module === 'sales-orders' ? 'orders' : (module === 'grn' ? 'grns' : module);
 
-    if (Array.isArray(db[targetKey])) {
-      db[targetKey] = db[targetKey].filter(item => String(item.id) !== String(id));
-    }
-    render();
+    try {
+      // 1. Thực hiện xóa trực tiếp trên Supabase Database
+      const { error } = await supabaseClient.from(tableName).delete().eq('id', id);
+      if (error) throw error;
 
-    const { error } = await supabaseClient.from(tableName).delete().eq('id', id);
-    if (error) {
-      await showAlert('Xóa trên CSDL thất bại: ' + error.message, 'Lỗi kết nối');
+      // 2. Xóa thành công -> Xóa cache tồn kho & Nạp lại dữ liệu mới nhất từ máy chủ
+      invalidateStockCache();
+      await fetchDataFromSupabase();
+
+      // 3. Render lại giao diện danh sách
+      render();
+
+      // 4. Bắn tín hiệu đồng bộ Realtime cho các Tab/Cửa sổ khác trên cùng thiết bị
+      if (typeof BroadcastChannel !== 'undefined') {
+        const appChannel = new BroadcastChannel('app_data_sync_channel');
+        appChannel.postMessage('REFRESH_DATA');
+      }
+
+      // 5. Hiển thị thông báo Toast thành công
+      showToast('Đã xóa bản ghi thành công!', 'success');
+    } catch (error) {
+      console.error('Lỗi khi xóa bản ghi:', error);
+      await showAlert('Xóa trên CSDL thất bại: ' + (error.message || error), 'Lỗi kết nối');
       await fetchDataFromSupabase();
       render();
-    }
-    else {
-      // THÊM THÔNG BÁO TOAST THÀNH CÔNG KHI XÓA TRÊN DATABASE THÀNH CÔNG
-      showToast('Đã xóa bản ghi thành công!', 'success');
     }
   }
 }
@@ -895,7 +906,7 @@ async function handleCustomerSelectInQuotation(customerName) {
 
   // Nếu tìm thấy báo giá cũ có chi tiết mặt hàng
   if (latestQuotation && Array.isArray(latestQuotation.lineItems) && latestQuotation.lineItems.length > 0) {
-    
+
     // Hiển thị hộp thoại cảnh báo / hỏi ý kiến người dùng
     const confirmInherit = await showConfirm(
       `Khách hàng "${safeCustomer}" đã có báo giá cũ (${latestQuotation.id}). Bạn có muốn kế thừa thông tin chi tiết từ báo giá này không?`,

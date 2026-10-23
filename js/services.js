@@ -861,14 +861,16 @@ function subscribeAppRealtimeChanges() {
         // Nạp lại toàn bộ dữ liệu mới nhất từ Supabase
         await fetchDataFromSupabase();
 
-        // Nếu đang chỉnh sửa/xem một bản ghi mà bản ghi đó vừa bị XÓA từ máy khác -> Báo lỗi & Đẩy về danh sách
-        if (state.mode !== 'list' && state.formData && String(state.formData.id) === String(payload.old?.id)) {
-          if (payload.eventType === 'DELETE') {
-            showAlert('Bản ghi bạn đang mở đã bị xóa bởi người dùng khác!', 'Thông báo');
-            state.formData = null;
-            navigate(state.view, 'list');
-            return;
-          }
+        // Kiểm tra ID bị xóa từ payload
+        const deletedId = payload.old ? payload.old.id : null;
+
+        // Nếu người dùng đang xem/chỉnh sửa một bản ghi mà bản ghi đó vừa bị XÓA từ máy/tab khác
+        if (payload.eventType === 'DELETE' && state.mode !== 'list' && state.formData && String(state.formData.id) === String(deletedId)) {
+          showAlert('Bản ghi bạn đang mở đã bị xóa bởi người dùng khác!', 'Thông báo');
+          state.formData = null;
+          state.mode = 'list';
+          navigate(state.view, 'list');
+          return;
         }
 
         // Nếu đang ở màn hình danh sách (list), tự động render lại bảng
