@@ -6,7 +6,17 @@ if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
-function navigate(view, mode = 'list', itemId = null) {
+async function navigate(view, mode = 'list', itemId = null) {
+  if (hasUnsavedFormData() && (view !== state.view || mode === 'list')) {
+    const confirmLeave = await showConfirm(
+      'Bạn đang nhập dữ liệu dở dang. Nếu thoát ra, toàn bộ dữ liệu đang nhập sẽ bị mất!',
+      'Cảnh báo mất dữ liệu'
+    );
+    if (!confirmLeave) {
+      return; // Người dùng chọn "Hủy bỏ" -> Giữ nguyên ở màn hình nhập liệu
+    }
+  }
+
   // --- BỔ SUNG: Lưu vị trí cuộn và trạng thái danh sách trước khi rời đi ---
   if (state.mode === 'list') {
     const contentBox = document.getElementById('app-content');
@@ -91,7 +101,22 @@ function navigate(view, mode = 'list', itemId = null) {
   }
 }
 
-function handleRouteChange() {
+async function handleRouteChange() {
+  if (hasUnsavedFormData()) {
+    const confirmLeave = await showConfirm(
+      'Bạn đang nhập dữ liệu dở dang. Nếu quay lại, toàn bộ dữ liệu đang nhập sẽ bị mất!',
+      'Cảnh báo mất dữ liệu'
+    );
+    if (!confirmLeave) {
+      // Đẩy lại URL hiện tại để giữ người dùng ở lại trang
+      let currentPath = `${BASE_PATH}/${state.view}`;
+      if (state.mode === 'add') currentPath += '/add';
+      if (state.mode === 'edit' && state.formData?.id) currentPath += `/edit/${state.formData.id}`;
+      window.history.pushState(null, '', currentPath);
+      return;
+    }
+  }
+
   let pathname = window.location.pathname;
   if (pathname.startsWith(BASE_PATH)) {
     pathname = pathname.substring(BASE_PATH.length);
@@ -625,7 +650,8 @@ async function saveForm(module) {
     showToast(state.mode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
 
     invalidateStockCache();
-    fetchDataFromSupabase();
+    // Bắt buộc await để dữ liệu mới từ Database kịp nạp vào biến db
+    await fetchDataFromSupabase();
     navigate(module, 'list');
   } catch (error) {
     console.error('Lỗi lưu Supabase:', error);
@@ -1533,4 +1559,23 @@ async function downloadOrShareXLSX(workbook, fileName) {
     console.error('Lỗi khi xuất file Excel:', err);
     showAlert('Có lỗi xảy ra trong quá trình tạo file Excel!', 'Lỗi');
   }
+}
+
+// Kiểm tra xem form giao dịch hiện tại có dữ liệu chưa lưu hay không
+function hasUnsavedFormData() {
+  // Chỉ kiểm tra ở chế độ Thêm mới hoặc Sửa của các module giao dịch
+  if (!['add', 'edit'].includes(state.mode)) return false;
+  if (!['quotations', 'sales-orders', 'returns', 'grn'].includes(state.view)) return false;
+
+  const d = state.formData;
+  if (!d) return false;
+
+  // Nếu người dùng đã chọn Khách hàng hoặc Nhà cung cấp
+  if (d.customer || d.supplier) return true;
+
+  // Nếu đã thêm mặt hàng vào danh sách chi tiết (tên hàng không rỗng)
+  const lineItems = Array.isArray(d.lineItems) ? d.lineItems : (d.lineitems || []);
+  const hasItems = lineItems.some(item => item.name && item.name.trim() !== '');
+
+  return hasItems;
 }

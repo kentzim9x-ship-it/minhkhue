@@ -2,8 +2,18 @@
 // 10. LẮNG NGHE SỰ KIỆN TỔNG (EVENT LISTENERS)
 // ==========================================
 
+// 1. Cảnh báo khi Reload (F5), đóng tab hoặc đóng trình duyệt
+window.addEventListener('beforeunload', function (e) {
+  if (typeof hasUnsavedFormData === 'function' && hasUnsavedFormData()) {
+    e.preventDefault();
+    e.returnValue = 'Bạn có dữ liệu chưa lưu. Bạn có chắc chắn muốn thoát ra không?';
+    return e.returnValue;
+  }
+});
+
+// 2. Lắng nghe phím tắt bàn phím
 document.addEventListener('keydown', function (e) {
-  // 1. Thao tác bấm ESC để đóng Form Thông báo / Form Lịch sử
+  // Thao tác bấm ESC để đóng Form Thông báo / Form Lịch sử
   if (e.key === 'Escape' || e.key === 'Esc') {
     const dropdown = document.getElementById('notif-dropdown');
     if (dropdown && dropdown.classList.contains('open')) {
@@ -16,7 +26,7 @@ document.addEventListener('keydown', function (e) {
     return;
   }
 
-  // 2. Chặn tự động Submit Form khi bấm Enter trên các ô input/select
+  // Chặn tự động Submit Form khi bấm Enter trên các ô input/select
   if (e.key === 'Enter') {
     if (document.getElementById('login-container')) return;
     if (e.target.tagName === 'TEXTAREA') return;
@@ -27,6 +37,7 @@ document.addEventListener('keydown', function (e) {
   }
 });
 
+// 3. Khởi tạo ứng dụng khi DOM sẵn sàng
 document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => navigate(btn.getAttribute('data-view')));
@@ -36,9 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const newSize = getResponsivePageSize();
     if (state.pageSize !== newSize) {
       state.pageSize = newSize;
-      state.page = 1; // Reset về trang 1 để tránh lỗi vượt quá tổng số trang
+      state.page = 1;
       if (typeof currentRenderedView !== 'undefined') {
-        currentRenderedView = null; // Xóa cache DOM nếu bạn đang dùng giải pháp DOM Caching
+        currentRenderedView = null;
       }
       render(true);
     }

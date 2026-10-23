@@ -1464,6 +1464,8 @@ function renderQuotationForm(c) {
   const isEdit = state.mode === 'edit';
   d.lineItems = Array.isArray(d.lineItems) ? d.lineItems : [];
 
+  const isDetailsDisabled = !isView && state.mode === 'add' && !d.customer;
+
   d.subtotal = d.lineItems.reduce((s, l) => s + ((l.qty || 0) * (l.unitPrice || 0)), 0);
   d.discountTotal = d.lineItems.reduce((s, l) => s + ((l.qty || 0) * (l.unitPrice || 0) * ((l.discount || 0) / 100)), 0);
 
@@ -1489,138 +1491,138 @@ function renderQuotationForm(c) {
     const unitName = mat ? (mat.unit || '—') : '—';
 
     return `
-    <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; border-bottom: 1px solid var(--border); align-items: center;">
-      <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
-      
-      <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${isView ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'quotations\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="Chọn/nhập tên hàng..." required>
-      
-      <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính">
-      
-      <input type="number" id="line-item-${l.lineId}-qty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
-      
-      <input 
-        type="text" 
-        id="line-item-${l.lineId}-unitPrice"
-        inputmode="numeric"
-        class="form-input" 
-        style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
-        value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
-        ${isView ? 'readonly' : `
-          onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'unitPrice')"
-          onfocus="this.value = parseNumberInput(this.value) || ''" 
-          onblur="this.value = formatVNDInput(this.value)" 
-          onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
-        `}
-      >
-      
-      <input type="number" id="line-item-${l.lineId}-discount" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
-      
-      <input type="number" id="line-item-${l.lineId}-tax" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
-      
-      <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500;">${fmtUSD(lineTotal)}</div>
-      ${!isView ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
-    </div>
-  `;
+  <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+    <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
+    
+    <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'quotations\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng chọn khách hàng...' : 'Chọn/nhập tên hàng...'}" required>
+    
+    <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính">
+    
+    <input type="number" id="line-item-${l.lineId}-qty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
+    
+    <input 
+      type="text" 
+      id="line-item-${l.lineId}-unitPrice"
+      inputmode="numeric"
+      class="form-input" 
+      style="padding: 6px 8px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
+      value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
+      ${(isView || isDetailsDisabled) ? 'readonly' : `
+        onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'unitPrice')"
+        onfocus="this.value = parseNumberInput(this.value) || ''" 
+        onblur="this.value = formatVNDInput(this.value)" 
+        onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
+      `}
+    >
+    
+    <input type="number" id="line-item-${l.lineId}-discount" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
+    
+    <input type="number" id="line-item-${l.lineId}-tax" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
+    
+    <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500;">${fmtUSD(lineTotal)}</div>
+    ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
+  </div>
+`;
   }).join('');
 
   c.innerHTML = `
-    <div style="max-width: 1050px;">
-      ${getBreadcrumb('Báo giá', isView ? `Xem ${d.id || ''}` : (isEdit ? `Chỉnh sửa ${d.id || ''}` : 'Tạo báo giá mới'), 'quotations')}
-      <form onsubmit="event.preventDefault(); saveForm('quotations');">
-        
-        <input type="hidden" value="${d.id || ''}">
+          <div style="max-width: 1050px;">
+            ${getBreadcrumb('Báo giá', isView ? `Xem ${d.id || ''}` : (isEdit ? `Chỉnh sửa ${d.id || ''}` : 'Tạo báo giá mới'), 'quotations')}
+            <form onsubmit="event.preventDefault(); saveForm('quotations');">
 
-        <div class="section-panel">
-          <div class="section-header">
-            <span class="section-num">01</span>
-            <span class="section-title">Thông tin báo giá</span>
-          </div>
-          <div class="section-body grid-3">
-            <div class="form-group" style="grid-column: span 2;">
-              <label class="form-label">Khách hàng *</label>
-              <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleCustomerSelectInQuotation(this.value)"'} required>
-                <option value="">-- Chọn khách hàng --</option>
-                ${customerOptions}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Trạng thái</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                <option value="accepted" ${d.status === 'accepted' ? 'selected' : ''}>Đã chấp nhận</option>
-                <option value="draft" ${d.status === 'draft' ? 'selected' : ''}>Bản nháp</option>
-                <option value="expired" ${d.status === 'expired' ? 'selected' : ''}>Hết hạn</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Ngày lập phiếu *</label>
-              <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Ngày phát hành *</label>
-              <input type="date" class="form-input" value="${d.validbegin || d.validBegin || getFirstDayOfMonthStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validbegin\', this.value)"'} required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Hiệu lực đến *</label>
-              <input type="date" class="form-input" value="${d.validUntil || d.validuntil || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validUntil\', this.value)"'} required>
-            </div>
+              <input type="hidden" value="${d.id || ''}">
 
-            <div class="form-group" style="grid-column: span 3; margin-top: 6px;">
-              <label class="form-label">Ghi chú</label>
-              <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập thông tin ghi chú (tùy chọn)...">${d.notes || ''}</textarea>
-            </div>
-          </div>
-        </div>
+                <div class="section-panel">
+                  <div class="section-header">
+                    <span class="section-num">01</span>
+                    <span class="section-title">Thông tin báo giá</span>
+                  </div>
+                  <div class="section-body grid-3">
+                    <div class="form-group" style="grid-column: span 2;">
+                      <label class="form-label">Khách hàng *</label>
+                      <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleCustomerSelectInQuotation(this.value)"'} required>
+                        <option value="">-- Chọn khách hàng --</option>
+                        ${customerOptions}
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Trạng thái</label>
+                      <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
+                        <option value="accepted" ${d.status === 'accepted' ? 'selected' : ''}>Đã chấp nhận</option>
+                        <option value="draft" ${d.status === 'draft' ? 'selected' : ''}>Bản nháp</option>
+                        <option value="expired" ${d.status === 'expired' ? 'selected' : ''}>Hết hạn</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Ngày lập phiếu *</label>
+                      <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Ngày phát hành *</label>
+                      <input type="date" class="form-input" value="${d.validbegin || d.validBegin || getFirstDayOfMonthStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validbegin\', this.value)"'} required>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Hiệu lực đến *</label>
+                      <input type="date" class="form-input" value="${d.validUntil || d.validuntil || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validUntil\', this.value)"'} required>
+                    </div>
 
-        <div class="section-panel">
-          <div class="section-header" style="justify-content: space-between;">
-            <div style="display:flex; gap:10px;">
-              <span class="section-num">02</span>
-              <span class="section-title">Danh mục sản phẩm</span>
-            </div>
-            ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('quotations')">${Icons.plus} Thêm dòng</button>` : ''}
-          </div>
-          
-          <div style="overflow-x: auto;">
-            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 8px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 900px;">
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn Giá</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-              ${!isView ? `<span></span>` : ''}
-            </div>
+                    <div class="form-group" style="grid-column: span 3; margin-top: 6px;">
+                      <label class="form-label">Ghi chú</label>
+                      <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập thông tin ghi chú (tùy chọn)...">${d.notes || ''}</textarea>
+                    </div>
+                  </div>
+                </div>
 
-            <div style="min-width: 850px;">
-              ${linesHtml}
-            </div>
-          </div>
+                <div class="section-panel">
+                  <div class="section-header" style="justify-content: space-between;">
+                    <div style="display:flex; gap:10px;">
+                      <span class="section-num">02</span>
+                      <span class="section-title">Danh mục sản phẩm</span>
+                    </div>
+                    ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('quotations')">${Icons.plus} Thêm dòng</button>` : ''}
+                  </div>
 
-          <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
-            <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
-              <div style="display: flex; justify-content: space-between;"><span class="form-label">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
-              <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
-              <div style="display: flex; justify-content: space-between;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
-              <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--foreground); font-weight: 500;">${fmtUSD(d.total)}</span></div>
-            </div>
-          </div>
-        </div>
+                  <div style="overflow-x: auto;">
+                    <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 8px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 900px;">
+                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
+                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
+                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn Giá</span>
+                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
+                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
+                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+                      ${!isView ? `<span></span>` : ''}
+                    </div>
 
-        <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" onclick="navigate('quotations')">${isView ? 'Quay lại' : 'Hủy'}</button>
-          <div style="display: flex; gap: 8px;">
-          <!-- Nút xuất PDF & Chia sẻ Zalo -->
-            ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
+                    <div style="min-width: 850px;">
+                      ${linesHtml}
+                    </div>
+                  </div>
+
+                  <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
+                    <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
+                      <div style="display: flex; justify-content: space-between;"><span class="form-label">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
+                      <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
+                      <div style="display: flex; justify-content: space-between;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
+                      <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--foreground); font-weight: 500;">${fmtUSD(d.total)}</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                  <button type="button" class="btn-cancel" onclick="navigate('quotations')">${isView ? 'Quay lại' : 'Hủy'}</button>
+                  <div style="display: flex; gap: 8px;">
+                    <!-- Nút xuất PDF & Chia sẻ Zalo -->
+                    ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
               Xuất PDF
             </button>` : ''}
-            ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo báo giá' : 'Cập nhật'}</button>` : ''}
+                    ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo báo giá' : 'Cập nhật'}</button>` : ''}
+                  </div>
+                </div>
+            </form>
           </div>
-        </div>
-      </form>
-    </div>
-  `;
+          `;
 }
 
 function renderSalesOrderForm(c) {
@@ -1628,6 +1630,8 @@ function renderSalesOrderForm(c) {
   const isView = state.mode === 'view';
   const isEdit = state.mode === 'edit';
   d.lineItems = Array.isArray(d.lineItems) ? d.lineItems : [];
+
+  const isDetailsDisabled = !isView && state.mode === 'add' && !d.customer;
 
   if (!d.warehouseCode && db.warehouses.length > 0) {
     d.warehouseCode = db.warehouses[0].code || db.warehouses[0].id;
@@ -1667,142 +1671,142 @@ function renderSalesOrderForm(c) {
     const stockQty = calculateRealtimeStock(l.sku, d.warehouseCode, d.id);
 
     return `
-    <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center;">
-      <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
-      
-      <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${isView ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'sales-orders\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="Chọn/nhập tên hàng..." required>
-      
-      <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 6px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính từ danh mục hàng">
-      
-      <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01">
-      
-      <input type="number" id="line-item-${l.lineId}-qty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
-      
-      <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
-      
-      <input 
-        type="text" 
-        id="line-item-${l.lineId}-unitPrice"
-        inputmode="numeric"
-        class="form-input" 
-        style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
-        value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
-        ${isView ? 'readonly' : `
-          onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'unitPrice')"
-          onfocus="this.value = parseNumberInput(this.value) || ''" 
-          onblur="this.value = formatVNDInput(this.value)" 
-          onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
-        `}
-      >
-      
-      <input type="number" id="line-item-${l.lineId}-discount" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
-      
-      <input type="number" id="line-item-${l.lineId}-tax" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
-      
-      <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500; font-size: 12px;">${fmtUSD(lineTotal)}</div>
-      ${!isView ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
-    </div>
-  `;
+  <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+    <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
+    
+    <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'sales-orders\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng chọn khách hàng...' : 'Chọn/nhập tên hàng...'}" required>
+    
+    <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 6px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính từ danh mục hàng">
+    
+    <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01">
+    
+    <input type="number" id="line-item-${l.lineId}-qty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
+    
+    <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
+    
+    <input 
+      type="text" 
+      id="line-item-${l.lineId}-unitPrice"
+      inputmode="numeric"
+      class="form-input" 
+      style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
+      value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
+      ${(isView || isDetailsDisabled) ? 'readonly' : `
+        onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'unitPrice')"
+        onfocus="this.value = parseNumberInput(this.value) || ''" 
+        onblur="this.value = formatVNDInput(this.value)" 
+        onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
+      `}
+    >
+    
+    <input type="number" id="line-item-${l.lineId}-discount" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
+    
+    <input type="number" id="line-item-${l.lineId}-tax" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
+    
+    <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500; font-size: 12px;">${fmtUSD(lineTotal)}</div>
+    ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
+  </div>
+`;
   }).join('');
 
   c.innerHTML = `
-    <div style="max-width: 1050px;">
-      ${getBreadcrumb('Đơn bán hàng', isView ? `Xem ${d.id || ''}` : (isEdit ? `Chỉnh sửa ${d.id || ''}` : 'Tạo đơn bán hàng mới'), 'sales-orders')}
-      <form onsubmit="event.preventDefault(); saveForm('sales-orders');">
-        
-        <input type="hidden" value="${d.id || ''}">
+                            <div style="max-width: 1050px;">
+                              ${getBreadcrumb('Đơn bán hàng', isView ? `Xem ${d.id || ''}` : (isEdit ? `Chỉnh sửa ${d.id || ''}` : 'Tạo đơn bán hàng mới'), 'sales-orders')}
+                              <form onsubmit="event.preventDefault(); saveForm('sales-orders');">
 
-        <div class="section-panel">
-          <div class="section-header">
-            <span class="section-num">01</span>
-            <span class="section-title">Thông tin đơn bán hàng</span>
-          </div>
-          <div class="section-body grid-3">
-            <div class="form-group" style="grid-column: span 2;">
-              <label class="form-label">Khách hàng *</label>
-              <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleCustomerSelectInOrder(this.value)"'} required>
-                <option value="">-- Chọn khách hàng --</option>
-                ${customerOptions}
-              </select>
-              ${d.quotationId ? `<div style="font-size: 11px; color: var(--primary); font-family: var(--font-dm-mono); margin-top: 4px;">✔ Đã tự động áp dụng Báo giá: ${d.quotationId}</div>` : ''}
-            </div>
-            <div class="form-group">
-              <label class="form-label">Mã kho (Xuất kho) *</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
-                ${warehouseOptions}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Trạng thái</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                <option value="completed" ${d.status === 'completed' ? 'selected' : ''}>Hoàn thành</option>
-                <option value="processing" ${d.status === 'processing' ? 'selected' : ''}>Đang xử lý</option>
-                <option value="pending" ${d.status === 'pending' ? 'selected' : ''}>Chờ xử lý</option>
-                <option value="cancelled" ${d.status === 'cancelled' ? 'selected' : ''}>Đã hủy</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Ngày tạo đơn *</label>
-              <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
-            </div>
-            <div class="form-group" style="grid-column: span 3;">
-              <label class="form-label">Ghi chú</label>
-              <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập ghi chú đơn hàng (tùy chọn)...">${d.notes || ''}</textarea>
-            </div>
-          </div>
-        </div>
+                                <input type="hidden" value="${d.id || ''}">
 
-        <div class="section-panel">
-          <div class="section-header" style="justify-content: space-between;">
-            <div style="display:flex; gap:10px;">
-              <span class="section-num">02</span>
-              <span class="section-title">Danh mục sản phẩm</span>
-            </div>
-            ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('sales-orders')">${Icons.plus} Thêm dòng</button>` : ''}
-          </div>
-          
-          <div style="overflow-x: auto;">
-            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 1000px;">
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tồn</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn giá</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-              ${!isView ? `<span></span>` : ''}
-            </div>
+                                  <div class="section-panel">
+                                    <div class="section-header">
+                                      <span class="section-num">01</span>
+                                      <span class="section-title">Thông tin đơn bán hàng</span>
+                                    </div>
+                                    <div class="section-body grid-3">
+                                      <div class="form-group" style="grid-column: span 2;">
+                                        <label class="form-label">Khách hàng *</label>
+                                        <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleCustomerSelectInOrder(this.value)"'} required>
+                                          <option value="">-- Chọn khách hàng --</option>
+                                          ${customerOptions}
+                                        </select>
+                                        ${d.quotationId ? `<div style="font-size: 11px; color: var(--primary); font-family: var(--font-dm-mono); margin-top: 4px;">✔ Đã tự động áp dụng Báo giá: ${d.quotationId}</div>` : ''}
+                                      </div>
+                                      <div class="form-group">
+                                        <label class="form-label">Mã kho (Xuất kho) *</label>
+                                        <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
+                                          ${warehouseOptions}
+                                        </select>
+                                      </div>
+                                      <div class="form-group">
+                                        <label class="form-label">Trạng thái</label>
+                                        <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
+                                          <option value="completed" ${d.status === 'completed' ? 'selected' : ''}>Hoàn thành</option>
+                                          <option value="processing" ${d.status === 'processing' ? 'selected' : ''}>Đang xử lý</option>
+                                          <option value="pending" ${d.status === 'pending' ? 'selected' : ''}>Chờ xử lý</option>
+                                          <option value="cancelled" ${d.status === 'cancelled' ? 'selected' : ''}>Đã hủy</option>
+                                        </select>
+                                      </div>
+                                      <div class="form-group">
+                                        <label class="form-label">Ngày tạo đơn *</label>
+                                        <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+                                      </div>
+                                      <div class="form-group" style="grid-column: span 3;">
+                                        <label class="form-label">Ghi chú</label>
+                                        <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập ghi chú đơn hàng (tùy chọn)...">${d.notes || ''}</textarea>
+                                      </div>
+                                    </div>
+                                  </div>
 
-            <div style="min-width: 900px;">
-              ${linesHtml}
-            </div>
-          </div>
+                                  <div class="section-panel">
+                                    <div class="section-header" style="justify-content: space-between;">
+                                      <div style="display:flex; gap:10px;">
+                                        <span class="section-num">02</span>
+                                        <span class="section-title">Danh mục sản phẩm</span>
+                                      </div>
+                                      ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('sales-orders')">${Icons.plus} Thêm dòng</button>` : ''}
+                                    </div>
 
-          <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
-            <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
-              <div style="display: flex; justify-content: space-between;"><span class="form-label">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
-              <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
-              <div style="display: flex; justify-content: space-between;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
-              <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.total)}</span></div>
-            </div>
-          </div>
-        </div>
+                                    <div style="overflow-x: auto;">
+                                      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 1000px;">
+                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
+                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
+                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
+                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tồn</span>
+                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn giá</span>
+                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
+                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
+                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+                                        ${!isView ? `<span></span>` : ''}
+                                      </div>
 
-        <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" onclick="navigate('sales-orders')">${isView ? 'Quay lại' : 'Hủy'}</button>
-          <div style="display: flex; gap: 8px;">
-            ${isView ? `<button type="button" class="btn-primary" onclick="exportSalesOrderToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
+                                      <div style="min-width: 900px;">
+                                        ${linesHtml}
+                                      </div>
+                                    </div>
+
+                                    <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
+                                      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
+                                        <div style="display: flex; justify-content: space-between;"><span class="form-label">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
+                                        <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
+                                        <div style="display: flex; justify-content: space-between;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
+                                        <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.total)}</span></div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <button type="button" class="btn-cancel" onclick="navigate('sales-orders')">${isView ? 'Quay lại' : 'Hủy'}</button>
+                                    <div style="display: flex; gap: 8px;">
+                                      ${isView ? `<button type="button" class="btn-primary" onclick="exportSalesOrderToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">
               Xuất PDF
             </button>` : ''}
-            ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo đơn hàng' : 'Cập nhật'}</button>` : ''}
-          </div>
-        </div>
-      </form>
-    </div>
-  `;
+                                      ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo đơn hàng' : 'Cập nhật'}</button>` : ''}
+                                    </div>
+                                  </div>
+                              </form>
+                            </div>
+                            `;
 }
 
 function renderReturnForm(c) {
@@ -1813,6 +1817,8 @@ function renderReturnForm(c) {
 
   d.lineItems = Array.isArray(d.lineItems) ? d.lineItems : [];
   d.total = d.lineItems.reduce((s, l) => s + ((l.qtyReturned || 0) * (l.unitPrice || 0)), 0);
+
+  const isDetailsDisabled = !isView && state.mode === 'add' && !d.customer;
 
   if (!d.warehouseCode && db.warehouses.length > 0) {
     d.warehouseCode = db.warehouses[0].code || db.warehouses[0].id;
@@ -1839,134 +1845,136 @@ function renderReturnForm(c) {
     const stockQty = calculateRealtimeStock(l.sku, d.warehouseCode, d.id);
 
     return `
-      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center;">
-        <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng không cho sửa">
-        
-        <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${isView ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'returns\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="Chọn/nhập tên hàng..." required>
-        
-        <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ Material">
-        
-        <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho lấy từ mục 01 xuống">
-        
-        <input type="number" id="line-item-${l.lineId}-qtyReturned" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qtyReturned ?? 1}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'qtyReturned')" onchange="updateLine('${l.lineId}', 'qtyReturned', this.value, 'number')"`}>
-        
-        <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
-        
-        <input 
-          type="text" 
-          id="line-item-${l.lineId}-unitPrice"
-          inputmode="numeric"
-          class="form-input" 
-          style="padding: 6px 6px; text-align: right; ${(isView || hasOrder) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
-          value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
-          ${(isView || hasOrder) ? 'readonly' : `
-            onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'unitPrice')"
-            onfocus="this.value = parseNumberInput(this.value) || ''" 
-            onblur="this.value = formatVNDInput(this.value)" 
-            onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
-          `}
-        >
-        
-        <div style="font-family: var(--font-dm-mono); text-align: right; color: #f87171; font-weight: 500; font-size: 12px;">${fmtUSD((l.qtyReturned || 0) * (l.unitPrice || 0))}</div>
-        ${!isView ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
-      </div>
-    `;
+    <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+      <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng không cho sửa">
+      
+      <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'returns\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng chọn khách hàng...' : 'Chọn/nhập tên hàng...'}" required>
+      
+      <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ Material">
+      
+      <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho lấy từ mục 01 xuống">
+      
+      <input type="number" id="line-item-${l.lineId}-qtyReturned" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qtyReturned ?? 1}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'qtyReturned')" onchange="updateLine('${l.lineId}', 'qtyReturned', this.value, 'number')"`}>
+      
+      <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
+      
+      <input 
+        type="text" 
+        id="line-item-${l.lineId}-unitPrice"
+        inputmode="numeric"
+        class="form-input" 
+        style="padding: 6px 6px; text-align: right; ${(isView || hasOrder || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
+        value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
+        ${(isView || hasOrder || isDetailsDisabled) ? 'readonly' : `
+          onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'unitPrice')"
+          onfocus="this.value = parseNumberInput(this.value) || ''" 
+          onblur="this.value = formatVNDInput(this.value)" 
+          onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
+        `}
+      >
+      
+      <div style="font-family: var(--font-dm-mono); text-align: right; color: #f87171; font-weight: 500; font-size: 12px;">${fmtUSD((l.qtyReturned || 0) * (l.unitPrice || 0))}</div>
+      ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
+    </div>
+  `;
   }).join('');
 
   c.innerHTML = `
-    <div style="max-width: 1050px;">
-      ${getBreadcrumb('Đổi trả hàng bán', isView ? `Xem ${d.id}` : (isEdit ? `Chỉnh sửa ${d.id}` : 'Tạo phiếu đổi trả mới'), 'returns')}
-      <form onsubmit="event.preventDefault(); saveForm('returns');">
-        <div class="section-panel">
-          <div class="section-header"><span class="section-num">01</span><span class="section-title">Thông tin phiếu đổi trả</span></div>
-          <div class="section-body grid-3">
-            <div class="form-group">
-              <label class="form-label">Đơn hàng bán (Tùy chọn)</label>
-              <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleOrderSelectInReturn(this.value)"'}>
-                <option value="">-- Không theo đơn hàng --</option>
-                ${orderOptions}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Tên khách hàng *</label>
-              <select class="form-select" ${(isView || isEdit || hasOrder) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'customer\', this.value)"'} required>
-                <option value="">-- Chọn khách hàng --</option>
-                ${customerOptions}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Mã kho *</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
-                ${warehouseOptions}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Lý do *</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'reason\', this.value)"'}>
-                ${['Hàng lỗi/hỏng', 'Giao nhầm sản phẩm', 'Đặt hàng thừa', 'Hủy đơn hàng', 'Hư hỏng do vận chuyển', 'Khác'].map(w => `<option value="${w}" ${d.reason === w ? 'selected' : ''}>${w}</option>`).join('')}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Ngày đổi trả *</label>
-              <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Trạng thái</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                <option value="processed" ${d.status === 'processed' ? 'selected' : ''}>Đã xử lý</option>
-                <option value="approved" ${d.status === 'approved' ? 'selected' : ''}>Đã duyệt</option>
-                <option value="pending" ${d.status === 'pending' ? 'selected' : ''}>Chờ duyệt</option>
-                <option value="rejected" ${d.status === 'rejected' ? 'selected' : ''}>Từ chối</option>
-              </select>
-            </div>
-            <div class="form-group" style="grid-column: span 3;">
-              <label class="form-label">Ghi chú nhập tay</label>
-              <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập ghi chú chi tiết...">${d.notes || ''}</textarea>
-            </div>
-          </div>
-        </div>
+                                          <div style="max-width: 1050px;">
+                                            ${getBreadcrumb('Đổi trả hàng bán', isView ? `Xem ${d.id}` : (isEdit ? `Chỉnh sửa ${d.id}` : 'Tạo phiếu đổi trả mới'), 'returns')}
+                                            <form onsubmit="event.preventDefault(); saveForm('returns');">
+                                              <div class="section-panel">
+                                                <div class="section-header"><span class="section-num">01</span><span class="section-title">Thông tin phiếu đổi trả</span></div>
+                                                <div class="section-body grid-3">
+                                                  <div class="form-group">
+                                                    <label class="form-label">Đơn hàng bán (Tùy chọn)</label>
+                                                    <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleOrderSelectInReturn(this.value)"'}>
+                                                      <option value="">-- Không theo đơn hàng --</option>
+                                                      ${orderOptions}
+                                                    </select>
+                                                  </div>
+                                                  <div class="form-group">
+                                                    <label class="form-label">Tên khách hàng *</label>
+                                                    <select class="form-select" ${(isView || isEdit || hasOrder) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'customer\', this.value)"'} required>
+                                                      <option value="">-- Chọn khách hàng --</option>
+                                                      ${customerOptions}
+                                                    </select>
+                                                  </div>
+                                                  <div class="form-group">
+                                                    <label class="form-label">Mã kho *</label>
+                                                    <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
+                                                      ${warehouseOptions}
+                                                    </select>
+                                                  </div>
+                                                  <div class="form-group">
+                                                    <label class="form-label">Lý do *</label>
+                                                    <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'reason\', this.value)"'}>
+                                                      ${['Hàng lỗi/hỏng', 'Giao nhầm sản phẩm', 'Đặt hàng thừa', 'Hủy đơn hàng', 'Hư hỏng do vận chuyển', 'Khác'].map(w => `<option value="${w}" ${d.reason === w ? 'selected' : ''}>${w}</option>`).join('')}
+                                                    </select>
+                                                  </div>
+                                                  <div class="form-group">
+                                                    <label class="form-label">Ngày đổi trả *</label>
+                                                    <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+                                                  </div>
+                                                  <div class="form-group">
+                                                    <label class="form-label">Trạng thái</label>
+                                                    <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
+                                                      <option value="processed" ${d.status === 'processed' ? 'selected' : ''}>Đã xử lý</option>
+                                                      <option value="approved" ${d.status === 'approved' ? 'selected' : ''}>Đã duyệt</option>
+                                                      <option value="pending" ${d.status === 'pending' ? 'selected' : ''}>Chờ duyệt</option>
+                                                      <option value="rejected" ${d.status === 'rejected' ? 'selected' : ''}>Từ chối</option>
+                                                    </select>
+                                                  </div>
+                                                  <div class="form-group" style="grid-column: span 3;">
+                                                    <label class="form-label">Ghi chú nhập tay</label>
+                                                    <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập ghi chú chi tiết...">${d.notes || ''}</textarea>
+                                                  </div>
+                                                </div>
+                                              </div>
 
-        <div class="section-panel">
-          <div class="section-header" style="justify-content: space-between;">
-            <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng đổi trả</span></div>
-            ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('returns')">${Icons.plus} Thêm dòng</button>` : ''}
-          </div>
-          <div style="overflow-x: auto;">
-            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">SL Trả Lại</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tồn</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn giá</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-              ${!isView ? `<span></span>` : ''}
-            </div>
+                                              <div class="section-panel">
+                                                <div class="section-header" style="justify-content: space-between;">
+                                                  <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng đổi trả</span></div>
+                                                  ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('returns')">${Icons.plus} Thêm dòng</button>` : ''}
+                                                </div>
+                                                <div style="overflow-x: auto;">
+                                                  <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
+                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
+                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
+                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">SL Trả Lại</span>
+                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tồn</span>
+                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn giá</span>
+                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+                                                    ${!isView ? `<span></span>` : ''}
+                                                  </div>
 
-            <div style="min-width: 850px;">
-              ${linesHtml}
-            </div>
-          </div>
+                                                  <div style="min-width: 850px;">
+                                                    ${linesHtml}
+                                                  </div>
+                                                </div>
 
-          <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
-            <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px;"><span class="form-label" style="font-weight: 600;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
-          </div>
-        </div>
+                                                <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
+                                                  <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px;"><span class="form-label" style="font-weight: 600;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
+                                                </div>
+                                              </div>
 
-        <div class="action-bar">
-          <button type="button" class="btn-cancel" onclick="navigate('returns')">${isView ? 'Quay lại' : 'Hủy'}</button>
-          ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
-        </div>
-      </form>
-    </div>
-  `;
+                                              <div class="action-bar">
+                                                <button type="button" class="btn-cancel" onclick="navigate('returns')">${isView ? 'Quay lại' : 'Hủy'}</button>
+                                                ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
+                                              </div>
+                                            </form>
+                                          </div>
+                                          `;
 }
 
 function renderGRNForm(c) {
   const d = state.formData || {};
   const isView = state.mode === 'view';
   d.lineItems = Array.isArray(d.lineItems) ? d.lineItems : [];
+
+  const isDetailsDisabled = !isView && state.mode === 'add' && !d.supplier;
 
   if (!d.warehouseCode && db.warehouses.length > 0) {
     d.warehouseCode = db.warehouses[0].code || db.warehouses[0].id;
@@ -1992,108 +2000,108 @@ function renderGRNForm(c) {
     const qtyVal = l.receivedQty ?? l.qtyImport ?? 1;
 
     return `
-      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center;">
-        <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động điền theo tên hàng">
-        
-        <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${isView ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${isView ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'grn\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="Chọn/nhập tên hàng..." required>
-        
-        <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ danh mục">
-        
-        <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01 xuống">
-        
-        <input type="number" id="line-item-${l.lineId}-receivedQty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${qtyVal}" ${isView ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'receivedQty')" onchange="updateLine('${l.lineId}', 'receivedQty', this.value, 'number'); updateLine('${l.lineId}', 'qtyImport', this.value, 'number');"`}>
-        
-        <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế tính tự động">
-        
-        <input 
-          type="text" 
-          id="line-item-${l.lineId}-unitCost"
-          inputmode="numeric"
-          class="form-input" 
-          style="padding: 6px 6px; text-align: right; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
-          value="${(l.unitCost ?? 0).toLocaleString('vi-VN')}" 
-          ${isView ? 'readonly' : `
-            onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'unitCost')"
-            onfocus="this.value = parseNumberInput(this.value) || ''" 
-            onblur="this.value = formatVNDInput(this.value)" 
-            onchange="updateLine('${l.lineId}', 'unitCost', parseNumberInput(this.value), 'number')"
-          `}
-        >
-        
-        <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500; font-size: 12px;">${fmtUSD((qtyVal) * (l.unitCost || 0))}</div>
-        ${!isView ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
-      </div>
-    `;
+    <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+      <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động điền theo tên hàng">
+      
+      <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'grn\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng nhập nhà cung cấp...' : 'Chọn/nhập tên hàng...'}" required>
+      
+      <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ danh mục">
+      
+      <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01 xuống">
+      
+      <input type="number" id="line-item-${l.lineId}-receivedQty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${qtyVal}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'receivedQty')" onchange="updateLine('${l.lineId}', 'receivedQty', this.value, 'number'); updateLine('${l.lineId}', 'qtyImport', this.value, 'number');"`}>
+      
+      <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế tính tự động">
+      
+      <input 
+        type="text" 
+        id="line-item-${l.lineId}-unitCost"
+        inputmode="numeric"
+        class="form-input" 
+        style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
+        value="${(l.unitCost ?? 0).toLocaleString('vi-VN')}" 
+        ${(isView || isDetailsDisabled) ? 'readonly' : `
+          onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'unitCost')"
+          onfocus="this.value = parseNumberInput(this.value) || ''" 
+          onblur="this.value = formatVNDInput(this.value)" 
+          onchange="updateLine('${l.lineId}', 'unitCost', parseNumberInput(this.value), 'number')"
+        `}
+      >
+      
+      <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500; font-size: 12px;">${fmtUSD((qtyVal) * (l.unitCost || 0))}</div>
+      ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
+    </div>
+  `;
   }).join('');
 
   c.innerHTML = `
-    <div style="max-width: 1050px;">
-      ${getBreadcrumb('Phiếu nhập kho', isView ? `Xem ${d.id}` : (state.mode === 'edit' ? `Chỉnh sửa ${d.id}` : 'Tạo phiếu nhập kho mới'), 'grn')}
-      <form onsubmit="event.preventDefault(); saveForm('grn');">
-        <div class="section-panel">
-          <div class="section-header"><span class="section-num">01</span><span class="section-title">Chi tiết nhập kho</span></div>
-          <div class="section-body grid-3">
-            <div class="form-group" style="grid-column: span 2;">
-              <label class="form-label">Nhà cung cấp *</label>
-              <input type="text" class="form-input" value="${d.supplier || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'supplier\', this.value)"'} placeholder="Nhập tên nhà cung cấp..." required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Mã kho *</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
-                ${warehouseOptions}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Ngày nhập kho *</label>
-              <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Trạng thái</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                <option value="Đã nhận" ${d.status === 'Đã nhận' || d.status === 'received' ? 'selected' : ''}>Đã nhận</option>
-                <option value="Bản nháp" ${d.status === 'Bản nháp' || d.status === 'draft' ? 'selected' : ''}>Bản nháp</option>
-                <option value="Đã xác minh" ${d.status === 'Đã xác minh' || d.status === 'verified' ? 'selected' : ''}>Đã xác minh</option>
-              </select>
-            </div>
-            <div class="form-group" style="grid-column: span 3;">
-              <label class="form-label">Ghi chú</label>
-              <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập ghi chú phiếu nhập kho...">${d.notes || ''}</textarea>
-            </div>
-          </div>
-        </div>
+                                                        <div style="max-width: 1050px;">
+                                                          ${getBreadcrumb('Phiếu nhập kho', isView ? `Xem ${d.id}` : (state.mode === 'edit' ? `Chỉnh sửa ${d.id}` : 'Tạo phiếu nhập kho mới'), 'grn')}
+                                                          <form onsubmit="event.preventDefault(); saveForm('grn');">
+                                                            <div class="section-panel">
+                                                              <div class="section-header"><span class="section-num">01</span><span class="section-title">Chi tiết nhập kho</span></div>
+                                                              <div class="section-body grid-3">
+                                                                <div class="form-group" style="grid-column: span 2;">
+                                                                  <label class="form-label">Nhà cung cấp *</label>
+                                                                  <input type="text" class="form-input" value="${d.supplier || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'supplier\', this.value)"'} placeholder="Nhập tên nhà cung cấp..." required>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                  <label class="form-label">Mã kho *</label>
+                                                                  <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
+                                                                    ${warehouseOptions}
+                                                                  </select>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                  <label class="form-label">Ngày nhập kho *</label>
+                                                                  <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+                                                                </div>
+                                                                <div class="form-group">
+                                                                  <label class="form-label">Trạng thái</label>
+                                                                  <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
+                                                                    <option value="Đã nhận" ${d.status === 'Đã nhận' || d.status === 'received' ? 'selected' : ''}>Đã nhận</option>
+                                                                    <option value="Bản nháp" ${d.status === 'Bản nháp' || d.status === 'draft' ? 'selected' : ''}>Bản nháp</option>
+                                                                    <option value="Đã xác minh" ${d.status === 'Đã xác minh' || d.status === 'verified' ? 'selected' : ''}>Đã xác minh</option>
+                                                                  </select>
+                                                                </div>
+                                                                <div class="form-group" style="grid-column: span 3;">
+                                                                  <label class="form-label">Ghi chú</label>
+                                                                  <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập ghi chú phiếu nhập kho...">${d.notes || ''}</textarea>
+                                                                </div>
+                                                              </div>
+                                                            </div>
 
-        <div class="section-panel">
-          <div class="section-header" style="justify-content: space-between;">
-            <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng thực nhận</span></div>
-            ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('grn')">${Icons.plus} Thêm dòng</button>` : ''}
-          </div>
-          <div style="overflow-x: auto;">
-            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">SL Nhập</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tồn</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Giá nhập</span>
-              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-              ${!isView ? `<span></span>` : ''}
-            </div>
+                                                            <div class="section-panel">
+                                                              <div class="section-header" style="justify-content: space-between;">
+                                                                <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng thực nhận</span></div>
+                                                                ${!isView ? `<button type="button" class="btn-action" onclick="addLineItem('grn')">${Icons.plus} Thêm dòng</button>` : ''}
+                                                              </div>
+                                                              <div style="overflow-x: auto;">
+                                                                <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
+                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
+                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
+                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">SL Nhập</span>
+                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tồn</span>
+                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Giá nhập</span>
+                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+                                                                  ${!isView ? `<span></span>` : ''}
+                                                                </div>
 
-            <div style="min-width: 850px;">
-              ${linesHtml}
-            </div>
-          </div>
+                                                                <div style="min-width: 850px;">
+                                                                  ${linesHtml}
+                                                                </div>
+                                                              </div>
 
-          <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
-            <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px;"><span class="form-label" style="font-weight: 600;">Tổng giá trị</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.totalValue)}</span></div>
-          </div>
-        </div>
+                                                              <div style="display: flex; justify-content: flex-end; padding: 16px 24px;">
+                                                                <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px;"><span class="form-label" style="font-weight: 600;">Tổng giá trị</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.totalValue)}</span></div>
+                                                              </div>
+                                                            </div>
 
-        <div class="action-bar"><button type="button" class="btn-cancel" onclick="navigate('grn')">${isView ? 'Quay lại' : 'Hủy'}</button>${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}</div>
-      </form>
-    </div>
-  `;
+                                                            <div class="action-bar"><button type="button" class="btn-cancel" onclick="navigate('grn')">${isView ? 'Quay lại' : 'Hủy'}</button>${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}</div>
+                                                          </form>
+                                                        </div>
+                                                        `;
 }
 
 function renderReportInventory(c) {
@@ -2149,27 +2157,27 @@ function renderReportInventory(c) {
     { label: 'Giá trị đã giữ', value: fmtUSD(materials.reduce((s, m) => s + (m.reserved || 0) * (m.cost || 0), 0)), sub: 'cam kết đơn hàng' },
     { label: 'Sản phẩm cảnh báo', value: fmt(materials.filter(m => ['low', 'critical', 'out'].includes(m.status)).length), sub: 'dưới mức định mức' },
   ].map(s => `
-    <div style="background-color: var(--card); padding: 16px 20px;">
-      <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
-      <div style="font-family: var(--font-dm-mono); font-size: 22px; font-weight: 300; margin-bottom: 4px;">${s.value}</div>
-      <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${s.sub}</div>
-    </div>
-  `).join('');
+                                                        <div style="background-color: var(--card); padding: 16px 20px;">
+                                                          <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
+                                                          <div style="font-family: var(--font-dm-mono); font-size: 22px; font-weight: 300; margin-bottom: 4px;">${s.value}</div>
+                                                          <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${s.sub}</div>
+                                                        </div>
+                                                        `).join('');
 
   const catBreakdownHtml = catBreakdown.map(cat => `
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <span style="font-family: var(--font-dm-mono); font-size: 11px; width: 100px; color: var(--muted-foreground);">${cat.category}</span>
-      <div style="flex: 1; height: 8px; background: var(--muted);"><div style="width: ${(cat.value / maxVal) * 100}%; height: 100%; background: var(--primary);"></div></div>
-      <span style="font-family: var(--font-dm-mono); font-size: 11px; width: 90px; text-align: right;">${fmtUSD(cat.value)}</span>
-    </div>
-  `).join('');
+                                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                                          <span style="font-family: var(--font-dm-mono); font-size: 11px; width: 100px; color: var(--muted-foreground);">${cat.category}</span>
+                                                          <div style="flex: 1; height: 8px; background: var(--muted);"><div style="width: ${(cat.value / maxVal) * 100}%; height: 100%; background: var(--primary);"></div></div>
+                                                          <span style="font-family: var(--font-dm-mono); font-size: 11px; width: 90px; text-align: right;">${fmtUSD(cat.value)}</span>
+                                                        </div>
+                                                        `).join('');
 
   const alertsHtml = materials.filter(m => ['low', 'critical', 'out'].includes(m.status)).map(m => `
-    <div style="padding: 8px 12px; border: 1px solid var(--border); background: var(--secondary);">
-      <div style="font-size: 12px; font-weight: 500;">${m.name}</div>
-      <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${m.id} · ${getActualStock(m)} / ${m.reorder ?? 0} đơn vị</div>
-    </div>
-  `).join('');
+                                                        <div style="padding: 8px 12px; border: 1px solid var(--border); background: var(--secondary);">
+                                                          <div style="font-size: 12px; font-weight: 500;">${m.name}</div>
+                                                          <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${m.id} · ${getActualStock(m)} / ${m.reorder ?? 0} đơn vị</div>
+                                                        </div>
+                                                        `).join('');
 
   const headersHtml = ['Mã Hàng (SKU)', 'Tên Hàng', 'ĐVT', 'Danh Mục', 'Vị Trí', 'Tồn Đầu Kỳ', 'Tồn Thực Tế', 'Tạm Giữ', 'Có Thể Bán', 'Mức Cảnh Báo', 'Giá Vốn', 'Trạng Thái']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Trạng Thái' ? 'right' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
@@ -2183,100 +2191,100 @@ function renderReportInventory(c) {
       const coTheBan = tonThucTe - tamGiu;
 
       return `
-      <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
-        <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
-        <td data-label="Tên Hàng" style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
-        <td data-label="ĐVT" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
-        <td data-label="Danh Mục" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${m.category || '—'}</td>
-        <td data-label="Vị Trí" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px;">${m.location || '—'}</td>
-        <td data-label="Tồn Đầu Kỳ" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${tonDauKy}</td>
-        <td data-label="Tồn Thực Tế" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; font-weight: 600; color: var(--primary);">${tonThucTe}</td>
-        <td data-label="Tạm Giữ" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${tamGiu}</td>
-        <td data-label="Có Thể Bán" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${coTheBan}</td>
-        <td data-label="Mức Cảnh Báo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${m.reorder ?? 0}</td>
-        <td data-label="Giá Vốn" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
-        <td data-label="Trạng Thái" style="padding: 11px 16px; text-align: right;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'Đủ hàng' : m.status}</span></td>
-      </tr>
-    `;
+                                                        <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
+                                                          <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
+                                                          <td data-label="Tên Hàng" style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
+                                                          <td data-label="ĐVT" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
+                                                          <td data-label="Danh Mục" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${m.category || '—'}</td>
+                                                          <td data-label="Vị Trí" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px;">${m.location || '—'}</td>
+                                                          <td data-label="Tồn Đầu Kỳ" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${tonDauKy}</td>
+                                                          <td data-label="Tồn Thực Tế" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; font-weight: 600; color: var(--primary);">${tonThucTe}</td>
+                                                          <td data-label="Tạm Giữ" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${tamGiu}</td>
+                                                          <td data-label="Có Thể Bán" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${coTheBan}</td>
+                                                          <td data-label="Mức Cảnh Báo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${m.reorder ?? 0}</td>
+                                                          <td data-label="Giá Vốn" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
+                                                          <td data-label="Trạng Thái" style="padding: 11px 16px; text-align: right;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'Đủ hàng' : m.status}</span></td>
+                                                        </tr>
+                                                        `;
     }).join('');
   };
 
   c.innerHTML = `
-    <div style="display: flex; flex-direction: column; gap: 24px;">
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
-        ${kpiHtml}
-      </div>
+                                                        <div style="display: flex; flex-direction: column; gap: 24px;">
+                                                          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
+                                                            ${kpiHtml}
+                                                          </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 320px; gap: 16px;" class="grid-2">
-        <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
-          <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Giá Trị Tồn Kho Theo Danh Mục</div>
-          <div style="display: flex; flex-direction: column; gap: 12px;">
-            ${catBreakdownHtml}
-          </div>
-        </div>
-        <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
-          <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 12px;">Cảnh Báo Hàng Tồn Kho</div>
-          <div style="display: flex; flex-direction: column; gap: 8px;">
-            ${alertsHtml}
-          </div>
-        </div>
-      </div>
+                                                          <div style="display: grid; grid-template-columns: 1fr 320px; gap: 16px;" class="grid-2">
+                                                            <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
+                                                              <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Giá Trị Tồn Kho Theo Danh Mục</div>
+                                                              <div style="display: flex; flex-direction: column; gap: 12px;">
+                                                                ${catBreakdownHtml}
+                                                              </div>
+                                                            </div>
+                                                            <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
+                                                              <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 12px;">Cảnh Báo Hàng Tồn Kho</div>
+                                                              <div style="display: flex; flex-direction: column; gap: 8px;">
+                                                                ${alertsHtml}
+                                                              </div>
+                                                            </div>
+                                                          </div>
 
-      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;" id="inventory-report-table-box">
-        
-        <div style="padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-          <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Báo Cáo Tồn Kho Chi Tiết & Định Giá</span>
-          
-          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 2px; width: 220px;">
-              <span style="color: var(--muted-foreground);">${Icons.search}</span>
-              <input type="text" id="report-inv-search-input" placeholder="Tìm mã, tên hàng..." value="${state.reportInvSearch}" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; padding: 6px 0;">
-            </div>
+                                                          <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;" id="inventory-report-table-box">
 
-            <div style="display: flex; gap: 1px;">
-              ${['all', ...categories].map(cat => `
+                                                            <div style="padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                                                              <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Báo Cáo Tồn Kho Chi Tiết & Định Giá</span>
+
+                                                              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                                                <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 2px; width: 220px;">
+                                                                  <span style="color: var(--muted-foreground);">${Icons.search}</span>
+                                                                  <input type="text" id="report-inv-search-input" placeholder="Tìm mã, tên hàng..." value="${state.reportInvSearch}" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; padding: 6px 0;">
+                                                                </div>
+
+                                                                <div style="display: flex; gap: 1px;">
+                                                                  ${['all', ...categories].map(cat => `
                 <button onclick="state.filter='${cat}'; state.page=1; render();" style="padding: 5px 12px; font-family: var(--font-dm-mono); font-size: 10px; text-transform: uppercase; background: ${state.filter === cat ? 'var(--primary)' : 'var(--muted)'}; color: ${state.filter === cat ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer;">${cat === 'all' ? 'Tất cả' : cat}</button>
               `).join('')}
-            </div>
-          </div>
-        </div>
+                                                                </div>
+                                                              </div>
+                                                            </div>
 
-        <div style="padding: 8px 20px 4px; display: flex; justify-content: flex-end; border-bottom: 1px solid var(--border); background: var(--secondary);">
-          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);" id="report-inv-summary-text">
-            Đang hiển thị <strong>${totalItems === 0 ? 0 : startIndex + 1}-${Math.min(startIndex + state.pageSize, totalItems)}/${totalItems}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(totalVal)}</strong> · Đã tạm giữ: ${fmtUSD(reservedVal)} · Cảnh báo: ${alertCount}
-          </span>
-        </div>
+                                                            <div style="padding: 8px 20px 4px; display: flex; justify-content: flex-end; border-bottom: 1px solid var(--border); background: var(--secondary);">
+                                                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);" id="report-inv-summary-text">
+                                                                Đang hiển thị <strong>${totalItems === 0 ? 0 : startIndex + 1}-${Math.min(startIndex + state.pageSize, totalItems)}/${totalItems}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(totalVal)}</strong> · Đã tạm giữ: ${fmtUSD(reservedVal)} · Cảnh báo: ${alertCount}
+                                                              </span>
+                                                            </div>
 
-        <table style="width: 100%; border-collapse: collapse;">
-          <thead>
-            <tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">
-              ${headersHtml}
-            </tr>
-          </thead>
-          <tbody id="report-inv-tbody">
-            ${renderRows(visibleList)}
-          </tbody>
-        </table>
+                                                            <table style="width: 100%; border-collapse: collapse;">
+                                                              <thead>
+                                                                <tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">
+                                                                  ${headersHtml}
+                                                                </tr>
+                                                              </thead>
+                                                              <tbody id="report-inv-tbody">
+                                                                ${renderRows(visibleList)}
+                                                              </tbody>
+                                                            </table>
 
-        <div id="report-inv-empty-msg" style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px; display: ${filtered.length === 0 ? 'block' : 'none'};">
-          Không tìm thấy dữ liệu mặt hàng phù hợp
-        </div>
+                                                            <div id="report-inv-empty-msg" style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px; display: ${filtered.length === 0 ? 'block' : 'none'};">
+                                                              Không tìm thấy dữ liệu mặt hàng phù hợp
+                                                            </div>
 
-      </div>
+                                                          </div>
 
-      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
-        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
-          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
-        </span>
-        <div style="display: flex; gap: 6px; align-items: center;">
-          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
-          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
-          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
-        </div>
-      </div>
-    </div>
-  `;
+                                                          <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
+                                                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+                                                            <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+                                                              Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
+                                                            </span>
+                                                            <div style="display: flex; gap: 6px; align-items: center;">
+                                                              <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
+                                                              <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
+                                                              <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
+                                                            </div>
+                                                          </div>
+                                                        </div>
+                                                        `;
 
   // Xử lý ô Tìm kiếm
   const searchInput = document.getElementById('report-inv-search-input');
@@ -2372,116 +2380,116 @@ function renderReportSales(c) {
   const paginatedDetailItems = detailItemsList.slice(startIndex, startIndex + state.pageSize);
 
   const customersHtml = topCustomersReal.slice(0, 5).map((cus, i) => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
-      <td data-label="" style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); width: 28px;">${String(i + 1).padStart(2, '0')}</td>
-      <td data-label="" style="padding: 9px 14px; font-size: 13px;">${cus.name}</td>
-      <td data-label="" style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--primary);">${fmtUSD(cus.revenue)}</td>
-      <td data-label="" style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; text-align: right; color: var(--muted-foreground);">${cus.orders} đơn</td>
-    </tr>
-  `).join('');
+                                                        <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
+                                                          <td data-label="" style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); width: 28px;">${String(i + 1).padStart(2, '0')}</td>
+                                                          <td data-label="" style="padding: 9px 14px; font-size: 13px;">${cus.name}</td>
+                                                          <td data-label="" style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--primary);">${fmtUSD(cus.revenue)}</td>
+                                                          <td data-label="" style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; text-align: right; color: var(--muted-foreground);">${cus.orders} đơn</td>
+                                                        </tr>
+                                                        `).join('');
 
   const detailHeaders = ['Mã Hàng (SKU)', 'Tên Hàng Hóa', 'Tổng Số Lượng', 'Tổng Số Tiền']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Tổng Số Lượng' || h === 'Tổng Số Tiền' ? 'right' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
   const detailRows = paginatedDetailItems.map(item => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
-      <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${item.sku}</td>
-      <td data-label="Tên Hàng Hóa" style="padding: 11px 16px; font-size: 13px; font-weight: 500;">${item.name}</td>
-      <td data-label="Tổng Số Lượng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(item.qty)}</td>
-      <td data-label="Tổng Số Tiền" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right; color: var(--primary);">${fmtUSD(item.totalAmount)}</td>
-    </tr>
-  `).join('');
+                                                        <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
+                                                          <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${item.sku}</td>
+                                                          <td data-label="Tên Hàng Hóa" style="padding: 11px 16px; font-size: 13px; font-weight: 500;">${item.name}</td>
+                                                          <td data-label="Tổng Số Lượng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(item.qty)}</td>
+                                                          <td data-label="Tổng Số Tiền" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right; color: var(--primary);">${fmtUSD(item.totalAmount)}</td>
+                                                        </tr>
+                                                        `).join('');
 
   const customerSelectOptions = (db.customers || []).map(cust => `
-    <option value="${cust.name}" ${selectedCustomer === cust.name ? 'selected' : ''}>${cust.name}</option>
-  `).join('');
+                                                        <option value="${cust.name}" ${selectedCustomer === cust.name ? 'selected' : ''}>${cust.name}</option>
+                                                        `).join('');
 
   c.innerHTML = `
-    <div style="display: flex; flex-direction: column; gap: 16px;">
-      
-      <!-- KPI CARDS -->
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
-        <div class="kpi-card"><span class="kpi-label">Doanh Thu Lũy Kế Năm</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(ytdRevenue)}</span></div><span class="kpi-sub">Năm ${currentYear}</span></div>
-        <div class="kpi-card"><span class="kpi-label">Tổng Đơn Bán</span><div class="kpi-value-row"><span class="kpi-value">${fmt(ytdOrders)}</span></div><span class="kpi-sub">Năm ${currentYear}</span></div>
-        <div class="kpi-card"><span class="kpi-label">Tỷ Lệ Trả Hàng</span><div class="kpi-value-row"><span class="kpi-value">${returnRatePercent}%</span></div><span class="kpi-sub">theo số lượt đổi trả</span></div>
-        <div class="kpi-card"><span class="kpi-label">Giá Trị Đơn Trung Bình</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(avgOrderValue)}</span></div><span class="kpi-sub">AOV năm ${currentYear}</span></div>
-      </div>
+                                                        <div style="display: flex; flex-direction: column; gap: 16px;">
 
-      <!-- BIỂU ĐỒ DOANH SỐ & TOP KHÁCH HÀNG -->
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="grid-2">
-        <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
-          <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Biểu Đồ Doanh Thu & Sản Lượng Đơn Bán</div>
-          <div style="height: 220px;"><canvas id="chart-sales"></canvas></div>
-        </div>
-        <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
-          <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng (Tháng ${selectedMonthNum})</div>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tbody>
-              ${customersHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có dữ liệu khách hàng</td></tr>'}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                                                          <!-- KPI CARDS -->
+                                                          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
+                                                            <div class="kpi-card"><span class="kpi-label">Doanh Thu Lũy Kế Năm</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(ytdRevenue)}</span></div><span class="kpi-sub">Năm ${currentYear}</span></div>
+                                                            <div class="kpi-card"><span class="kpi-label">Tổng Đơn Bán</span><div class="kpi-value-row"><span class="kpi-value">${fmt(ytdOrders)}</span></div><span class="kpi-sub">Năm ${currentYear}</span></div>
+                                                            <div class="kpi-card"><span class="kpi-label">Tỷ Lệ Trả Hàng</span><div class="kpi-value-row"><span class="kpi-value">${returnRatePercent}%</span></div><span class="kpi-sub">theo số lượt đổi trả</span></div>
+                                                            <div class="kpi-card"><span class="kpi-label">Giá Trị Đơn Trung Bình</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(avgOrderValue)}</span></div><span class="kpi-sub">AOV năm ${currentYear}</span></div>
+                                                          </div>
 
-      <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG -->
-      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
-        <div style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-          
-          <div style="display: flex; flex-direction: column; gap: 2px;">
-            <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--foreground);">
-              Thống Kê Chi Tiết Theo Khách Hàng ${selectedCustomer ? `(${selectedCustomer})` : ''} - Tháng ${selectedMonthNum}/${currentYear}
-            </span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--primary);">
-              Tổng số mặt hàng: ${detailItemsList.length}
-            </span>
-          </div>
+                                                          <!-- BIỂU ĐỒ DOANH SỐ & TOP KHÁCH HÀNG -->
+                                                          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="grid-2">
+                                                            <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
+                                                              <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Biểu Đồ Doanh Thu & Sản Lượng Đơn Bán</div>
+                                                              <div style="height: 220px;"><canvas id="chart-sales"></canvas></div>
+                                                            </div>
+                                                            <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
+                                                              <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng (Tháng ${selectedMonthNum})</div>
+                                                              <table style="width: 100%; border-collapse: collapse;">
+                                                                <tbody>
+                                                                  ${customersHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có dữ liệu khách hàng</td></tr>'}
+                                                                </tbody>
+                                                              </table>
+                                                            </div>
+                                                          </div>
 
-          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
-              <select class="form-select" style="width: 110px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; state.page=1; render();">
-                ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
-              </select>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Khách hàng:</label>
-              <select class="form-select" style="width: 200px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesCustomer=this.value; state.page=1; render();">
-                <option value="">-- Tất cả khách hàng --</option>
-                ${customerSelectOptions}
-              </select>
-            </div>
-          </div>
+                                                          <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG -->
+                                                          <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
+                                                            <div style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
 
-        </div>
+                                                              <div style="display: flex; flex-direction: column; gap: 2px;">
+                                                                <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--foreground);">
+                                                                  Thống Kê Chi Tiết Theo Khách Hàng ${selectedCustomer ? `(${selectedCustomer})` : ''} - Tháng ${selectedMonthNum}/${currentYear}
+                                                                </span>
+                                                                <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--primary);">
+                                                                  Tổng số mặt hàng: ${detailItemsList.length}
+                                                                </span>
+                                                              </div>
 
-        <table style="width: 100%; border-collapse: collapse;">
-          <thead>
-            <tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">
-              ${detailHeaders}
-            </tr>
-          </thead>
-          <tbody>
-            ${detailRows}
-          </tbody>
-        </table>
-        ${detailItemsList.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không có dữ liệu đơn hàng trong tháng đã chọn</div>` : ''}
-      </div>
+                                                              <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                                                                <div style="display: flex; align-items: center; gap: 6px;">
+                                                                  <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
+                                                                  <select class="form-select" style="width: 110px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; state.page=1; render();">
+                                                                    ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
+                                                                  </select>
+                                                                </div>
+                                                                <div style="display: flex; align-items: center; gap: 6px;">
+                                                                  <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Khách hàng:</label>
+                                                                  <select class="form-select" style="width: 200px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesCustomer=this.value; state.page=1; render();">
+                                                                    <option value="">-- Tất cả khách hàng --</option>
+                                                                    ${customerSelectOptions}
+                                                                  </select>
+                                                                </div>
+                                                              </div>
 
-      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
-        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
-          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
-        </span>
-        <div style="display: flex; gap: 6px; align-items: center;">
-          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
-          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
-          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
-        </div>
-      </div>
+                                                            </div>
 
-    </div>
-  `;
+                                                            <table style="width: 100%; border-collapse: collapse;">
+                                                              <thead>
+                                                                <tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">
+                                                                  ${detailHeaders}
+                                                                </tr>
+                                                              </thead>
+                                                              <tbody>
+                                                                ${detailRows}
+                                                              </tbody>
+                                                            </table>
+                                                            ${detailItemsList.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không có dữ liệu đơn hàng trong tháng đã chọn</div>` : ''}
+                                                          </div>
+
+                                                          <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
+                                                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+                                                            <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+                                                              Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
+                                                            </span>
+                                                            <div style="display: flex; gap: 6px; align-items: center;">
+                                                              <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
+                                                              <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
+                                                              <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
+                                                            </div>
+                                                          </div>
+
+                                                        </div>
+                                                        `;
 
   new Chart(document.getElementById('chart-sales').getContext('2d'), {
     type: 'line',
@@ -2511,19 +2519,19 @@ function renderTableSkeleton(columnsCount = 8, rowsCount = 5) {
   ).join('');
 
   const rows = Array.from({ length: rowsCount }).map(() => `
-    <tr style="border-bottom: 1px solid var(--border);">
-      ${Array.from({ length: columnsCount }).map(() => `
+                                                        <tr style="border-bottom: 1px solid var(--border);">
+                                                          ${Array.from({ length: columnsCount }).map(() => `
         <td style="padding: 11px 16px;"><div class="skeleton-box skeleton-row"></div></td>
       `).join('')}
-    </tr>
-  `).join('');
+                                                        </tr>
+                                                        `).join('');
 
   return `
-    <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
-      <table style="width: 100%; border-collapse: collapse;">
-        <thead><tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">${headers}</tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-  `;
+                                                        <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
+                                                          <table style="width: 100%; border-collapse: collapse;">
+                                                            <thead><tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">${headers}</tr></thead>
+                                                            <tbody>${rows}</tbody>
+                                                          </table>
+                                                        </div>
+                                                        `;
 }
