@@ -320,20 +320,45 @@ function fmtTimeStr(timeStr) {
   return String(timeStr).substring(0, 5);
 }
 
+// ==========================================
+// 4. TIỆN ÍCH (HELPERS) & FORMATTER
+// ==========================================
+
 function getBadgeClass(status) {
   const s = String(status || '').toLowerCase().trim();
   const map = {
-    'completed': 'badge-emerald', 'hoàn thành': 'badge-emerald', 'approved': 'badge-emerald', 'đã duyệt': 'badge-emerald',
-    'processed': 'badge-emerald', 'đã xử lý': 'badge-emerald', 'accepted': 'badge-emerald', 'đã chấp nhận': 'badge-emerald',
-    'verified': 'badge-emerald', 'đã xác minh': 'badge-emerald', 'active': 'badge-emerald', 'hoạt động': 'badge-emerald',
-    'ok': 'badge-emerald', 'đủ hàng': 'badge-emerald', 'processing': 'badge-amber', 'đang xử lý': 'badge-amber',
-    'received': 'badge-amber', 'đã nhận': 'badge-amber', 'maintenance': 'badge-amber', 'bảo trì': 'badge-amber',
-    'low': 'badge-amber', 'sắp hết': 'badge-amber', 'shipped': 'badge-blue', 'delivered': 'badge-blue',
-    'pending': 'badge-zinc', 'chờ xử lý': 'badge-zinc', 'chờ duyệt': 'badge-zinc', 'draft': 'badge-zinc',
-    'bản nháp': 'badge-zinc', 'inactive': 'badge-zinc', 'ngừng hoạt động': 'badge-zinc', 'expired': 'badge-red',
-    'hết hạn': 'badge-red', 'cancelled': 'badge-red', 'đã hủy': 'badge-red', 'rejected': 'badge-red',
-    'từ chối': 'badge-red', 'suspended': 'badge-red', 'tạm khóa': 'badge-red', 'closed': 'badge-red',
-    'đóng cửa': 'badge-red', 'critical': 'badge-red', 'out': 'badge-red', 'hết hàng': 'badge-red'
+    // 🟢 XANH LÁ (Thành công / Hoạt động / Đã duyệt / Đủ hàng)
+    'completed': 'badge-emerald', 'hoàn thành': 'badge-emerald',
+    'approved': 'badge-emerald', 'đã duyệt': 'badge-emerald',
+    'processed': 'badge-emerald', 'đã xử lý': 'badge-emerald',
+    'accepted': 'badge-emerald', 'đã chấp nhận': 'badge-emerald',
+    'verified': 'badge-emerald', 'đã xác minh': 'badge-emerald',
+    'active': 'badge-emerald', 'hoạt động': 'badge-emerald', 'đang hoạt động': 'badge-emerald',
+    'ok': 'badge-emerald', 'đủ hàng': 'badge-emerald', 'còn hàng': 'badge-emerald',
+
+    // 🟡 VÀNG / CAM (Đang xử lý / Chờ duyệt / Nhận hàng / Cảnh báo nhẹ)
+    'processing': 'badge-amber', 'đang xử lý': 'badge-amber',
+    'received': 'badge-amber', 'đã nhận': 'badge-amber',
+    'maintenance': 'badge-amber', 'bảo trì': 'badge-amber',
+    'low': 'badge-amber', 'sắp hết': 'badge-amber',
+
+    // 🔵 XANH DƯƠNG (Đã giao hàng / Đang vận chuyển)
+    'shipped': 'badge-blue',
+    'delivered': 'badge-blue',
+
+    // 🔘 XÁM (Chờ xử lý / Nháp / Tạm ngưng)
+    'pending': 'badge-zinc', 'chờ xử lý': 'badge-zinc', 'chờ duyệt': 'badge-zinc',
+    'draft': 'badge-zinc', 'bản nháp': 'badge-zinc',
+    'inactive': 'badge-zinc', 'ngừng hoạt động': 'badge-zinc',
+
+    // 🔴 ĐỎ (Nguy cấp / Hết hàng / Lỗi / Hủy / Từ chối / Khóa / Đóng cửa)
+    'expired': 'badge-red', 'hết hạn': 'badge-red',
+    'cancelled': 'badge-red', 'đã hủy': 'badge-red',
+    'rejected': 'badge-red', 'từ chối': 'badge-red',
+    'suspended': 'badge-red', 'tạm khóa': 'badge-red',
+    'closed': 'badge-red', 'đóng cửa': 'badge-red',
+    'critical': 'badge-red', 'nguy cấp': 'badge-red',
+    'out': 'badge-red', 'hết hàng': 'badge-red'
   };
   return map[s] || 'badge-zinc';
 }
@@ -341,12 +366,39 @@ function getBadgeClass(status) {
 function getStatusLabel(status) {
   const s = String(status || '').toLowerCase().trim();
   const map = {
-    'approved': 'Đã duyệt', 'processed': 'Đã xử lý', 'processing': 'Đang xử lý', 'completed': 'Hoàn thành',
-    'pending': 'Chờ xử lý', 'accepted': 'Đã chấp nhận', 'draft': 'Bản nháp', 'expired': 'Hết hạn',
-    'verified': 'Đã xác minh', 'received': 'Đã nhận', 'active': 'Hoạt động', 'inactive': 'Ngừng hoạt động',
-    'suspended': 'Tạm khóa', 'maintenance': 'Bảo trì', 'closed': 'Đóng cửa', 'cancelled': 'Đã hủy',
-    'rejected': 'Từ chối', 'ok': 'Đủ hàng', 'low': 'Sắp hết', 'critical': 'Nguy cấp', 'out': 'Hết hàng'
+    // Báo giá & Đơn hàng & Đổi trả
+    'accepted': 'Duyệt',
+    'approved': 'Đã duyệt',
+    'processed': 'Đã xử lý',
+    'processing': 'Đang xử lý',
+    'completed': 'Hoàn thành',
+    'pending': 'Chờ duyệt',
+    'draft': 'Bản nháp',
+    'bản nháp': 'Bản nháp',
+    'expired': 'Hết hạn',
+    'rejected': 'Từ chối',
+    'cancelled': 'Đã hủy',
+
+    // Phiếu nhập kho (GRN)
+    'received': 'Đã nhận',
+    'đã nhận': 'Đã nhận',
+    'verified': 'Đã xác minh',
+    'đã xác minh': 'Đã xác minh',
+
+    // Khách hàng & Kho hàng
+    'active': 'Đang hoạt động',
+    'inactive': 'Ngừng hoạt động',
+    'suspended': 'Tạm khóa',
+    'maintenance': 'Bảo trì',
+    'closed': 'Đóng cửa',
+
+    // Vật tư & Tồn kho
+    'ok': 'Đủ hàng',
+    'low': 'Sắp hết',
+    'critical': 'Nguy cấp',
+    'out': 'Hết hàng'
   };
+
   return map[s] || (status ? String(status).toUpperCase() : '—');
 }
 
