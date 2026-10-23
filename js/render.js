@@ -777,8 +777,8 @@ function renderQuotationsList(c) {
     // Màu sắc tương ứng từng thẻ: Tổng (Trắng/Mặc định), Duyệt (Xanh lá), Chờ duyệt (Cam), Từ chối (Xám), Hết hạn (Đỏ)
     const color = s === 'all' ? 'var(--foreground)'
       : s === 'accepted' ? '#34d399'
-        : s === 'pending' ? '#fbbf24'
-          : s === 'rejected' ? '#f87171'
+        : s === 'pending' ? 'var(--foreground)'
+          : s === 'rejected' ? '#818cf8'
             : '#f87171';
 
     return `
@@ -1017,7 +1017,7 @@ function renderReturnsList(c) {
     { label: 'Hoàn thành', val: db.returns.filter(r => ['processed', 'hoàn thành', 'đã xử lý'].includes((r.status || '').toLowerCase())).length, color: '#60a5fa' },
     { label: 'Duyệt', val: db.returns.filter(r => ['approved', 'duyệt', 'đã duyệt'].includes((r.status || '').toLowerCase())).length, color: '#34d399' },
     { label: 'Chờ duyệt', val: db.returns.filter(r => ['pending', 'chờ duyệt'].includes((r.status || '').toLowerCase())).length, color: '#fbbf24' },
-    { label: 'Từ chối', val: db.returns.filter(r => ['rejected', 'từ chối'].includes((r.status || '').toLowerCase())).length, color: '#f87171' }
+    { label: 'Từ chối', val: db.returns.filter(r => ['rejected', 'từ chối'].includes((r.status || '').toLowerCase())).length, color: '#818cf8' }
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>

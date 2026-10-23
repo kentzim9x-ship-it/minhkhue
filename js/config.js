@@ -353,11 +353,14 @@ function getBadgeClass(status) {
     'closed': 'badge-red', 'đóng cửa': 'badge-red',
     'critical': 'badge-red', 'nguy cấp': 'badge-red',
     'out': 'badge-red', 'hết hàng': 'badge-red',
-    'rejected': 'badge-red', 'từ chối': 'badge-red',
+
 
     // #60a5fa XANH DƯƠNG / BLUE (Dành riêng cho Hoàn thành / Đã xử lý)
     'processed': 'badge-blue', 'Hoàn thành': 'badge-blue',
-    'completed': 'badge-blue', 'Hoàn thành': 'badge-blue'
+    'completed': 'badge-blue', 'Hoàn thành': 'badge-blue',
+
+    // 🟪 XANH CHÀM / INDIGO
+    'rejected': 'badge-red', 'từ chối': 'badge-red'
   };
   return map[s] || 'badge-zinc';
 }
