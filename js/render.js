@@ -1577,7 +1577,7 @@ function renderQuotationForm(c) {
     <div class="section-header" style="justify-content: space-between;">
       <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh mục sản phẩm</span></div>
       <!-- Nút Header: Tự động ẩn trên PC -->
-      ${getAddLineButton(moduleKey, isDetailsDisabled, 'header')}
+      ${getAddLineButton('quotations', isDetailsDisabled, 'header')}
     </div>
 
                   <div style="overflow-x: auto;">
@@ -1600,12 +1600,12 @@ function renderQuotationForm(c) {
 
                   <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
     <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
-      <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng (~110px đến 130px) -->
-      <div style="width: 120px; flex-shrink: 0;">
-        ${getAddLineButton(moduleKey, isDetailsDisabled, 'footer')}
+      <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
+      <div style="width: 110px; flex-shrink: 0;">
+        ${getAddLineButton('quotations', isDetailsDisabled, 'footer')}
       </div>
                     <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
-                      <div style="display: flex; justify-content: space-between;"><span class="form-label">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
+                      <div style="display: flex; justify-content: space-between; align-items: center; height: 36px;"><span class="form-label" style="margin:0;">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
                       <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
                       <div style="display: flex; justify-content: space-between;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
                       <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--foreground); font-weight: 500;">${fmtUSD(d.total)}</span></div>
@@ -1765,7 +1765,7 @@ function renderSalesOrderForm(c) {
     <div class="section-header" style="justify-content: space-between;">
       <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh mục sản phẩm</span></div>
       <!-- Nút Header: Tự động ẩn trên PC -->
-      ${getAddLineButton(moduleKey, isDetailsDisabled, 'header')}
+      ${getAddLineButton('sales-orders', isDetailsDisabled, 'header')}
     </div>
 
                                     <div style="overflow-x: auto;">
@@ -1790,12 +1790,12 @@ function renderSalesOrderForm(c) {
 
                                     <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
     <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
-      <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng (~110px đến 130px) -->
-      <div style="width: 120px; flex-shrink: 0;">
-        ${getAddLineButton(moduleKey, isDetailsDisabled, 'footer')}
+      <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
+      <div style="width: 110px; flex-shrink: 0;">
+        ${getAddLineButton('sales-orders', isDetailsDisabled, 'footer')}
       </div>
                                       <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
-                                        <div style="display: flex; justify-content: space-between;"><span class="form-label">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center; height: 36px;"><span class="form-label" style="margin:0;">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
                                         <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
                                         <div style="display: flex; justify-content: space-between;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
                                         <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.total)}</span></div>
@@ -1969,10 +1969,10 @@ function renderReturnForm(c) {
 
                                                 <!-- NÚT THÊM DÒNG RỘNG BẰNG CỘT MÃ HÀNG VÀ THẲNG HÀNG DỌC -->
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
-      <div style="width: 120px; flex-shrink: 0;">
+      <div style="width: 110px; flex-shrink: 0;">
         ${getAddLineButton('returns', isDetailsDisabled, 'footer')}
       </div>
-                                                  <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px;"><span class="form-label" style="font-weight: 600;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
+                                                  <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;"><span class="form-label" style="font-weight: 600; margin:0;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
                                                 </div>
                                               </div>
 
@@ -2123,12 +2123,12 @@ function renderGRNForm(c) {
 
                                                               <!-- BỐ TRÍ KHU VỰC TỔNG TIỀN VÀ NÚT THÊM DÒNG TRÊN PC -->
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
-      <div style="width: 120px; flex-shrink: 0;">
+      <div style="width: 110px; flex-shrink: 0;">
         ${getAddLineButton('grn', isDetailsDisabled, 'footer')}
       </div>
             
-            <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px;">
-              <span class="form-label" style="font-weight: 600;">Tổng giá trị</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;">
+              <span class="form-label" style="font-weight: 600; margin: 0;">Tổng giá trị</span>
               <span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.totalValue)}</span>
             </div>
           </div>
@@ -2553,45 +2553,21 @@ function renderReportSales(c) {
   });
 }
 
-function renderTableSkeleton(columnsCount = 8, rowsCount = 5) {
-  const headers = Array.from({ length: columnsCount }).map(() =>
-    `<th style="padding: 11px 16px;"><div class="skeleton-box skeleton-row" style="width: 70%;"></div></th>`
-  ).join('');
-
-  const rows = Array.from({ length: rowsCount }).map(() => `
-                                                        <tr style="border-bottom: 1px solid var(--border);">
-                                                          ${Array.from({ length: columnsCount }).map(() => `
-        <td style="padding: 11px 16px;"><div class="skeleton-box skeleton-row"></div></td>
-      `).join('')}
-                                                        </tr>
-                                                        `).join('');
-
-  return `
-                                                        <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
-                                                          <table style="width: 100%; border-collapse: collapse;">
-                                                            <thead><tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">${headers}</tr></thead>
-                                                            <tbody>${rows}</tbody>
-                                                          </table>
-                                                        </div>
-                                                        `;
-}
-
-function getAddLineButton(module, isDetailsDisabled, position) {
+function getAddLineButton(moduleName, isDetailsDisabled, position) {
   if (state.mode === 'view' || isDetailsDisabled) return '';
-
+  
   const isMobile = window.innerWidth <= 768;
+  
+  // Ẩn ở Header nếu là PC, ẩn ở Footer nếu là Mobile
+  if (position === 'header' && !isMobile) return ''; 
+  if (position === 'footer' && isMobile) return '';  
 
-  // PC: Hide at header | Mobile: Hide at footer
-  if (position === 'header' && !isMobile) return '';
-  if (position === 'footer' && isMobile) return '';
-
-  // Style chuẩn cho PC: Rộng 100% container chứa (đúng kích thước cột Mã hàng)
-  const buttonStyle = position === 'footer'
+  const buttonStyle = position === 'footer' 
     ? 'width: 100%; height: 36px; padding: 0 8px; justify-content: center; box-sizing: border-box; font-size: 13px;'
     : '';
 
   return `
-    <button type="button" class="btn-action btn-add-line-${position}" onclick="addLineItem('${module}')" style="display: inline-flex; align-items: center; gap: 6px; ${buttonStyle}">
+    <button type="button" class="btn-action btn-add-line-${position}" onclick="addLineItem('${moduleName}')" style="display: inline-flex; align-items: center; gap: 6px; ${buttonStyle}">
       ${Icons.plus} Thêm dòng
     </button>
   `;
