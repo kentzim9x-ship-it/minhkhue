@@ -829,18 +829,35 @@ function markAllNotificationsAsRead() {
 }
 
 function subscribeAppRealtimeChanges() {
-  const tables = ['materials', 'customers', 'warehouses', 'quotations', 'orders', 'returns', 'grns'];
+  const tables = ['materials', 'customers', 'warehouses', 'quotations', 'orders', 'returns', 'grns', 'notifications'];
 
+  // 1. Kênh đồng bộ giữa các Tab/Cửa sổ trên cùng trình duyệt
+  const appChannel = new BroadcastChannel('app_data_sync_channel');
+  appChannel.onmessage = async (event) => {
+    if (event.data === 'REFRESH_DATA') {
+      invalidateStockCache();
+      await fetchDataFromSupabase();
+      if (state.mode === 'list') {
+        render();
+      }
+    }
+  };
+
+  // 2. Kênh Lắng nghe Realtime trực tiếp từ Supabase Database
   tables.forEach(tbl => {
     supabaseClient
-      .channel(`public:${tbl}-changes`)
+      .channel(`public:${tbl}-changes-global`)
       .on('postgres_changes', { event: '*', schema: 'public', table: tbl }, async () => {
         invalidateStockCache();
+        // Bắt buộc AWAIT để chờ dữ liệu mới nạp vào biến db xong mới vẽ lại UI
         await fetchDataFromSupabase();
-        // Chỉ vẽ lại màn hình nếu người dùng đang đứng ở danh sách
+
         if (state.mode === 'list') {
           render();
         }
+
+        // Thông báo cho các Tab khác biết để cùng cập nhật
+        appChannel.postMessage('REFRESH_DATA');
       })
       .subscribe();
   });

@@ -652,6 +652,8 @@ async function saveForm(module) {
     invalidateStockCache();
     // Bắt buộc await để dữ liệu mới từ Database kịp nạp vào biến db
     await fetchDataFromSupabase();
+    state.formData = null;
+    state.mode = 'list';
     navigate(module, 'list');
   } catch (error) {
     console.error('Lỗi lưu Supabase:', error);
@@ -872,11 +874,12 @@ function handleMaterialSelectInLine(lineId, selectedName) {
   render();
 }
 
-function handleCustomerSelectInQuotation(customerName) {
+async function handleCustomerSelectInQuotation(customerName) {
   if (!state.formData || state.mode === 'view') return;
   const safeCustomer = String(customerName || '').trim();
   state.formData.customer = safeCustomer;
 
+  // Nếu bỏ chọn khách hàng (về ô trống)
   if (!safeCustomer) {
     state.formData.lineItems = [{
       lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
@@ -885,26 +888,45 @@ function handleCustomerSelectInQuotation(customerName) {
     return;
   }
 
+  // Tìm báo giá gần nhất của khách hàng này
   const latestQuotation = (db.quotations || [])
     .filter(q => q && q.customer === safeCustomer)
     .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
 
+  // Nếu tìm thấy báo giá cũ có chi tiết mặt hàng
   if (latestQuotation && Array.isArray(latestQuotation.lineItems) && latestQuotation.lineItems.length > 0) {
-    state.formData.lineItems = latestQuotation.lineItems.map(item => ({
-      lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-      sku: item.sku || '',
-      name: item.name || '',
-      qty: item.qty ?? 1,
-      unitPrice: item.unitPrice ?? 0,
-      discount: item.discount ?? 0,
-      tax: item.tax ?? 0
-    }));
+    
+    // Hiển thị hộp thoại cảnh báo / hỏi ý kiến người dùng
+    const confirmInherit = await showConfirm(
+      `Khách hàng "${safeCustomer}" đã có báo giá cũ (${latestQuotation.id}). Bạn có muốn kế thừa thông tin chi tiết từ báo giá này không?`,
+      'Xác nhận kế thừa báo giá'
+    );
+
+    if (confirmInherit) {
+      // Người dùng chọn ĐỒNG Ý -> Sao chép danh sách dòng sản phẩm từ báo giá cũ
+      state.formData.lineItems = latestQuotation.lineItems.map(item => ({
+        lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+        sku: item.sku || '',
+        name: item.name || '',
+        qty: item.qty ?? 1,
+        unitPrice: item.unitPrice ?? 0,
+        discount: item.discount ?? 0,
+        tax: item.tax ?? 0
+      }));
+    } else {
+      // Người dùng chọn HỦY BỎ -> Tạo 1 dòng trống sạch sẽ để nhập mới từ đầu
+      state.formData.lineItems = [{
+        lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
+      }];
+    }
   } else {
+    // Trường hợp Khách hàng chưa từng có báo giá nào trước đó
     state.formData.lineItems = [{
       lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
     }];
   }
 
+  // Render lại giao diện (Đồng thời mở khóa vùng nhập chi tiết sản phẩm bên dưới)
   render();
 }
 
@@ -1563,7 +1585,7 @@ async function downloadOrShareXLSX(workbook, fileName) {
 
 // Kiểm tra xem form giao dịch hiện tại có dữ liệu chưa lưu hay không
 function hasUnsavedFormData() {
-  // Chỉ kiểm tra ở chế độ Thêm mới hoặc Sửa của các module giao dịch
+  // Nếu đang ở màn hình danh sách (list) hoặc xem (view) thì không cảnh báo
   if (!['add', 'edit'].includes(state.mode)) return false;
   if (!['quotations', 'sales-orders', 'returns', 'grn'].includes(state.view)) return false;
 
