@@ -532,9 +532,9 @@ function renderMaterialsList(c) {
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['ok', 'Đủ hàng'], ['low', 'Sắp hết'], ['critical', 'Nguy cấp'], ['out', 'Hết hàng']])}
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
-            <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã, tên hàng..." value="${state.search}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
+            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('materials', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
@@ -650,9 +650,9 @@ function renderCustomersList(c) {
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['active', 'Đang Hoạt Động'], ['inactive', 'Ngừng Hoạt Động'], ['suspended', 'Tạm Khóa']])}
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
-            <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã, tên, liên hệ, địa chỉ..." value="${state.search}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
+            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('customers', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
@@ -763,21 +763,17 @@ function renderQuotationsList(c) {
   const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
 
   const kpiHtml = [
-    ['all', 'Tất cả'],
-    ['accepted', 'Duyệt'],
-    ['pending', 'Chờ Duyệt'],
-    ['rejected', 'Từ Chối'],
-    ['expired', 'Hết hạn']
-  ].map(([s, label]) => {
-    const count = s === 'all' ? db.quotations.length : db.quotations.filter(q => q.status === s).length;
-    const color = s === 'all' ? 'var(--foreground)' : s === 'draft' ? 'var(--muted-foreground)' : s === 'accepted' ? '#34d399' : '#f87171';
-    return `
-      <div style="background-color: var(--card); padding: 16px 20px;">
-        <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${label}</div>
-        <div style="font-family: var(--font-dm-mono); font-size: 24px; font-weight: 300; color: ${color};">${count}</div>
-      </div>
-    `;
-  }).join('');
+    { label: 'Tổng Báo Giá', val: db.orders.length, color: 'var(--foreground)' },
+    { label: 'Duyệt', val: db.orders.filter(o => o.status === 'accepted' || o.status === 'approved').length, color: '#34d399' },
+    { label: 'Chờ Duyệt', val: db.orders.filter(o => o.status === 'pending' || o.status === 'draft').length, color: '#fbbf24' },
+    { label: 'Từ Chối', val: db.orders.filter(o => o.status === 'rejected' ).length, color: 'var(--muted-foreground)' },
+    { label: 'Hết Hạn', val: db.orders.filter(o => o.status === 'expired').length, color: '#f87171' },
+  ].map(s => `
+    <div style="background-color: var(--card); padding: 16px 20px;">
+      <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
+      <div style="font-family: var(--font-dm-mono); font-size: 24px; font-weight: 300; color: ${s.color};">${s.val}</div>
+    </div>
+  `).join('');
 
   const headersHtml = ['Mã Báo Giá', 'Khách Hàng', 'Ngày Lập', 'Phát Hành', 'Hiệu Lực Đến', 'Số Dòng', 'Tổng Tiền', 'Trạng Thái', 'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', 'Hành Động']
     .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
@@ -819,9 +815,9 @@ function renderQuotationsList(c) {
         ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
-            <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã, tên khách hàng..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
+            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
@@ -937,9 +933,9 @@ function renderOrdersList(c) {
         ${getFilterBar([['all', 'Tất cả'], ['completed', 'Hoàn thành'], ['processing', 'Đang xử lý'], ['pending', 'Chờ xử lý'], ['cancelled', 'Đã hủy']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
-            <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã, tên khách hàng..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
+            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('sales-orders', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
@@ -1058,9 +1054,9 @@ function renderReturnsList(c) {
         ${getFilterBar([['all', 'Tất cả'], ['processed', 'Đã xử lý'], ['approved', 'Đã duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
-            <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã, khách hàng, lý do..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
+            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
@@ -1176,9 +1172,9 @@ function renderGRNList(c) {
         ${getFilterBar([['all', 'Tất cả'], ['Bản nháp', 'Bản nháp'], ['Đã nhận', 'Đã nhận'], ['Đã xác minh', 'Đã xác minh']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px;">
-            <span style="color: var(--muted-foreground);">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm theo mã phiếu, nhà cung cấp..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; padding: 8px 0;">
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
+            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
