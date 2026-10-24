@@ -1345,6 +1345,10 @@ async function exportSalesOrderToPDF() {
   await generateAndSharePDF(container, `DonHang_${d.id || 'Export'}`, `Đơn Bán Hàng ${d.id || ''}`);
 }
 
+// ==========================================
+// XUẤT PDF BÁO CÁO BÁN HÀNG (TỔNG HỢP & CHI TIẾT)
+// Giữ nguyên 100% cấu trúc, sửa cột ĐVT & ngày tháng ở cột Tên Hàng
+// ==========================================
 async function exportSalesReportToPDF() {
   const selectedCustomer = state.reportSalesCustomer || '';
   const selectedMonth = state.reportSalesMonth || (new Date().getMonth() + 1);
@@ -1354,6 +1358,13 @@ async function exportSalesReportToPDF() {
 
   const custAddress = selectedCustomer ? getCustomerAddress(selectedCustomer) : 'Tất cả địa chỉ';
   const { dayStr, monthStr, yearStr } = parseDateParts(getTodayDateStr());
+
+  // Hàm bổ trợ lấy ĐVT chuẩn
+  const resolveUnit = (sku, name, itemUnit) => {
+    if (itemUnit && itemUnit !== '—') return itemUnit;
+    const mat = (db.materials || []).find(m => (sku && m.id === sku) || (name && m.name === name));
+    return (mat && mat.unit) ? mat.unit : '—';
+  };
 
   // Lọc danh sách đơn hàng đã duyệt / hoàn thành trong tháng
   const filteredOrders = (db.orders || []).filter(o => {
@@ -1383,7 +1394,7 @@ async function exportSalesReportToPDF() {
           const tax = Number(item.tax || 0);
           const lineSub = qty * price * (1 - disc / 100);
           const lineTotal = lineSub * (1 + tax / 100);
-          const unit = item.unit || (typeof getMaterialUnit === 'function' ? getMaterialUnit(sku, name) : '—');
+          const unit = resolveUnit(sku, name, item.unit);
 
           if (!itemSummaryMap[sku]) {
             itemSummaryMap[sku] = { sku, name, unit, qty: 0, totalAmount: 0 };
@@ -1462,7 +1473,7 @@ async function exportSalesReportToPDF() {
           const lineTotal = lineSub * (1 + tax / 100);
           const sku = item.sku || '—';
           const name = item.name || '—';
-          const unit = item.unit || (typeof getMaterialUnit === 'function' ? getMaterialUnit(sku, name) : '—');
+          const unit = resolveUnit(sku, name, item.unit);
 
           dayTotalQty += qty;
           dayTotalAmount += lineTotal;
@@ -1483,12 +1494,12 @@ async function exportSalesReportToPDF() {
         });
       });
 
-      // Dòng gom nhóm Ngày
+      // Dòng gom nhóm Ngày (NGÀY THÁNG ĐẶT Ở CỘT TÊN HÀNG)
       rowsHtml += `
         <tr style="height: 26px; background-color: #f2f2f2; font-weight: bold;">
           <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000; text-align: center; font-size: 11pt; color: #d97706;">${formattedDate}</td>
           <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px; color: #d97706;">${formattedDate}</td>
           <td style="border: 1px solid #000;"></td>
           <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px; color: #d97706;">${dayTotalQty ? dayTotalQty.toLocaleString('vi-VN') : '0'}</td>
           <td style="border: 1px solid #000;"></td>
@@ -1597,7 +1608,7 @@ async function exportSalesReportToPDF() {
 
   // Gọi hàm bổ trợ dùng chung để tạo và tải/chia sẻ file PDF
   const custTitle = selectedCustomer ? selectedCustomer.replace(/\s+/g, '_') : 'Tat_Ca';
-  const filePrefix = isDetail ? `Bao_cao_ban_hang_chi_tiet_${custTitle}` : `Bao_cao_tong_hop_${custTitle}`;
+  const filePrefix = isDetail ? `Báo_cáo_chi_tiết_${custTitle}` : `Báo_cáo_tổng_hợp_${custTitle}`;
   await generateAndSharePDF(container, filePrefix, `Báo cáo bán hàng ${isDetail ? 'Chi tiết' : 'Tổng hợp'}`);
 }
 
