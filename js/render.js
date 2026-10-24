@@ -962,7 +962,7 @@ function renderOrdersList(c) {
   const columnConfig = [
     { title: 'Mã Đơn Hàng', width: '60px', align: 'center' },
     { title: 'Khách Hàng', width: '100px', align: 'center' },
-    { title: 'Ngày Tạo', width: '60px', align: 'center' },
+    { title: 'Ngày Lập Phiếu', width: '60px', align: 'center' },
     { title: 'Mã Kho', width: '40px', align: 'center' },
     { title: 'Số Dòng', width: '40px', align: 'center' },
     { title: 'Tổng Tiền', width: '80px', align: 'center' },
@@ -986,7 +986,7 @@ function renderOrdersList(c) {
   <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', '${hasPermission ? 'edit' : 'view'}', '${o.id}')" onclick="navigate('sales-orders', 'view', '${o.id}')">
     <td data-label="Mã Đơn Hàng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${o.id}</td>
     <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${o.customer}</td>
-    <td data-label="Ngày Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${o.date}</td>
+    <td data-label="Ngày Lập Phiếu" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${o.date}</td>
     <td data-label="Mã Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${o.warehouseCode || o.warehouse_code || '—'}</td>
     <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${(o.lineItems || o.lineitems || []).length || o.items || 0}</td>
     <td data-label="Tổng Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: center;">${fmtUSD(o.total)}</td>
@@ -1099,7 +1099,7 @@ function renderReturnsList(c) {
     { title: 'Mã Đổi Trả', width: '60px', align: 'center' },
     { title: 'Đơn Hàng Bán', width: '60px', align: 'center' },
     { title: 'Khách Hàng', width: '100px', align: 'center' },
-    { title: 'Ngày Tạo', width: '60px', align: 'center' },
+    { title: 'Ngày Đổi Trả', width: '60px', align: 'center' },
     { title: 'Lý Do', width: '120px', align: 'center' },
     { title: 'Số Dòng', width: '40px', align: 'center' },
     { title: 'Tổng Hoàn Tiền', width: '80px', align: 'center' },
@@ -1126,7 +1126,7 @@ function renderReturnsList(c) {
         <td data-label="Mã Đổi Trả" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${r.id}</td>
         <td data-label="Đơn Hàng Bán" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${r.orderId || '—'}</td>
         <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${r.customer}</td>
-        <td data-label="Ngày Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${r.date}</td>
+        <td data-label="Ngày Đổi Trả" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${r.date}</td>
         <td data-label="Lý Do" style="padding: 12px 16px; font-size: 13px;">${r.reason}</td>
         <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${totalLines}</td>
         <td data-label="Tổng Hoàn Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; color: #f87171; text-align: center;">${fmtUSD(r.total)}</td>
@@ -1237,7 +1237,7 @@ function renderGRNList(c) {
   const columnConfig = [
     { title: 'Mã Nhập Kho', width: '60px', align: 'center' },
     { title: 'Nhà Cung Cấp', width: '100px', align: 'center' },
-    { title: 'Ngày Nhập', width: '60px', align: 'center' },
+    { title: 'Ngày Nhập Kho', width: '60px', align: 'center' },
     { title: 'Mã Kho', width: '40px', align: 'center' },
     { title: 'Số Dòng', width: '40px', align: 'center' },
     { title: 'Tổng Tiền', width: '80px', align: 'center' },
@@ -1264,7 +1264,7 @@ function renderGRNList(c) {
       <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('grn', '${hasPermission ? 'edit' : 'view'}', '${g.id}')" onclick="navigate('grn', 'view', '${g.id}')">
         <td data-label="Mã Nhập Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${g.id}</td>
         <td data-label="Nhà Cung Cấp" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${g.supplier || '—'}</td>      
-        <td data-label="Ngày Nhập" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${g.date}</td>
+        <td data-label="Ngày Nhập Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${g.date}</td>
         <td data-label="Mã Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${wCode}</td>
         <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${totalLines}</td>
         <td data-label="Tổng Giá Trị" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: center;">${fmtUSD(g.totalValue)}</td>
@@ -1865,7 +1865,7 @@ function renderSalesOrderForm(c) {
                                         </select>
                                       </div>                                     
                                       <div class="form-group">
-                                        <label class="form-label">Ngày tạo đơn *</label>
+                                        <label class="form-label">Ngày lập phiếu *</label>
                                         <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
                                       </div>
                                       <div class="form-group">
