@@ -1347,7 +1347,7 @@ async function exportSalesOrderToPDF() {
 
 // ==========================================
 // XUẤT PDF BÁO CÁO BÁN HÀNG (TỔNG HỢP & CHI TIẾT)
-// Giữ nguyên 100% cấu trúc, sửa cột ĐVT & ngày tháng ở cột Tên Hàng
+// Cập nhật: Bỏ cột STT mẫu chi tiết & Đưa Khách hàng / Địa chỉ thành từng dòng riêng
 // ==========================================
 async function exportSalesReportToPDF() {
   const selectedCustomer = state.reportSalesCustomer || '';
@@ -1380,7 +1380,7 @@ async function exportSalesReportToPDF() {
   let totalAmount = 0;
 
   if (!isDetail) {
-    // === 1. TẠO BÁO CÁO TỔNG HỢP ===
+    // === 1. TẠO BÁO CÁO TỔNG HỢP (GIỮ CỘT STT) ===
     const itemSummaryMap = {};
     filteredOrders.forEach(o => {
       if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
@@ -1438,7 +1438,7 @@ async function exportSalesReportToPDF() {
     }
 
   } else {
-    // === 2. TẠO BÁO CÁO CHI TIẾT ===
+    // === 2. TẠO BÁO CÁO CHI TIẾT (BỎ CỘT STT) ===
     const customerOrders = filteredOrders.filter(o =>
       o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
     );
@@ -1451,7 +1451,6 @@ async function exportSalesReportToPDF() {
     });
 
     const sortedDates = Object.keys(dailyMap).sort((a, b) => new Date(a) - new Date(b));
-    let stt = 1;
 
     sortedDates.forEach(dateStr => {
       const dateParts = dateStr.split('-');
@@ -1482,7 +1481,6 @@ async function exportSalesReportToPDF() {
 
           dayRowsHtml += `
             <tr style="height: 26px;">
-              <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${stt++}</td>
               <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${sku}</td>
               <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px;">${name}</td>
               <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${unit}</td>
@@ -1494,10 +1492,9 @@ async function exportSalesReportToPDF() {
         });
       });
 
-      // Dòng gom nhóm Ngày (NGÀY THÁNG ĐẶT Ở CỘT TÊN HÀNG)
+      // Dòng gom nhóm Ngày (Không có cột STT)
       rowsHtml += `
         <tr style="height: 26px; background-color: #f2f2f2; font-weight: bold;">
-          <td style="border: 1px solid #000;"></td>
           <td style="border: 1px solid #000;"></td>
           <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px; color: #d97706;">${formattedDate}</td>
           <td style="border: 1px solid #000;"></td>
@@ -1529,12 +1526,11 @@ async function exportSalesReportToPDF() {
     </tr>
   ` : `
     <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
-      <td style="border: 1px solid #000000; width: 5%;">STT</td>
-      <td style="border: 1px solid #000000; width: 15%;">Mã Hàng (SKU)</td>
-      <td style="border: 1px solid #000000; width: 32%;">Tên Hàng</td>
-      <td style="border: 1px solid #000000; width: 8%;">ĐVT</td>
-      <td style="border: 1px solid #000000; width: 12%;">Tổng Số Lượng</td>
-      <td style="border: 1px solid #000000; width: 13%;">Đơn Giá</td>
+      <td style="border: 1px solid #000000; width: 18%;">Mã Hàng (SKU)</td>
+      <td style="border: 1px solid #000000; width: 35%;">Tên Hàng</td>
+      <td style="border: 1px solid #000000; width: 9%;">ĐVT</td>
+      <td style="border: 1px solid #000000; width: 11%;">Tổng Số Lượng</td>
+      <td style="border: 1px solid #000000; width: 12%;">Đơn Giá</td>
       <td style="border: 1px solid #000000; width: 15%;">Tổng Số Tiền</td>
     </tr>
   `;
@@ -1547,7 +1543,7 @@ async function exportSalesReportToPDF() {
     </tr>
   ` : `
     <tr style="height: 26px; font-weight: bold;">
-      <td colspan="4" style="border: 1px solid #000000; text-align: center;">Tổng Cộng</td>
+      <td colspan="3" style="border: 1px solid #000000; text-align: center;">Tổng Cộng</td>
       <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : '0'}</td>
       <td style="border: 1px solid #000000;"></td>
       <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : '0'}</td>
@@ -1574,16 +1570,11 @@ async function exportSalesReportToPDF() {
       CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
     </div>
 
-    <table style="width: 100%; font-size: 11pt; margin-bottom: 12px; border-collapse: collapse;">
-      <tr>
-        <td style="width: 50%; padding: 3px 0;">Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</td>
-        <td style="width: 50%; padding: 3px 0;">Loại báo cáo: Báo cáo bán hàng ${isDetail ? 'chi tiết' : 'tổng hợp'}</td>
-      </tr>
-      <tr>
-        <td style="padding: 3px 0;">Địa chỉ: ${custAddress}</td>
-        <td style="padding: 3px 0;">Tháng báo cáo: Tháng ${selectedMonth}/${currentYear}</td>
-      </tr>
-    </table>
+    <!-- KHU VỰC THÔNG TIN KHÁCH HÀNG & ĐỊA CHỈ (MỖI THÔNG TIN 1 DÒNG ĐỘC LẬP) -->
+    <div style="font-size: 11pt; margin-bottom: 12px; line-height: 1.6;">
+      <div>Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</div>
+      <div>Địa chỉ: ${custAddress}</div>
+    </div>
 
     <div style="border: 1.5px solid #000000; box-sizing: border-box;">
       <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
@@ -1608,7 +1599,7 @@ async function exportSalesReportToPDF() {
 
   // Gọi hàm bổ trợ dùng chung để tạo và tải/chia sẻ file PDF
   const custTitle = selectedCustomer ? selectedCustomer.replace(/\s+/g, '_') : 'Tat_Ca';
-  const filePrefix = isDetail ? `Báo_cáo_chi_tiết_${custTitle}` : `Báo_cáo_tổng_hợp_${custTitle}`;
+  const filePrefix = isDetail ? `Bao_cao_ban_hang_chi_tiet_${custTitle}` : `Bao_cao_tong_hop_${custTitle}`;
   await generateAndSharePDF(container, filePrefix, `Báo cáo bán hàng ${isDetail ? 'Chi tiết' : 'Tổng hợp'}`);
 }
 
