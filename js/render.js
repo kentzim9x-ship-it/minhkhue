@@ -2475,6 +2475,53 @@ const headersHtml = columnConfig.map(col => `
   }
 }
 
+// HÀM XỬ LÝ XUẤT PDF PHÂN NHÁNH PC & MOBILE THEO HỆ THỐNG
+function exportSalesReportToPDF() {
+  const selectedCustomer = state.reportSalesCustomer || 'Tất cả khách hàng';
+  const selectedMonth = state.reportSalesMonth || (new Date().getMonth() + 1);
+  const reportType = state.reportType === 'detail' ? 'Chi tiết' : 'Tổng hợp';
+  const fileName = `Bao_cao_ban_hang_${reportType}_Thang_${selectedMonth}.pdf`;
+
+  const element = document.querySelector('#sales-report-table-container') || document.body;
+
+  // Kiểm tra thiết bị Mobile (hoặc hỗ trợ chia sẻ Web Share API)
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768);
+
+  if (typeof html2pdf !== 'undefined') {
+    const opt = {
+      margin:       [10, 10, 10, 10],
+      filename:     fileName,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+
+    if (isMobile && navigator.share && navigator.canShare) {
+      // Logic trên Mobile: Tạo Blob PDF và mở Trình chia sẻ (Zalo / Tải xuống)
+      html2pdf().set(opt).from(element).outputPdf('blob').then(function(pdfBlob) {
+        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+        if (navigator.canShare({ files: [file] })) {
+          navigator.share({
+            title: `Báo cáo bán hàng ${reportType}`,
+            text: `Báo cáo bán hàng ${reportType} - Tháng ${selectedMonth}`,
+            files: [file]
+          }).catch(() => {});
+        } else {
+          // Fallback nếu không hỗ trợ chia sẻ file
+          html2pdf().set(opt).from(element).save();
+        }
+      });
+    } else {
+      // Logic trên PC: Tải xuống trực tiếp file PDF
+      html2pdf().set(opt).from(element).save();
+    }
+  } else {
+    // Trường hợp không có thư viện html2pdf -> Dùng lệnh In của trình duyệt
+    window.print();
+  }
+}
+
+// HÀM RENDER CHÍNH
 function renderReportSales(c) {
   const {
     salesDataReal,
@@ -2747,7 +2794,7 @@ function renderReportSales(c) {
       </div>
 
       <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG -->
-      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
+      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;" id="sales-report-table-container">
         <div style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
 
           <div style="display: flex; flex-direction: column; gap: 2px;">
@@ -2791,7 +2838,7 @@ function renderReportSales(c) {
               <button 
                 type="button" 
                 class="btn-primary" 
-                onclick="exportQuotationToPDF()" 
+                onclick="exportSalesReportToPDF()" 
                 style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"
               >
                 Xuất PDF
@@ -2878,34 +2925,6 @@ function renderReportSales(c) {
       }
     }
   });
-}
-
-function exportSalesReportToPDF() {
-  const selectedCustomer = state.reportSalesCustomer || 'Tat_Ca_Khach_Hang';
-  const selectedMonth = state.reportSalesMonth || (new Date().getMonth() + 1);
-  const reportType = state.reportType || 'summary';
-  const reportTypeName = reportType === 'detail' ? 'Chi_Tiet' : 'Tong_Hop';
-
-  // Tên file xuất tương tự mẫu
-  const fileName = reportType === 'detail' 
-    ? `Bao_cao_ban_hang_chi_tiet_${selectedCustomer.replace(/\s+/g, '_')}.pdf`
-    : `Bao_cao_tong_hop_${selectedCustomer.replace(/\s+/g, '_')}.pdf`;
-
-  // Kiểm tra nếu có hàm render/xuất PDF có sẵn trong dự án hoặc dùng cửa sổ in chuẩn HTML
-  if (typeof html2pdf !== 'undefined') {
-    const element = document.querySelector('#sales-report-table-container');
-    const opt = {
-      margin:       [10, 10, 10, 10],
-      filename:     fileName,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2 },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
-    html2pdf().set(opt).from(element).save();
-  } else {
-    // Phương án fallback: Mở giao diện in PDF của trình duyệt
-    window.print();
-  }
 }
 
 function getAddLineButton(moduleName, isDetailsDisabled, position) {
