@@ -791,19 +791,19 @@ function renderQuotationsList(c) {
 
   const columnConfig = [
     { title: 'Mã Báo Giá', width: '60px', align: 'center' },
-    { title: 'Khách Hàng', width: '110px', align: 'center' },
+    { title: 'Khách Hàng', width: '100px', align: 'center' },
     { title: 'Ngày Lập Phiếu', width: '60px', align: 'center' },
     { title: 'Ngày Bắt Đầu', width: '60px', align: 'center' },
     { title: 'Ngày Kết Thúc', width: '60px', align: 'center' },
-    { title: 'Số Dòng', width: '50px', align: 'center' },
-    { title: 'Tổng Tiền', width: '90px', align: 'center' },
-    { title: 'Trạng Thái', width: '90px', align: 'center' },
-    { title: 'Người Tạo', width: '90px', align: 'center' },
+    { title: 'Số Dòng', width: '40px', align: 'center' },
+    { title: 'Tổng Tiền', width: '80px', align: 'center' },
+    { title: 'Trạng Thái', width: '80px', align: 'center' },
+    { title: 'Người Tạo', width: '80px', align: 'center' },
     { title: 'Ngày Tạo', width: '60px', align: 'center' },
-    { title: 'Giờ Tạo', width: '50px', align: 'center' },
-    { title: 'Người Sửa', width: '90px', align: 'center' },
+    { title: 'Giờ Tạo', width: '40px', align: 'center' },
+    { title: 'Người Sửa', width: '80px', align: 'center' },
     { title: 'Ngày Sửa', width: '60px', align: 'center' },
-    { title: 'Giờ Sửa', width: '50px', align: 'center' },
+    { title: 'Giờ Sửa', width: '40px', align: 'center' },
     { title: 'Hành Động', width: '120px', align: 'center' }
   ];
 
@@ -815,21 +815,21 @@ function renderQuotationsList(c) {
 
   const rowsHtml = paginatedItems.map(q => `
     <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('quotations', '${hasPermission ? 'edit' : 'view'}', '${q.id}')" onclick="navigate('quotations', 'view', '${q.id}')">
-      <td data-label="Mã Báo Giá" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${q.id}</td>
-      <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${q.customer}</td>
-      <td data-label="Ngày Lập" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.date || '—'}</td>
-      <td data-label="Ngày Bắt Đầu" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.validbegin || q.validBegin || '—'}</td>
-      <td data-label="Ngày Kết Thúc" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.validUntil}</td>
-      <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${(q.lineItems || []).length}</td>
-      <td data-label="Tổng Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(q.total)}</td>
-      <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(q.status)}">${getStatusLabel(q.status)}</span></td>
+      <td data-label="Mã Báo Giá" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${q.id}</td>
+      <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500; text-align: center;">${q.customer}</td>
+      <td data-label="Ngày Lập" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${q.date || '—'}</td>
+      <td data-label="Ngày Bắt Đầu" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${q.validbegin || q.validBegin || '—'}</td>
+      <td data-label="Ngày Kết Thúc" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${q.validUntil}</td>
+      <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${(q.lineItems || []).length}</td>
+      <td data-label="Tổng Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: center;">${fmtUSD(q.total)}</td>
+      <td data-label="Trạng Thái" style="padding: 12px 16px; text-align: center;"><span class="badge ${getBadgeClass(q.status)}">${getStatusLabel(q.status)}</span></td>
 
-      <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(q.user_id0)}</td>
-      <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(q.date0)}</td>
-      <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(q.time0)}</td>
-      <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(q.user_id2)}</td>
-      <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(q.date2)}</td>
-      <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(q.time2)}</td>
+      <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px; text-align: center;">${getUserFullName(q.user_id0)}</td>
+      <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(q.date0)}</td>
+      <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(q.time0)}</td>
+      <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px; text-align: center;">${getUserFullName(q.user_id2)}</td>
+      <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(q.date2)}</td>
+      <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(q.time2)}</td>
 
       <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
         <button class="btn-action" onclick="event.stopPropagation(); navigate('quotations', 'view', '${q.id}')">${Icons.view} Xem</button>
