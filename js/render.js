@@ -1337,98 +1337,100 @@ function renderMaterialForm(c) {
   const hasPermission = checkModulePermission('materials');
 
   c.innerHTML = `
-    <div style="max-width: 900px;">
-      ${getBreadcrumb('Sản Phẩm & Vật Tư', isView ? `Xem ${d.id}` : (state.mode === 'edit' ? `Sửa ${d.id}` : 'Thêm Sản Phẩm Mới'), 'materials')}
-      <form onsubmit="event.preventDefault(); saveForm('materials');">
-        <input type="hidden" value="${d.id || ''}">
+                  <div style="max-width: 900px;">
+                    ${getBreadcrumb('Sản Phẩm & Vật Tư', isView ? `Xem ${d.id}` : (state.mode === 'edit' ? `Sửa ${d.id}` : 'Thêm Sản Phẩm Mới'), 'materials')}
+                    <form onsubmit="event.preventDefault(); saveForm('materials');">
+                      <input type="hidden" value="${d.id || ''}">
 
-        <div class="section-panel">
-          <div class="section-header">
-            <span class="section-num">01</span>
-            <span class="section-title">Thông tin cơ bản</span>
-          </div>
-          <div class="section-body grid-3">
-            <div class="form-group" style="grid-column: span 2;">
-              <label class="form-label">Tên sản phẩm *</label>
-              <input 
-                  type="text" 
-                  class="form-input" 
-                  value="${d.name || ''}" 
-                  ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-                    oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
-                    onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
-                  `} 
-                  placeholder="Nhập tên sản phẩm..." 
-                  required
-                >
-            </div>
-            <div class="form-group">
-              <label class="form-label">Đơn vị tính *</label>
-              <input 
-                type="text" 
-                class="form-input" 
-                value="${d.unit || ''}" 
-                ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-                  oninput="this.value = toUpperCaseStr(this.value); updateField('unit', this.value);"
-                  onchange="this.value = toUpperCaseStr(this.value); updateField('unit', this.value);"
-                `} 
-                placeholder="CÁI, HỘP, BỘ, KG..." 
-                required
-              >
-            </div>
-            <div class="form-group">
-              <label class="form-label">Danh mục</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'category\', this.value)"'}>
-                ${['Hoa Quả', 'Rau Củ', 'Khác'].map(cat => `<option value="${cat}" ${d.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
-              </select>
-            </div>
-          </div>
-        </div>
+                      <div class="section-panel">
+                        <div class="section-header">
+                          <span class="section-num">01</span>
+                          <span class="section-title">Thông tin cơ bản</span>
+                        </div>
+                        <div class="section-body grid-3">
+                          <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Tên sản phẩm *</label>
+                            <input 
+                                type="text" 
+                                class="form-input" 
+                                value="${d.name || ''}" 
+                                ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+                                  oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
+                                  onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
+                                `} 
+                                placeholder="Nhập tên sản phẩm..." 
+                                required
+                              >
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Đơn vị tính *</label>
+                            <input 
+                              type="text" 
+                              class="form-input" 
+                              value="${d.unit || ''}" 
+                              ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+                                oninput="this.value = toUpperCaseStr(this.value); updateField('unit', this.value);"
+                                onchange="this.value = toUpperCaseStr(this.value); updateField('unit', this.value);"
+                              `} 
+                              placeholder="CÁI, HỘP, BỘ, KG..." 
+                              required
+                            >
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Danh mục</label>
+                            <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'category\', this.value)"'}>
+                              ${['Hoa Quả', 'Rau Củ', 'Khác'].map(cat => `<option value="${cat}" ${d.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
 
-        <div class="section-panel">
-          <div class="section-header">
-            <span class="section-num">02</span>
-            <span class="section-title">Kho hàng & Chi phí (Tùy chọn)</span>
-          </div>
-          <div class="section-body grid-4">
-            <div class="form-group">
-              <label class="form-label">Vị trí lưu kho</label>
-              <input type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'location\', this.value)"'} placeholder="Ví dụ: A-12-03">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Tồn kho ban đầu</label>
-              <input 
-                type="number" 
-                step="any" 
-                inputmode="decimal" 
-                class="form-input" 
-                value="${d.stock ?? 0}" 
-                ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'stock\', this.value, \'number\')"'}>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Mức định mức</label>
-              <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.reorder ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'reorder\', this.value, \'number\')"'} >
-            </div>
-            <div class="form-group">
-              <label class="form-label">Đơn giá (VNĐ)</label>
-              <input type="number" step="any" inputmode="numeric" class="form-input" value="${d.cost ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'cost\', this.value, \'number\')"'} >
-            </div>
-          </div>
-        </div>
+                      <div class="section-panel">
+                        <div class="section-header">
+                          <span class="section-num">02</span>
+                          <span class="section-title">Kho hàng & Chi phí (Tùy chọn)</span>
+                        </div>
+                        <div class="section-body grid-4">
+                          <div class="form-group">
+                            <label class="form-label">Vị trí lưu kho</label>
+                            <input type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'location\', this.value)"'} placeholder="Ví dụ: A-12-03">
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Tồn kho ban đầu</label>
+                            <input 
+                              type="number" 
+                              step="any" 
+                              inputmode="decimal" 
+                              class="form-input" 
+                              value="${d.stock ?? 0}" 
+                              ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'stock\', this.value, \'number\')"'}>
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Mức định mức</label>
+                            <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.reorder ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'reorder\', this.value, \'number\')"'} >
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Đơn giá (VNĐ)</label>
+                            <input type="number" step="any" inputmode="numeric" class="form-input" value="${d.cost ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'cost\', this.value, \'number\')"'} >
+                          </div>
+                        </div>
+                      </div>
 
-        <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" onclick="navigate('materials')">${isView ? 'Quay lại' : 'Hủy'}</button>
-          <div style="display: flex; gap: 8px;">
-            ${isView && hasPermission ? `
-              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('materials', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
-              <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('materials', '${d.id}')">${Icons.trash} Xóa</button>
-            ` : ''}
-            ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu sản phẩm' : 'Cập nhật'}</button>` : ''}
-          </div>
-        </div>
-      </form>
-    </div>
-  `;
+                      <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                        <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('materials', 'view', '${d.id}') : navigate('materials')">
+                          ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+                        </button>
+                        <div style="display: flex; gap: 8px;">
+                          ${isView && hasPermission ? `
+                            <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('materials', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                            <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('materials', '${d.id}')">${Icons.trash} Xóa</button>
+                          ` : ''}
+                          ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu sản phẩm' : 'Cập nhật'}</button>` : ''}
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                `;
 }
 
 function renderCustomerForm(c) {
@@ -1437,92 +1439,94 @@ function renderCustomerForm(c) {
   const hasPermission = checkModulePermission('customers');
 
   c.innerHTML = `
-    <div style="max-width: 900px;">
-      ${getBreadcrumb('Khách hàng', isView ? `Xem ${d.id}` : (state.mode === 'edit' ? `Chỉnh sửa ${d.id}` : 'Thêm mới khách hàng'), 'customers')}
-      <form onsubmit="event.preventDefault(); saveForm('customers');">
-        <input type="hidden" value="${d.id || ''}">
+                  <div style="max-width: 900px;">
+                    ${getBreadcrumb('Khách hàng', isView ? `Xem ${d.id}` : (state.mode === 'edit' ? `Chỉnh sửa ${d.id}` : 'Thêm mới khách hàng'), 'customers')}
+                    <form onsubmit="event.preventDefault(); saveForm('customers');">
+                      <input type="hidden" value="${d.id || ''}">
 
-        <div class="section-panel">
-          <div class="section-header">
-            <span class="section-num">01</span>
-            <span class="section-title">Thông tin khách hàng</span>
-          </div>
-          <div class="section-body grid-3">
-            <div class="form-group" style="grid-column: span 2;">
-              <label class="form-label">Tên công ty / Khách hàng *</label>
-              <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-                oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
-                onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
-              `} placeholder="Nhập tên công ty hoặc tên khách hàng..." required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Loại khách hàng</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'type\', this.value)"'}>
-                ${['Khách vãng lai', 'Khách hàng tiềm năng', 'Khách hàng trung thành', 'Khách hàng cũ', 'Khách hàng tiêu cực'].map(t => `<option value="${t}" ${d.type === t ? 'selected' : ''}>${t}</option>`).join('')}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Người liên hệ</label>
-              <input type="text" class="form-input" value="${d.contact || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-                oninput="this.value = toTitleCase(this.value); updateField('contact', this.value);"
-                onchange="this.value = toTitleCase(this.value); updateField('contact', this.value);"
-              `} placeholder="Tên người đại diện...">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Email</label>
-              <input type="email" class="form-input" value="${d.email || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'email\', this.value)"'} placeholder="example@domain.com">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Số điện thoại</label>
-              <input type="tel" inputmode="tel" class="form-input" value="${d.phone || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'phone\', this.value)"'} placeholder="090x xxx xxx">
-            </div>
-            <div class="form-group" style="grid-column: span 3;">
-              <label class="form-label">Địa chỉ</label>
-              <input type="text" class="form-input" value="${d.address || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'address\', this.value)"'} placeholder="Nhập địa chỉ trụ sở/giao hàng...">
-            </div>
-          </div>
-        </div>
+                      <div class="section-panel">
+                        <div class="section-header">
+                          <span class="section-num">01</span>
+                          <span class="section-title">Thông tin khách hàng</span>
+                        </div>
+                        <div class="section-body grid-3">
+                          <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Tên công ty / Khách hàng *</label>
+                            <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+                              oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
+                              onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
+                            `} placeholder="Nhập tên công ty hoặc tên khách hàng..." required>
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Loại khách hàng</label>
+                            <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'type\', this.value)"'}>
+                              ${['Khách vãng lai', 'Khách hàng tiềm năng', 'Khách hàng trung thành', 'Khách hàng cũ', 'Khách hàng tiêu cực'].map(t => `<option value="${t}" ${d.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Người liên hệ</label>
+                            <input type="text" class="form-input" value="${d.contact || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+                              oninput="this.value = toTitleCase(this.value); updateField('contact', this.value);"
+                              onchange="this.value = toTitleCase(this.value); updateField('contact', this.value);"
+                            `} placeholder="Tên người đại diện...">
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-input" value="${d.email || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'email\', this.value)"'} placeholder="example@domain.com">
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="tel" inputmode="tel" class="form-input" value="${d.phone || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'phone\', this.value)"'} placeholder="090x xxx xxx">
+                          </div>
+                          <div class="form-group" style="grid-column: span 3;">
+                            <label class="form-label">Địa chỉ</label>
+                            <input type="text" class="form-input" value="${d.address || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'address\', this.value)"'} placeholder="Nhập địa chỉ trụ sở/giao hàng...">
+                          </div>
+                        </div>
+                      </div>
 
-        <div class="section-panel">
-          <div class="section-header">
-            <span class="section-num">02</span>
-            <span class="section-title">Điều khoản thương mại</span>
-          </div>
-          <div class="section-body grid-3">
-            <div class="form-group">
-              <label class="form-label">Hạn mức tín dụng (VNĐ)</label>
-              <input type="number" step="any" inputmode="numeric" class="form-input" value="${d.creditLimit ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'creditLimit\', this.value, \'number\')"'} >
-            </div>
-            <div class="form-group">
-              <label class="form-label">Điều khoản thanh toán</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'paymentTerms\', this.value)"'}>
-                ${['Thanh toán ngay', 'Thanh toán gối đầu', 'Thanh toán cuối tháng', 'Net 30', 'Net 60'].map(t => `<option value="${t}" ${d.paymentTerms === t ? 'selected' : ''}>${t}</option>`).join('')}
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Trạng thái</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                <option value="active" ${d.status === 'active' ? 'selected' : ''}>Đang hoạt động</option>
-                <option value="inactive" ${d.status === 'inactive' ? 'selected' : ''}>Ngừng hoạt động</option>
-                <option value="suspended" ${d.status === 'suspended' ? 'selected' : ''}>Tạm khóa</option>
-              </select>
-            </div>
-          </div>
-        </div>
+                      <div class="section-panel">
+                        <div class="section-header">
+                          <span class="section-num">02</span>
+                          <span class="section-title">Điều khoản thương mại</span>
+                        </div>
+                        <div class="section-body grid-3">
+                          <div class="form-group">
+                            <label class="form-label">Hạn mức tín dụng (VNĐ)</label>
+                            <input type="number" step="any" inputmode="numeric" class="form-input" value="${d.creditLimit ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'creditLimit\', this.value, \'number\')"'} >
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Điều khoản thanh toán</label>
+                            <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'paymentTerms\', this.value)"'}>
+                              ${['Thanh toán ngay', 'Thanh toán gối đầu', 'Thanh toán cuối tháng', 'Net 30', 'Net 60'].map(t => `<option value="${t}" ${d.paymentTerms === t ? 'selected' : ''}>${t}</option>`).join('')}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
+                              <option value="active" ${d.status === 'active' ? 'selected' : ''}>Đang hoạt động</option>
+                              <option value="inactive" ${d.status === 'inactive' ? 'selected' : ''}>Ngừng hoạt động</option>
+                              <option value="suspended" ${d.status === 'suspended' ? 'selected' : ''}>Tạm khóa</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
 
-        <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" onclick="navigate('customers')">${isView ? 'Quay lại' : 'Hủy'}</button>
-          <div style="display: flex; gap: 8px;">
-            ${isView && hasPermission ? `
-              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('customers', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
-              <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('customers', '${d.id}')">${Icons.trash} Xóa</button>
-            ` : ''}
-            ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu khách hàng' : 'Cập nhật'}</button>` : ''}
-          </div>
-        </div>
-      </form>
-    </div>
-  `;
+                      <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                        <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('customers', 'view', '${d.id}') : navigate('customers')">
+                          ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+                        </button>
+                        <div style="display: flex; gap: 8px;">
+                          ${isView && hasPermission ? `
+                            <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('customers', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                            <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('customers', '${d.id}')">${Icons.trash} Xóa</button>
+                          ` : ''}
+                          ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu khách hàng' : 'Cập nhật'}</button>` : ''}
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                `;
 }
 
 function renderWarehouseForm(c) {
@@ -1531,74 +1535,76 @@ function renderWarehouseForm(c) {
   const hasPermission = checkModulePermission('warehouses');
 
   c.innerHTML = `
-    <div style="max-width: 900px;">
-      ${getBreadcrumb('Kho hàng', isView ? `Xem ${d.code || ''}` : (state.mode === 'edit' ? `Chỉnh sửa ${d.code || ''}` : 'Thêm mới kho hàng'), 'warehouses')}
-      <form onsubmit="event.preventDefault(); saveForm('warehouses');">
-        <input type="hidden" value="${d.id || ''}">
+                  <div style="max-width: 900px;">
+                    ${getBreadcrumb('Kho hàng', isView ? `Xem ${d.code || ''}` : (state.mode === 'edit' ? `Chỉnh sửa ${d.code || ''}` : 'Thêm mới kho hàng'), 'warehouses')}
+                    <form onsubmit="event.preventDefault(); saveForm('warehouses');">
+                      <input type="hidden" value="${d.id || ''}">
 
-        <div class="section-panel">
-          <div class="section-header">
-            <span class="section-num">01</span>
-            <span class="section-title">Thông tin kho hàng</span>
-          </div>
-          <div class="section-body grid-3">
-            <div class="form-group">
-              <label class="form-label">Mã kho (Tự động) *</label>
-              <input type="text" class="form-input" value="${d.code || ''}" readonly style="background: var(--muted); cursor: not-allowed; color: var(--primary);" title="Mã kho tự động sinh">
-            </div>
-            <div class="form-group" style="grid-column: span 2;">
-              <label class="form-label">Tên kho *</label>
-              <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'name\', this.value)"'} placeholder="Nhập tên kho hàng..." required>
-            </div>
-            <div class="form-group" style="grid-column: span 3;">
-              <label class="form-label">Địa chỉ / Vị trí *</label>
-              <input type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'location\', this.value)"'} placeholder="Nhập địa chỉ kho hàng..." required>
-            </div>
-          </div>
-        </div>
+                      <div class="section-panel">
+                        <div class="section-header">
+                          <span class="section-num">01</span>
+                          <span class="section-title">Thông tin kho hàng</span>
+                        </div>
+                        <div class="section-body grid-3">
+                          <div class="form-group">
+                            <label class="form-label">Mã kho (Tự động) *</label>
+                            <input type="text" class="form-input" value="${d.code || ''}" readonly style="background: var(--muted); cursor: not-allowed; color: var(--primary);" title="Mã kho tự động sinh">
+                          </div>
+                          <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Tên kho *</label>
+                            <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'name\', this.value)"'} placeholder="Nhập tên kho hàng..." required>
+                          </div>
+                          <div class="form-group" style="grid-column: span 3;">
+                            <label class="form-label">Địa chỉ / Vị trí *</label>
+                            <input type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'location\', this.value)"'} placeholder="Nhập địa chỉ kho hàng..." required>
+                          </div>
+                        </div>
+                      </div>
 
-        <div class="section-panel">
-          <div class="section-header">
-            <span class="section-num">02</span>
-            <span class="section-title">Sức chứa & Quản lý</span>
-          </div>
-          <div class="section-body grid-4">
-            <div class="form-group">
-              <label class="form-label">Sức chứa (Đơn vị)</label>
-              <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.capacity ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'capacity\', this.value, \'number\')"'} >
-            </div>
-            <div class="form-group">
-              <label class="form-label">Đã sử dụng</label>
-              <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.used ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'used\', this.value, \'number\')"'} >
-            </div>
-            <div class="form-group">
-              <label class="form-label">Quản lý kho</label>
-              <input type="text" class="form-input" value="${d.manager || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'manager\', this.value)"'} placeholder="Tên quản lý kho...">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Trạng thái</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                <option value="active" ${d.status === 'active' ? 'selected' : ''}>Đang hoạt động</option>
-                <option value="maintenance" ${d.status === 'maintenance' ? 'selected' : ''}>Bảo trì</option>
-                <option value="closed" ${d.status === 'closed' ? 'selected' : ''}>Đóng cửa</option>
-              </select>
-            </div>
-          </div>
-        </div>
+                      <div class="section-panel">
+                        <div class="section-header">
+                          <span class="section-num">02</span>
+                          <span class="section-title">Sức chứa & Quản lý</span>
+                        </div>
+                        <div class="section-body grid-4">
+                          <div class="form-group">
+                            <label class="form-label">Sức chứa (Đơn vị)</label>
+                            <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.capacity ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'capacity\', this.value, \'number\')"'} >
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Đã sử dụng</label>
+                            <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.used ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'used\', this.value, \'number\')"'} >
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Quản lý kho</label>
+                            <input type="text" class="form-input" value="${d.manager || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'manager\', this.value)"'} placeholder="Tên quản lý kho...">
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
+                              <option value="active" ${d.status === 'active' ? 'selected' : ''}>Đang hoạt động</option>
+                              <option value="maintenance" ${d.status === 'maintenance' ? 'selected' : ''}>Bảo trì</option>
+                              <option value="closed" ${d.status === 'closed' ? 'selected' : ''}>Đóng cửa</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
 
-        <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" onclick="navigate('warehouses')">${isView ? 'Quay lại' : 'Hủy'}</button>
-          <div style="display: flex; gap: 8px;">
-            ${isView && hasPermission ? `
-              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('warehouses', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
-              <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('warehouses', '${d.id}')">${Icons.trash} Xóa</button>
-            ` : ''}
-            ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu kho hàng' : 'Cập nhật'}</button>` : ''}
-          </div>
-        </div>
-      </form>
-    </div>
-  `;
+                      <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                        <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('warehouses', 'view', '${d.id}') : navigate('warehouses')">
+                          ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+                        </button>
+                        <div style="display: flex; gap: 8px;">
+                          ${isView && hasPermission ? `
+                            <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('warehouses', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                            <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('warehouses', '${d.id}')">${Icons.trash} Xóa</button>
+                          ` : ''}
+                          ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu kho hàng' : 'Cập nhật'}</button>` : ''}
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                `;
 }
 
 function renderQuotationForm(c) {
@@ -1670,115 +1676,116 @@ function renderQuotationForm(c) {
   }).join('');
 
   c.innerHTML = `
-          <div style="max-width: 1050px;">
-            ${getBreadcrumb('Báo giá', isView ? `Xem ${d.id || ''}` : (isEdit ? `Chỉnh sửa ${d.id || ''}` : 'Tạo báo giá mới'), 'quotations')}
-            <form onsubmit="event.preventDefault(); saveForm('quotations');">
+                  <div style="max-width: 1050px;">
+                    ${getBreadcrumb('Báo giá', isView ? `Xem ${d.id || ''}` : (isEdit ? `Chỉnh sửa ${d.id || ''}` : 'Tạo báo giá mới'), 'quotations')}
+                    <form onsubmit="event.preventDefault(); saveForm('quotations');">
 
-              <input type="hidden" value="${d.id || ''}">
+                      <input type="hidden" value="${d.id || ''}">
 
-                <div class="section-panel">
-                  <div class="section-header">
-                    <span class="section-num">01</span>
-                    <span class="section-title">Thông tin báo giá</span>
+                        <div class="section-panel">
+                          <div class="section-header">
+                            <span class="section-num">01</span>
+                            <span class="section-title">Thông tin báo giá</span>
+                          </div>
+                          <div class="section-body grid-3">
+                            <div class="form-group" style="grid-column: span 2;">
+                              <label class="form-label">Khách hàng *</label>
+                              <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleCustomerSelectInQuotation(this.value)"'} required>
+                                <option value="">-- Chọn khách hàng --</option>
+                                ${customerOptions}
+                              </select>
+                            </div>
+                            <div class="form-group">
+                              <label class="form-label">Ngày lập phiếu *</label>
+                              <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+                            </div>
+                            <div class="form-group">
+                              <label class="form-label">Ngày bắt đầu *</label>
+                              <input type="date" class="form-input" value="${d.validbegin || d.validBegin || getFirstDayOfMonthStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validbegin\', this.value)"'} required>
+                            </div>
+                            <div class="form-group">
+                              <label class="form-label">Ngày kết thúc *</label>
+                              <input type="date" class="form-input" value="${d.validUntil || d.validuntil || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validUntil\', this.value)"'} required>
+                            </div>
+                            <div class="form-group">
+                              <label class="form-label">Trạng thái</label>
+                              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
+                                <option value="accepted" ${['accepted', 'approved', 'Duyệt'].includes(d.status) ? 'selected' : ''}>Duyệt</option>
+                                <option value="pending" ${['pending', 'draft', 'bản nháp', 'Chờ Duyệt'].includes(d.status) || !d.status ? 'selected' : ''}>Chờ Duyệt</option>
+                                <option value="rejected" ${['rejected', 'Từ Chối'].includes(d.status) ? 'selected' : ''}>Từ Chối</option>
+                                <option value="expired" ${['expired', 'Hết Hạn'].includes(d.status) ? 'selected' : ''}>Hết Hạn</option>
+                              </select>
+                            </div>
+
+                            <div class="form-group" style="grid-column: span 3; margin-top: 6px;">
+                              <label class="form-label">Ghi chú</label>
+                              <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập thông tin ghi chú (tùy chọn)...">${d.notes || ''}</textarea>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="section-panel">
+                          <div class="section-header" style="justify-content: space-between;">
+                            <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
+                            <!-- Nút Header: Tự động ẩn trên PC -->
+                            ${getAddLineButton('quotations', isDetailsDisabled, 'header')}
+                          </div>
+
+                          <div style="overflow-x: auto;">
+                            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 8px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 900px;">
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn Giá</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+                              ${!isView ? `<span></span>` : ''}
+                            </div>
+
+                            <div style="min-width: 850px;">
+                              ${linesHtml}
+                            </div>
+                          </div>
+
+                          <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
+                          <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
+                            <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
+                            <div style="width: 110px; flex-shrink: 0;">
+                              ${getAddLineButton('quotations', isDetailsDisabled, 'footer')}
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
+                              <div style="display: flex; justify-content: space-between; align-items: center; height: 36px;"><span class="form-label" style="margin:0;">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
+                              <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
+                              <div style="display: flex; justify-content: space-between;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
+                              <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--foreground); font-weight: 500;">${fmtUSD(d.total)}</span></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                          <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('quotations', 'view', '${d.id}') : navigate('quotations')">
+                            ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+                          </button>
+                          <div style="display: flex; gap: 8px;">                            
+                              ${hasPermission ? `
+                                <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('quotations', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                                <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('quotations', '${d.id}')">${Icons.trash} Xóa</button>
+                              ` : ''}
+                              ${isView ? `
+                              <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>
+                            ` : ''}
+                            ${!isView ? `
+                              <button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>
+                                ${state.mode === 'add' ? 'Tạo báo giá' : 'Cập nhật'}
+                              </button>
+                            ` : ''}
+                          </div>
+                        </div>
+                    </form>
                   </div>
-                  <div class="section-body grid-3">
-                    <div class="form-group" style="grid-column: span 2;">
-                      <label class="form-label">Khách hàng *</label>
-                      <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleCustomerSelectInQuotation(this.value)"'} required>
-                        <option value="">-- Chọn khách hàng --</option>
-                        ${customerOptions}
-                      </select>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Ngày lập phiếu *</label>
-                      <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Ngày bắt đầu *</label>
-                      <input type="date" class="form-input" value="${d.validbegin || d.validBegin || getFirstDayOfMonthStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validbegin\', this.value)"'} required>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Ngày kết thúc *</label>
-                      <input type="date" class="form-input" value="${d.validUntil || d.validuntil || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validUntil\', this.value)"'} required>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Trạng thái</label>
-                      <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                        <option value="accepted" ${['accepted', 'approved', 'Duyệt'].includes(d.status) ? 'selected' : ''}>Duyệt</option>
-                        <option value="pending" ${['pending', 'draft', 'bản nháp', 'Chờ Duyệt'].includes(d.status) || !d.status ? 'selected' : ''}>Chờ Duyệt</option>
-                        <option value="rejected" ${['rejected', 'Từ Chối'].includes(d.status) ? 'selected' : ''}>Từ Chối</option>
-                        <option value="expired" ${['expired', 'Hết Hạn'].includes(d.status) ? 'selected' : ''}>Hết Hạn</option>
-                      </select>
-                    </div>
-
-                    <div class="form-group" style="grid-column: span 3; margin-top: 6px;">
-                      <label class="form-label">Ghi chú</label>
-                      <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập thông tin ghi chú (tùy chọn)...">${d.notes || ''}</textarea>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="section-panel">
-                  <div class="section-header" style="justify-content: space-between;">
-                    <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
-                    <!-- Nút Header: Tự động ẩn trên PC -->
-                    ${getAddLineButton('quotations', isDetailsDisabled, 'header')}
-                  </div>
-
-                  <div style="overflow-x: auto;">
-                    <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 8px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 900px;">
-                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
-                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
-                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn Giá</span>
-                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
-                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
-                      <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-                      ${!isView ? `<span></span>` : ''}
-                    </div>
-
-                    <div style="min-width: 850px;">
-                      ${linesHtml}
-                    </div>
-                  </div>
-
-                  <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
-                  <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 24px; flex-wrap: wrap; gap: 12px;">
-                    <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
-                    <div style="width: 110px; flex-shrink: 0;">
-                      ${getAddLineButton('quotations', isDetailsDisabled, 'footer')}
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
-                      <div style="display: flex; justify-content: space-between; align-items: center; height: 36px;"><span class="form-label" style="margin:0;">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
-                      <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
-                      <div style="display: flex; justify-content: space-between;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
-                      <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--foreground); font-weight: 500;">${fmtUSD(d.total)}</span></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-                  <button type="button" class="btn-cancel" onclick="navigate('quotations')">${isView ? 'Quay lại' : 'Hủy'}</button>
-                  <div style="display: flex; gap: 8px;">           
-              ${hasPermission ? `
-                <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('quotations', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
-                <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('quotations', '${d.id}')">${Icons.trash} Xóa</button>
-              ` : ''}
-              ${isView ? `
-              <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>
-            ` : ''}
-            
-            <!-- KHÓA NÚT TẠO PHIẾU / CẬP NHẬT KHI CHƯA CHỌN KHÁCH HÀNG -->
-            ${!isView ? `
-              <button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>
-                ${state.mode === 'add' ? 'Tạo báo giá' : 'Cập nhật'}
-              </button>
-            ` : ''}
-          </div>
-            </form>
-          </div>
-          `;
+                  `;
 }
 
 function renderSalesOrderForm(c) {
@@ -1867,116 +1874,116 @@ function renderSalesOrderForm(c) {
   }).join('');
 
   c.innerHTML = `
-                            <div style="max-width: 1050px;">
-                              ${getBreadcrumb('Đơn bán hàng', isView ? `Xem ${d.id || ''}` : (isEdit ? `Chỉnh sửa ${d.id || ''}` : 'Tạo đơn bán hàng mới'), 'sales-orders')}
-                              <form onsubmit="event.preventDefault(); saveForm('sales-orders');">
+                  <div style="max-width: 1050px;">
+                    ${getBreadcrumb('Đơn bán hàng', isView ? `Xem ${d.id || ''}` : (isEdit ? `Chỉnh sửa ${d.id || ''}` : 'Tạo đơn bán hàng mới'), 'sales-orders')}
+                    <form onsubmit="event.preventDefault(); saveForm('sales-orders');">
 
-                                <input type="hidden" value="${d.id || ''}">
+                      <input type="hidden" value="${d.id || ''}">
 
-                                  <div class="section-panel">
-                                    <div class="section-header">
-                                      <span class="section-num">01</span>
-                                      <span class="section-title">Thông tin đơn bán hàng</span>
-                                    </div>
-                                    <div class="section-body grid-3">
-                                      <div class="form-group" style="grid-column: span 2;">
-                                        <label class="form-label">Khách hàng *</label>
-                                        <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleCustomerSelectInOrder(this.value)"'} required>
-                                          <option value="">-- Chọn khách hàng --</option>
-                                          ${customerOptions}
-                                        </select>
-                                        ${d.quotationId ? `<div style="font-size: 11px; color: var(--primary); font-family: var(--font-dm-mono); margin-top: 4px;">✔ Đã tự động áp dụng Báo giá: ${d.quotationId}</div>` : ''}
-                                      </div>
-                                      <div class="form-group">
-                                        <label class="form-label">Mã kho (Xuất kho) *</label>
-                                        <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
-                                          ${warehouseOptions}
-                                        </select>
-                                      </div>                                     
-                                      <div class="form-group">
-                                        <label class="form-label">Ngày lập phiếu *</label>
-                                        <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
-                                      </div>
-                                      <div class="form-group">
-                                        <label class="form-label">Trạng thái</label>
-                                        <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                                          <option value="completed" ${d.status && ['completed', 'hoàn thành'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
-                                          <option value="accepted" ${(!d.status || ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((d.status || '').toLowerCase())) ? 'selected' : ''}>Duyệt</option>
-                                          <option value="pending" ${d.status && ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Chờ duyệt</option>
-                                          <option value="cancelled" ${d.status && ['cancelled', 'đã hủy'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Đã hủy</option>
-                                        </select>
-                                      </div>
-                                      <div class="form-group" style="grid-column: span 3;">
-                                        <label class="form-label">Ghi chú</label>
-                                        <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập ghi chú đơn hàng (tùy chọn)...">${d.notes || ''}</textarea>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div class="section-panel">
-                                    <div class="section-header" style="justify-content: space-between;">
-                                      <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
-                                      <!-- Nút Header: Tự động ẩn trên PC -->
-                                      ${getAddLineButton('sales-orders', isDetailsDisabled, 'header')}
-                                    </div>
-
-                                    <div style="overflow-x: auto;">
-                                      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 1000px;">
-                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
-                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
-                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
-                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tồn</span>
-                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn giá</span>
-                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
-                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
-                                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-                                        ${!isView ? `<span></span>` : ''}
-                                      </div>
-
-                                      <div style="min-width: 900px;">
-                                        ${linesHtml}
-                                      </div>
-                                    </div>
-
-                                    <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
-                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
-                                      <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
-                                      <div style="width: 110px; flex-shrink: 0;">
-                                        ${getAddLineButton('sales-orders', isDetailsDisabled, 'footer')}
-                                      </div>
-                                      <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; height: 36px;"><span class="form-label" style="margin:0;">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
-                                        <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
-                                        <div style="display: flex; justify-content: space-between;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
-                                        <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.total)}</span></div>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-                                    <button type="button" class="btn-cancel" onclick="navigate('sales-orders')">${isView ? 'Quay lại' : 'Hủy'}</button>
-                                    <div style="display: flex; gap: 8px;">                                     
-                                        ${hasPermission ? `
-                                          <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('sales-orders', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
-                                          <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('sales-orders', '${d.id}')">${Icons.trash} Xóa</button>
-                                        ` : ''}
-                                        ${isView ? `
-                                        <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>
-                                      ` : ''}
-                                      
-                                      <!-- KHÓA NÚT TẠO PHIẾU / CẬP NHẬT KHI CHƯA CHỌN KHÁCH HÀNG -->
-                                      ${!isView ? `
-                                        <button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>
-                                          ${state.mode === 'add' ? 'Tạo đơn hàng' : 'Cập nhật'}
-                                        </button>
-                                      ` : ''}
-                                    </div>
-                                  </div>
-                              </form>
+                        <div class="section-panel">
+                          <div class="section-header">
+                            <span class="section-num">01</span>
+                            <span class="section-title">Thông tin đơn bán hàng</span>
+                          </div>
+                          <div class="section-body grid-3">
+                            <div class="form-group" style="grid-column: span 2;">
+                              <label class="form-label">Khách hàng *</label>
+                              <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleCustomerSelectInOrder(this.value)"'} required>
+                                <option value="">-- Chọn khách hàng --</option>
+                                ${customerOptions}
+                              </select>
+                              ${d.quotationId ? `<div style="font-size: 11px; color: var(--primary); font-family: var(--font-dm-mono); margin-top: 4px;">✔ Đã tự động áp dụng Báo giá: ${d.quotationId}</div>` : ''}
                             </div>
-                            `;
+                            <div class="form-group">
+                              <label class="form-label">Mã kho (Xuất kho) *</label>
+                              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
+                                ${warehouseOptions}
+                              </select>
+                            </div>                                     
+                            <div class="form-group">
+                              <label class="form-label">Ngày lập phiếu *</label>
+                              <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+                            </div>
+                            <div class="form-group">
+                              <label class="form-label">Trạng thái</label>
+                              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
+                                <option value="completed" ${d.status && ['completed', 'hoàn thành'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
+                                <option value="accepted" ${(!d.status || ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((d.status || '').toLowerCase())) ? 'selected' : ''}>Duyệt</option>
+                                <option value="pending" ${d.status && ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Chờ duyệt</option>
+                                <option value="cancelled" ${d.status && ['cancelled', 'đã hủy'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Đã hủy</option>
+                              </select>
+                            </div>
+                            <div class="form-group" style="grid-column: span 3;">
+                              <label class="form-label">Ghi chú</label>
+                              <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập ghi chú đơn hàng (tùy chọn)...">${d.notes || ''}</textarea>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="section-panel">
+                          <div class="section-header" style="justify-content: space-between;">
+                            <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
+                            <!-- Nút Header: Tự động ẩn trên PC -->
+                            ${getAddLineButton('sales-orders', isDetailsDisabled, 'header')}
+                          </div>
+
+                          <div style="overflow-x: auto;">
+                            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 1000px;">
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Số Lượng</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tồn</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn giá</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Chiết Khấu %</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thuế %</span>
+                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+                              ${!isView ? `<span></span>` : ''}
+                            </div>
+
+                            <div style="min-width: 900px;">
+                              ${linesHtml}
+                            </div>
+                          </div>
+
+                          <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
+                          <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
+                            <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
+                            <div style="width: 110px; flex-shrink: 0;">
+                              ${getAddLineButton('sales-orders', isDetailsDisabled, 'footer')}
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
+                              <div style="display: flex; justify-content: space-between; align-items: center; height: 36px;"><span class="form-label" style="margin:0;">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
+                              <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
+                              <div style="display: flex; justify-content: space-between;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
+                              <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.total)}</span></div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                          <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('sales-orders', 'view', '${d.id}') : navigate('sales-orders')">
+                            ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+                          </button>
+                          <div style="display: flex; gap: 8px;">                          
+                              ${hasPermission ? `
+                                <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('sales-orders', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                                <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('sales-orders', '${d.id}')">${Icons.trash} Xóa</button>
+                              ` : ''}
+                              ${isView ? `
+                              <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>
+                            ` : ''}
+                            ${!isView ? `
+                              <button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>
+                                ${state.mode === 'add' ? 'Tạo đơn hàng' : 'Cập nhật'}
+                              </button>
+                            ` : ''}
+                          </div>
+                        </div>
+                    </form>
+                  </div>
+                  `;
 }
 
 function renderReturnForm(c) {
@@ -2051,104 +2058,105 @@ function renderReturnForm(c) {
   }).join('');
 
   c.innerHTML = `
-                                          <div style="max-width: 1050px;">
-                                            ${getBreadcrumb('Đổi trả hàng bán', isView ? `Xem ${d.id}` : (isEdit ? `Chỉnh sửa ${d.id}` : 'Tạo phiếu đổi trả mới'), 'returns')}
-                                            <form onsubmit="event.preventDefault(); saveForm('returns');">
-                                              <div class="section-panel">
-                                                <div class="section-header"><span class="section-num">01</span><span class="section-title">Thông tin phiếu đổi trả</span></div>
-                                                <div class="section-body grid-3">
-                                                  <div class="form-group">
-                                                    <label class="form-label">Đơn hàng bán (Tùy chọn)</label>
-                                                    <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleOrderSelectInReturn(this.value)"'}>
-                                                      <option value="">-- Không theo đơn hàng --</option>
-                                                      ${orderOptions}
-                                                    </select>
-                                                  </div>
-                                                  <div class="form-group">
-                                                    <label class="form-label">Tên khách hàng *</label>
-                                                    <select class="form-select" ${(isView || isEdit || hasOrder) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'customer\', this.value); render();"'} required>
-                                                      <option value="">-- Chọn khách hàng --</option>
-                                                      ${customerOptions}
-                                                    </select>
-                                                  </div>
-                                                  <div class="form-group">
-                                                    <label class="form-label">Mã kho *</label>
-                                                    <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
-                                                      ${warehouseOptions}
-                                                    </select>
-                                                  </div>
-                                                  <div class="form-group">
-                                                    <label class="form-label">Lý do *</label>
-                                                    <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'reason\', this.value)"'}>
-                                                      ${['Hàng lỗi/hỏng', 'Giao nhầm sản phẩm', 'Đặt hàng thừa', 'Hủy đơn hàng', 'Hư hỏng do vận chuyển', 'Khác'].map(w => `<option value="${w}" ${d.reason === w ? 'selected' : ''}>${w}</option>`).join('')}
-                                                    </select>
-                                                  </div>
-                                                  <div class="form-group">
-                                                    <label class="form-label">Ngày đổi trả *</label>
-                                                    <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
-                                                  </div>
-                                                  <div class="form-group">
-                                                    <label class="form-label">Trạng thái</label>
-                                                    <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>                                                      
-                                                      <option value="processed" ${d.status && ['processed', 'hoàn thành', 'đã xử lý'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
-                                                      <option value="approved" ${(!d.status || ['approved', 'duyệt', 'đã duyệt'].includes((d.status || '').toLowerCase())) ? 'selected' : ''}>Duyệt</option>
-                                                      <option value="pending" ${d.status && ['pending', 'chờ duyệt'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Chờ duyệt</option>
-                                                      <option value="rejected" ${d.status && ['rejected', 'từ chối'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Từ chối</option>
-                                                    </select>
-                                                  </div>
-                                                  <div class="form-group" style="grid-column: span 3;">
-                                                    <label class="form-label">Ghi chú nhập tay</label>
-                                                    <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập ghi chú chi tiết...">${d.notes || ''}</textarea>
-                                                  </div>
-                                                </div>
-                                              </div>
+                  <div style="max-width: 1050px;">
+                    ${getBreadcrumb('Đổi trả hàng bán', isView ? `Xem ${d.id}` : (isEdit ? `Chỉnh sửa ${d.id}` : 'Tạo phiếu đổi trả mới'), 'returns')}
+                    <form onsubmit="event.preventDefault(); saveForm('returns');">
+                      <div class="section-panel">
+                        <div class="section-header"><span class="section-num">01</span><span class="section-title">Thông tin phiếu đổi trả</span></div>
+                        <div class="section-body grid-3">
+                          <div class="form-group">
+                            <label class="form-label">Đơn hàng bán (Tùy chọn)</label>
+                            <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleOrderSelectInReturn(this.value)"'}>
+                              <option value="">-- Không theo đơn hàng --</option>
+                              ${orderOptions}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Tên khách hàng *</label>
+                            <select class="form-select" ${(isView || isEdit || hasOrder) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'customer\', this.value); render();"'} required>
+                              <option value="">-- Chọn khách hàng --</option>
+                              ${customerOptions}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Mã kho *</label>
+                            <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
+                              ${warehouseOptions}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Lý do *</label>
+                            <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'reason\', this.value)"'}>
+                              ${['Hàng lỗi/hỏng', 'Giao nhầm sản phẩm', 'Đặt hàng thừa', 'Hủy đơn hàng', 'Hư hỏng do vận chuyển', 'Khác'].map(w => `<option value="${w}" ${d.reason === w ? 'selected' : ''}>${w}</option>`).join('')}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Ngày đổi trả *</label>
+                            <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>                                                      
+                              <option value="processed" ${d.status && ['processed', 'hoàn thành', 'đã xử lý'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
+                              <option value="approved" ${(!d.status || ['approved', 'duyệt', 'đã duyệt'].includes((d.status || '').toLowerCase())) ? 'selected' : ''}>Duyệt</option>
+                              <option value="pending" ${d.status && ['pending', 'chờ duyệt'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Chờ duyệt</option>
+                              <option value="rejected" ${d.status && ['rejected', 'từ chối'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Từ chối</option>
+                            </select>
+                          </div>
+                          <div class="form-group" style="grid-column: span 3;">
+                            <label class="form-label">Ghi chú nhập tay</label>
+                            <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập ghi chú chi tiết...">${d.notes || ''}</textarea>
+                          </div>
+                        </div>
+                      </div>
 
-                                              <div class="section-panel">
-                                                <div class="section-header" style="justify-content: space-between;">
-                                                  <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng đổi trả</span></div>
-                                                  ${getAddLineButton('returns', isDetailsDisabled, 'header')}
-                                                </div>
-                                                <div style="overflow-x: auto;">
-                                                  <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
-                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
-                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
-                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">SL Trả Lại</span>
-                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tồn</span>
-                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn giá</span>
-                                                    <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-                                                    ${!isView ? `<span></span>` : ''}
-                                                  </div>
+                      <div class="section-panel">
+                        <div class="section-header" style="justify-content: space-between;">
+                          <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách hàng đổi trả</span></div>
+                          ${getAddLineButton('returns', isDetailsDisabled, 'header')}
+                        </div>
+                        <div style="overflow-x: auto;">
+                          <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">SL Trả Lại</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tồn</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn giá</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+                            ${!isView ? `<span></span>` : ''}
+                          </div>
 
-                                                  <div style="min-width: 850px;">
-                                                    ${linesHtml}
-                                                  </div>
-                                                </div>
+                          <div style="min-width: 850px;">
+                            ${linesHtml}
+                          </div>
+                        </div>
 
-                                                <!-- NÚT THÊM DÒNG RỘNG BẰNG CỘT MÃ HÀNG VÀ THẲNG HÀNG DỌC -->
-                                                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
-                                                    <div style="width: 110px; flex-shrink: 0;">
-                                                      ${getAddLineButton('returns', isDetailsDisabled, 'footer')}
-                                                    </div>
-                                                  <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;"><span class="form-label" style="font-weight: 600; margin:0;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
-                                                </div>
-                                              </div>
+                        <!-- NÚT THÊM DÒNG RỘNG BẰNG CỘT MÃ HÀNG VÀ THẲNG HÀNG DỌC -->
+                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
+                            <div style="width: 110px; flex-shrink: 0;">
+                              ${getAddLineButton('returns', isDetailsDisabled, 'footer')}
+                            </div>
+                          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;"><span class="form-label" style="font-weight: 600; margin:0;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
+                        </div>
+                      </div>
 
-                                              <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-                                                <button type="button" class="btn-cancel" onclick="navigate('returns')">${isView ? 'Quay lại' : 'Hủy'}</button>
-                                                <div style="display: flex; gap: 8px;">
-                                                  ${isView && hasPermission ? `
-                                                    <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('returns', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
-                                                    <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('returns', '${d.id}')">${Icons.trash} Xóa</button>
-                                                  ` : ''}
-                                                  <!-- KHÓA NÚT TẠO PHIẾU ĐỔI TRẢ -->
-                                                  ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
-                                                </div>
-                                              </div>
-                                            </form>
-                                          </div>
-                                          `;
+                      <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                        <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('returns', 'view', '${d.id}') : navigate('returns')">
+                          ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+                        </button>
+                        <div style="display: flex; gap: 8px;">
+                          ${isView && hasPermission ? `
+                            <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('returns', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                            <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('returns', '${d.id}')">${Icons.trash} Xóa</button>
+                          ` : ''}
+                          ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                  `;
 }
 
 function renderGRNForm(c) {
@@ -2218,102 +2226,103 @@ function renderGRNForm(c) {
   }).join('');
 
   c.innerHTML = `
-                                                        <div style="max-width: 1050px;">
-                                                          ${getBreadcrumb('Phiếu nhập kho', isView ? `Xem ${d.id}` : (state.mode === 'edit' ? `Chỉnh sửa ${d.id}` : 'Tạo phiếu nhập kho mới'), 'grn')}
-                                                          <form onsubmit="event.preventDefault(); saveForm('grn');">
-                                                            <div class="section-panel">
-                                                              <div class="section-header"><span class="section-num">01</span><span class="section-title">Chi tiết nhập kho</span></div>
-                                                              <div class="section-body grid-3">
-                                                                <div class="form-group" style="grid-column: span 2;">
-                                                                  <label class="form-label">Nhà cung cấp *</label>
-                                                                  <input 
-                                                                      type="text" 
-                                                                      class="form-input" 
-                                                                      value="${d.supplier || ''}" 
-                                                                      ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-                                                                        oninput="updateField('supplier', this.value);" 
-                                                                        onblur="if(this.value.trim()) render();"
-                                                                        onchange="updateField('supplier', this.value); render();"
-                                                                      `} 
-                                                                      placeholder="Nhập tên nhà cung cấp..." 
-                                                                      required
-                                                                    >
-                                                                </div>
-                                                                <div class="form-group">
-                                                                  <label class="form-label">Mã kho *</label>
-                                                                  <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
-                                                                    ${warehouseOptions}
-                                                                  </select>
-                                                                </div>
-                                                                <div class="form-group">
-                                                                  <label class="form-label">Ngày nhập kho *</label>
-                                                                  <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
-                                                                </div>
-                                                                <div class="form-group">
-                                                                  <label class="form-label">Trạng thái</label>
-                                                                  <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                                                                    <option value="Đã nhận" ${d.status === 'Đã nhận' || d.status === 'received' ? 'selected' : ''}>Đã nhận</option>
-                                                                    <option value="Bản nháp" ${d.status === 'Bản nháp' || d.status === 'draft' ? 'selected' : ''}>Bản nháp</option>
-                                                                    <option value="Đã xác minh" ${d.status === 'Đã xác minh' || d.status === 'verified' ? 'selected' : ''}>Đã xác minh</option>
-                                                                  </select>
-                                                                </div>
-                                                                <div class="form-group" style="grid-column: span 3;">
-                                                                  <label class="form-label">Ghi chú</label>
-                                                                  <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập ghi chú phiếu nhập kho...">${d.notes || ''}</textarea>
-                                                                </div>
-                                                              </div>
-                                                            </div>
+                  <div style="max-width: 1050px;">
+                    ${getBreadcrumb('Phiếu nhập kho', isView ? `Xem ${d.id}` : (state.mode === 'edit' ? `Chỉnh sửa ${d.id}` : 'Tạo phiếu nhập kho mới'), 'grn')}
+                    <form onsubmit="event.preventDefault(); saveForm('grn');">
+                      <div class="section-panel">
+                        <div class="section-header"><span class="section-num">01</span><span class="section-title">Chi tiết nhập kho</span></div>
+                        <div class="section-body grid-3">
+                          <div class="form-group" style="grid-column: span 2;">
+                            <label class="form-label">Nhà cung cấp *</label>
+                            <input 
+                                type="text" 
+                                class="form-input" 
+                                value="${d.supplier || ''}" 
+                                ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+                                  oninput="updateField('supplier', this.value);" 
+                                  onblur="if(this.value.trim()) render();"
+                                  onchange="updateField('supplier', this.value); render();"
+                                `} 
+                                placeholder="Nhập tên nhà cung cấp..." 
+                                required
+                              >
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Mã kho *</label>
+                            <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
+                              ${warehouseOptions}
+                            </select>
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Ngày nhập kho *</label>
+                            <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
+                          </div>
+                          <div class="form-group">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
+                              <option value="Đã nhận" ${d.status === 'Đã nhận' || d.status === 'received' ? 'selected' : ''}>Đã nhận</option>
+                              <option value="Bản nháp" ${d.status === 'Bản nháp' || d.status === 'draft' ? 'selected' : ''}>Bản nháp</option>
+                              <option value="Đã xác minh" ${d.status === 'Đã xác minh' || d.status === 'verified' ? 'selected' : ''}>Đã xác minh</option>
+                            </select>
+                          </div>
+                          <div class="form-group" style="grid-column: span 3;">
+                            <label class="form-label">Ghi chú</label>
+                            <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập ghi chú phiếu nhập kho...">${d.notes || ''}</textarea>
+                          </div>
+                        </div>
+                      </div>
 
-                                                            <div class="section-panel">
-                                                              <div class="section-header" style="justify-content: space-between;">
-                                                                <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
-                                                                ${getAddLineButton('grn', isDetailsDisabled, 'header')}
-                                                              </div>
-                                                              <div style="overflow-x: auto;">
-                                                                <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
-                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
-                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
-                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
-                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
-                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">SL Nhập</span>
-                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tồn</span>
-                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Giá nhập</span>
-                                                                  <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
-                                                                  ${!isView ? `<span></span>` : ''}
-                                                                </div>
+                      <div class="section-panel">
+                        <div class="section-header" style="justify-content: space-between;">
+                          <div style="display:flex; gap:10px;"><span class="section-num">02</span><span class="section-title">Danh sách sản phẩm</span></div>
+                          ${getAddLineButton('grn', isDetailsDisabled, 'header')}
+                        </div>
+                        <div style="overflow-x: auto;">
+                          <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">ĐVT</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Kho</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">SL Nhập</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tồn</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Giá nhập</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Thành tiền</span>
+                            ${!isView ? `<span></span>` : ''}
+                          </div>
 
-                                                                <div style="min-width: 850px;">
-                                                                  ${linesHtml}
-                                                                </div>
-                                                              </div>
+                          <div style="min-width: 850px;">
+                            ${linesHtml}
+                          </div>
+                        </div>
 
-                                                              <!-- BỐ TRÍ KHU VỰC TỔNG TIỀN VÀ NÚT THÊM DÒNG TRÊN PC -->
-                                                              <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
-                                                                <div style="width: 110px; flex-shrink: 0;">
-                                                                  ${getAddLineButton('grn', isDetailsDisabled, 'footer')}
-                                                                </div>
-            
-                                                                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;">
-                                                                  <span class="form-label" style="font-weight: 600; margin: 0;">Tổng giá trị</span>
-                                                                  <span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.totalValue)}</span>
-                                                                </div>
-                                                              </div>
-                                                            </div>
+                        <!-- BỐ TRÍ KHU VỰC TỔNG TIỀN VÀ NÚT THÊM DÒNG TRÊN PC -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
+                          <div style="width: 110px; flex-shrink: 0;">
+                            ${getAddLineButton('grn', isDetailsDisabled, 'footer')}
+                          </div>
 
-                                                            <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-                                                              <button type="button" class="btn-cancel" onclick="navigate('grn')">${isView ? 'Quay lại' : 'Hủy'}</button>
-                                                              <div style="display: flex; gap: 8px;">
-                                                                ${isView && hasPermission ? `
-                                                                  <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('grn', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
-                                                                  <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('grn', '${d.id}')">${Icons.trash} Xóa</button>
-                                                                ` : ''}
-                                                                <!-- KHÓA NÚT TẠO PHIẾU NHẬP -->
-                                                                ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}
-                                                              </div>
-                                                            </div>
-                                                          </form>
-                                                        </div>
-                                                        `;
+                          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;">
+                            <span class="form-label" style="font-weight: 600; margin: 0;">Tổng giá trị</span>
+                            <span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.totalValue)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
+                        <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('grn', 'view', '${d.id}') : navigate('grn')">
+                          ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+                        </button>
+                        <div style="display: flex; gap: 8px;">
+                          ${isView && hasPermission ? `
+                            <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('grn', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                            <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('grn', '${d.id}')">${Icons.trash} Xóa</button>
+                          ` : ''}
+                          ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                  `;
 }
 
 function renderReportInventory(c) {
@@ -2439,81 +2448,81 @@ function renderReportInventory(c) {
   };
 
   c.innerHTML = `
-                                                        <div style="display: flex; flex-direction: column; gap: 24px;">
-                                                          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
-                                                            ${kpiHtml}
-                                                          </div>
+                  <div style="display: flex; flex-direction: column; gap: 24px;">
+                    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
+                      ${kpiHtml}
+                    </div>
 
-                                                          <div style="display: grid; grid-template-columns: 1fr 320px; gap: 16px;" class="grid-2">
-                                                            <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
-                                                              <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Giá Trị Tồn Kho Theo Danh Mục</div>
-                                                              <div style="display: flex; flex-direction: column; gap: 12px;">
-                                                                ${catBreakdownHtml}
-                                                              </div>
-                                                            </div>
-                                                            <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
-                                                              <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 12px;">Cảnh Báo Hàng Tồn Kho</div>
-                                                              <div style="display: flex; flex-direction: column; gap: 8px;">
-                                                                ${alertsHtml}
-                                                              </div>
-                                                            </div>
-                                                          </div>
+                    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 16px;" class="grid-2">
+                      <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
+                        <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Giá Trị Tồn Kho Theo Danh Mục</div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                          ${catBreakdownHtml}
+                        </div>
+                      </div>
+                      <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
+                        <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 12px;">Cảnh Báo Hàng Tồn Kho</div>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                          ${alertsHtml}
+                        </div>
+                      </div>
+                    </div>
 
-                                                          <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;" id="inventory-report-table-box">
+                    <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;" id="inventory-report-table-box">
 
-                                                            <div style="padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                                                              <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Báo Cáo Tồn Kho Chi Tiết & Định Giá</span>
+                      <div style="padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Báo Cáo Tồn Kho Chi Tiết & Định Giá</span>
 
-                                                              <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                                                                <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 2px; width: 220px;">
-                                                                  <span style="color: var(--muted-foreground);">${Icons.search}</span>
-                                                                  <input type="text" id="report-inv-search-input" placeholder="Tìm mã, tên hàng..." value="${state.reportInvSearch}" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; padding: 6px 0;">
-                                                                </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                          <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 2px; width: 220px;">
+                            <span style="color: var(--muted-foreground);">${Icons.search}</span>
+                            <input type="text" id="report-inv-search-input" placeholder="Tìm mã, tên hàng..." value="${state.reportInvSearch}" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; padding: 6px 0;">
+                          </div>
 
-                                                                <div style="display: flex; gap: 1px;">
-                                                                  ${['all', ...categories].map(cat => `
-                                                                  <button onclick="state.filter='${cat}'; state.page=1; render();" style="padding: 5px 12px; font-family: var(--font-dm-mono); font-size: 10px; text-transform: uppercase; background: ${state.filter === cat ? 'var(--primary)' : 'var(--muted)'}; color: ${state.filter === cat ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer;">${cat === 'all' ? 'Tất cả' : cat}</button>
-                                                                `).join('')}
-                                                                </div>
-                                                              </div>
-                                                            </div>
+                          <div style="display: flex; gap: 1px;">
+                            ${['all', ...categories].map(cat => `
+                            <button onclick="state.filter='${cat}'; state.page=1; render();" style="padding: 5px 12px; font-family: var(--font-dm-mono); font-size: 10px; text-transform: uppercase; background: ${state.filter === cat ? 'var(--primary)' : 'var(--muted)'}; color: ${state.filter === cat ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer;">${cat === 'all' ? 'Tất cả' : cat}</button>
+                          `).join('')}
+                          </div>
+                        </div>
+                      </div>
 
-                                                            <div style="padding: 8px 20px 4px; display: flex; justify-content: flex-end; border-bottom: 1px solid var(--border); background: var(--secondary);">
-                                                              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);" id="report-inv-summary-text">
-                                                                Đang hiển thị <strong>${totalItems === 0 ? 0 : startIndex + 1}-${Math.min(startIndex + state.pageSize, totalItems)}/${totalItems}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(totalVal)}</strong> · Đã tạm giữ: ${fmtUSD(reservedVal)} · Cảnh báo: ${alertCount}
-                                                              </span>
-                                                            </div>
+                      <div style="padding: 8px 20px 4px; display: flex; justify-content: flex-end; border-bottom: 1px solid var(--border); background: var(--secondary);">
+                        <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);" id="report-inv-summary-text">
+                          Đang hiển thị <strong>${totalItems === 0 ? 0 : startIndex + 1}-${Math.min(startIndex + state.pageSize, totalItems)}/${totalItems}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(totalVal)}</strong> · Đã tạm giữ: ${fmtUSD(reservedVal)} · Cảnh báo: ${alertCount}
+                        </span>
+                      </div>
 
-                                                            <table style="width: 100%; border-collapse: collapse;">
-                                                              <thead>
-                                                                <tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">
-                                                                  ${headersHtml}
-                                                                </tr>
-                                                              </thead>
-                                                              <tbody id="report-inv-tbody">
-                                                                ${renderRows(visibleList)}
-                                                              </tbody>
-                                                            </table>
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                          <tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">
+                            ${headersHtml}
+                          </tr>
+                        </thead>
+                        <tbody id="report-inv-tbody">
+                          ${renderRows(visibleList)}
+                        </tbody>
+                      </table>
 
-                                                            <div id="report-inv-empty-msg" style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px; display: ${filtered.length === 0 ? 'block' : 'none'};">
-                                                              Không tìm thấy dữ liệu mặt hàng phù hợp
-                                                            </div>
+                      <div id="report-inv-empty-msg" style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px; display: ${filtered.length === 0 ? 'block' : 'none'};">
+                        Không tìm thấy dữ liệu mặt hàng phù hợp
+                      </div>
 
-                                                          </div>
+                    </div>
 
-                                                          <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-                                                          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
-                                                            <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
-                                                              Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
-                                                            </span>
-                                                            <div style="display: flex; gap: 6px; align-items: center;">
-                                                              <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
-                                                              <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
-                                                              <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
-                                                            </div>
-                                                          </div>
-                                                        </div>
-                                                        `;
+                    <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+                      <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+                        Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
+                      </span>
+                      <div style="display: flex; gap: 6px; align-items: center;">
+                        <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
+                        <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
+                        <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
+                      </div>
+                    </div>
+                  </div>
+                  `;
 
   // Xử lý ô Tìm kiếm
   const searchInput = document.getElementById('report-inv-search-input');
@@ -2771,123 +2780,123 @@ function renderReportSales(c) {
   `).join('');
 
   c.innerHTML = `
-    <div style="display: flex; flex-direction: column; gap: 16px;">
+                  <div style="display: flex; flex-direction: column; gap: 16px;">
 
-      <!-- KPI CARDS -->
-      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
-        <div class="kpi-card"><span class="kpi-label">Doanh Thu Lũy Kế Năm</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(ytdRevenue)}</span></div><span class="kpi-sub">Năm ${currentYear}</span></div>
-        <div class="kpi-card"><span class="kpi-label">Tổng Đơn Bán</span><div class="kpi-value-row"><span class="kpi-value">${fmt(ytdOrders)}</span></div><span class="kpi-sub">Năm ${currentYear}</span></div>
-        <div class="kpi-card"><span class="kpi-label">Tỷ Lệ Trả Hàng</span><div class="kpi-value-row"><span class="kpi-value">${returnRatePercent}%</span></div><span class="kpi-sub">theo số lượt đổi trả</span></div>
-        <div class="kpi-card"><span class="kpi-label">Giá Trị Đơn Trung Bình</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(avgOrderValue)}</span></div><span class="kpi-sub">AOV năm ${currentYear}</span></div>
-      </div>
+                    <!-- KPI CARDS -->
+                    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
+                      <div class="kpi-card"><span class="kpi-label">Doanh Thu Lũy Kế Năm</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(ytdRevenue)}</span></div><span class="kpi-sub">Năm ${currentYear}</span></div>
+                      <div class="kpi-card"><span class="kpi-label">Tổng Đơn Bán</span><div class="kpi-value-row"><span class="kpi-value">${fmt(ytdOrders)}</span></div><span class="kpi-sub">Năm ${currentYear}</span></div>
+                      <div class="kpi-card"><span class="kpi-label">Tỷ Lệ Trả Hàng</span><div class="kpi-value-row"><span class="kpi-value">${returnRatePercent}%</span></div><span class="kpi-sub">theo số lượt đổi trả</span></div>
+                      <div class="kpi-card"><span class="kpi-label">Giá Trị Đơn Trung Bình</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(avgOrderValue)}</span></div><span class="kpi-sub">AOV năm ${currentYear}</span></div>
+                    </div>
 
-      <!-- BIỂU ĐỒ DOANH SỐ & TOP KHÁCH HÀNG -->
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="grid-2">
-        <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
-          <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Biểu Đồ Doanh Thu & Sản Lượng Đơn Bán</div>
-          <div style="height: 220px;"><canvas id="chart-sales"></canvas></div>
-        </div>
-        <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
-          <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng (Tháng ${selectedMonthNum})</div>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tbody>
-              ${customersHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có dữ liệu khách hàng</td></tr>'}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    <!-- BIỂU ĐỒ DOANH SỐ & TOP KHÁCH HÀNG -->
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="grid-2">
+                      <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
+                        <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Biểu Đồ Doanh Thu & Sản Lượng Đơn Bán</div>
+                        <div style="height: 220px;"><canvas id="chart-sales"></canvas></div>
+                      </div>
+                      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
+                        <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng (Tháng ${selectedMonthNum})</div>
+                        <table style="width: 100%; border-collapse: collapse;">
+                          <tbody>
+                            ${customersHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có dữ liệu khách hàng</td></tr>'}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
 
-      <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG -->
-      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
-        <div style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG -->
+                    <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
+                      <div style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
 
-          <div style="display: flex; flex-direction: column; gap: 2px;">
-            <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--foreground);">
-              Thống Kê ${reportType === 'detail' ? 'Chi Tiết' : 'Tổng Hợp'} Theo Khách Hàng ${selectedCustomer ? `(${selectedCustomer})` : ''} - Tháng ${selectedMonthNum}/${currentYear}
-            </span>
-            <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--primary);">
-              Tổng số mặt hàng: ${totalDisplayItemsCount}
-            </span>
-          </div>
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                          <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--foreground);">
+                            Thống Kê ${reportType === 'detail' ? 'Chi Tiết' : 'Tổng Hợp'} Theo Khách Hàng ${selectedCustomer ? `(${selectedCustomer})` : ''} - Tháng ${selectedMonthNum}/${currentYear}
+                          </span>
+                          <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--primary);">
+                            Tổng số mặt hàng: ${totalDisplayItemsCount}
+                          </span>
+                        </div>
 
-          <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-            <!-- Ô Chọn Tháng -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
-              <select class="form-select" style="width: 100px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; state.reportSalesLimit=40; state.page=1; render();">
-                ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
-              </select>
-            </div>
+                        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                          <!-- Ô Chọn Tháng -->
+                          <div style="display: flex; align-items: center; gap: 6px;">
+                            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
+                            <select class="form-select" style="width: 100px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; state.reportSalesLimit=40; state.page=1; render();">
+                              ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
+                            </select>
+                          </div>
 
-            <!-- Ô Chọn Loại Báo Cáo -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Loại báo cáo:</label>
-              <select class="form-select" style="width: 160px; padding: 5px 8px; font-size: 12px;" onchange="state.reportType=this.value; state.reportSalesLimit=40; state.page=1; render();">
-                <option value="summary" ${reportType === 'summary' ? 'selected' : ''}>Báo cáo tổng hợp</option>
-                <option value="detail" ${reportType === 'detail' ? 'selected' : ''}>Báo cáo chi tiết</option>
-              </select>
-            </div>
+                          <!-- Ô Chọn Loại Báo Cáo -->
+                          <div style="display: flex; align-items: center; gap: 6px;">
+                            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Loại báo cáo:</label>
+                            <select class="form-select" style="width: 160px; padding: 5px 8px; font-size: 12px;" onchange="state.reportType=this.value; state.reportSalesLimit=40; state.page=1; render();">
+                              <option value="summary" ${reportType === 'summary' ? 'selected' : ''}>Báo cáo tổng hợp</option>
+                              <option value="detail" ${reportType === 'detail' ? 'selected' : ''}>Báo cáo chi tiết</option>
+                            </select>
+                          </div>
 
-            <!-- Ô Chọn Khách Hàng -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Khách hàng:</label>
-              <select class="form-select" style="width: 190px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesCustomer=this.value; state.reportSalesLimit=40; state.page=1; render();">
-                <option value="">-- Tất cả khách hàng --</option>
-                ${customerSelectOptions}
-              </select>
-            </div>
+                          <!-- Ô Chọn Khách Hàng -->
+                          <div style="display: flex; align-items: center; gap: 6px;">
+                            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Khách hàng:</label>
+                            <select class="form-select" style="width: 190px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesCustomer=this.value; state.reportSalesLimit=40; state.page=1; render();">
+                              <option value="">-- Tất cả khách hàng --</option>
+                              ${customerSelectOptions}
+                            </select>
+                          </div>
 
-            <!-- NÚT XUẤT PDF LÔ GICH MỚI: Luôn hiển thị, disable khi chọn mẫu Chi tiết mà chưa chọn Khách hàng -->
-            <button 
-              type="button" 
-              class="btn-primary" 
-              onclick="exportSalesReportToPDF()" 
-              ${(reportType === 'detail' && !selectedCustomer) ? 'disabled style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"' : 'style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"'}
-            >
-              Xuất PDF
-            </button>
+                          <!-- NÚT XUẤT PDF LÔ GICH MỚI: Luôn hiển thị, disable khi chọn mẫu Chi tiết mà chưa chọn Khách hàng -->
+                          <button 
+                            type="button" 
+                            class="btn-primary" 
+                            onclick="exportSalesReportToPDF()" 
+                            ${(reportType === 'detail' && !selectedCustomer) ? 'disabled style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"' : 'style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"'}
+                          >
+                            Xuất PDF
+                          </button>
 
-          </div>
+                        </div>
 
-        </div>
+                      </div>
 
-        <table style="width: 100%; border-collapse: collapse;">
-          <thead>
-            <tr style="border-bottom: 2px solid var(--border); background: #232730;">
-              ${detailHeaders}
-            </tr>
-          </thead>
-          <tbody>
-            ${detailRowsHtml}
-          </tbody>
-        </table>
+                      <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                          <tr style="border-bottom: 2px solid var(--border); background: #232730;">
+                            ${detailHeaders}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${detailRowsHtml}
+                        </tbody>
+                      </table>
 
-        ${reportType === 'detail' && selectedCustomer ? `
-          <!-- KHU VỰC SENTINEL LAZY LOADING -->
-          <div id="sales-report-lazy-sentinel" style="padding: 16px; text-align: center; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground); background: var(--card); border-top: 1px solid var(--border);">
-            ${(state.reportSalesLimit < totalDisplayItemsCount)
+                      ${reportType === 'detail' && selectedCustomer ? `
+                        <!-- KHU VỰC SENTINEL LAZY LOADING -->
+                        <div id="sales-report-lazy-sentinel" style="padding: 16px; text-align: center; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground); background: var(--card); border-top: 1px solid var(--border);">
+                          ${(state.reportSalesLimit < totalDisplayItemsCount)
         ? `⏳ Đang hiển thị ${Math.min(state.reportSalesLimit, totalDisplayItemsCount)} / ${totalDisplayItemsCount} mục. Cuộn xuống để tải thêm...`
         : `✔ Đã hiển thị toàn bộ ${totalDisplayItemsCount} mục.`}
-          </div>
-        ` : ''}
-      </div>
+                        </div>
+                      ` : ''}
+                    </div>
 
-      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG (CHỈ HIỂN THỊ TRONG BÁO CÁO TỔNG HỢP) -->
-      ${reportType === 'summary' ? `
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
-          <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
-            Hiển thị ${totalDisplayItemsCount === 0 ? 0 : ((state.page - 1) * state.pageSize) + 1} - ${Math.min(state.page * state.pageSize, totalDisplayItemsCount)} / Tổng ${totalDisplayItemsCount} mục
-          </span>
-          <div style="display: flex; gap: 6px; align-items: center;">
-            <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
-            <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${Math.ceil(totalDisplayItemsCount / state.pageSize) || 1}</span>
-            <button ${state.page >= (Math.ceil(totalDisplayItemsCount / state.pageSize) || 1) ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
-          </div>
-        </div>
-      ` : ''}
+                    <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG (CHỈ HIỂN THỊ TRONG BÁO CÁO TỔNG HỢP) -->
+                    ${reportType === 'summary' ? `
+                      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+                        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+                          Hiển thị ${totalDisplayItemsCount === 0 ? 0 : ((state.page - 1) * state.pageSize) + 1} - ${Math.min(state.page * state.pageSize, totalDisplayItemsCount)} / Tổng ${totalDisplayItemsCount} mục
+                        </span>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
+                          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${Math.ceil(totalDisplayItemsCount / state.pageSize) || 1}</span>
+                          <button ${state.page >= (Math.ceil(totalDisplayItemsCount / state.pageSize) || 1) ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
+                        </div>
+                      </div>
+                    ` : ''}
 
-    </div>
-  `;
+                  </div>
+                `;
 
   // KÍCH HOẠT LAZY LOADING CHO BÁO CÁO CHI TIẾT
   if (reportType === 'detail' && selectedCustomer) {
