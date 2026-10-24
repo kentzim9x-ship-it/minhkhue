@@ -789,17 +789,37 @@ function renderQuotationsList(c) {
     `;
   }).join('');
 
-  const headersHtml = ['Mã Báo Giá', 'Khách Hàng', 'Ngày Lập', 'Phát Hành', 'Hiệu Lực Đến', 'Số Dòng', 'Tổng Tiền', 'Trạng Thái', 'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', 'Hành Động']
-    .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
-    .join('');
+  const columnConfig = [
+    { title: 'Mã Báo Giá', width: '130px', align: 'left' },
+    { title: 'Khách Hàng', width: '180px', align: 'left' },
+    { title: 'Ngày Lập', width: '100px', align: 'left' },
+    { title: 'Phát Hành', width: '100px', align: 'left' },
+    { title: 'Hiệu Lực Đến', width: '100px', align: 'left' },
+    { title: 'Số Dòng', width: '70px', align: 'right' },
+    { title: 'Tổng Tiền', width: '110px', align: 'right' },
+    { title: 'Trạng Thái', width: '110px', align: 'left' },
+    { title: 'Người Tạo', width: '130px', align: 'left' },
+    { title: 'Ngày Tạo', width: '90px', align: 'left' },
+    { title: 'Giờ Tạo', width: '70px', align: 'left' },
+    { title: 'Người Sửa', width: '130px', align: 'left' },
+    { title: 'Ngày Sửa', width: '90px', align: 'left' },
+    { title: 'Giờ Sửa', width: '70px', align: 'left' },
+    { title: 'Hành Động', width: '140px', align: 'center' }
+  ];
+
+  const headersHtml = columnConfig.map(col => `
+  <th style="width: ${col.width}; min-width: ${col.width}; padding: 9px 16px; text-align: ${col.align}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">
+    ${col.title}
+  </th>
+`).join('');
 
   const rowsHtml = paginatedItems.map(q => `
     <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('quotations', '${hasPermission ? 'edit' : 'view'}', '${q.id}')" onclick="navigate('quotations', 'view', '${q.id}')">
       <td data-label="Mã Báo Giá" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${q.id}</td>
       <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${q.customer}</td>
       <td data-label="Ngày Lập" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.date || '—'}</td>
-      <td data-label="Phát Hành" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.validbegin || q.validBegin || '—'}</td>
-      <td data-label="Hiệu Lực Đến" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.validUntil}</td>
+      <td data-label="Ngày Bắt Đầu" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.validbegin || q.validBegin || '—'}</td>
+      <td data-label="Ngày Kết Thúc" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${q.validUntil}</td>
       <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${(q.lineItems || []).length}</td>
       <td data-label="Tổng Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(q.total)}</td>
       <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(q.status)}">${getStatusLabel(q.status)}</span></td>
@@ -1563,11 +1583,11 @@ function renderQuotationForm(c) {
                       <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
                     </div>
                     <div class="form-group">
-                      <label class="form-label">Ngày phát hành *</label>
+                      <label class="form-label">Ngày bắt đầu *</label>
                       <input type="date" class="form-input" value="${d.validbegin || d.validBegin || getFirstDayOfMonthStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validbegin\', this.value)"'} required>
                     </div>
                     <div class="form-group">
-                      <label class="form-label">Hiệu lực đến *</label>
+                      <label class="form-label">Ngày kết thúc *</label>
                       <input type="date" class="form-input" value="${d.validUntil || d.validuntil || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'validUntil\', this.value)"'} required>
                     </div>
                     <div class="form-group">
