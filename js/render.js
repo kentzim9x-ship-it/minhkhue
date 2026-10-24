@@ -2496,6 +2496,10 @@ function renderReportSales(c) {
   if (!state.reportType) {
     state.reportType = 'summary'; // Mặc định là 'summary' (Báo cáo tổng hợp)
   }
+  // Khởi tạo limit cho Lazy Loading (áp dụng riêng cho Báo cáo chi tiết)
+  if (!state.reportSalesLimit) {
+    state.reportSalesLimit = 40;
+  }
 
   const currentYear = new Date().getFullYear();
   const selectedMonthNum = parseInt(state.reportSalesMonth, 10) || (new Date().getMonth() + 1);
@@ -2548,7 +2552,7 @@ function renderReportSales(c) {
     .join('');
 
   if (reportType === 'summary') {
-    // === BÁO CÁO TỔNG HỢP (Không có cột Đơn Giá) ===
+    // === BÁO CÁO TỔNG HỢP (Không có cột Đơn Giá - Giữ nguyên Phân Trang theo hệ thống) ===
     const itemSummaryMap = {};
     filteredOrdersForMonth.forEach(o => {
       if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
@@ -2595,7 +2599,7 @@ function renderReportSales(c) {
     `).join('');
 
   } else {
-    // === BÁO CÁO CHI TIẾT (Có thêm cột Đơn Giá) ===
+    // === BÁO CÁO CHI TIẾT (Dạng Lazy Loading, tự động tải thêm khi cuộn) ===
     if (!selectedCustomer) {
       detailRowsHtml = `
         <tr>
@@ -2626,8 +2630,11 @@ function renderReportSales(c) {
 
       let rows = [];
       let itemCount = 0;
+      let renderedItemCount = 0;
 
-      sortedDates.forEach(dateStr => {
+      for (const dateStr of sortedDates) {
+        if (renderedItemCount >= state.reportSalesLimit) break;
+
         const dateParts = dateStr.split('-');
         const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
 
@@ -2654,8 +2661,8 @@ function renderReportSales(c) {
             dayTotalQty += qty;
             dayTotalAmount += lineTotal;
             itemCount++;
+            renderedItemCount++;
 
-            // Thêm sự kiện click/double-click vào các dòng con chi tiết để điều hướng đến đơn bán hàng cụ thể
             dayRows.push(`
               <tr style="border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'view', '${o.id}')" ondblclick="navigate('sales-orders', 'edit', '${o.id}')">
                 <td data-label="Mã Hàng (SKU)" style="padding: 9px 16px 9px 32px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${sku}</td>
@@ -2669,11 +2676,10 @@ function renderReportSales(c) {
           });
         });
 
-        // 🟢 BỔ SUNG ĐIỀU HƯỚNG: Bấm vào dòng tiêu đề ngày sẽ tự động lọc sang Đơn bán hàng (sales-orders) theo từ khóa khách hàng/ngày
         rows.push(`
           <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="state.search='${selectedCustomer}'; navigate('sales-orders');" title="Click để xem các Đơn hàng bán của ${selectedCustomer} ngày ${formattedDate}">
             <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);"></td>
-            <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030;">📅 ${formattedDate}</td>
+            <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030;">${formattedDate}</td>
             <td style="padding: 8px 16px; text-align: center;"></td>
             <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: #f0a030;">${fmt(dayTotalQty)}</td>
             <td style="padding: 8px 16px; text-align: right;"></td>
@@ -2682,9 +2688,9 @@ function renderReportSales(c) {
         `);
 
         rows.push(...dayRows);
-      });
+      }
 
-      totalDisplayItemsCount = itemCount;
+      totalDisplayItemsCount = Object.values(dailyMap).reduce((sum, d) => sum + d.orders.reduce((s, o) => s + (o.lineItems || o.lineitems || []).length, 0), 0);
 
       if (rows.length === 0) {
         detailRowsHtml = `
@@ -2757,7 +2763,7 @@ function renderReportSales(c) {
             <!-- Ô Chọn Tháng -->
             <div style="display: flex; align-items: center; gap: 6px;">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
-              <select class="form-select" style="width: 100px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; state.page=1; render();">
+              <select class="form-select" style="width: 100px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; state.reportSalesLimit=40; state.page=1; render();">
                 ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
               </select>
             </div>
@@ -2765,7 +2771,7 @@ function renderReportSales(c) {
             <!-- Ô Chọn Loại Báo Cáo -->
             <div style="display: flex; align-items: center; gap: 6px;">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Loại báo cáo:</label>
-              <select class="form-select" style="width: 160px; padding: 5px 8px; font-size: 12px;" onchange="state.reportType=this.value; state.page=1; render();">
+              <select class="form-select" style="width: 160px; padding: 5px 8px; font-size: 12px;" onchange="state.reportType=this.value; state.reportSalesLimit=40; state.page=1; render();">
                 <option value="summary" ${reportType === 'summary' ? 'selected' : ''}>Báo cáo tổng hợp</option>
                 <option value="detail" ${reportType === 'detail' ? 'selected' : ''}>Báo cáo chi tiết</option>
               </select>
@@ -2774,7 +2780,7 @@ function renderReportSales(c) {
             <!-- Ô Chọn Khách Hàng -->
             <div style="display: flex; align-items: center; gap: 6px;">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Khách hàng:</label>
-              <select class="form-select" style="width: 190px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesCustomer=this.value; state.page=1; render();">
+              <select class="form-select" style="width: 190px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesCustomer=this.value; state.reportSalesLimit=40; state.page=1; render();">
                 <option value="">-- Tất cả khách hàng --</option>
                 ${customerSelectOptions}
               </select>
@@ -2793,6 +2799,15 @@ function renderReportSales(c) {
             ${detailRowsHtml}
           </tbody>
         </table>
+
+        ${reportType === 'detail' && selectedCustomer ? `
+          <!-- KHU VỰC SENTINEL LAZY LOADING -->
+          <div id="sales-report-lazy-sentinel" style="padding: 16px; text-align: center; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground); background: var(--card); border-top: 1px solid var(--border);">
+            ${(state.reportSalesLimit < totalDisplayItemsCount) 
+              ? `⏳ Đang hiển thị ${Math.min(state.reportSalesLimit, totalDisplayItemsCount)} / ${totalDisplayItemsCount} mục. Cuộn xuống để tải thêm...` 
+              : `✔ Đã hiển thị toàn bộ ${totalDisplayItemsCount} mục.`}
+          </div>
+        ` : ''}
       </div>
 
       <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG (CHỈ HIỂN THỊ TRONG BÁO CÁO TỔNG HỢP) -->
@@ -2811,6 +2826,24 @@ function renderReportSales(c) {
 
     </div>
   `;
+
+  // KÍCH HOẠT LAZY LOADING CHO BÁO CÁO CHI TIẾT
+  if (reportType === 'detail' && selectedCustomer) {
+    setTimeout(() => {
+      const sentinel = document.getElementById('sales-report-lazy-sentinel');
+      if (sentinel && state.reportSalesLimit < totalDisplayItemsCount) {
+        const observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            observer.disconnect();
+            state.reportSalesLimit += 30;
+            render();
+          }
+        }, { threshold: 0.1 });
+
+        observer.observe(sentinel);
+      }
+    }, 100);
+  }
 
   new Chart(document.getElementById('chart-sales').getContext('2d'), {
     type: 'line',
