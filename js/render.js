@@ -829,7 +829,6 @@ function renderQuotationsList(c) {
     { title: 'Ngày Bắt Đầu', width: '30px', align: 'center' },
     { title: 'Ngày Kết Thúc', width: '30px', align: 'center' },
     { title: 'Số Dòng', width: '20px', align: 'center' },
-    { title: 'Tổng Tiền', width: '30px', align: 'center' },
     { title: 'Trạng Thái', width: '40px', align: 'center' },
     { title: 'Người Tạo', width: '50px', align: 'center' },
     { title: 'Ngày Tạo', width: '30px', align: 'center' },
@@ -854,7 +853,6 @@ function renderQuotationsList(c) {
       <td data-label="Ngày Bắt Đầu" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${q.validbegin || q.validBegin || '—'}</td>
       <td data-label="Ngày Kết Thúc" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${q.validUntil}</td>
       <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${(q.lineItems || []).length}</td>
-      <td data-label="Tổng Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: center;">${fmtUSD(q.total)}</td>
       <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(q.status)}">${getStatusLabel(q.status)}</span></td>
 
       <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(q.user_id0)}</td>
