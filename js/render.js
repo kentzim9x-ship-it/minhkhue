@@ -2785,6 +2785,19 @@ function renderReportSales(c) {
                 ${customerSelectOptions}
               </select>
             </div>
+
+            <!-- NÚT XUẤT PDF ĐẶT ĐẰNG SAU SELECT KHÁCH HÀNG -->
+            ${(reportType === 'summary' || (reportType === 'detail' && selectedCustomer)) ? `
+              <button 
+                type="button" 
+                class="btn-primary" 
+                onclick="exportQuotationToPDF()" 
+                style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"
+              >
+                Xuất PDF
+              </button>
+            ` : ''}
+
           </div>
 
         </div>
@@ -2865,6 +2878,34 @@ function renderReportSales(c) {
       }
     }
   });
+}
+
+function exportSalesReportToPDF() {
+  const selectedCustomer = state.reportSalesCustomer || 'Tat_Ca_Khach_Hang';
+  const selectedMonth = state.reportSalesMonth || (new Date().getMonth() + 1);
+  const reportType = state.reportType || 'summary';
+  const reportTypeName = reportType === 'detail' ? 'Chi_Tiet' : 'Tong_Hop';
+
+  // Tên file xuất tương tự mẫu
+  const fileName = reportType === 'detail' 
+    ? `Bao_cao_ban_hang_chi_tiet_${selectedCustomer.replace(/\s+/g, '_')}.pdf`
+    : `Bao_cao_tong_hop_${selectedCustomer.replace(/\s+/g, '_')}.pdf`;
+
+  // Kiểm tra nếu có hàm render/xuất PDF có sẵn trong dự án hoặc dùng cửa sổ in chuẩn HTML
+  if (typeof html2pdf !== 'undefined') {
+    const element = document.querySelector('#sales-report-table-container');
+    const opt = {
+      margin:       [10, 10, 10, 10],
+      filename:     fileName,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+    html2pdf().set(opt).from(element).save();
+  } else {
+    // Phương án fallback: Mở giao diện in PDF của trình duyệt
+    window.print();
+  }
 }
 
 function getAddLineButton(moduleName, isDetailsDisabled, position) {
