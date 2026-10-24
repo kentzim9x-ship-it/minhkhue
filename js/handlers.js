@@ -1347,7 +1347,7 @@ async function exportSalesOrderToPDF() {
 
 // ==========================================
 // XUẤT PDF BÁO CÁO BÁN HÀNG (TỔNG HỢP & CHI TIẾT)
-// Cập nhật: Bỏ cột STT mẫu chi tiết & Đưa Khách hàng / Địa chỉ thành từng dòng riêng
+// Cập nhật: Thêm "Báo cáo tháng X năm Y" ở trên dòng Khách hàng (cả 2 mẫu)
 // ==========================================
 async function exportSalesReportToPDF() {
   const selectedCustomer = state.reportSalesCustomer || '';
@@ -1380,7 +1380,7 @@ async function exportSalesReportToPDF() {
   let totalAmount = 0;
 
   if (!isDetail) {
-    // === 1. TẠO BÁO CÁO TỔNG HỢP (GIỮ CỘT STT) ===
+    // === 1. TẠO BÁO CÁO TỔNG HỢP (CÓ CỘT STT) ===
     const itemSummaryMap = {};
     filteredOrders.forEach(o => {
       if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
@@ -1492,7 +1492,7 @@ async function exportSalesReportToPDF() {
         });
       });
 
-      // Dòng gom nhóm Ngày (Không có cột STT)
+      // Dòng gom nhóm Ngày (Đặt ở cột Tên Hàng, không có cột STT)
       rowsHtml += `
         <tr style="height: 26px; background-color: #f2f2f2; font-weight: bold;">
           <td style="border: 1px solid #000;"></td>
@@ -1570,8 +1570,9 @@ async function exportSalesReportToPDF() {
       CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
     </div>
 
-    <!-- KHU VỰC THÔNG TIN KHÁCH HÀNG & ĐỊA CHỈ (MỖI THÔNG TIN 1 DÒNG ĐỘC LẬP) -->
+    <!-- KHU VỰC THÔNG TIN THÁNG BÁO CÁO, KHÁCH HÀNG & ĐỊA CHỈ (MỖI THÔNG TIN 1 DÒNG) -->
     <div style="font-size: 11pt; margin-bottom: 12px; line-height: 1.6;">
+      <div>Báo cáo tháng ${selectedMonth} năm ${currentYear}</div>
       <div>Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</div>
       <div>Địa chỉ: ${custAddress}</div>
     </div>
