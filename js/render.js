@@ -824,20 +824,20 @@ function renderQuotationsList(c) {
 
   const columnConfig = [
     { title: 'Mã Báo Giá', width: '30px', align: 'center' },
-    { title: 'Khách Hàng', width: '100px', align: 'center' },
     { title: 'Ngày Lập Phiếu', width: '30px', align: 'center' },
+    { title: 'Khách Hàng', width: '50px', align: 'center' },
     { title: 'Ngày Bắt Đầu', width: '30px', align: 'center' },
     { title: 'Ngày Kết Thúc', width: '30px', align: 'center' },
-    { title: 'Số Dòng', width: '30px', align: 'center' },
+    { title: 'Số Dòng', width: '20px', align: 'center' },
     { title: 'Tổng Tiền', width: '30px', align: 'center' },
     { title: 'Trạng Thái', width: '40px', align: 'center' },
-    { title: 'Người Tạo', width: '80px', align: 'center' },
+    { title: 'Người Tạo', width: '50px', align: 'center' },
     { title: 'Ngày Tạo', width: '30px', align: 'center' },
-    { title: 'Giờ Tạo', width: '30px', align: 'center' },
-    { title: 'Người Sửa', width: '80px', align: 'center' },
+    { title: 'Giờ Tạo', width: '20px', align: 'center' },
+    { title: 'Người Sửa', width: '50px', align: 'center' },
     { title: 'Ngày Sửa', width: '30px', align: 'center' },
-    { title: 'Giờ Sửa', width: '30px', align: 'center' },
-    { title: 'Hành Động', width: '120px', align: 'center' }
+    { title: 'Giờ Sửa', width: '20px', align: 'center' },
+    { title: 'Hành Động', width: '80px', align: 'center' }
   ];
 
   const headersHtml = columnConfig.map(col => `
@@ -960,20 +960,20 @@ function renderOrdersList(c) {
   `).join('');
 
   const columnConfig = [
-    { title: 'Mã Đơn Hàng', width: '60px', align: 'center' },
-    { title: 'Khách Hàng', width: '100px', align: 'center' },
-    { title: 'Ngày Lập Phiếu', width: '60px', align: 'center' },
-    { title: 'Mã Kho', width: '40px', align: 'center' },
-    { title: 'Số Dòng', width: '40px', align: 'center' },
-    { title: 'Tổng Tiền', width: '80px', align: 'center' },
-    { title: 'Trạng Thái', width: '80px', align: 'center' },
-    { title: 'Người Tạo', width: '80px', align: 'center' },
-    { title: 'Ngày Tạo', width: '60px', align: 'center' },
-    { title: 'Giờ Tạo', width: '40px', align: 'center' },
-    { title: 'Người Sửa', width: '80px', align: 'center' },
-    { title: 'Ngày Sửa', width: '60px', align: 'center' },
-    { title: 'Giờ Sửa', width: '40px', align: 'center' },
-    { title: 'Hành Động', width: '120px', align: 'center' }
+    { title: 'Mã Đơn Hàng', width: '30px', align: 'center' },
+    { title: 'Ngày Lập Phiếu', width: '30px', align: 'center' },
+    { title: 'Khách Hàng', width: '50px', align: 'center' },
+    { title: 'Mã Kho', width: '30px', align: 'center' },
+    { title: 'Số Dòng', width: '20px', align: 'center' },
+    { title: 'Tổng Tiền', width: '30px', align: 'center' },
+    { title: 'Trạng Thái', width: '40px', align: 'center' },
+    { title: 'Người Tạo', width: '50px', align: 'center' },
+    { title: 'Ngày Tạo', width: '30px', align: 'center' },
+    { title: 'Giờ Tạo', width: '20px', align: 'center' },
+    { title: 'Người Sửa', width: '50px', align: 'center' },
+    { title: 'Ngày Sửa', width: '30px', align: 'center' },
+    { title: 'Giờ Sửa', width: '20px', align: 'center' },
+    { title: 'Hành Động', width: '80px', align: 'center' }
   ];
 
   const headersHtml = columnConfig.map(col => `
@@ -1096,21 +1096,21 @@ function renderReturnsList(c) {
   `).join('');
 
   const columnConfig = [
-    { title: 'Mã Đổi Trả', width: '60px', align: 'center' },
-    { title: 'Đơn Hàng Bán', width: '60px', align: 'center' },
-    { title: 'Khách Hàng', width: '100px', align: 'center' },
-    { title: 'Ngày Đổi Trả', width: '60px', align: 'center' },
-    { title: 'Lý Do', width: '120px', align: 'center' },
-    { title: 'Số Dòng', width: '40px', align: 'center' },
-    { title: 'Tổng Hoàn Tiền', width: '80px', align: 'center' },
-    { title: 'Trạng Thái', width: '80px', align: 'center' },
-    { title: 'Người Tạo', width: '80px', align: 'center' },
-    { title: 'Ngày Tạo', width: '60px', align: 'center' },
-    { title: 'Giờ Tạo', width: '40px', align: 'center' },
-    { title: 'Người Sửa', width: '80px', align: 'center' },
-    { title: 'Ngày Sửa', width: '60px', align: 'center' },
-    { title: 'Giờ Sửa', width: '40px', align: 'center' },
-    { title: 'Hành Động', width: '120px', align: 'center' }
+    { title: 'Mã Đổi Trả', width: '30px', align: 'center' },
+    { title: 'Ngày Đổi Trả', width: '30px', align: 'center' },
+    { title: 'Đơn Hàng Bán', width: '30px', align: 'center' },
+    { title: 'Khách Hàng', width: '50px', align: 'center' },
+    { title: 'Lý Do', width: '50px', align: 'center' },
+    { title: 'Số Dòng', width: '20px', align: 'center' },
+    { title: 'Tổng Hoàn Tiền', width: '30px', align: 'center' },
+    { title: 'Trạng Thái', width: '40px', align: 'center' },
+    { title: 'Người Tạo', width: '50px', align: 'center' },
+    { title: 'Ngày Tạo', width: '30px', align: 'center' },
+    { title: 'Giờ Tạo', width: '20px', align: 'center' },
+    { title: 'Người Sửa', width: '50px', align: 'center' },
+    { title: 'Ngày Sửa', width: '30px', align: 'center' },
+    { title: 'Giờ Sửa', width: '20px', align: 'center' },
+    { title: 'Hành Động', width: '80px', align: 'center' }
   ];
 
   const headersHtml = columnConfig.map(col => `
@@ -1235,20 +1235,20 @@ function renderGRNList(c) {
   `).join('');
 
   const columnConfig = [
-    { title: 'Mã Nhập Kho', width: '60px', align: 'center' },
-    { title: 'Nhà Cung Cấp', width: '100px', align: 'center' },
-    { title: 'Ngày Nhập Kho', width: '60px', align: 'center' },
-    { title: 'Mã Kho', width: '40px', align: 'center' },
-    { title: 'Số Dòng', width: '40px', align: 'center' },
-    { title: 'Tổng Tiền', width: '80px', align: 'center' },
-    { title: 'Trạng Thái', width: '80px', align: 'center' },
-    { title: 'Người Tạo', width: '80px', align: 'center' },
-    { title: 'Ngày Tạo', width: '60px', align: 'center' },
-    { title: 'Giờ Tạo', width: '40px', align: 'center' },
-    { title: 'Người Sửa', width: '80px', align: 'center' },
-    { title: 'Ngày Sửa', width: '60px', align: 'center' },
-    { title: 'Giờ Sửa', width: '40px', align: 'center' },
-    { title: 'Hành Động', width: '120px', align: 'center' }
+    { title: 'Mã Nhập Kho', width: '30px', align: 'center' },
+    { title: 'Ngày Nhập Kho', width: '30px', align: 'center' },
+    { title: 'Nhà Cung Cấp', width: '50px', align: 'center' },
+    { title: 'Mã Kho', width: '30px', align: 'center' },
+    { title: 'Số Dòng', width: '20px', align: 'center' },
+    { title: 'Tổng Tiền', width: '30px', align: 'center' },
+    { title: 'Trạng Thái', width: '40px', align: 'center' },
+    { title: 'Người Tạo', width: '50px', align: 'center' },
+    { title: 'Ngày Tạo', width: '30px', align: 'center' },
+    { title: 'Giờ Tạo', width: '20px', align: 'center' },
+    { title: 'Người Sửa', width: '50px', align: 'center' },
+    { title: 'Ngày Sửa', width: '30px', align: 'center' },
+    { title: 'Giờ Sửa', width: '20px', align: 'center' },
+    { title: 'Hành Động', width: '80px', align: 'center' }
   ];
 
   const headersHtml = columnConfig.map(col => `
