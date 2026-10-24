@@ -2540,8 +2540,8 @@ function renderReportSales(c) {
 
   // Cấu hình Cột Header: Đơn Giá chỉ xuất hiện ở Báo cáo Chi tiết
   const headersConfig = reportType === 'detail'
-    ? ['Mã Hàng (SKU)', 'Tên Hàng Hóa', 'ĐVT', 'Tổng Số Lượng', 'Đơn Giá', 'Tổng Số Tiền']
-    : ['Mã Hàng (SKU)', 'Tên Hàng Hóa', 'ĐVT', 'Tổng Số Lượng', 'Tổng Số Tiền'];
+    ? ['Mã Hàng (SKU)', 'Tên Hàng', 'ĐVT', 'Tổng Số Lượng', 'Đơn Giá', 'Tổng Số Tiền']
+    : ['Mã Hàng (SKU)', 'Tên Hàng', 'ĐVT', 'Tổng Số Lượng', 'Tổng Số Tiền'];
 
   const detailHeaders = headersConfig
     .map(h => `<th style="padding: 10px 16px; text-align: ${h === 'Tổng Số Lượng' || h === 'Đơn Giá' || h === 'Tổng Số Tiền' ? 'right' : (h === 'ĐVT' ? 'center' : 'left')}; font-family: var(--font-dm-mono); font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: #ffffff; font-weight: 600; white-space: nowrap;">${h}</th>`)
@@ -2587,7 +2587,7 @@ function renderReportSales(c) {
     detailRowsHtml = paginatedDetailItems.map(item => `
       <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
         <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${item.sku}</td>
-        <td data-label="Tên Hàng Hóa" style="padding: 11px 16px; font-size: 13px; font-weight: 500;">${item.name}</td>
+        <td data-label="Tên Hàng" style="padding: 11px 16px; font-size: 13px; font-weight: 500;">${item.name}</td>
         <td data-label="ĐVT" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${item.unit}</td>
         <td data-label="Tổng Số Lượng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(item.qty)}</td>
         <td data-label="Tổng Số Tiền" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right; color: var(--primary);">${fmtUSD(item.totalAmount)}</td>
@@ -2659,7 +2659,7 @@ function renderReportSales(c) {
             dayRows.push(`
               <tr style="border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'view', '${o.id}')" ondblclick="navigate('sales-orders', 'edit', '${o.id}')">
                 <td data-label="Mã Hàng (SKU)" style="padding: 9px 16px 9px 32px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${sku}</td>
-                <td data-label="Tên Hàng Hóa" style="padding: 9px 16px; font-size: 13px;">${name}</td>
+                <td data-label="Tên Hàng" style="padding: 9px 16px; font-size: 13px;">${name}</td>
                 <td data-label="ĐVT" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${unit}</td>
                 <td data-label="Tổng Số Lượng" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(qty)}</td>
                 <td data-label="Đơn Giá" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(price)}</td>
