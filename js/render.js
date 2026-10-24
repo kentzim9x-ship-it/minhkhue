@@ -790,20 +790,20 @@ function renderQuotationsList(c) {
   }).join('');
 
   const columnConfig = [
-    { title: 'Mã Báo Giá', width: '130px', align: 'left' },
-    { title: 'Khách Hàng', width: '180px', align: 'left' },
-    { title: 'Ngày Lập', width: '100px', align: 'left' },
-    { title: 'Phát Hành', width: '100px', align: 'left' },
-    { title: 'Hiệu Lực Đến', width: '100px', align: 'left' },
-    { title: 'Số Dòng', width: '70px', align: 'right' },
-    { title: 'Tổng Tiền', width: '110px', align: 'right' },
-    { title: 'Trạng Thái', width: '110px', align: 'left' },
-    { title: 'Người Tạo', width: '130px', align: 'left' },
-    { title: 'Ngày Tạo', width: '90px', align: 'left' },
-    { title: 'Giờ Tạo', width: '70px', align: 'left' },
-    { title: 'Người Sửa', width: '130px', align: 'left' },
-    { title: 'Ngày Sửa', width: '90px', align: 'left' },
-    { title: 'Giờ Sửa', width: '70px', align: 'left' },
+    { title: 'Mã Báo Giá', width: '100px', align: 'center' },
+    { title: 'Khách Hàng', width: '150px', align: 'center' },
+    { title: 'Ngày Lập', width: '100px', align: 'center' },
+    { title: 'Phát Hành', width: '100px', align: 'center' },
+    { title: 'Hiệu Lực Đến', width: '100px', align: 'center' },
+    { title: 'Số Dòng', width: '70px', align: 'center' },
+    { title: 'Tổng Tiền', width: '120px', align: 'center' },
+    { title: 'Trạng Thái', width: '120px', align: 'center' },
+    { title: 'Người Tạo', width: '130px', align: 'center' },
+    { title: 'Ngày Tạo', width: '90px', align: 'center' },
+    { title: 'Giờ Tạo', width: '70px', align: 'center' },
+    { title: 'Người Sửa', width: '130px', align: 'center' },
+    { title: 'Ngày Sửa', width: '90px', align: 'center' },
+    { title: 'Giờ Sửa', width: '70px', align: 'center' },
     { title: 'Hành Động', width: '140px', align: 'center' }
   ];
 
