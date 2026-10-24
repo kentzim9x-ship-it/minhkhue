@@ -2753,20 +2753,20 @@ function renderReportSales(c) {
           </div>
 
           <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <!-- Ô Chọn Tháng -->
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
+              <select class="form-select" style="width: 100px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; state.page=1; render();">
+                ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
+              </select>
+            </div>
+
             <!-- Ô Chọn Loại Báo Cáo -->
             <div style="display: flex; align-items: center; gap: 6px;">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Loại báo cáo:</label>
               <select class="form-select" style="width: 160px; padding: 5px 8px; font-size: 12px;" onchange="state.reportType=this.value; state.page=1; render();">
                 <option value="summary" ${reportType === 'summary' ? 'selected' : ''}>Báo cáo tổng hợp</option>
                 <option value="detail" ${reportType === 'detail' ? 'selected' : ''}>Báo cáo chi tiết</option>
-              </select>
-            </div>
-
-            <!-- Ô Chọn Tháng -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
-              <select class="form-select" style="width: 100px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; state.page=1; render();">
-                ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
               </select>
             </div>
 
