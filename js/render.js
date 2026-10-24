@@ -1334,6 +1334,8 @@ function renderGRNList(c) {
 function renderMaterialForm(c) {
   const d = state.formData || {};
   const isView = state.mode === 'view';
+  const hasPermission = checkModulePermission('materials');
+
   c.innerHTML = `
     <div style="max-width: 900px;">
       ${getBreadcrumb('Sản Phẩm & Vật Tư', isView ? `Xem ${d.id}` : (state.mode === 'edit' ? `Sửa ${d.id}` : 'Thêm Sản Phẩm Mới'), 'materials')}
@@ -1414,9 +1416,15 @@ function renderMaterialForm(c) {
           </div>
         </div>
 
-        <div class="action-bar">
+        <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
           <button type="button" class="btn-cancel" onclick="navigate('materials')">${isView ? 'Quay lại' : 'Hủy'}</button>
-          ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu sản phẩm' : 'Cập nhật'}</button>` : ''}
+          <div style="display: flex; gap: 8px;">
+            ${isView && hasPermission ? `
+              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('materials', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+              <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('materials', '${d.id}')">${Icons.trash} Xóa</button>
+            ` : ''}
+            ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu sản phẩm' : 'Cập nhật'}</button>` : ''}
+          </div>
         </div>
       </form>
     </div>
@@ -1426,6 +1434,8 @@ function renderMaterialForm(c) {
 function renderCustomerForm(c) {
   const d = state.formData || {};
   const isView = state.mode === 'view';
+  const hasPermission = checkModulePermission('customers');
+
   c.innerHTML = `
     <div style="max-width: 900px;">
       ${getBreadcrumb('Khách hàng', isView ? `Xem ${d.id}` : (state.mode === 'edit' ? `Chỉnh sửa ${d.id}` : 'Thêm mới khách hàng'), 'customers')}
@@ -1500,9 +1510,15 @@ function renderCustomerForm(c) {
           </div>
         </div>
 
-        <div class="action-bar">
+        <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
           <button type="button" class="btn-cancel" onclick="navigate('customers')">${isView ? 'Quay lại' : 'Hủy'}</button>
-          ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu khách hàng' : 'Cập nhật'}</button>` : ''}
+          <div style="display: flex; gap: 8px;">
+            ${isView && hasPermission ? `
+              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('customers', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+              <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('customers', '${d.id}')">${Icons.trash} Xóa</button>
+            ` : ''}
+            ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu khách hàng' : 'Cập nhật'}</button>` : ''}
+          </div>
         </div>
       </form>
     </div>
@@ -1582,6 +1598,7 @@ function renderQuotationForm(c) {
   const d = state.formData || {};
   const isView = state.mode === 'view';
   const isEdit = state.mode === 'edit';
+  const hasPermission = checkModulePermission('quotations');
   d.lineItems = Array.isArray(d.lineItems) ? d.lineItems : [];
 
   const isDetailsDisabled = !isView && state.mode === 'add' && !d.customer;
@@ -1737,7 +1754,13 @@ function renderQuotationForm(c) {
                 <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
                   <button type="button" class="btn-cancel" onclick="navigate('quotations')">${isView ? 'Quay lại' : 'Hủy'}</button>
                   <div style="display: flex; gap: 8px;">
-            ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>` : ''}
+            ${isView ? `
+              <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>
+              ${hasPermission ? `
+                <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('quotations', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('quotations', '${d.id}')">${Icons.trash} Xóa</button>
+              ` : ''}
+            ` : ''}
             
             <!-- KHÓA NÚT TẠO PHIẾU / CẬP NHẬT KHI CHƯA CHỌN KHÁCH HÀNG -->
             ${!isView ? `
@@ -1755,6 +1778,7 @@ function renderSalesOrderForm(c) {
   const d = state.formData || {};
   const isView = state.mode === 'view';
   const isEdit = state.mode === 'edit';
+  const hasPermission = checkModulePermission('sales-orders');
   d.lineItems = Array.isArray(d.lineItems) ? d.lineItems : [];
 
   const isDetailsDisabled = !isView && state.mode === 'add' && !d.customer;
@@ -1927,7 +1951,13 @@ function renderSalesOrderForm(c) {
                                   <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
                                     <button type="button" class="btn-cancel" onclick="navigate('sales-orders')">${isView ? 'Quay lại' : 'Hủy'}</button>
                                     <div style="display: flex; gap: 8px;">
-                                      ${isView ? `<button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>` : ''}
+                                      ${isView ? `
+                                        <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>
+                                        ${hasPermission ? `
+                                          <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('sales-orders', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                                          <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('sales-orders', '${d.id}')">${Icons.trash} Xóa</button>
+                                        ` : ''}
+                                      ` : ''}
                                       
                                       <!-- KHÓA NÚT TẠO PHIẾU / CẬP NHẬT KHI CHƯA CHỌN KHÁCH HÀNG -->
                                       ${!isView ? `
@@ -1947,6 +1977,7 @@ function renderReturnForm(c) {
   const isView = state.mode === 'view';
   const isEdit = state.mode === 'edit';
   const hasOrder = Boolean(d.orderId);
+  const hasPermission = checkModulePermission('returns');
 
   d.lineItems = Array.isArray(d.lineItems) ? d.lineItems : [];
   d.total = d.lineItems.reduce((s, l) => s + ((l.qtyReturned || 0) * (l.unitPrice || 0)), 0);
@@ -2097,10 +2128,16 @@ function renderReturnForm(c) {
                                                 </div>
                                               </div>
 
-                                              <div class="action-bar">
+                                              <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
                                                 <button type="button" class="btn-cancel" onclick="navigate('returns')">${isView ? 'Quay lại' : 'Hủy'}</button>
-                                                <!-- KHÓA NÚT TẠO PHIẾU ĐỔI TRẢ -->
-                                                ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
+                                                <div style="display: flex; gap: 8px;">
+                                                  ${isView && hasPermission ? `
+                                                    <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('returns', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                                                    <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('returns', '${d.id}')">${Icons.trash} Xóa</button>
+                                                  ` : ''}
+                                                  <!-- KHÓA NÚT TẠO PHIẾU ĐỔI TRẢ -->
+                                                  ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
+                                                </div>
                                               </div>
                                             </form>
                                           </div>
@@ -2110,6 +2147,7 @@ function renderReturnForm(c) {
 function renderGRNForm(c) {
   const d = state.formData || {};
   const isView = state.mode === 'view';
+  const hasPermission = checkModulePermission('grn');
   d.lineItems = Array.isArray(d.lineItems) ? d.lineItems : [];
 
   const isDetailsDisabled = !isView && state.mode === 'add' && !d.supplier;
@@ -2255,10 +2293,16 @@ function renderGRNForm(c) {
                                                               </div>
                                                             </div>
 
-                                                            <div class="action-bar">
+                                                            <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
                                                               <button type="button" class="btn-cancel" onclick="navigate('grn')">${isView ? 'Quay lại' : 'Hủy'}</button>
-                                                              <!-- KHÓA NÚT TẠO PHIẾU NHẬP -->
-                                                              ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}
+                                                              <div style="display: flex; gap: 8px;">
+                                                                ${isView && hasPermission ? `
+                                                                  <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('grn', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                                                                  <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('grn', '${d.id}')">${Icons.trash} Xóa</button>
+                                                                ` : ''}
+                                                                <!-- KHÓA NÚT TẠO PHIẾU NHẬP -->
+                                                                ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}
+                                                              </div>
                                                             </div>
                                                           </form>
                                                         </div>
@@ -2786,17 +2830,15 @@ function renderReportSales(c) {
               </select>
             </div>
 
-            <!-- NÚT XUẤT PDF ĐẶT ĐẰNG SAU SELECT KHÁCH HÀNG -->
-            ${(reportType === 'summary' || (reportType === 'detail' && selectedCustomer)) ? `
-              <button 
-                type="button" 
-                class="btn-primary" 
-                onclick="exportSalesReportToPDF()" 
-                style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"
-              >
-                Xuất PDF
-              </button>
-            ` : ''}
+            <!-- NÚT XUẤT PDF LÔ GICH MỚI: Luôn hiển thị, disable khi chọn mẫu Chi tiết mà chưa chọn Khách hàng -->
+            <button 
+              type="button" 
+              class="btn-primary" 
+              onclick="exportSalesReportToPDF()" 
+              ${(reportType === 'detail' && !selectedCustomer) ? 'disabled style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"' : 'style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"'}
+            >
+              Xuất PDF
+            </button>
 
           </div>
 

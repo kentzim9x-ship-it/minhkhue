@@ -596,7 +596,7 @@ async function saveForm(module) {
   state.formData = null;
   state.mode = 'list';
   navigate(module, 'list');
-  showToast(currentMode === 'add' ? 'Đã gửi yêu cầu thêm mới!' : 'Đã gửi yêu cầu cập nhật!', 'info');
+  // showToast(currentMode === 'add' ? 'Đã gửi yêu cầu thêm mới!' : 'Đã gửi yêu cầu cập nhật!', 'info');
 
   // GỬI YÊU CẦU LƯU XUỐNG DB CHẠY NGẦM (BACKGROUND ASYNC)
   (async () => {
