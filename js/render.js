@@ -2583,7 +2583,7 @@ function renderReportSales(c) {
 
     detailRowsHtml = paginatedDetailItems.map(item => `
       <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
-        <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${item.sku}</td>
+        <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${item.sku}</td>
         <td data-label="Tên Hàng Hóa" style="padding: 11px 16px; font-size: 13px; font-weight: 500;">${item.name}</td>
         <td data-label="ĐVT" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${item.unit}</td>
         <td data-label="Tổng Số Lượng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(item.qty)}</td>
@@ -2673,10 +2673,10 @@ function renderReportSales(c) {
         rows.push(`
           <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
             <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);"></td>
-            <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030;">📅 ${formattedDate}</td>
+            <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030;">${formattedDate}</td>
             <td style="padding: 8px 16px; text-align: center;"></td> <!-- Cột ĐVT để trống ở dòng ngày -->
-            <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: var(--foreground);">${fmt(dayTotalQty)}</td>
-            <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: var(--foreground);">${fmtUSD(dayTotalAmount)}</td>
+            <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: #f0a030;">${fmt(dayTotalQty)}</td>
+            <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: #f0a030;">${fmtUSD(dayTotalAmount)}</td>
           </tr>
         `);
 
