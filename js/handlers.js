@@ -425,6 +425,7 @@ async function saveForm(module) {
     return;
   }
 
+  // Validation dữ liệu cơ bản
   if (['quotations', 'sales-orders', 'returns', 'grn'].includes(module)) {
     const lineItems = state.formData?.lineItems || [];
     for (let i = 0; i < lineItems.length; i++) {
@@ -456,7 +457,6 @@ async function saveForm(module) {
   const targetKey = module === 'sales-orders' ? 'orders' : (module === 'grn' ? 'grns' : module);
 
   let rawData = JSON.parse(JSON.stringify(state.formData));
-
   const currentDate = getTodayDateStr();
   const currentTime = getCurrentTimeStr();
 
@@ -495,7 +495,6 @@ async function saveForm(module) {
       db.quotations.forEach(q => {
         if (q.customer === rawData.customer) q.status = 'expired';
       });
-      await supabaseClient.from('quotations').update({ status: 'expired' }).eq('customer', rawData.customer).neq('status', 'expired');
     }
     rawData.validuntil = rawData.validUntil;
     rawData.validbegin = rawData.validbegin || rawData.validBegin || rawData.date;
@@ -579,86 +578,47 @@ async function saveForm(module) {
     delete supabasePayload.lineItems;
   }
 
-  try {
-    // KIỂM TRA XUNG ĐỘT DỮ LIỆU ĐA NGƯỜI DÙNG KHI CHỈNH SỬA (MODE EDIT)
-    if (state.mode === 'edit') {
-      const { data: serverRecord } = await supabaseClient
-        .from(tableName)
-        .select('date2, time2, user_id2')
-        .eq('id', dbPayload.id)
-        .maybeSingle();
-
-      if (serverRecord && serverRecord.date2 && serverRecord.time2) {
-        const localLastUpdate = `${state.formData.date2 || ''} ${state.formData.time2 || ''}`.trim();
-        const serverLastUpdate = `${serverRecord.date2} ${serverRecord.time2}`.trim();
-
-        if (serverLastUpdate > localLastUpdate) {
-          const editorName = getUserFullName(serverRecord.user_id2);
-          const confirmOverwrite = await showConfirm(
-            `CẢNH BÁO XUNG ĐỘT DỮ LIỆU:\nBản ghi này vừa được cập nhật bởi [${editorName}] lúc ${serverLastUpdate}.\n\nBạn có muốn ghi đè dữ liệu của họ không?`,
-            'Xung đột dữ liệu đa người dùng'
-          );
-
-          if (!confirmOverwrite) {
-            await fetchDataFromSupabase();
-            render();
-            return; // Hủy thao tác lưu
-          }
-        }
-      }
-    }
-
-    if (state.mode === 'add') {
-      const { error } = await supabaseClient.from(tableName).insert([supabasePayload]);
-      if (error) throw error;
-      db[targetKey].unshift(dbPayload);
-
-      if (module === 'quotations') {
-        addNotification(
-          'quotation_add',
-          'Báo Giá Mới Đã Tạo',
-          `Đã tạo thành công báo giá ${dbPayload.id} cho KH: ${dbPayload.customer || 'Khách hàng'}`,
-          'quotations',
-          dbPayload.id,
-          currentUserFullname
-        );
-      }
-
-    } else {
-      const { error } = await supabaseClient.from(tableName).update(supabasePayload).eq('id', dbPayload.id);
-      if (error) throw error;
-      const idx = db[targetKey].findIndex(item => item.id === dbPayload.id);
-      if (idx !== -1) db[targetKey][idx] = dbPayload;
-
-      if (module === 'quotations') {
-        addNotification(
-          'quotation_edit',
-          'Cập Nhật Báo Giá',
-          `Báo giá ${dbPayload.id} (${dbPayload.customer || 'Khách hàng'}) đã được cập nhật`,
-          'quotations',
-          dbPayload.id,
-          currentUserFullname
-        );
-      }
-    }
-
-    if (['quotations', 'orders', 'returns', 'grns'].includes(targetKey)) {
-      db[targetKey].sort(sortDescById);
-    }
-
-    // THÊM THÔNG BÁO TOAST THÀNH CÔNG TẠI ĐÂY
-    showToast(state.mode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
-
-    invalidateStockCache();
-    // Bắt buộc await để dữ liệu mới từ Database kịp nạp vào biến db
-    await fetchDataFromSupabase();
-    state.formData = null;
-    state.mode = 'list';
-    navigate(module, 'list');
-  } catch (error) {
-    console.error('Lỗi lưu Supabase:', error);
-    showAlert('Lưu thất bại: ' + (error.message || error), 'Lỗi');
+  // CẬP NHẬT TRỰC TIẾP VÀO LOCAL DB (MEM) DÙNG CHO CẢ ADD & EDIT
+  const currentMode = state.mode;
+  if (currentMode === 'add') {
+    db[targetKey].unshift(dbPayload);
+  } else {
+    const idx = db[targetKey].findIndex(item => item.id === dbPayload.id);
+    if (idx !== -1) db[targetKey][idx] = dbPayload;
   }
+
+  if (['quotations', 'orders', 'returns', 'grns'].includes(targetKey)) {
+    db[targetKey].sort(sortDescById);
+  }
+
+  // THOÁT FORM NGAY LẬP TỨC VỀ DẠNG LIST
+  invalidateStockCache();
+  state.formData = null;
+  state.mode = 'list';
+  navigate(module, 'list');
+  showToast(currentMode === 'add' ? 'Đã gửi yêu cầu thêm mới!' : 'Đã gửi yêu cầu cập nhật!', 'info');
+
+  // GỬI YÊU CẦU LƯU XUỐNG DB CHẠY NGẦM (BACKGROUND ASYNC)
+  (async () => {
+    try {
+      if (currentMode === 'add') {
+        const { error } = await supabaseClient.from(tableName).insert([supabasePayload]);
+        if (error) throw error;
+      } else {
+        const { error } = await supabaseClient.from(tableName).update(supabasePayload).eq('id', dbPayload.id);
+        if (error) throw error;
+      }
+
+      showToast(currentMode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
+      await fetchDataFromSupabase();
+      if (state.mode === 'list') render();
+    } catch (error) {
+      console.error('Lỗi lưu Supabase:', error);
+      showAlert('Lưu thất bại: ' + (error.message || error), 'Lỗi DB');
+      await fetchDataFromSupabase();
+      if (state.mode === 'list') render();
+    }
+  })();
 }
 
 async function deleteItem(module, id) {
