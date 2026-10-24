@@ -2366,7 +2366,7 @@ const headersHtml = columnConfig.map(col => `
       const tonThucTe = getActualStock(m);
       const tonDauKy = m.stock ?? 0;
       const tamGiu = m.reserved ?? 0;
-      const coTheBan = tonThucTe - tamGiu;
+      const coTheBan = tonThucTe - tamGiu < 0 ? 0 : tonThucTe - tamGiu;
 
       return `
                                                         <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
@@ -2655,8 +2655,9 @@ function renderReportSales(c) {
             dayTotalAmount += lineTotal;
             itemCount++;
 
+            // Thêm sự kiện click/double-click vào các dòng con chi tiết để điều hướng đến đơn bán hàng cụ thể
             dayRows.push(`
-              <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
+              <tr style="border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'view', '${o.id}')" ondblclick="navigate('sales-orders', 'edit', '${o.id}')">
                 <td data-label="Mã Hàng (SKU)" style="padding: 9px 16px 9px 32px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${sku}</td>
                 <td data-label="Tên Hàng Hóa" style="padding: 9px 16px; font-size: 13px;">${name}</td>
                 <td data-label="ĐVT" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${unit}</td>
@@ -2668,14 +2669,14 @@ function renderReportSales(c) {
           });
         });
 
-        // Dòng Tiêu Đề Ngày (ĐVT và Đơn Giá để trống)
+        // 🟢 BỔ SUNG ĐIỀU HƯỚNG: Bấm vào dòng tiêu đề ngày sẽ tự động lọc sang Đơn bán hàng (sales-orders) theo từ khóa khách hàng/ngày
         rows.push(`
-          <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+          <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="state.search='${selectedCustomer}'; navigate('sales-orders');" title="Click để xem các Đơn hàng bán của ${selectedCustomer} ngày ${formattedDate}">
             <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);"></td>
-            <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030;">${formattedDate}</td>
+            <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030;">📅 ${formattedDate}</td>
             <td style="padding: 8px 16px; text-align: center;"></td>
             <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: #f0a030;">${fmt(dayTotalQty)}</td>
-            <td style="padding: 8px 16px; text-align: right;"></td> <!-- Ô Đơn Giá để trống ở dòng ngày -->
+            <td style="padding: 8px 16px; text-align: right;"></td>
             <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: #f0a030;">${fmtUSD(dayTotalAmount)}</td>
           </tr>
         `);
