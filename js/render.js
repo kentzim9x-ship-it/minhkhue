@@ -2475,53 +2475,6 @@ const headersHtml = columnConfig.map(col => `
   }
 }
 
-// HÀM XỬ LÝ XUẤT PDF PHÂN NHÁNH PC & MOBILE THEO HỆ THỐNG
-function exportSalesReportToPDF() {
-  const selectedCustomer = state.reportSalesCustomer || 'Tất cả khách hàng';
-  const selectedMonth = state.reportSalesMonth || (new Date().getMonth() + 1);
-  const reportType = state.reportType === 'detail' ? 'Chi tiết' : 'Tổng hợp';
-  const fileName = `Bao_cao_ban_hang_${reportType}_Thang_${selectedMonth}.pdf`;
-
-  const element = document.querySelector('#sales-report-table-container') || document.body;
-
-  // Kiểm tra thiết bị Mobile (hoặc hỗ trợ chia sẻ Web Share API)
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768);
-
-  if (typeof html2pdf !== 'undefined') {
-    const opt = {
-      margin:       [10, 10, 10, 10],
-      filename:     fileName,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
-
-    if (isMobile && navigator.share && navigator.canShare) {
-      // Logic trên Mobile: Tạo Blob PDF và mở Trình chia sẻ (Zalo / Tải xuống)
-      html2pdf().set(opt).from(element).outputPdf('blob').then(function(pdfBlob) {
-        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-        if (navigator.canShare({ files: [file] })) {
-          navigator.share({
-            title: `Báo cáo bán hàng ${reportType}`,
-            text: `Báo cáo bán hàng ${reportType} - Tháng ${selectedMonth}`,
-            files: [file]
-          }).catch(() => {});
-        } else {
-          // Fallback nếu không hỗ trợ chia sẻ file
-          html2pdf().set(opt).from(element).save();
-        }
-      });
-    } else {
-      // Logic trên PC: Tải xuống trực tiếp file PDF
-      html2pdf().set(opt).from(element).save();
-    }
-  } else {
-    // Trường hợp không có thư viện html2pdf -> Dùng lệnh In của trình duyệt
-    window.print();
-  }
-}
-
-// HÀM RENDER CHÍNH
 function renderReportSales(c) {
   const {
     salesDataReal,
@@ -2794,7 +2747,7 @@ function renderReportSales(c) {
       </div>
 
       <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG -->
-      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;" id="sales-report-table-container">
+      <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
         <div style="padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
 
           <div style="display: flex; flex-direction: column; gap: 2px;">

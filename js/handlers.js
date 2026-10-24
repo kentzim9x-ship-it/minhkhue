@@ -1345,6 +1345,262 @@ async function exportSalesOrderToPDF() {
   await generateAndSharePDF(container, `DonHang_${d.id || 'Export'}`, `Đơn Bán Hàng ${d.id || ''}`);
 }
 
+async function exportSalesReportToPDF() {
+  const selectedCustomer = state.reportSalesCustomer || '';
+  const selectedMonth = state.reportSalesMonth || (new Date().getMonth() + 1);
+  const currentYear = new Date().getFullYear();
+  const reportType = state.reportType || 'summary';
+  const isDetail = reportType === 'detail';
+
+  const custAddress = selectedCustomer ? getCustomerAddress(selectedCustomer) : 'Tất cả địa chỉ';
+  const { dayStr, monthStr, yearStr } = parseDateParts(getTodayDateStr());
+
+  // Lọc danh sách đơn hàng đã duyệt / hoàn thành trong tháng
+  const filteredOrders = (db.orders || []).filter(o => {
+    const status = (o.status || '').toLowerCase();
+    const isValidStatus = ['completed', 'hoàn thành', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
+    if (!isValidStatus || !o.date) return false;
+    const parts = o.date.split('-');
+    return parts.length >= 2 && parseInt(parts[0], 10) === currentYear && parseInt(parts[1], 10) == selectedMonth;
+  });
+
+  let rowsHtml = '';
+  let totalQty = 0;
+  let totalAmount = 0;
+
+  if (!isDetail) {
+    // === 1. TẠO BÁO CÁO TỔNG HỢP ===
+    const itemSummaryMap = {};
+    filteredOrders.forEach(o => {
+      if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
+        const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
+        items.forEach(item => {
+          const sku = item.sku || '—';
+          const name = item.name || '—';
+          const qty = Number(item.qty || 0);
+          const price = Number(item.unitPrice || 0);
+          const disc = Number(item.discount || 0);
+          const tax = Number(item.tax || 0);
+          const lineSub = qty * price * (1 - disc / 100);
+          const lineTotal = lineSub * (1 + tax / 100);
+          const unit = item.unit || (typeof getMaterialUnit === 'function' ? getMaterialUnit(sku, name) : '—');
+
+          if (!itemSummaryMap[sku]) {
+            itemSummaryMap[sku] = { sku, name, unit, qty: 0, totalAmount: 0 };
+          }
+          itemSummaryMap[sku].qty += qty;
+          itemSummaryMap[sku].totalAmount += lineTotal;
+        });
+      }
+    });
+
+    const itemList = Object.values(itemSummaryMap).sort((a, b) => b.totalAmount - a.totalAmount);
+    const maxRows = Math.max(itemList.length, 12);
+
+    for (let i = 0; i < maxRows; i++) {
+      if (i < itemList.length) {
+        const it = itemList[i];
+        totalQty += it.qty;
+        totalAmount += it.totalAmount;
+        rowsHtml += `
+          <tr style="height: 26px;">
+            <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${i + 1}</td>
+            <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${it.sku}</td>
+            <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px;">${it.name}</td>
+            <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${it.unit}</td>
+            <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${it.qty ? it.qty.toLocaleString('vi-VN') : '0'}</td>
+            <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${it.totalAmount ? Math.round(it.totalAmount).toLocaleString('vi-VN') : '0'}</td>
+          </tr>
+        `;
+      } else {
+        rowsHtml += `
+          <tr style="height: 26px;">
+            <td style="border: 1px solid #000;"></td>
+            <td style="border: 1px solid #000;"></td>
+            <td style="border: 1px solid #000;"></td>
+            <td style="border: 1px solid #000;"></td>
+            <td style="border: 1px solid #000;"></td>
+            <td style="border: 1px solid #000;"></td>
+          </tr>
+        `;
+      }
+    }
+
+  } else {
+    // === 2. TẠO BÁO CÁO CHI TIẾT ===
+    const customerOrders = filteredOrders.filter(o =>
+      o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
+    );
+
+    const dailyMap = {};
+    customerOrders.forEach(o => {
+      const orderDateStr = o.date;
+      if (!dailyMap[orderDateStr]) dailyMap[orderDateStr] = [];
+      dailyMap[orderDateStr].push(o);
+    });
+
+    const sortedDates = Object.keys(dailyMap).sort((a, b) => new Date(a) - new Date(b));
+    let stt = 1;
+
+    sortedDates.forEach(dateStr => {
+      const dateParts = dateStr.split('-');
+      const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+      const dayOrders = dailyMap[dateStr];
+
+      let dayTotalQty = 0;
+      let dayTotalAmount = 0;
+      let dayRowsHtml = '';
+
+      dayOrders.forEach(o => {
+        const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
+        items.forEach(item => {
+          const qty = Number(item.qty || 0);
+          const price = Number(item.unitPrice || 0);
+          const disc = Number(item.discount || 0);
+          const tax = Number(item.tax || 0);
+          const lineSub = qty * price * (1 - disc / 100);
+          const lineTotal = lineSub * (1 + tax / 100);
+          const sku = item.sku || '—';
+          const name = item.name || '—';
+          const unit = item.unit || (typeof getMaterialUnit === 'function' ? getMaterialUnit(sku, name) : '—');
+
+          dayTotalQty += qty;
+          dayTotalAmount += lineTotal;
+          totalQty += qty;
+          totalAmount += lineTotal;
+
+          dayRowsHtml += `
+            <tr style="height: 26px;">
+              <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${stt++}</td>
+              <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${sku}</td>
+              <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px;">${name}</td>
+              <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${unit}</td>
+              <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${qty ? qty.toLocaleString('vi-VN') : '0'}</td>
+              <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${price ? Math.round(price).toLocaleString('vi-VN') : '0'}</td>
+              <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : '0'}</td>
+            </tr>
+          `;
+        });
+      });
+
+      // Dòng gom nhóm Ngày
+      rowsHtml += `
+        <tr style="height: 26px; background-color: #f2f2f2; font-weight: bold;">
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000; text-align: center; font-size: 11pt; color: #d97706;">${formattedDate}</td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px; color: #d97706;">${dayTotalQty ? dayTotalQty.toLocaleString('vi-VN') : '0'}</td>
+          <td style="border: 1px solid #000;"></td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px; color: #d97706;">${dayTotalAmount ? Math.round(dayTotalAmount).toLocaleString('vi-VN') : '0'}</td>
+        </tr>
+      ` + dayRowsHtml;
+    });
+  }
+
+  // Khởi tạo HTML container theo đúng mẫu A4
+  const container = document.createElement('div');
+  container.style.width = '100%';
+  container.style.boxSizing = 'border-box';
+  container.style.padding = '10px';
+  container.style.background = '#ffffff';
+  container.style.color = '#000000';
+  container.style.fontFamily = "'Times New Roman', serif";
+
+  const tableHeaderHtml = !isDetail ? `
+    <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
+      <td style="border: 1px solid #000000; width: 6%;">STT</td>
+      <td style="border: 1px solid #000000; width: 18%;">Mã Hàng (SKU)</td>
+      <td style="border: 1px solid #000000; width: 38%;">Tên Hàng</td>
+      <td style="border: 1px solid #000000; width: 10%;">ĐVT</td>
+      <td style="border: 1px solid #000000; width: 12%;">Tổng Số Lượng</td>
+      <td style="border: 1px solid #000000; width: 16%;">Tổng Số Tiền</td>
+    </tr>
+  ` : `
+    <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
+      <td style="border: 1px solid #000000; width: 5%;">STT</td>
+      <td style="border: 1px solid #000000; width: 15%;">Mã Hàng (SKU)</td>
+      <td style="border: 1px solid #000000; width: 32%;">Tên Hàng</td>
+      <td style="border: 1px solid #000000; width: 8%;">ĐVT</td>
+      <td style="border: 1px solid #000000; width: 12%;">Tổng Số Lượng</td>
+      <td style="border: 1px solid #000000; width: 13%;">Đơn Giá</td>
+      <td style="border: 1px solid #000000; width: 15%;">Tổng Số Tiền</td>
+    </tr>
+  `;
+
+  const totalRowHtml = !isDetail ? `
+    <tr style="height: 26px; font-weight: bold;">
+      <td colspan="4" style="border: 1px solid #000000; text-align: center;">Tổng Cộng</td>
+      <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : '0'}</td>
+      <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : '0'}</td>
+    </tr>
+  ` : `
+    <tr style="height: 26px; font-weight: bold;">
+      <td colspan="4" style="border: 1px solid #000000; text-align: center;">Tổng Cộng</td>
+      <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : '0'}</td>
+      <td style="border: 1px solid #000000;"></td>
+      <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : '0'}</td>
+    </tr>
+  `;
+
+  container.innerHTML = `
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+      <tr>
+        <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
+          ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
+          Xã Sơn Đồng – TP Hà Nội<br>
+          ĐT: 0936.35.31.37
+        </td>
+        <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
+          Giấy phép ĐKKD số: 01U8005300<br>
+          Địa chỉ nhận hóa đơn: nhambc@gmail.com<br>
+          MST: 0110640531
+        </td>
+      </tr>
+    </table>
+
+    <div style="font-size: 16pt; font-weight: bold; text-align: center; margin: 15px 0 12px 0;">
+      CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
+    </div>
+
+    <table style="width: 100%; font-size: 11pt; margin-bottom: 12px; border-collapse: collapse;">
+      <tr>
+        <td style="width: 50%; padding: 3px 0;">Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</td>
+        <td style="width: 50%; padding: 3px 0;">Loại báo cáo: Báo cáo bán hàng ${isDetail ? 'chi tiết' : 'tổng hợp'}</td>
+      </tr>
+      <tr>
+        <td style="padding: 3px 0;">Địa chỉ: ${custAddress}</td>
+        <td style="padding: 3px 0;">Tháng báo cáo: Tháng ${selectedMonth}/${currentYear}</td>
+      </tr>
+    </table>
+
+    <div style="border: 1.5px solid #000000; box-sizing: border-box;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
+        <thead>
+          ${tableHeaderHtml}
+        </thead>
+        <tbody>
+          ${rowsHtml}
+          ${totalRowHtml}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+      <div style="width: 250px; text-align: center; font-size: 11pt;">
+        <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
+        <div style="font-weight: bold; margin-top: 4px; margin-bottom: 55px;">Đại diện nhà cung cấp</div>
+        <div style="font-weight: bold;">BÙI CAO NHÂM</div>
+      </div>
+    </div>
+  `;
+
+  // Gọi hàm bổ trợ dùng chung để tạo và tải/chia sẻ file PDF
+  const custTitle = selectedCustomer ? selectedCustomer.replace(/\s+/g, '_') : 'Tat_Ca';
+  const filePrefix = isDetail ? `Bao_cao_ban_hang_chi_tiet_${custTitle}` : `Bao_cao_tong_hop_${custTitle}`;
+  await generateAndSharePDF(container, filePrefix, `Báo cáo bán hàng ${isDetail ? 'Chi tiết' : 'Tổng hợp'}`);
+}
+
 // ==========================================
 // 1. Xuất Excel Báo Giá (ĐÃ NÂNG CẤP XUẤT .XLSX & CHIA SẺ ZALO)
 // ==========================================
