@@ -2583,7 +2583,7 @@ function renderReportSales(c) {
 
     detailRowsHtml = paginatedDetailItems.map(item => `
       <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
-        <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${item.sku}</td>
+        <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${item.sku}</td>
         <td data-label="Tên Hàng Hóa" style="padding: 11px 16px; font-size: 13px; font-weight: 500;">${item.name}</td>
         <td data-label="ĐVT" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${item.unit}</td>
         <td data-label="Tổng Số Lượng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(item.qty)}</td>
@@ -2659,7 +2659,7 @@ function renderReportSales(c) {
 
             dayRows.push(`
               <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
-                <td data-label="Mã Hàng (SKU)" style="padding: 9px 16px 9px 32px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${sku}</td>
+                <td data-label="Mã Hàng (SKU)" style="padding: 9px 16px 9px 32px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${sku}</td>
                 <td data-label="Tên Hàng Hóa" style="padding: 9px 16px; font-size: 13px;">${name}</td>
                 <td data-label="ĐVT" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${unit}</td>
                 <td data-label="Tổng Số Lượng" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(qty)}</td>
