@@ -1572,7 +1572,7 @@ async function exportSalesReportToPDF() {
 
     <!-- KHU VỰC THÔNG TIN THÁNG BÁO CÁO, KHÁCH HÀNG & ĐỊA CHỈ (MỖI THÔNG TIN 1 DÒNG) -->
     <div style="font-size: 11pt; margin-bottom: 12px; line-height: 1.6;">
-      <div>Báo cáo tháng ${selectedMonth} năm ${currentYear}</div>
+      <div>Báo cáo: tháng ${selectedMonth} năm ${currentYear}</div>
       <div>Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</div>
       <div>Địa chỉ: ${custAddress}</div>
     </div>
