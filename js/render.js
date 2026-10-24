@@ -490,29 +490,47 @@ function renderMaterialsList(c) {
     </div>
   `).join('');
 
-  const headersHtml = [
-    'Mã Hàng', 'Tên Hàng', 'Đơn Vị', 'Danh Mục', 'Vị Trí Lưu Kho', 'Tồn Kho Ban Đầu', 'Đơn Giá', 'Trạng Thái',
-    'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa',
-    'Hành Động'
-  ].map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tồn Kho Ban Đầu' || h === 'Đơn Giá' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`).join('');
+  const columnConfig = [
+    { title: 'Mã Hàng', width: '50px', align: 'center' },
+    { title: 'Tên Hàng', width: '100px', align: 'center' },
+    { title: 'Đơn Vị', width: '40px', align: 'center' },
+    { title: 'Danh Mục', width: '80px', align: 'center' },
+    { title: 'Vị Trí Lưu Kho', width: '80px', align: 'center' },
+    { title: 'Tồn Kho Ban Đầu', width: '80px', align: 'center' },
+    { title: 'Đơn Giá', width: '80px', align: 'center' },
+    { title: 'Trạng Thái', width: '80px', align: 'center' },
+    { title: 'Người Tạo', width: '80px', align: 'center' },
+    { title: 'Ngày Tạo', width: '60px', align: 'center' },
+    { title: 'Giờ Tạo', width: '40px', align: 'center' },
+    { title: 'Người Sửa', width: '80px', align: 'center' },
+    { title: 'Ngày Sửa', width: '60px', align: 'center' },
+    { title: 'Giờ Sửa', width: '40px', align: 'center' },
+    { title: 'Hành Động', width: '120px', align: 'center' }
+  ];
+
+  const headersHtml = columnConfig.map(col => `
+  <th style="width: ${col.width}; min-width: ${col.width}; padding: 9px 16px; text-align: ${col.align}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">
+    ${col.title}
+  </th>
+`).join('');
 
   const rowsHtml = paginatedItems.map(m => `
   <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
-    <td data-label="Mã Hàng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
+    <td data-label="Mã Hàng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${m.id}</td>
     <td data-label="Tên Hàng" style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
-    <td data-label="Đơn Vị" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
-    <td data-label="Danh Mục" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${m.category || '—'}</td>
-    <td data-label="Vị Trí Lưu Kho" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px;">${m.location || '—'}</td>
-    <td data-label="Tồn Kho Ban Đầu" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${m.stock ?? 0}</td>
-    <td data-label="Đơn Giá" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
+    <td data-label="Đơn Vị" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--foreground);">${m.unit || '—'}</td>
+    <td data-label="Danh Mục" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${m.category || '—'}</td>
+    <td data-label="Vị Trí Lưu Kho" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${m.location || '—'}</td>
+    <td data-label="Tồn Kho Ban Đầu" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${m.stock ?? 0}</td>
+    <td data-label="Đơn Giá" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${fmtUSD(m.cost || 0)}</td>
     <td data-label="Trạng Thái" style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'CÒN HÀNG' : m.status.toUpperCase()}</span></td>
     
     <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
-    <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
-    <td data-label="Giờ Táo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
+    <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
+    <td data-label="Giờ Táo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
     <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
-    <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
-    <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
+    <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
+    <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
 
     <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
       <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
@@ -609,17 +627,32 @@ function renderCustomersList(c) {
     </div>
   `).join('');
 
-  const headersHtml = [
-    'Mã KH', 'Tên Công Ty / KH', 'Người Liên Hệ', 'Email', 'SĐT', 'Địa Chỉ', 'Trạng Thái', 'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', 'Hành Động'
-  ].map(h => `
-    <th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">
-      ${h}
-    </th>
-  `).join('');
+  const columnConfig = [
+    { title: 'Mã KH', width: '50px', align: 'center' },
+    { title: 'Tên Công Ty / KH', width: '100px', align: 'center' },
+    { title: 'Người Liên Hệ', width: '80px', align: 'center' },
+    { title: 'Email', width: '80px', align: 'center' },
+    { title: 'SĐT', width: '80px', align: 'center' },
+    { title: 'Địa Chỉ', width: '150px', align: 'center' },
+    { title: 'Trạng Thái', width: '80px', align: 'center' },
+    { title: 'Người Tạo', width: '80px', align: 'center' },
+    { title: 'Ngày Tạo', width: '60px', align: 'center' },
+    { title: 'Giờ Tạo', width: '40px', align: 'center' },
+    { title: 'Người Sửa', width: '80px', align: 'center' },
+    { title: 'Ngày Sửa', width: '60px', align: 'center' },
+    { title: 'Giờ Sửa', width: '40px', align: 'center' },
+    { title: 'Hành Động', width: '120px', align: 'center' }
+  ];
+
+  const headersHtml = columnConfig.map(col => `
+  <th style="width: ${col.width}; min-width: ${col.width}; padding: 9px 16px; text-align: ${col.align}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">
+    ${col.title}
+  </th>
+`).join('');
 
   const rowsHtml = paginatedItems.map(c => `
     <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('customers', '${hasPermission ? 'edit' : 'view'}', '${c.id}')" onclick="navigate('customers', 'view', '${c.id}')">
-      <td data-label="Mã Khách Hàng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); text-align: left;">${c.id || '—'}</td>
+      <td data-label="Mã Khách Hàng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary); text-align: left;">${c.id || '—'}</td>
       <td data-label="Tên Công Ty / Khách Hàng" style="padding: 11px 16px; font-size: 13px; font-weight: 500; text-align: left;">${c.name || '—'}</td>
       <td data-label="Người Liên Hệ" style="padding: 11px 16px; font-size: 13px; text-align: left;">${c.contact || '—'}</td>
       <td data-label="Email" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); text-align: left;">${c.email || '—'}</td>
@@ -628,11 +661,11 @@ function renderCustomersList(c) {
       <td data-label="Trạng Thái" style="padding: 11px 16px; text-align: left;"><span class="badge ${getBadgeClass(c.status)}">${getStatusLabel(c.status)}</span></td>
 
       <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(c.user_id0)}</td>
-      <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(c.date0)}</td>
-      <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(c.time0)}</td>
+      <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(c.date0)}</td>
+      <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(c.time0)}</td>
       <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(c.user_id2)}</td>
-      <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(c.date2)}</td>
-      <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(c.time2)}</td>
+      <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(c.date2)}</td>
+      <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(c.time2)}</td>
     
       <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
         <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
@@ -926,28 +959,45 @@ function renderOrdersList(c) {
     </div>
   `).join('');
 
-  const headersHtml = [
-    'Mã Đơn Hàng', 'Khách Hàng', 'Ngày Tạo', 'Mã Kho', 'Số Dòng', 'Tổng Tiền', 'Trạng Thái',
-    'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa',
-    'Hành Động'
-  ].map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`).join('');
+  const columnConfig = [
+    { title: 'Mã Đơn Hàng', width: '60px', align: 'center' },
+    { title: 'Khách Hàng', width: '100px', align: 'center' },
+    { title: 'Ngày Tạo', width: '60px', align: 'center' },
+    { title: 'Mã Kho', width: '40px', align: 'center' },
+    { title: 'Số Dòng', width: '40px', align: 'center' },
+    { title: 'Tổng Tiền', width: '80px', align: 'center' },
+    { title: 'Trạng Thái', width: '80px', align: 'center' },
+    { title: 'Người Tạo', width: '80px', align: 'center' },
+    { title: 'Ngày Tạo', width: '60px', align: 'center' },
+    { title: 'Giờ Tạo', width: '40px', align: 'center' },
+    { title: 'Người Sửa', width: '80px', align: 'center' },
+    { title: 'Ngày Sửa', width: '60px', align: 'center' },
+    { title: 'Giờ Sửa', width: '40px', align: 'center' },
+    { title: 'Hành Động', width: '120px', align: 'center' }
+  ];
+
+  const headersHtml = columnConfig.map(col => `
+  <th style="width: ${col.width}; min-width: ${col.width}; padding: 9px 16px; text-align: ${col.align}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">
+    ${col.title}
+  </th>
+`).join('');
 
   const rowsHtml = paginatedItems.map(o => `
   <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', '${hasPermission ? 'edit' : 'view'}', '${o.id}')" onclick="navigate('sales-orders', 'view', '${o.id}')">
-    <td data-label="Mã Đơn Hàng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${o.id}</td>
+    <td data-label="Mã Đơn Hàng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${o.id}</td>
     <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${o.customer}</td>
-    <td data-label="Ngày Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${o.date}</td>
-    <td data-label="Mã Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${o.warehouseCode || o.warehouse_code || '—'}</td>
-    <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${(o.lineItems || o.lineitems || []).length || o.items || 0}</td>
-    <td data-label="Tổng Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(o.total)}</td>
+    <td data-label="Ngày Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${o.date}</td>
+    <td data-label="Mã Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${o.warehouseCode || o.warehouse_code || '—'}</td>
+    <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${(o.lineItems || o.lineitems || []).length || o.items || 0}</td>
+    <td data-label="Tổng Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: center;">${fmtUSD(o.total)}</td>
     <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(o.status)}">${getStatusLabel(o.status)}</span></td>
 
     <td data-label="Người Tạo" style="padding: 12px 16px; font-size: 12px;">${getUserFullName(o.user_id0)}</td>
-    <td data-label="Ngày Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(o.date0)}</td>
-    <td data-label="Giờ Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(o.time0)}</td>
+    <td data-label="Ngày Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(o.date0)}</td>
+    <td data-label="Giờ Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(o.time0)}</td>
     <td data-label="Người Sửa" style="padding: 12px 16px; font-size: 12px;">${getUserFullName(o.user_id2)}</td>
-    <td data-label="Ngày Sửa" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(o.date2)}</td>
-    <td data-label="Giờ Sửa" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(o.time2)}</td>
+    <td data-label="Ngày Sửa" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(o.date2)}</td>
+    <td data-label="Giờ Sửa" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(o.time2)}</td>
 
     <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
       <button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'view', '${o.id}')">${Icons.view} Xem</button>
@@ -1045,29 +1095,49 @@ function renderReturnsList(c) {
     </div>
   `).join('');
 
-  const headersHtml = ['Mã Đổi Trả', 'Tham Chiếu Đơn', 'Khách Hàng', 'Ngày Tạo', 'Lý Do', 'Số Dòng', 'Tổng Hoàn Tiền', 'Trạng Thái', 'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', 'Hành Động']
-    .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Hoàn Tiền' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
-    .join('');
+  const columnConfig = [
+    { title: 'Mã Đổi Trả', width: '60px', align: 'center' },
+    { title: 'Đơn Hàng Bán', width: '60px', align: 'center' },
+    { title: 'Khách Hàng', width: '100px', align: 'center' },
+    { title: 'Ngày Tạo', width: '60px', align: 'center' },
+    { title: 'Lý Do', width: '120px', align: 'center' },
+    { title: 'Số Dòng', width: '40px', align: 'center' },
+    { title: 'Tổng Hoàn Tiền', width: '80px', align: 'center' },
+    { title: 'Trạng Thái', width: '80px', align: 'center' },
+    { title: 'Người Tạo', width: '80px', align: 'center' },
+    { title: 'Ngày Tạo', width: '60px', align: 'center' },
+    { title: 'Giờ Tạo', width: '40px', align: 'center' },
+    { title: 'Người Sửa', width: '80px', align: 'center' },
+    { title: 'Ngày Sửa', width: '60px', align: 'center' },
+    { title: 'Giờ Sửa', width: '40px', align: 'center' },
+    { title: 'Hành Động', width: '120px', align: 'center' }
+  ];
+
+  const headersHtml = columnConfig.map(col => `
+  <th style="width: ${col.width}; min-width: ${col.width}; padding: 9px 16px; text-align: ${col.align}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">
+    ${col.title}
+  </th>
+`).join('');
 
   const rowsHtml = paginatedItems.map(r => {
     const totalLines = (r.lineItems || r.lineitems || []).length;
     return `
       <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('returns', '${hasPermission ? 'edit' : 'view'}', '${r.id}')" onclick="navigate('returns', 'view', '${r.id}')">
-        <td data-label="Mã Đổi Trả" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${r.id}</td>
-        <td data-label="Tham Chiếu Đơn" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${r.orderId || '—'}</td>
+        <td data-label="Mã Đổi Trả" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${r.id}</td>
+        <td data-label="Đơn Hàng Bán" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${r.orderId || '—'}</td>
         <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${r.customer}</td>
-        <td data-label="Ngày Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${r.date}</td>
+        <td data-label="Ngày Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${r.date}</td>
         <td data-label="Lý Do" style="padding: 12px 16px; font-size: 13px;">${r.reason}</td>
-        <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${totalLines}</td>
-        <td data-label="Tổng Hoàn Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; color: #f87171; text-align: right;">${fmtUSD(r.total)}</td>
+        <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${totalLines}</td>
+        <td data-label="Tổng Hoàn Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; color: #f87171; text-align: center;">${fmtUSD(r.total)}</td>
         <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(r.status)}">${getStatusLabel(r.status)}</span></td>
 
         <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(r.user_id0)}</td>
-        <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(r.date0)}</td>
-        <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(r.time0)}</td>
+        <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(r.date0)}</td>
+        <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(r.time0)}</td>
         <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(r.user_id2)}</td>
-        <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(r.date2)}</td>
-        <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(r.time2)}</td>
+        <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(r.date2)}</td>
+        <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(r.time2)}</td>
 
         <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
           <button class="btn-action" onclick="event.stopPropagation(); navigate('returns', 'view', '${r.id}')">${Icons.view} Xem</button>
@@ -1164,29 +1234,48 @@ function renderGRNList(c) {
     </div>
   `).join('');
 
-  const headersHtml = ['Mã Nhập Kho', 'Nhà Cung Cấp', 'Ngày Nhập', 'Mã Kho', 'Số Dòng', 'Tổng Giá Trị', 'Trạng Thái', 'Người Tạo', 'Ngày Tạo', 'Giờ Tạo', 'Người Sửa', 'Ngày Sửa', 'Giờ Sửa', 'Hành Động']
-    .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Hành Động' ? 'center' : (h === 'Tổng Giá Trị' || h === 'Số Dòng' ? 'right' : 'left')}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
-    .join('');
+  const columnConfig = [
+    { title: 'Mã Nhập Kho', width: '60px', align: 'center' },
+    { title: 'Nhà Cung Cấp', width: '100px', align: 'center' },
+    { title: 'Ngày Nhập', width: '60px', align: 'center' },
+    { title: 'Mã Kho', width: '40px', align: 'center' },
+    { title: 'Số Dòng', width: '40px', align: 'center' },
+    { title: 'Tổng Tiền', width: '80px', align: 'center' },
+    { title: 'Trạng Thái', width: '80px', align: 'center' },
+    { title: 'Người Tạo', width: '80px', align: 'center' },
+    { title: 'Ngày Tạo', width: '60px', align: 'center' },
+    { title: 'Giờ Tạo', width: '40px', align: 'center' },
+    { title: 'Người Sửa', width: '80px', align: 'center' },
+    { title: 'Ngày Sửa', width: '60px', align: 'center' },
+    { title: 'Giờ Sửa', width: '40px', align: 'center' },
+    { title: 'Hành Động', width: '120px', align: 'center' }
+  ];
+
+  const headersHtml = columnConfig.map(col => `
+  <th style="width: ${col.width}; min-width: ${col.width}; padding: 9px 16px; text-align: ${col.align}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">
+    ${col.title}
+  </th>
+`).join('');
 
   const rowsHtml = paginatedItems.map(g => {
     const totalLines = (g.lineItems || []).length;
     const wCode = g.warehouseCode || g.warehouse_code || '—';
     return `
       <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('grn', '${hasPermission ? 'edit' : 'view'}', '${g.id}')" onclick="navigate('grn', 'view', '${g.id}')">
-        <td data-label="Mã Nhập Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${g.id}</td>
+        <td data-label="Mã Nhập Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${g.id}</td>
         <td data-label="Nhà Cung Cấp" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${g.supplier || '—'}</td>      
-        <td data-label="Ngày Nhập" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">${g.date}</td>
-        <td data-label="Mã Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${wCode}</td>
-        <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${totalLines}</td>
-        <td data-label="Tổng Giá Trị" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(g.totalValue)}</td>
+        <td data-label="Ngày Nhập" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${g.date}</td>
+        <td data-label="Mã Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${wCode}</td>
+        <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${totalLines}</td>
+        <td data-label="Tổng Giá Trị" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: center;">${fmtUSD(g.totalValue)}</td>
         <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(g.status)}">${getStatusLabel(g.status)}</span></td>
 
         <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(g.user_id0)}</td>
-        <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(g.date0)}</td>
-        <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(g.time0)}</td>
+        <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(g.date0)}</td>
+        <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(g.time0)}</td>
         <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(g.user_id2)}</td>
-        <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtDateStr(g.date2)}</td>
-        <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${fmtTimeStr(g.time2)}</td>
+        <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(g.date2)}</td>
+        <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(g.time2)}</td>
 
         <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
           <button class="btn-action" onclick="event.stopPropagation(); navigate('grn', 'view', '${g.id}')">${Icons.view} Xem</button>
@@ -2253,9 +2342,26 @@ function renderReportInventory(c) {
                                                         </div>
                                                         `).join('');
 
-  const headersHtml = ['Mã Hàng (SKU)', 'Tên Hàng', 'ĐVT', 'Danh Mục', 'Vị Trí', 'Tồn Đầu Kỳ', 'Tồn Thực Tế', 'Tạm Giữ', 'Có Thể Bán', 'Mức Cảnh Báo', 'Giá Vốn', 'Trạng Thái']
-    .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Trạng Thái' ? 'right' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
-    .join('');
+  const columnConfig = [
+  { title: 'Mã Hàng (SKU)', width: '50px', align: 'left' },
+  { title: 'Tên Hàng', width: '100px', align: 'left' },
+  { title: 'ĐVT', width: '40px', align: 'left' },
+  { title: 'Danh Mục', width: '80px', align: 'left' },
+  { title: 'Vị Trí', width: '80px', align: 'left' },
+  { title: 'Tồn Đầu Kỳ', width: '80px', align: 'right' },
+  { title: 'Tồn Thực Tế', width: '80px', align: 'right' },
+  { title: 'Tạm Giữ', width: '80px', align: 'right' },
+  { title: 'Có Thể Bán', width: '80px', align: 'right' },
+  { title: 'Mức Cảnh Báo', width: '80px', align: 'right' },
+  { title: 'Giá Vốn', width: '80px', align: 'right' },
+  { title: 'Trạng Thái', width: '80px', align: 'right' }
+];
+
+const headersHtml = columnConfig.map(col => `
+  <th style="width: ${col.width}; min-width: ${col.width}; padding: 9px 16px; text-align: ${col.align}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">
+    ${col.title}
+  </th>
+`).join('');
 
   const renderRows = (list) => {
     return list.map(m => {
