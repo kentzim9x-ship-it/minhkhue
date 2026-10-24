@@ -1528,6 +1528,7 @@ function renderCustomerForm(c) {
 function renderWarehouseForm(c) {
   const d = state.formData || {};
   const isView = state.mode === 'view';
+  const hasPermission = checkModulePermission('warehouses');
 
   c.innerHTML = `
     <div style="max-width: 900px;">
@@ -1585,9 +1586,15 @@ function renderWarehouseForm(c) {
           </div>
         </div>
 
-        <div class="action-bar">
+        <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
           <button type="button" class="btn-cancel" onclick="navigate('warehouses')">${isView ? 'Quay lại' : 'Hủy'}</button>
-          ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu kho hàng' : 'Cập nhật'}</button>` : ''}
+          <div style="display: flex; gap: 8px;">
+            ${isView && hasPermission ? `
+              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('warehouses', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+              <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('warehouses', '${d.id}')">${Icons.trash} Xóa</button>
+            ` : ''}
+            ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu kho hàng' : 'Cập nhật'}</button>` : ''}
+          </div>
         </div>
       </form>
     </div>
@@ -1753,13 +1760,13 @@ function renderQuotationForm(c) {
 
                 <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
                   <button type="button" class="btn-cancel" onclick="navigate('quotations')">${isView ? 'Quay lại' : 'Hủy'}</button>
-                  <div style="display: flex; gap: 8px;">
-            ${isView ? `
-              <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>
+                  <div style="display: flex; gap: 8px;">           
               ${hasPermission ? `
                 <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('quotations', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
                 <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('quotations', '${d.id}')">${Icons.trash} Xóa</button>
               ` : ''}
+              ${isView ? `
+              <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>
             ` : ''}
             
             <!-- KHÓA NÚT TẠO PHIẾU / CẬP NHẬT KHI CHƯA CHỌN KHÁCH HÀNG -->
@@ -1950,13 +1957,13 @@ function renderSalesOrderForm(c) {
 
                                   <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
                                     <button type="button" class="btn-cancel" onclick="navigate('sales-orders')">${isView ? 'Quay lại' : 'Hủy'}</button>
-                                    <div style="display: flex; gap: 8px;">
-                                      ${isView ? `
-                                        <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>
+                                    <div style="display: flex; gap: 8px;">                                     
                                         ${hasPermission ? `
                                           <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('sales-orders', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
                                           <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('sales-orders', '${d.id}')">${Icons.trash} Xóa</button>
                                         ` : ''}
+                                        ${isView ? `
+                                        <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>
                                       ` : ''}
                                       
                                       <!-- KHÓA NÚT TẠO PHIẾU / CẬP NHẬT KHI CHƯA CHỌN KHÁCH HÀNG -->
@@ -2385,21 +2392,21 @@ function renderReportInventory(c) {
                                                         `).join('');
 
   const columnConfig = [
-  { title: 'Mã Hàng (SKU)', width: '50px', align: 'left' },
-  { title: 'Tên Hàng', width: '100px', align: 'left' },
-  { title: 'ĐVT', width: '40px', align: 'left' },
-  { title: 'Danh Mục', width: '80px', align: 'left' },
-  { title: 'Vị Trí', width: '80px', align: 'left' },
-  { title: 'Tồn Đầu Kỳ', width: '80px', align: 'right' },
-  { title: 'Tồn Thực Tế', width: '80px', align: 'right' },
-  { title: 'Tạm Giữ', width: '80px', align: 'right' },
-  { title: 'Có Thể Bán', width: '80px', align: 'right' },
-  { title: 'Mức Cảnh Báo', width: '80px', align: 'right' },
-  { title: 'Giá Vốn', width: '80px', align: 'right' },
-  { title: 'Trạng Thái', width: '80px', align: 'right' }
-];
+    { title: 'Mã Hàng (SKU)', width: '50px', align: 'left' },
+    { title: 'Tên Hàng', width: '100px', align: 'left' },
+    { title: 'ĐVT', width: '40px', align: 'left' },
+    { title: 'Danh Mục', width: '80px', align: 'left' },
+    { title: 'Vị Trí', width: '80px', align: 'left' },
+    { title: 'Tồn Đầu Kỳ', width: '80px', align: 'right' },
+    { title: 'Tồn Thực Tế', width: '80px', align: 'right' },
+    { title: 'Tạm Giữ', width: '80px', align: 'right' },
+    { title: 'Có Thể Bán', width: '80px', align: 'right' },
+    { title: 'Mức Cảnh Báo', width: '80px', align: 'right' },
+    { title: 'Giá Vốn', width: '80px', align: 'right' },
+    { title: 'Trạng Thái', width: '80px', align: 'right' }
+  ];
 
-const headersHtml = columnConfig.map(col => `
+  const headersHtml = columnConfig.map(col => `
   <th style="width: ${col.width}; min-width: ${col.width}; padding: 9px 16px; text-align: ${col.align}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">
     ${col.title}
   </th>
@@ -2858,9 +2865,9 @@ function renderReportSales(c) {
         ${reportType === 'detail' && selectedCustomer ? `
           <!-- KHU VỰC SENTINEL LAZY LOADING -->
           <div id="sales-report-lazy-sentinel" style="padding: 16px; text-align: center; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground); background: var(--card); border-top: 1px solid var(--border);">
-            ${(state.reportSalesLimit < totalDisplayItemsCount) 
-              ? `⏳ Đang hiển thị ${Math.min(state.reportSalesLimit, totalDisplayItemsCount)} / ${totalDisplayItemsCount} mục. Cuộn xuống để tải thêm...` 
-              : `✔ Đã hiển thị toàn bộ ${totalDisplayItemsCount} mục.`}
+            ${(state.reportSalesLimit < totalDisplayItemsCount)
+        ? `⏳ Đang hiển thị ${Math.min(state.reportSalesLimit, totalDisplayItemsCount)} / ${totalDisplayItemsCount} mục. Cuộn xuống để tải thêm...`
+        : `✔ Đã hiển thị toàn bộ ${totalDisplayItemsCount} mục.`}
           </div>
         ` : ''}
       </div>
