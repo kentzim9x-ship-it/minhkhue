@@ -39,6 +39,8 @@ document.addEventListener('keydown', function (e) {
 
 // 3. Khởi tạo ứng dụng khi DOM sẵn sàng
 document.addEventListener('DOMContentLoaded', async () => {
+  sessionStorage.clear();
+  
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => navigate(btn.getAttribute('data-view')));
   });
