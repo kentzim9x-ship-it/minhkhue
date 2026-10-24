@@ -2502,11 +2502,20 @@ function renderReportSales(c) {
   const selectedCustomer = state.reportSalesCustomer;
   const reportType = state.reportType;
 
-  // Lọc dữ liệu đơn hàng theo tháng
+  // Tra cứu ĐVT từ danh mục Vật tư / Sản phẩm theo SKU hoặc Tên
+  const getMaterialUnit = (sku, name) => {
+    const mat = (db.materials || []).find(m => (sku && m.id === sku) || (name && m.name === name));
+    return mat ? (mat.unit || '—') : '—';
+  };
+
+  // Lọc dữ liệu đơn hàng theo tháng & Chỉ lấy trạng thái "Duyệt" hoặc "Hoàn thành"
   const filteredOrdersForMonth = (db.orders || []).filter(o => {
     const status = (o.status || '').toLowerCase();
-    if (!['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) return false;
+    // CHỈ LẤY ĐƠN CÓ TRẠNG THÁI DUYỆT HOẶC HOÀN THÀNH
+    const isValidStatus = ['completed', 'hoàn thành', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
+    if (!isValidStatus) return false;
     if (!o.date) return false;
+
     const parts = o.date.split('-');
     if (parts.length >= 2) {
       const oYear = parseInt(parts[0], 10);
@@ -2530,12 +2539,13 @@ function renderReportSales(c) {
   let detailRowsHtml = '';
   let totalDisplayItemsCount = 0;
 
-  const detailHeaders = ['Mã Hàng (SKU)', 'Tên Hàng Hóa', 'Tổng Số Lượng', 'Tổng Số Tiền']
-    .map(h => `<th style="padding: 9px 16px; text-align: ${h === 'Tổng Số Lượng' || h === 'Tổng Số Tiền' ? 'right' : 'left'}; font-family: var(--font-dm-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
+  // Cột Header gồm: Mã Hàng (SKU), Tên Hàng Hóa, Đơn Vị Tính, Tổng Số Lượng, Tổng Số Tiền
+  const detailHeaders = ['Mã Hàng (SKU)', 'Tên Hàng Hóa', 'ĐVT', 'Tổng Số Lượng', 'Tổng Số Tiền']
+    .map(h => `<th style="padding: 10px 16px; text-align: ${h === 'Tổng Số Lượng' || h === 'Tổng Số Tiền' ? 'right' : (h === 'ĐVT' ? 'center' : 'left')}; font-family: var(--font-dm-mono); font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: #ffffff; font-weight: 600; white-space: nowrap;">${h}</th>`)
     .join('');
 
   if (reportType === 'summary') {
-    // === BÁO CÁO TỔNG HỢP (GIỮ NGUYÊN) ===
+    // === BÁO CÁO TỔNG HỢP ===
     const itemSummaryMap = {};
     filteredOrdersForMonth.forEach(o => {
       if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
@@ -2549,9 +2559,10 @@ function renderReportSales(c) {
           const tax = Number(item.tax || 0);
           const lineSub = qty * price * (1 - disc / 100);
           const lineTotal = lineSub * (1 + tax / 100);
+          const unit = item.unit || getMaterialUnit(sku, name);
 
           if (!itemSummaryMap[sku]) {
-            itemSummaryMap[sku] = { sku, name, qty: 0, totalAmount: 0 };
+            itemSummaryMap[sku] = { sku, name, unit, qty: 0, totalAmount: 0 };
           }
           itemSummaryMap[sku].qty += qty;
           itemSummaryMap[sku].totalAmount += lineTotal;
@@ -2574,6 +2585,7 @@ function renderReportSales(c) {
       <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
         <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${item.sku}</td>
         <td data-label="Tên Hàng Hóa" style="padding: 11px 16px; font-size: 13px; font-weight: 500;">${item.name}</td>
+        <td data-label="ĐVT" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${item.unit}</td>
         <td data-label="Tổng Số Lượng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(item.qty)}</td>
         <td data-label="Tổng Số Tiền" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right; color: var(--primary);">${fmtUSD(item.totalAmount)}</td>
       </tr>
@@ -2584,22 +2596,51 @@ function renderReportSales(c) {
     if (!selectedCustomer) {
       detailRowsHtml = `
         <tr>
-          <td colspan="4" style="padding: 40px; text-align: center; color: #f87171; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500;">
+          <td colspan="5" style="padding: 40px; text-align: center; color: #f87171; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500;">
             ⚠️ Vui lòng chọn khách hàng để xem báo cáo chi tiết!
           </td>
         </tr>
       `;
     } else {
-      // 1. Gom nhóm đơn hàng theo Ngày trong tháng của Khách hàng đã chọn
+      // 1. Lọc đơn hàng của khách hàng đã chọn và sắp xếp theo ngày
+      const customerOrders = filteredOrdersForMonth.filter(o =>
+        o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
+      );
+
       const dailyMap = {};
 
-      filteredOrdersForMonth.forEach(o => {
-        if (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()) {
-          const orderDateStr = o.date; // YYYY-MM-DD
-          if (!dailyMap[orderDateStr]) {
-            dailyMap[orderDateStr] = [];
-          }
+      customerOrders.forEach(o => {
+        const orderDateStr = o.date; // YYYY-MM-DD
+        if (!dailyMap[orderDateStr]) {
+          dailyMap[orderDateStr] = {
+            dateStr: orderDateStr,
+            orders: []
+          };
+        }
+        dailyMap[orderDateStr].orders.push(o);
+      });
 
+      // Sắp xếp các ngày tăng dần
+      const sortedDates = Object.keys(dailyMap).sort((a, b) => new Date(a) - new Date(b));
+
+      let rows = [];
+      let itemCount = 0;
+
+      sortedDates.forEach(dateStr => {
+        const dateParts = dateStr.split('-');
+        const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; // DD/MM/YYYY
+
+        const dayData = dailyMap[dateStr];
+        
+        // Sắp xếp danh sách đơn hàng trong ngày theo Số đơn hàng (id)
+        dayData.orders.sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')));
+
+        let dayTotalQty = 0;
+        let dayTotalAmount = 0;
+        let dayRows = [];
+
+        // Duyệt từng đơn hàng và giữ nguyên thứ tự dòng sản phẩm trong đơn
+        dayData.orders.forEach(o => {
           const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
           items.forEach(item => {
             const qty = Number(item.qty || 0);
@@ -2608,49 +2649,39 @@ function renderReportSales(c) {
             const tax = Number(item.tax || 0);
             const lineSub = qty * price * (1 - disc / 100);
             const lineTotal = lineSub * (1 + tax / 100);
+            const sku = item.sku || '—';
+            const name = item.name || '—';
+            const unit = item.unit || getMaterialUnit(sku, name);
 
-            dailyMap[orderDateStr].push({
-              sku: item.sku || '—',
-              name: item.name || '—',
-              qty: qty,
-              totalAmount: lineTotal
-            });
+            dayTotalQty += qty;
+            dayTotalAmount += lineTotal;
+            itemCount++;
+
+            dayRows.push(`
+              <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
+                <td data-label="Mã Hàng (SKU)" style="padding: 9px 16px 9px 32px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${sku}</td>
+                <td data-label="Tên Hàng Hóa" style="padding: 9px 16px; font-size: 13px;">${name}</td>
+                <td data-label="ĐVT" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${unit}</td>
+                <td data-label="Tổng Số Lượng" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(qty)}</td>
+                <td data-label="Tổng Số Tiền" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 500; text-align: right;">${fmtUSD(lineTotal)}</td>
+              </tr>
+            `);
           });
-        }
-      });
+        });
 
-      // 2. Sắp xếp các ngày từ đầu tháng đến cuối tháng (Tăng dần)
-      const sortedDates = Object.keys(dailyMap).sort((a, b) => new Date(a) - new Date(b));
-
-      let rows = [];
-      let itemCount = 0;
-
-      sortedDates.forEach(dateStr => {
-        const dateParts = dateStr.split('-');
-        const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; // Chuyển về DD/MM/YYYY
-
-        // Dòng Tiêu Đề Ngày
+        // Dòng Tiêu Đề Ngày (Hiển thị tổng số lượng và tổng số tiền của tất cả mặt hàng trong ngày, ĐVT để trống)
         rows.push(`
           <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
             <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);"></td>
             <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030;">📅 ${formattedDate}</td>
-            <td style="padding: 8px 16px;"></td>
-            <td style="padding: 8px 16px;"></td>
+            <td style="padding: 8px 16px; text-align: center;"></td> <!-- Cột ĐVT để trống ở dòng ngày -->
+            <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: var(--foreground);">${fmt(dayTotalQty)}</td>
+            <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: var(--foreground);">${fmtUSD(dayTotalAmount)}</td>
           </tr>
         `);
 
-        // Các dòng chi tiết mặt hàng trong ngày hôm đó
-        dailyMap[dateStr].forEach(item => {
-          itemCount++;
-          rows.push(`
-            <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
-              <td data-label="Mã Hàng (SKU)" style="padding: 9px 16px 9px 32px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${item.sku}</td>
-              <td data-label="Tên Hàng Hóa" style="padding: 9px 16px; font-size: 13px;">${item.name}</td>
-              <td data-label="Tổng Số Lượng" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(item.qty)}</td>
-              <td data-label="Tổng Số Tiền" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 500; text-align: right;">${fmtUSD(item.totalAmount)}</td>
-            </tr>
-          `);
-        });
+        // Đẩy các dòng sản phẩm của ngày đó vào mảng
+        rows.push(...dayRows);
       });
 
       totalDisplayItemsCount = itemCount;
@@ -2658,7 +2689,7 @@ function renderReportSales(c) {
       if (rows.length === 0) {
         detailRowsHtml = `
           <tr>
-            <td colspan="4" style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">
+            <td colspan="5" style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">
               Không có dữ liệu đơn hàng chi tiết trong tháng đã chọn
             </td>
           </tr>
@@ -2754,7 +2785,8 @@ function renderReportSales(c) {
 
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
-            <tr style="border-bottom: 1px solid var(--border); background: var(--secondary);">
+            <!-- Header đậm hơn hẳn các dòng nội dung để tăng độ tương phản -->
+            <tr style="border-bottom: 2px solid var(--border); background: #232730;">
               ${detailHeaders}
             </tr>
           </thead>
