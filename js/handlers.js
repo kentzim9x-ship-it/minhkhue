@@ -598,6 +598,14 @@ async function saveForm(module) {
           const isCurrentAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(currentStatus);
           if (isCurrentAccepted) {
             q.status = 'expired';
+            
+            // --- ĐÃ BỔ SUNG: BẢO TỒN VÀ CHUẨN HÓA CẢ 2 DẠNG TÊN TRƯỜNG NGÀY KẾT THÚC VÀ NGÀY BẮT ĐẦU ---
+            const vUntil = q.validUntil || q.validuntil || '';
+            const vBegin = q.validbegin || q.validBegin || q.date || '';
+            q.validUntil = vUntil;
+            q.validuntil = vUntil;
+            q.validBegin = vBegin;
+            q.validbegin = vBegin;
           }
         }
       });
