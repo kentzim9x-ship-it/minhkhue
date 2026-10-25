@@ -491,11 +491,37 @@ async function saveForm(module) {
   }
 
   if (module === 'quotations') {
-    if (state.mode === 'add' && rawData.customer) {
+    const isNewStatusAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((rawData.status || '').toLowerCase());
+
+    // Nếu tạo mới HOẶC cập nhật báo giá thành trạng thái "Duyệt":
+    // CHỈ chuyển các báo giá ĐANG Ở TRẠNG THÁI DUYỆT của Khách hàng đó thành "Hết Hạn" ('expired')
+    if (isNewStatusAccepted && rawData.customer) {
+      const currentCust = rawData.customer.trim().toLowerCase();
       db.quotations.forEach(q => {
-        if (q.customer === rawData.customer) q.status = 'expired';
+        if (q && q.customer && q.customer.trim().toLowerCase() === currentCust && String(q.id) !== String(rawData.id)) {
+          const currentStatus = (q.status || '').toLowerCase();
+          const isCurrentAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(currentStatus);
+
+          // Chỉ cập nhật báo giá nào đang có trạng thái là Duyệt
+          if (isCurrentAccepted) {
+            q.status = 'expired';
+          }
+        }
       });
+
+      (async () => {
+        try {
+          await supabaseClient
+            .from('quotations')
+            .update({ status: 'expired' })
+            .eq('customer', targetCustomer)
+            .neq('id', rawData.id);
+        } catch (err) {
+          console.error('Lỗi tự động chuyển báo giá cũ sang Hết hạn:', err);
+        }
+      })();
     }
+
     rawData.validuntil = rawData.validUntil;
     rawData.validbegin = rawData.validbegin || rawData.validBegin || rawData.date;
     rawData.lineitems = rawData.lineItems;
@@ -864,7 +890,7 @@ function handleMaterialSelectInLine(lineId, selectedName) {
   if (mat) {
     line.name = mat.name || '';
     line.sku = mat.id || '';
-    
+
     // Đơn giá mặc định lấy từ Danh mục sản phẩm (Giá vốn/Giá niêm yết)
     let finalUnitPrice = mat.cost || 0;
 
@@ -879,7 +905,7 @@ function handleMaterialSelectInLine(lineId, selectedName) {
           .filter(q => {
             if (!q || !q.customer) return false;
             if (q.customer.trim().toLowerCase() !== currentCustomer.toLowerCase()) return false;
-            
+
             const status = (q.status || '').toLowerCase();
             const isAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
             if (!isAccepted) return false;
@@ -896,8 +922,8 @@ function handleMaterialSelectInLine(lineId, selectedName) {
 
         // Nếu tìm thấy Báo giá hợp lệ -> Tìm sản phẩm trong Báo giá đó
         if (activeQuotation && Array.isArray(activeQuotation.lineItems)) {
-          const quotedItem = activeQuotation.lineItems.find(item => 
-            (item.sku && item.sku === mat.id) || 
+          const quotedItem = activeQuotation.lineItems.find(item =>
+            (item.sku && item.sku === mat.id) ||
             (item.name && item.name.toLowerCase() === mat.name.toLowerCase())
           );
 
