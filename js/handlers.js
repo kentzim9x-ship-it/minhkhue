@@ -475,7 +475,8 @@ async function saveForm(module) {
         const localLastTime = `${rawData.date2 || ''} ${rawData.time2 || ''}`.trim();
         const dbLastTime = `${latestRecord.date2 || ''} ${latestRecord.time2 || ''}`.trim();
 
-        if (dbLastTime && localLastTime && dbLastTime !== localLastTime && String(latestRecord.user_id2) !== String(currentUserId) && String(latestRecord.user_id2) !== String(currentUserFullname)) {
+        // So sánh theo user_id2 kiểu BigInt/String
+        if (dbLastTime && localLastTime && dbLastTime !== localLastTime && String(latestRecord.user_id2) !== String(currentUserId)) {
           
           let editorName = latestRecord.user_id2 || 'Một người dùng khác';
           const userList = db.users || db.userinfo || db.user_info || [];
@@ -491,7 +492,7 @@ async function saveForm(module) {
             'Cảnh báo xung đột dữ liệu'
           );
 
-          // NẠP ĐẦY ĐỦ TẤT CẢ CÁC TRƯỜNG CỦA MỌI MODULE
+          // NẠP ĐẦY ĐỦ TẤT CẢ CÁC TRƯỜNG CỦA MỌI MODULE KHI TỰ ĐỘNG LÀM MỚI
           const rawLines = latestRecord.lineItems || latestRecord.lineitems || [];
           const normalizedLines = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
           latestRecord.lineItems = normalizedLines;
@@ -552,27 +553,28 @@ async function saveForm(module) {
     }
   }
 
+  // LƯU ĐÚNG USER_ID DẠNG ID NGUYÊN (TRÁNH LỖI INVALID INPUT SYNTAX FOR TYPE BIGINT)
   if (state.mode === 'add') {
-    rawData.user_id0 = currentUserFullname;
+    rawData.user_id0 = currentUserId;
     rawData.date0 = currentDate;
     rawData.time0 = currentTime;
 
-    rawData.user_id2 = currentUserFullname;
+    rawData.user_id2 = currentUserId;
     rawData.date2 = currentDate;
     rawData.time2 = currentTime;
   } else if (state.mode === 'edit') {
     const existing = db[targetKey].find(item => String(item.id) === String(rawData.id));
     if (existing) {
-      rawData.user_id0 = existing.user_id0 || currentUserFullname;
+      rawData.user_id0 = existing.user_id0 || currentUserId;
       rawData.date0 = existing.date0 || currentDate;
       rawData.time0 = existing.time0 || currentTime;
     } else {
-      rawData.user_id0 = currentUserFullname;
+      rawData.user_id0 = currentUserId;
       rawData.date0 = currentDate;
       rawData.time0 = currentTime;
     }
 
-    rawData.user_id2 = currentUserFullname;
+    rawData.user_id2 = currentUserId;
     rawData.date2 = currentDate;
     rawData.time2 = currentTime;
   }
