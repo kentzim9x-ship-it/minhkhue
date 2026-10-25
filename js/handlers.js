@@ -474,8 +474,7 @@ async function saveForm(module) {
 
         // Nếu bản ghi trên DB có thời gian chỉnh sửa mới hơn và do người khác sửa
         if (dbLastTime && localLastTime && dbLastTime !== localLastTime && String(latestRecord.user_id2) !== String(currentUserId) && String(latestRecord.user_id2) !== String(currentUserFullname)) {
-          
-          // Tra cứu Fullname của người sửa theo ID trong danh sách users
+
           let editorName = latestRecord.user_id2 || 'Một người dùng khác';
           const userList = db.users || db.userinfo || db.user_info || [];
           const matchedUser = userList.find(u => String(u.id) === String(latestRecord.user_id2));
@@ -485,18 +484,24 @@ async function saveForm(module) {
 
           const editTime = `${latestRecord.time2 || ''} - ${latestRecord.date2 || ''}`;
 
-          // Hiển thị hộp thoại cảnh báo với Fullname chuẩn
           await showAlert(
             `Phiếu/Danh mục này vừa được chỉnh sửa bởi "${editorName}" vào lúc ${editTime}.\n\nHệ thống sẽ tự động cập nhật dữ liệu mới nhất và chuyển sang giao diện Xem chi tiết!`,
             'Cảnh báo xung đột dữ liệu'
           );
 
-          // Chuẩn hóa nạp mảng lineItems/lineitems đẩy đủ
+          // Chuẩn hóa nạp mảng lineItems/lineitems và ngày kết thúc (validUntil / validuntil)
           const rawLines = latestRecord.lineItems || latestRecord.lineitems || [];
           latestRecord.lineItems = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
           latestRecord.lineitems = latestRecord.lineItems;
 
-          // Cập nhật đè dữ liệu mới nhất vào bộ nhớ Local Memory (tránh lỗi danh sách bị hỏng)
+          if (module === 'quotations') {
+            latestRecord.validUntil = latestRecord.validUntil || latestRecord.validuntil || '';
+            latestRecord.validuntil = latestRecord.validUntil;
+            latestRecord.validbegin = latestRecord.validbegin || latestRecord.validBegin || latestRecord.date || '';
+            latestRecord.validBegin = latestRecord.validbegin;
+          }
+
+          // Cập nhật đè dữ liệu mới nhất vào bộ nhớ Local Memory
           if (!db[targetKey]) db[targetKey] = [];
           const idx = db[targetKey].findIndex(item => String(item.id) === String(rawData.id));
           if (idx !== -1) {
@@ -505,10 +510,10 @@ async function saveForm(module) {
             db[targetKey].unshift(latestRecord);
           }
 
-          // Cập nhật lại state và tự động CHUYỂN VỀ GIAO DIỆN VIEW (XEM CHI TIẾT)
+          // Cập nhật lại state và chuyển sang giao diện VIEW
           state.formData = JSON.parse(JSON.stringify(latestRecord));
           navigate(module, 'view', rawData.id);
-          return; // Ngắt quá trình lưu
+          return;
         }
       }
     } catch (checkEx) {
