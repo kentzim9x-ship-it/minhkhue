@@ -922,6 +922,8 @@ function subscribeAppRealtimeChanges() {
 
         // --- C. XỬ LÝ DELETE (XÓA) ---
         else if (eventType === 'DELETE' && oldRecord) {
+          const deletedId = String(oldRecord.id);
+
           db[targetKey] = db[targetKey].filter(x => String(x.id) !== deletedId);
 
           // KIỂM TRA: Nếu ID bị xóa KHÔNG PHẢI do máy này chủ động bấm xóa (chỉ hiển thị cho người khác đang xem)
