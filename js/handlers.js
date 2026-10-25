@@ -418,7 +418,7 @@ function removeLineItem(lineId) {
 async function saveForm(module) {
   const session = getAuthSession();
   const currentUserId = session.currentUser ? session.currentUser.id : 'Hệ Thống';
-  const currentUserFullname = session.currentUser ? (session.currentUser.fullname || session.currentUser.username) : 'Hệ Thống';
+  const currentUserFullname = session.currentUser ? (session.currentUser.fullname || session.currentUser.username) : (session.fullName || session.username || 'Hệ Thống');
 
   if (!checkModulePermission(module)) {
     alert('Tài khoản của bạn chỉ có quyền xem, không thể thực hiện thao tác lưu!');
@@ -460,6 +460,9 @@ async function saveForm(module) {
   const currentDate = getTodayDateStr();
   const currentTime = getCurrentTimeStr();
 
+  // =========================================================================
+  // 1. KIỂM TRA XUNG ĐỘT KHI SỬA (LẤY FULLNAME & NẠP ĐẦY ĐỦ TRƯỜNG DỮ LIỆU)
+  // =========================================================================
   if (state.mode === 'edit') {
     try {
       const { data: latestRecord, error: checkErr } = await supabaseClient
@@ -472,9 +475,8 @@ async function saveForm(module) {
         const localLastTime = `${rawData.date2 || ''} ${rawData.time2 || ''}`.trim();
         const dbLastTime = `${latestRecord.date2 || ''} ${latestRecord.time2 || ''}`.trim();
 
-        // Nếu bản ghi trên DB có thời gian chỉnh sửa mới hơn và do người khác sửa
         if (dbLastTime && localLastTime && dbLastTime !== localLastTime && String(latestRecord.user_id2) !== String(currentUserId) && String(latestRecord.user_id2) !== String(currentUserFullname)) {
-
+          
           let editorName = latestRecord.user_id2 || 'Một người dùng khác';
           const userList = db.users || db.userinfo || db.user_info || [];
           const matchedUser = userList.find(u => String(u.id) === String(latestRecord.user_id2));
@@ -489,7 +491,7 @@ async function saveForm(module) {
             'Cảnh báo xung đột dữ liệu'
           );
 
-          // CHUẨN HÓA ĐẦY ĐỦ TẤT CẢ CÁC TRƯỜNG DỮ LIỆU CỦA MỌI MODULE KHI NẠP TỪ SUPABASE
+          // NẠP ĐẦY ĐỦ TẤT CẢ CÁC TRƯỜNG CỦA MỌI MODULE
           const rawLines = latestRecord.lineItems || latestRecord.lineitems || [];
           const normalizedLines = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
           latestRecord.lineItems = normalizedLines;
@@ -505,7 +507,6 @@ async function saveForm(module) {
           }
 
           if (module === 'returns') {
-            // Giữ nguyên đồng bộ cả dạng camelCase và snake_case cho Phiếu đổi trả
             const oId = latestRecord.orderId || latestRecord.order_id || null;
             const whCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
             latestRecord.orderId = oId;
@@ -515,7 +516,6 @@ async function saveForm(module) {
           }
 
           if (module === 'sales-orders') {
-            // Đồng bộ Đơn bán hàng (Mã báo giá, Mã kho)
             const qId = latestRecord.quotationId || latestRecord.quotation_id || null;
             const whCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
             latestRecord.quotationId = qId;
@@ -525,7 +525,6 @@ async function saveForm(module) {
           }
 
           if (module === 'grn') {
-            // Đồng bộ Phiếu nhập kho (Mã kho, Tổng giá trị)
             const whCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
             const totalVal = latestRecord.totalValue ?? latestRecord.totalvalue ?? 0;
             latestRecord.warehouseCode = whCode;
@@ -534,7 +533,7 @@ async function saveForm(module) {
             latestRecord.totalvalue = totalVal;
           }
 
-          // Cập nhật đè dữ liệu chuẩn hóa vào Local Memory (db[targetKey])
+          // Cập nhật đè dữ liệu mới vào Local Memory
           if (!db[targetKey]) db[targetKey] = [];
           const idx = db[targetKey].findIndex(item => String(item.id) === String(rawData.id));
           if (idx !== -1) {
@@ -543,10 +542,9 @@ async function saveForm(module) {
             db[targetKey].unshift(latestRecord);
           }
 
-          // Cập nhật state và tự động chuyển sang giao diện VIEW
           state.formData = JSON.parse(JSON.stringify(latestRecord));
           navigate(module, 'view', rawData.id);
-          return; // Dừng thao tác lưu
+          return;
         }
       }
     } catch (checkEx) {
@@ -555,26 +553,26 @@ async function saveForm(module) {
   }
 
   if (state.mode === 'add') {
-    rawData.user_id0 = currentUserId;
+    rawData.user_id0 = currentUserFullname;
     rawData.date0 = currentDate;
     rawData.time0 = currentTime;
 
-    rawData.user_id2 = currentUserId;
+    rawData.user_id2 = currentUserFullname;
     rawData.date2 = currentDate;
     rawData.time2 = currentTime;
   } else if (state.mode === 'edit') {
     const existing = db[targetKey].find(item => String(item.id) === String(rawData.id));
     if (existing) {
-      rawData.user_id0 = existing.user_id0 || currentUserId;
+      rawData.user_id0 = existing.user_id0 || currentUserFullname;
       rawData.date0 = existing.date0 || currentDate;
       rawData.time0 = existing.time0 || currentTime;
     } else {
-      rawData.user_id0 = currentUserId;
+      rawData.user_id0 = currentUserFullname;
       rawData.date0 = currentDate;
       rawData.time0 = currentTime;
     }
 
-    rawData.user_id2 = currentUserId;
+    rawData.user_id2 = currentUserFullname;
     rawData.date2 = currentDate;
     rawData.time2 = currentTime;
   }
@@ -588,11 +586,10 @@ async function saveForm(module) {
     const isNewStatusAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((rawData.status || '').toLowerCase());
     const targetCustomer = (rawData.customer || '').trim();
 
-    // 1. CẬP NHẬT CÁC BÁO GIÁ CŨ VỀ "HẾT HẠN" NẾU BÁO GIÁ MỚI LÀ "DUYỆT"
+    // CẬP NHẬT CÁC BÁO GIÁ CỦ VỀ "HẾT HẠN" NẾU BÁO GIÁ MỚI LÀ "DUYỆT"
     if (isNewStatusAccepted && targetCustomer) {
       const currentCust = targetCustomer.toLowerCase();
 
-      // Cập nhật trên Local Memory
       db.quotations.forEach(q => {
         if (q && q.customer && q.customer.trim().toLowerCase() === currentCust && String(q.id) !== String(rawData.id)) {
           const currentStatus = (q.status || '').toLowerCase();
@@ -603,7 +600,6 @@ async function saveForm(module) {
         }
       });
 
-      // Cập nhật trên Supabase Database
       try {
         await supabaseClient
           .from('quotations')
@@ -616,11 +612,9 @@ async function saveForm(module) {
       }
     }
 
-    // 2. CHÈN THÔNG BÁO VÀO BẢNG NOTIFICATIONS (CÓ AWAIT RÕ RÀNG)
+    // CHÈN THÔNG BÁO VÀO BẢNG NOTIFICATIONS (CHỐNG LẶP TRÙNG DUPLICATE)
     try {
-      const session = getAuthSession();
-      const userObj = session.currentUser || {};
-      const actorName = userObj.fullname || userObj.username || session.fullName || session.username || 'Hệ thống';
+      const actorName = currentUserFullname;
       const actionText = state.mode === 'add' ? 'Tạo mới' : 'Cập nhật';
 
       const notifTitle = `Báo Giá (${actionText})`;
@@ -643,7 +637,6 @@ async function saveForm(module) {
         actor: actorName
       };
 
-      // Gọi await trực tiếp để đẩy vào Supabase thành công trước khi chuyển trang
       const { data: insertedNotif, error: notifErr } = await supabaseClient
         .from('notifications')
         .insert([notifPayload])
@@ -654,7 +647,11 @@ async function saveForm(module) {
       } else {
         if (!db.notifications) db.notifications = [];
         const newNotif = (insertedNotif && insertedNotif[0]) ? insertedNotif[0] : notifPayload;
-        // db.notifications.unshift(newNotif);
+
+        const isExist = db.notifications.some(n => n.id === newNotif.id || (n.itemid === newNotif.itemid && n.title === newNotif.title && n.time === newNotif.time));
+        if (!isExist) {
+          db.notifications.unshift(newNotif);
+        }
 
         if (typeof updateNotificationBadge === 'function') {
           updateNotificationBadge();
@@ -664,19 +661,28 @@ async function saveForm(module) {
       console.error('Lỗi tạo thông báo:', err);
     }
 
-    // 3. CHUẨN HÓA CÁC TRƯỜNG DỮ LIỆU CỦA BÁO GIÁ
-    rawData.validuntil = rawData.validUntil;
-    rawData.validbegin = rawData.validbegin || rawData.validBegin || rawData.date;
+    // ĐỒNG BỘ ĐẦY ĐỦ CẢ 2 DẠNG TÊN TRƯỜNG DỮ LIỆU ĐỂ BẢNG LIST KHÔNG BỊ NULL
+    const validUntilVal = rawData.validUntil || rawData.validuntil || '';
+    const validBeginVal = rawData.validbegin || rawData.validBegin || rawData.date || '';
+
+    rawData.validuntil = validUntilVal;
+    rawData.validUntil = validUntilVal;
+    rawData.validbegin = validBeginVal;
+    rawData.validBegin = validBeginVal;
     rawData.lineitems = rawData.lineItems;
+
     delete rawData.discountTotal;
     delete rawData.subtotal;
-    delete rawData.validUntil;
-    delete rawData.validBegin;
-    delete rawData.lineItems;
   }
 
   let dbPayload = { ...rawData };
   let supabasePayload = { ...rawData };
+
+  if (module === 'quotations') {
+    delete supabasePayload.validUntil;
+    delete supabasePayload.validBegin;
+    delete supabasePayload.lineItems;
+  }
 
   if (module === 'returns') {
     const warehouseCode = rawData.warehouseCode || (db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '');
@@ -747,56 +753,64 @@ async function saveForm(module) {
     delete supabasePayload.lineItems;
   }
 
-  // CẬP NHẬT TRỰC TIẾP VÀO LOCAL DB (MEM) DÙNG CHO CẢ ADD & EDIT
+  // =========================================================================
+  // 2. LƯU DỮ LIỆU CSDL VÀ TỰ ĐỘNG LÀM MỚI GIAO DIỆN KHÔNG CẦN F5
+  // =========================================================================
   const currentMode = state.mode;
-  if (rawData.lineItems || rawData.lineitems) {
-    const lines = rawData.lineItems || rawData.lineitems;
-    dbPayload.lineItems = lines;
-    dbPayload.lineitems = lines;
-  }
-  if (currentMode === 'add') {
-    db[targetKey].unshift(dbPayload);
-  } else {
-    const idx = db[targetKey].findIndex(item => String(item.id) === String(dbPayload.id));
-    if (idx !== -1) db[targetKey][idx] = dbPayload;
-  }
-
-  if (['quotations', 'orders', 'returns', 'grns'].includes(targetKey)) {
-    db[targetKey].sort(sortDescById);
-  }
-
-  // XỬ LÝ CHUYỂN HƯỚNG TƯƠNG ỨNG VOI CÁC CHẾ ĐỘ
-  invalidateStockCache();
-  if (currentMode === 'add') {
-    state.formData = null;
-    state.mode = 'list';
-    navigate(module, 'list');
-  } else {
-    // Nếu là chế độ edit: Giữ ở lại Form chi tiết và chuyển sang chế độ view với ID bản ghi vừa sửa
-    navigate(module, 'view', dbPayload.id);
-  }
-
-  // GỬI YÊU CẦU LƯU XUỐNG DB CHẠY NGẦM (BACKGROUND ASYNC)
-  (async () => {
-    try {
-      if (currentMode === 'add') {
-        const { error } = await supabaseClient.from(tableName).insert([supabasePayload]);
-        if (error) throw error;
-      } else {
-        const { error } = await supabaseClient.from(tableName).update(supabasePayload).eq('id', dbPayload.id);
-        if (error) throw error;
+  try {
+    if (currentMode === 'add') {
+      const { data: insertedData, error } = await supabaseClient.from(tableName).insert([supabasePayload]).select();
+      if (error) throw error;
+      if (insertedData && insertedData[0]) {
+        dbPayload = { ...dbPayload, ...insertedData[0] };
       }
-
-      showToast(currentMode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
-      await fetchDataFromSupabase();
-      if (state.mode === 'list' || state.mode === 'view') render();
-    } catch (error) {
-      console.error('Lỗi lưu Supabase:', error);
-      showAlert('Lưu thất bại: ' + (error.message || error), 'Lỗi DB');
-      await fetchDataFromSupabase();
-      if (state.mode === 'list' || state.mode === 'view') render();
+    } else {
+      const { error } = await supabaseClient.from(tableName).update(supabasePayload).eq('id', dbPayload.id);
+      if (error) throw error;
     }
-  })();
+
+    // ĐỒNG BỘ CẬP NHẬT TRỰC TIẾP VÀO LOCAL MEMORY (db[targetKey])
+    if (rawData.lineItems || rawData.lineitems) {
+      const lines = rawData.lineItems || rawData.lineitems;
+      dbPayload.lineItems = lines;
+      dbPayload.lineitems = lines;
+    }
+
+    if (!db[targetKey]) db[targetKey] = [];
+
+    if (currentMode === 'add') {
+      db[targetKey].unshift(dbPayload);
+    } else {
+      const idx = db[targetKey].findIndex(item => String(item.id) === String(dbPayload.id));
+      if (idx !== -1) {
+        db[targetKey][idx] = dbPayload;
+      } else {
+        db[targetKey].unshift(dbPayload);
+      }
+    }
+
+    if (['quotations', 'orders', 'returns', 'grns'].includes(targetKey)) {
+      db[targetKey].sort(sortDescById);
+    }
+
+    invalidateStockCache();
+    showToast(currentMode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
+
+    // CHUYỂN HƯỚNG VÀ VẼ LẠI GIAO DIỆN NGAY LẬP TỨC
+    if (currentMode === 'add') {
+      state.formData = null;
+      state.mode = 'list';
+      navigate(module, 'list');
+    } else {
+      navigate(module, 'view', dbPayload.id);
+    }
+
+    render();
+
+  } catch (error) {
+    console.error('Lỗi lưu Supabase:', error);
+    showAlert('Lưu thất bại: ' + (error.message || error), 'Lỗi DB');
+  }
 }
 
 async function deleteItem(module, id) {
@@ -825,28 +839,28 @@ async function deleteItem(module, id) {
       const { error } = await supabaseClient.from(tableName).delete().eq('id', id);
       if (error) throw error;
 
+      // 2. CẬP NHẬT NGAY TRÊN BỘ NHỚ LOCAL (db[targetKey])
+      if (db[targetKey]) {
+        db[targetKey] = db[targetKey].filter(item => String(item.id) !== String(id));
+      }
+
+      // 3. XÓA CACHE TRẠNG THÁI CUỘN CŨ
       sessionStorage.removeItem(`scroll_pos_${module}`);
 
-      // 2. Xóa thành công -> Xóa cache tồn kho & Nạp lại dữ liệu mới nhất từ máy chủ
+      // 4. XÓA CACHE TỒN KHO VÀ RENDER LẠI MÀN HÌNH DANH SÁCH TỰ ĐỘNG
       invalidateStockCache();
-      await fetchDataFromSupabase();
-
-      // 3. Render lại giao diện danh sách
       render();
 
-      // 4. Bắn tín hiệu đồng bộ Realtime cho các Tab/Cửa sổ khác trên cùng thiết bị
+      // 5. Đồng bộ Realtime cho các Tab/Cửa sổ khác
       if (typeof BroadcastChannel !== 'undefined') {
         const appChannel = new BroadcastChannel('app_data_sync_channel');
         appChannel.postMessage('REFRESH_DATA');
       }
 
-      // 5. Hiển thị thông báo Toast thành công
       showToast('Đã xóa bản ghi thành công!', 'success');
     } catch (error) {
       console.error('Lỗi khi xóa bản ghi:', error);
       await showAlert('Xóa trên CSDL thất bại: ' + (error.message || error), 'Lỗi kết nối');
-      await fetchDataFromSupabase();
-      render();
     }
   }
 }
