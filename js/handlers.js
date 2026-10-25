@@ -580,10 +580,15 @@ async function saveForm(module) {
 
   // CẬP NHẬT TRỰC TIẾP VÀO LOCAL DB (MEM) DÙNG CHO CẢ ADD & EDIT
   const currentMode = state.mode;
+  if (rawData.lineItems || rawData.lineitems) {
+    const lines = rawData.lineItems || rawData.lineitems;
+    dbPayload.lineItems = lines;
+    dbPayload.lineitems = lines;
+  }
   if (currentMode === 'add') {
     db[targetKey].unshift(dbPayload);
   } else {
-    const idx = db[targetKey].findIndex(item => item.id === dbPayload.id);
+    const idx = db[targetKey].findIndex(item => String(item.id) === String(dbPayload.id));
     if (idx !== -1) db[targetKey][idx] = dbPayload;
   }
 
@@ -681,7 +686,26 @@ function initFormData(module, id) {
   const collection = db[targetKey] || [];
 
   if (id) {
-    state.formData = JSON.parse(JSON.stringify(collection.find(x => String(x.id) === String(id))));
+    const foundData = collection.find(x => String(x.id) === String(id));
+    if (foundData) {
+      state.formData = JSON.parse(JSON.stringify(foundData));
+
+      // === BỔ SUNG: Chuẩn hóa dữ liệu danh sách sản phẩm và các trường cho Form View/Edit ===
+      if (['quotations', 'sales-orders', 'returns', 'grn'].includes(module)) {
+        // Chuẩn hóa lineItems (hỗ trợ cả lineitems lẫn lineItems)
+        const rawLines = state.formData.lineItems || state.formData.lineitems || [];
+        state.formData.lineItems = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
+      }
+
+      if (module === 'quotations') {
+        state.formData.validUntil = state.formData.validUntil || state.formData.validuntil || '';
+        state.formData.validbegin = state.formData.validbegin || state.formData.validBegin || state.formData.date || '';
+      }
+
+      if (module === 'sales-orders' || module === 'returns' || module === 'grn') {
+        state.formData.warehouseCode = state.formData.warehouseCode || state.formData.warehouse_code || state.formData.warehousecode || '';
+      }
+    }
   } else {
     const autoId = generateAutoId(module);
     if (module === 'materials') {
