@@ -462,7 +462,6 @@ async function saveForm(module) {
 
   if (state.mode === 'edit') {
     try {
-      // Truy vấn bản ghi mới nhất từ Supabase
       const { data: latestRecord, error: checkErr } = await supabaseClient
         .from(tableName)
         .select('*')
@@ -470,27 +469,32 @@ async function saveForm(module) {
         .single();
 
       if (!checkErr && latestRecord) {
-        // So sánh thời gian/ngày cập nhật cũ lúc mở form và thời gian trên DB
         const localLastTime = `${rawData.date2 || ''} ${rawData.time2 || ''}`.trim();
         const dbLastTime = `${latestRecord.date2 || ''} ${latestRecord.time2 || ''}`.trim();
 
-        // Nếu dữ liệu trên DB đã thay đổi bởi người khác
-        if (dbLastTime && localLastTime && dbLastTime !== localLastTime && latestRecord.user_id2 !== currentUserId) {
+        // Nếu dữ liệu trên DB đã được người khác lưu mới hơn
+        if (dbLastTime && localLastTime && dbLastTime !== localLastTime && latestRecord.user_id2 !== currentUserFullname) {
           const editorName = latestRecord.user_id2 || 'Một người dùng khác';
           const editTime = `${latestRecord.time2 || ''} - ${latestRecord.date2 || ''}`;
 
           await showAlert(
-            `Phiếu/Danh mục này vừa được chỉnh sửa bởi "${editorName}" vào lúc ${editTime}.\n\nDữ liệu hiển thị của bạn đã cũ. Hệ thống sẽ làm mới dữ liệu để tránh ghi đè thông tin!`,
+            `Mục này vừa được chỉnh sửa bởi "${editorName}" vào lúc ${editTime}.\n\nHệ thống sẽ tự động cập nhật lại thông tin mới nhất!`,
             'Cảnh báo xung đột dữ liệu'
           );
 
-          // Cập nhật lại dữ liệu mới nhất vào bộ nhớ và quay về màn hình xem/danh sách
+          // Cập nhật lại mảng dữ liệu local db
           const idx = db[targetKey].findIndex(item => String(item.id) === String(rawData.id));
           if (idx !== -1) db[targetKey][idx] = latestRecord;
 
+          // Chuẩn hóa nạp đầy đủ thông tin chi tiết và danh sách mặt hàng (lineItems)
           state.formData = JSON.parse(JSON.stringify(latestRecord));
+          if (['quotations', 'sales-orders', 'returns', 'grn'].includes(module)) {
+            const rawLines = state.formData.lineItems || state.formData.lineitems || [];
+            state.formData.lineItems = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
+          }
+
           render();
-          return; // Hủy thao tác lưu
+          return; // Dừng thao tác lưu
         }
       }
     } catch (checkEx) {
