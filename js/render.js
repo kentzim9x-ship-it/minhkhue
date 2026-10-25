@@ -1813,7 +1813,7 @@ function renderSalesOrderForm(c) {
   }, 0);
   d.total = d.subtotal - d.discountTotal + d.tax;
 
-  // LỰA CHỌN VÀ SẮP XẾP SẢN PHẨM ƯU TIÊN THEO BẢNG BÁO GIÁ CÓ HIỆU LỰC (DUYỆT) KÈM THEO MÃ SKU TĂNG DẦN
+  // XỬ LÝ LẤY SẢN PHẨM: GIỮ NGUYÊN THỨ TỰ TRONG BÁO GIÁ ĐÃ DUYỆT + SẢN PHẨM CÒN LẠI SORT SKU TĂNG DẦN
   const currentCustomer = (d.customer || '').trim();
   const orderDate = d.date || getTodayDateStr();
 
@@ -1823,12 +1823,14 @@ function renderSalesOrderForm(c) {
       .filter(q => {
         if (!q || !q.customer) return false;
         if (q.customer.trim().toLowerCase() !== currentCustomer.toLowerCase()) return false;
+        
         const status = (q.status || '').toLowerCase();
         const isAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
         if (!isAccepted) return false;
 
         const vBegin = q.validbegin || q.validBegin || q.date || '';
         const vUntil = q.validUntil || q.validuntil || '';
+
         if (vBegin && vUntil) {
           return orderDate >= vBegin && orderDate <= vUntil;
         }
@@ -1842,32 +1844,37 @@ function renderSalesOrderForm(c) {
 
   let sortedMaterials = [];
   if (activeQuotation && Array.isArray(activeQuotation.lineItems) && activeQuotation.lineItems.length > 0) {
-    const quotedSkus = new Set(
-      activeQuotation.lineItems
-        .map(item => (item.sku || item.id || '').trim().toLowerCase())
-        .filter(Boolean)
-    );
-    const quotedNames = new Set(
-      activeQuotation.lineItems
-        .map(item => (item.name || '').trim().toLowerCase())
-        .filter(Boolean)
-    );
-
     const inQuotationList = [];
-    const outQuotationList = [];
+    const matchedSkusAndNames = new Set();
 
-    allMaterials.forEach(m => {
-      const matSku = (m.id || '').trim().toLowerCase();
-      const matName = (m.name || '').trim().toLowerCase();
-      if (quotedSkus.has(matSku) || quotedNames.has(matName)) {
-        inQuotationList.push(m);
-      } else {
-        outQuotationList.push(m);
+    // 1. Duyệt theo ĐÚNG THỨ TỰ các dòng trong Bảng Báo Giá để giữ nguyên thứ tự
+    activeQuotation.lineItems.forEach(qItem => {
+      const qSku = (qItem.sku || qItem.id || '').trim().toLowerCase();
+      const qName = (qItem.name || '').trim().toLowerCase();
+
+      const mat = allMaterials.find(m => {
+        const mSku = (m.id || '').trim().toLowerCase();
+        const mName = (m.name || '').trim().toLowerCase();
+        return (qSku && mSku === qSku) || (qName && mName === qName);
+      });
+
+      if (mat) {
+        const matKey = (mat.id || mat.name || '').toLowerCase();
+        if (!matchedSkusAndNames.has(matKey)) {
+          matchedSkusAndNames.add(matKey);
+          inQuotationList.push(mat);
+        }
       }
     });
 
-    inQuotationList.sort(sortBySkuAsc);
+    // 2. Lấy các sản phẩm không có trong báo giá và sắp xếp theo mã SKU tăng dần
+    const outQuotationList = allMaterials.filter(m => {
+      const matKey = (m.id || m.name || '').toLowerCase();
+      return !matchedSkusAndNames.has(matKey);
+    });
     outQuotationList.sort(sortBySkuAsc);
+
+    // Ghép danh sách: Nhóm Báo giá (Giữ nguyên thứ tự) đứng trước, Nhóm còn lại (Sort SKU) đứng sau
     sortedMaterials = [...inQuotationList, ...outQuotationList];
   } else {
     sortedMaterials = allMaterials.sort(sortBySkuAsc);
