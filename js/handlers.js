@@ -494,84 +494,81 @@ async function saveForm(module) {
     const isNewStatusAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((rawData.status || '').toLowerCase());
     const targetCustomer = (rawData.customer || '').trim();
 
-    // Nếu tạo mới HOẶC cập nhật báo giá thành trạng thái "Duyệt":
-    // CHỈ chuyển các báo giá ĐANG Ở TRẠNG THÁI DUYỆT của Khách hàng đó thành "Hết Hạn" ('expired')
+    // 1. CẬP NHẬT CÁC BÁO GIÁ CŨ VỀ "HẾT HẠN" NẾU BÁO GIÁ MỚI LÀ "DUYỆT"
     if (isNewStatusAccepted && targetCustomer) {
       const currentCust = targetCustomer.toLowerCase();
 
-      // 1. Cập nhật trên Local Database (MEM)
+      // Cập nhật trên Local Memory
       db.quotations.forEach(q => {
         if (q && q.customer && q.customer.trim().toLowerCase() === currentCust && String(q.id) !== String(rawData.id)) {
           const currentStatus = (q.status || '').toLowerCase();
           const isCurrentAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(currentStatus);
-
-          // Chỉ cập nhật báo giá nào đang có trạng thái là Duyệt
           if (isCurrentAccepted) {
             q.status = 'expired';
           }
         }
       });
 
-      // 2. Cập nhật trên Supabase Database (Chỉ update những dòng có status là Duyệt)
-      (async () => {
-        try {
-          await supabaseClient
-            .from('quotations')
-            .update({ status: 'expired' })
-            .eq('customer', targetCustomer)
-            .neq('id', rawData.id)
-            .in('status', ['accepted', 'approved', 'Duyệt', 'duyệt', 'Đã duyệt', 'đã duyệt']); // ĐIỀU KIỆN LỌC CHỈ CẬP NHẬT TRẠNG THÁI DUYỆT
-        } catch (err) {
-          console.error('Lỗi tự động chuyển báo giá cũ sang Hết hạn:', err);
-        }
-      })();
+      // Cập nhật trên Supabase Database
+      try {
+        await supabaseClient
+          .from('quotations')
+          .update({ status: 'expired' })
+          .eq('customer', targetCustomer)
+          .neq('id', rawData.id)
+          .in('status', ['accepted', 'approved', 'Duyệt', 'duyệt', 'Đã duyệt', 'đã duyệt']);
+      } catch (err) {
+        console.error('Lỗi tự động chuyển báo giá cũ sang Hết hạn:', err);
+      }
     }
 
-    (async () => {
-      try {
-        const session = getAuthSession();
-        const actionText = state.mode === 'add' ? 'Tạo mới' : 'Cập nhật';
-        const notifTitle = `Báo Giá (${actionText})`;
-        const notifDetail = `${session.fullName || session.username || 'Người dùng'} đã ${actionText.toLowerCase()} báo giá ${rawData.id} cho khách hàng ${rawData.customer || ''}`;
+    // 2. CHÈN THÔNG BÁO VÀO BẢNG NOTIFICATIONS (CÓ AWAIT RÕ RÀNG)
+    try {
+      const session = getAuthSession();
+      const userObj = session.currentUser || {};
+      const actorName = userObj.fullname || userObj.username || session.fullName || session.username || 'Hệ thống';
+      const actionText = state.mode === 'add' ? 'Tạo mới' : 'Cập nhật';
 
-        const now = new Date();
-        const dateStr = getTodayDateStr();
-        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      const notifTitle = `Báo Giá (${actionText})`;
+      const notifDetail = `${actorName} đã ${actionText.toLowerCase()} báo giá ${rawData.id} cho khách hàng ${rawData.customer || ''}`;
 
-        const notifPayload = {
-          title: notifTitle,
-          detail: notifDetail,
-          actor: session.fullName || session.username || 'Hệ thống',
-          date: dateStr,
-          time: timeStr,
-          module: 'quotations',
-          ref_id: rawData.id,
-          created_at: now.toISOString()
-        };
+      const now = new Date();
+      const dateStr = getTodayDateStr();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
-        // Gửi thông báo lên cơ sở dữ liệu Supabase
-        const { data: insertedNotif, error: notifErr } = await supabaseClient
-          .from('notifications')
-          .insert([notifPayload])
-          .select();
+      const notifPayload = {
+        title: notifTitle,
+        detail: notifDetail,
+        actor: actorName,
+        date: dateStr,
+        time: timeStr,
+        module: 'quotations',
+        ref_id: String(rawData.id || ''),
+        created_at: now.toISOString()
+      };
 
-        if (notifErr) {
-          console.error('Lỗi khi đẩy thông báo vào database:', notifErr);
-        } else {
-          // Thêm thông báo mới lên đầu danh sách Local Memory để hiển thị ngay trên UI Chuông
-          if (!db.notifications) db.notifications = [];
-          db.notifications.unshift(insertedNotif && insertedNotif[0] ? insertedNotif[0] : notifPayload);
+      // Gọi await trực tiếp để đẩy vào Supabase thành công trước khi chuyển trang
+      const { data: insertedNotif, error: notifErr } = await supabaseClient
+        .from('notifications')
+        .insert([notifPayload])
+        .select();
 
-          // Re-render giao diện để cập nhật số lượng/chấm đỏ thông báo trên Chuông
-          if (typeof updateNotificationBadge === 'function') {
-            updateNotificationBadge();
-          }
+      if (notifErr) {
+        console.error('Lỗi Supabase khi chèn notifications:', notifErr);
+      } else {
+        if (!db.notifications) db.notifications = [];
+        const newNotif = (insertedNotif && insertedNotif[0]) ? insertedNotif[0] : notifPayload;
+        db.notifications.unshift(newNotif);
+
+        if (typeof updateNotificationBadge === 'function') {
+          updateNotificationBadge();
         }
-      } catch (err) {
-        console.error('Lỗi tạo thông báo:', err);
       }
-    })();
+    } catch (err) {
+      console.error('Lỗi tạo thông báo:', err);
+    }
 
+    // 3. CHUẨN HÓA CÁC TRƯỜNG DỮ LIỆU CỦA BÁO GIÁ
     rawData.validuntil = rawData.validUntil;
     rawData.validbegin = rawData.validbegin || rawData.validBegin || rawData.date;
     rawData.lineitems = rawData.lineItems;
