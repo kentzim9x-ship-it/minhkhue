@@ -477,7 +477,7 @@ async function saveForm(module) {
 
         // So sánh theo user_id2 kiểu BigInt/String
         if (dbLastTime && localLastTime && dbLastTime !== localLastTime && String(latestRecord.user_id2) !== String(currentUserId)) {
-          
+
           let editorName = latestRecord.user_id2 || 'Một người dùng khác';
           const userList = db.users || db.userinfo || db.user_info || [];
           const matchedUser = userList.find(u => String(u.id) === String(latestRecord.user_id2));
@@ -652,7 +652,7 @@ async function saveForm(module) {
 
         const isExist = db.notifications.some(n => n.id === newNotif.id || (n.itemid === newNotif.itemid && n.title === newNotif.title && n.time === newNotif.time));
         if (!isExist) {
-          db.notifications.unshift(newNotif);
+          // db.notifications.unshift(newNotif);
         }
 
         if (typeof updateNotificationBadge === 'function') {
@@ -771,7 +771,7 @@ async function saveForm(module) {
       if (error) throw error;
     }
 
-    // ĐỒNG BỘ CẬP NHẬT TRỰC TIẾP VÀO LOCAL MEMORY (db[targetKey])
+    // ĐỒNG BỘ CẬP NHẬT TRỰC TIẾP VÀO BỘ NHỚ LOCAL (db[targetKey])
     if (rawData.lineItems || rawData.lineitems) {
       const lines = rawData.lineItems || rawData.lineitems;
       dbPayload.lineItems = lines;
@@ -781,37 +781,47 @@ async function saveForm(module) {
     if (!db[targetKey]) db[targetKey] = [];
 
     if (currentMode === 'add') {
-      db[targetKey].unshift(dbPayload);
+      db[targetKey].unshift(dbPayload); // Thêm vào đầu danh sách
     } else {
       const idx = db[targetKey].findIndex(item => String(item.id) === String(dbPayload.id));
       if (idx !== -1) {
-        db[targetKey][idx] = dbPayload;
+        db[targetKey][idx] = dbPayload; // Cập nhật bản ghi hiện tại
       } else {
         db[targetKey].unshift(dbPayload);
       }
     }
 
+    // Sắp xếp giảm dần theo ID đối với các phiếu giao dịch
     if (['quotations', 'orders', 'returns', 'grns'].includes(targetKey)) {
-      db[targetKey].sort(sortDescById);
+      if (typeof sortDescById === 'function') {
+        db[targetKey].sort(sortDescById);
+      }
     }
 
-    invalidateStockCache();
+    // Cập nhật datalist tự động gợi ý vật tư nếu là module materials
+    if (module === 'materials' && typeof updateGlobalMaterialDatalist === 'function') {
+      updateGlobalMaterialDatalist();
+    }
+
+    if (typeof invalidateStockCache === 'function') {
+      invalidateStockCache();
+    }
+
     showToast(currentMode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
 
-    // CHUYỂN HƯỚNG VÀ VẼ LẠI GIAO DIỆN NGAY LẬP TỨC
+    // CHUYỂN HƯỚNG VỀ LIST / VIEW VÀ RENDER LẠI GIAO DIỆN NGAY LẬP TỨC
     if (currentMode === 'add') {
       state.formData = null;
-      state.mode = 'list';
-      navigate(module, 'list');
+      navigate(module, 'list'); // Chuyển về danh sách
     } else {
-      navigate(module, 'view', dbPayload.id);
+      navigate(module, 'view', dbPayload.id); // Hoặc chuyển về màn hình xem chi tiết
     }
-
-    render();
 
   } catch (error) {
     console.error('Lỗi lưu Supabase:', error);
-    showAlert('Lưu thất bại: ' + (error.message || error), 'Lỗi DB');
+    if (typeof showAlert === 'function') {
+      showAlert('Lưu thất bại: ' + (error.message || error), 'Lỗi DB');
+    }
   }
 }
 
@@ -846,14 +856,20 @@ async function deleteItem(module, id) {
         db[targetKey] = db[targetKey].filter(item => String(item.id) !== String(id));
       }
 
-      // 3. XÓA CACHE TRẠNG THÁI CUỘN CŨ
-      sessionStorage.removeItem(`scroll_pos_${module}`);
+      // 3. Nếu là vật tư, cập nhật lại Datalist gợi ý
+      if (module === 'materials' && typeof updateGlobalMaterialDatalist === 'function') {
+        updateGlobalMaterialDatalist();
+      }
 
       // 4. XÓA CACHE TỒN KHO VÀ RENDER LẠI MÀN HÌNH DANH SÁCH TỰ ĐỘNG
-      invalidateStockCache();
+      if (typeof invalidateStockCache === 'function') {
+        invalidateStockCache();
+      }
+
+      // 5. Render lại UI ngay lập tức không cần F5
       render();
 
-      // 5. Đồng bộ Realtime cho các Tab/Cửa sổ khác
+      // 6. Đồng bộ Realtime cho các Tab/Cửa sổ khác (nếu dùng BroadcastChannel)
       if (typeof BroadcastChannel !== 'undefined') {
         const appChannel = new BroadcastChannel('app_data_sync_channel');
         appChannel.postMessage('REFRESH_DATA');
@@ -2159,4 +2175,13 @@ function hasUnsavedFormData() {
   const hasItems = lineItems.some(item => item.name && item.name.trim() !== '');
 
   return hasItems;
+}
+
+if (typeof BroadcastChannel !== 'undefined') {
+  const syncChannel = new BroadcastChannel('app_data_sync_channel');
+  syncChannel.onmessage = (event) => {
+    if (event.data === 'REFRESH_DATA' && state.mode === 'list') {
+      render(); // Tự động làm mới danh sách đang xem
+    }
+  };
 }
