@@ -472,29 +472,43 @@ async function saveForm(module) {
         const localLastTime = `${rawData.date2 || ''} ${rawData.time2 || ''}`.trim();
         const dbLastTime = `${latestRecord.date2 || ''} ${latestRecord.time2 || ''}`.trim();
 
-        // Nếu dữ liệu trên DB đã được người khác lưu mới hơn
-        if (dbLastTime && localLastTime && dbLastTime !== localLastTime && latestRecord.user_id2 !== currentUserFullname) {
-          const editorName = latestRecord.user_id2 || 'Một người dùng khác';
+        // Nếu bản ghi trên DB có thời gian chỉnh sửa mới hơn và do người khác sửa
+        if (dbLastTime && localLastTime && dbLastTime !== localLastTime && String(latestRecord.user_id2) !== String(currentUserId) && String(latestRecord.user_id2) !== String(currentUserFullname)) {
+          
+          // Tra cứu Fullname của người sửa theo ID trong danh sách users
+          let editorName = latestRecord.user_id2 || 'Một người dùng khác';
+          const userList = db.users || db.userinfo || db.user_info || [];
+          const matchedUser = userList.find(u => String(u.id) === String(latestRecord.user_id2));
+          if (matchedUser) {
+            editorName = matchedUser.fullname || matchedUser.full_name || matchedUser.username || editorName;
+          }
+
           const editTime = `${latestRecord.time2 || ''} - ${latestRecord.date2 || ''}`;
 
+          // Hiển thị hộp thoại cảnh báo với Fullname chuẩn
           await showAlert(
-            `Mục này vừa được chỉnh sửa bởi "${editorName}" vào lúc ${editTime}.\n\nHệ thống sẽ tự động cập nhật lại thông tin mới nhất!`,
+            `Phiếu/Danh mục này vừa được chỉnh sửa bởi "${editorName}" vào lúc ${editTime}.\n\nHệ thống sẽ tự động cập nhật dữ liệu mới nhất và chuyển sang giao diện Xem chi tiết!`,
             'Cảnh báo xung đột dữ liệu'
           );
 
-          // Cập nhật lại mảng dữ liệu local db
-          const idx = db[targetKey].findIndex(item => String(item.id) === String(rawData.id));
-          if (idx !== -1) db[targetKey][idx] = latestRecord;
+          // Chuẩn hóa nạp mảng lineItems/lineitems đẩy đủ
+          const rawLines = latestRecord.lineItems || latestRecord.lineitems || [];
+          latestRecord.lineItems = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
+          latestRecord.lineitems = latestRecord.lineItems;
 
-          // Chuẩn hóa nạp đầy đủ thông tin chi tiết và danh sách mặt hàng (lineItems)
-          state.formData = JSON.parse(JSON.stringify(latestRecord));
-          if (['quotations', 'sales-orders', 'returns', 'grn'].includes(module)) {
-            const rawLines = state.formData.lineItems || state.formData.lineitems || [];
-            state.formData.lineItems = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
+          // Cập nhật đè dữ liệu mới nhất vào bộ nhớ Local Memory (tránh lỗi danh sách bị hỏng)
+          if (!db[targetKey]) db[targetKey] = [];
+          const idx = db[targetKey].findIndex(item => String(item.id) === String(rawData.id));
+          if (idx !== -1) {
+            db[targetKey][idx] = latestRecord;
+          } else {
+            db[targetKey].unshift(latestRecord);
           }
 
-          render();
-          return; // Dừng thao tác lưu
+          // Cập nhật lại state và tự động CHUYỂN VỀ GIAO DIỆN VIEW (XEM CHI TIẾT)
+          state.formData = JSON.parse(JSON.stringify(latestRecord));
+          navigate(module, 'view', rawData.id);
+          return; // Ngắt quá trình lưu
         }
       }
     } catch (checkEx) {
@@ -809,9 +823,7 @@ function initFormData(module, id) {
     if (foundData) {
       state.formData = JSON.parse(JSON.stringify(foundData));
 
-      // === BỔ SUNG: Chuẩn hóa dữ liệu danh sách sản phẩm và các trường cho Form View/Edit ===
       if (['quotations', 'sales-orders', 'returns', 'grn'].includes(module)) {
-        // Chuẩn hóa lineItems (hỗ trợ cả lineitems lẫn lineItems)
         const rawLines = state.formData.lineItems || state.formData.lineitems || [];
         state.formData.lineItems = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
       }
