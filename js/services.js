@@ -832,6 +832,76 @@ function markAllNotificationsAsRead() {
 // ĐỒNG BỘ REALTIME DỮ LIỆU ĐA TAB & ĐA MÁY
 // ==========================================
 
+// Hàm bổ trợ chuẩn hóa toàn bộ thuộc tính dữ liệu cho từng module khi nhận Realtime
+function normalizeRealtimeRecord(tableName, record) {
+  if (!record) return record;
+  const item = { ...record };
+
+  // 1. Chuẩn hóa lineItems cho tất cả các phiếu giao dịch
+  const rawLines = item.lineItems || item.lineitems || item.line_items || [];
+  const linesArray = Array.isArray(rawLines) ? rawLines : [];
+  item.lineItems = linesArray;
+  item.lineitems = linesArray;
+
+  // 2. Chuẩn hóa Báo Giá (quotations)
+  if (tableName === 'quotations') {
+    const vUntil = item.validUntil || item.validuntil || item.valid_until || '';
+    const vBegin = item.validbegin || item.validBegin || item.valid_begin || item.date || '';
+    item.validUntil = vUntil;
+    item.validuntil = vUntil;
+    item.validBegin = vBegin;
+    item.validbegin = vBegin;
+  }
+
+  // 3. Chuẩn hóa Đơn Bán Hàng (orders)
+  if (tableName === 'orders') {
+    const whCode = item.warehouseCode || item.warehouse_code || item.warehousecode || '';
+    const qId = item.quotationId || item.quotation_id || item.quotationid || null;
+    item.warehouseCode = whCode;
+    item.warehouse_code = whCode;
+    item.quotationId = qId;
+    item.quotation_id = qId;
+  }
+
+  // 4. Chuẩn hóa Trả Hàng (returns)
+  if (tableName === 'returns') {
+    const whCode = item.warehouseCode || item.warehouse_code || item.warehousecode || '';
+    const oId = item.orderId || item.order_id || item.orderid || null;
+    item.warehouseCode = whCode;
+    item.warehouse_code = whCode;
+    item.orderId = oId;
+    item.order_id = oId;
+  }
+
+  // 5. Chuẩn hóa Nhập Kho (grns)
+  if (tableName === 'grns') {
+    const whCode = item.warehouseCode || item.warehousecode || item.warehouse_code || '';
+    const totalVal = item.totalValue ?? item.totalvalue ?? item.total_value ?? 0;
+    item.warehouseCode = whCode;
+    item.warehousecode = whCode;
+    item.totalValue = totalVal;
+    item.totalvalue = totalVal;
+  }
+
+  // 6. Chuẩn hóa Khách Hàng (customers)
+  if (tableName === 'customers') {
+    const pTerms = item.paymentTerms || item.paymentterms || item.payment_terms || 'Net 30';
+    const cLimit = item.creditLimit ?? item.creditlimit ?? item.credit_limit ?? 0;
+    item.paymentTerms = pTerms;
+    item.paymentterms = pTerms;
+    item.creditLimit = cLimit;
+    item.creditlimit = cLimit;
+  }
+
+  // 7. Chuẩn hóa Vật Tư (materials)
+  if (tableName === 'materials') {
+    item.reorder = item.reorder ?? item.reorder_level ?? 0;
+    item.stock = item.stock ?? 0;
+  }
+
+  return item;
+}
+
 function subscribeAppRealtimeChanges() {
   const tableMap = {
     'materials': 'materials',
@@ -875,48 +945,23 @@ function subscribeAppRealtimeChanges() {
 
         // --- A. XỬ LÝ INSERT (THÊM MỚI) ---
         if (eventType === 'INSERT' && newRecord) {
-          // Chuẩn hóa lineItems nếu có
-          const rawLines = newRecord.lineItems || newRecord.lineitems || [];
-          newRecord.lineItems = Array.isArray(rawLines) ? rawLines : [];
-          newRecord.lineitems = newRecord.lineItems;
-
-          const exists = db[targetKey].some(x => String(x.id) === String(newRecord.id));
-          if (!exists) {
-            db[targetKey].unshift(newRecord);
-          }
-
-          if (tbl === 'quotations' && newRecord) {
-            const vUntil = newRecord.validuntil || newRecord.validUntil || '';
-            const vBegin = newRecord.validbegin || newRecord.validBegin || newRecord.date || '';
-
-            newRecord.validUntil = vUntil;
-            newRecord.validuntil = vUntil;
-            newRecord.validBegin = vBegin;
-            newRecord.validbegin = vBegin;
+          const normalizedRecord = normalizeRealtimeRecord(tbl, newRecord);
+          const idx = db[targetKey].findIndex(x => String(x.id) === String(normalizedRecord.id));
+          if (idx !== -1) {
+            db[targetKey][idx] = { ...db[targetKey][idx], ...normalizedRecord };
+          } else {
+            db[targetKey].unshift(normalizedRecord);
           }
         }
 
         // --- B. XỬ LÝ UPDATE (SỬA) ---
         else if (eventType === 'UPDATE' && newRecord) {
-          const rawLines = newRecord.lineItems || newRecord.lineitems || [];
-          newRecord.lineItems = Array.isArray(rawLines) ? rawLines : [];
-          newRecord.lineitems = newRecord.lineItems;
-
-          const idx = db[targetKey].findIndex(x => String(x.id) === String(newRecord.id));
+          const normalizedRecord = normalizeRealtimeRecord(tbl, newRecord);
+          const idx = db[targetKey].findIndex(x => String(x.id) === String(normalizedRecord.id));
           if (idx !== -1) {
-            db[targetKey][idx] = { ...db[targetKey][idx], ...newRecord };
+            db[targetKey][idx] = { ...db[targetKey][idx], ...normalizedRecord };
           } else {
-            db[targetKey].unshift(newRecord);
-          }
-
-          if (tbl === 'quotations' && newRecord) {
-            const vUntil = newRecord.validuntil || newRecord.validUntil || '';
-            const vBegin = newRecord.validbegin || newRecord.validBegin || newRecord.date || '';
-
-            newRecord.validUntil = vUntil;
-            newRecord.validuntil = vUntil;
-            newRecord.validBegin = vBegin;
-            newRecord.validbegin = vBegin;
+            db[targetKey].unshift(normalizedRecord);
           }
         }
 
@@ -926,7 +971,7 @@ function subscribeAppRealtimeChanges() {
 
           db[targetKey] = db[targetKey].filter(x => String(x.id) !== deletedId);
 
-          // KIỂM TRA: Nếu ID bị xóa KHÔNG PHẢI do máy này chủ động bấm xóa (chỉ hiển thị cho người khác đang xem)
+          // KIỂM TRA: Chỉ hiển thị alert cho trình duyệt B (đang xem) nếu ID bị xóa KHÔNG PHẢI do trình duyệt này chủ động bấm xóa
           if (window.isLocalDeletingId !== deletedId) {
             if (state.mode !== 'list' && state.formData && String(state.formData.id) === deletedId) {
               showAlert('Bản ghi bạn đang mở đã bị xóa bởi người dùng khác!', 'Thông báo');
@@ -934,15 +979,6 @@ function subscribeAppRealtimeChanges() {
               navigate(state.view, 'list');
               return;
             }
-          }
-
-          // Cảnh báo nếu B đang mở đúng bản ghi bị A xóa
-          if (state.mode !== 'list' && state.formData && String(state.formData.id) === String(oldRecord.id)) {
-            showAlert('Bản ghi bạn đang mở đã bị xóa bởi người dùng khác!', 'Thông báo');
-            state.formData = null;
-            state.mode = 'list';
-            navigate(state.view, 'list');
-            return;
           }
         }
 

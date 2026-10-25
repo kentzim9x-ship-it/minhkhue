@@ -835,7 +835,8 @@ async function deleteItem(module, id) {
 
   if (confirmDelete) {
     // 1. ĐÁNH DẤU CỜ: Người dùng tại máy này đang chủ động xóa bản ghi này
-    window.isLocalDeletingId = String(id);
+    const targetDeleteId = String(id);
+    window.isLocalDeletingId = targetDeleteId;
 
     const tableMap = {
       'materials': 'materials',
@@ -856,7 +857,7 @@ async function deleteItem(module, id) {
 
       // 2. CẬP NHẬT NGAY TRÊN BỘ NHỚ LOCAL (db[targetKey])
       if (db[targetKey]) {
-        db[targetKey] = db[targetKey].filter(item => String(item.id) !== String(id));
+        db[targetKey] = db[targetKey].filter(item => String(item.id) !== targetDeleteId);
       }
 
       // 3. Nếu là vật tư, cập nhật lại Datalist gợi ý
@@ -864,13 +865,22 @@ async function deleteItem(module, id) {
         updateGlobalMaterialDatalist();
       }
 
+      sessionStorage.removeItem(`scroll_pos_${module}`);
+      
       // 4. XÓA CACHE TỒN KHO VÀ RENDER LẠI MÀN HÌNH DANH SÁCH TỰ ĐỘNG
       if (typeof invalidateStockCache === 'function') {
         invalidateStockCache();
       }
 
-      // 5. Render lại UI ngay lập tức không cần F5
-      render();
+      // 5. Thông báo xóa thành công và chuyển hướng về danh sách nếu đang ở màn hình khác
+      showToast('Đã xóa bản ghi thành công!', 'success');
+
+      if (state.mode !== 'list') {
+        state.formData = null;
+        navigate(module, 'list');
+      } else {
+        render();
+      }
 
       // 6. Đồng bộ Realtime cho các Tab/Cửa sổ khác (nếu dùng BroadcastChannel)
       if (typeof BroadcastChannel !== 'undefined') {
@@ -878,15 +888,16 @@ async function deleteItem(module, id) {
         appChannel.postMessage('REFRESH_DATA');
       }
 
-      showToast('Đã xóa bản ghi thành công!', 'success');
     } catch (error) {
       console.error('Lỗi khi xóa bản ghi:', error);
       await showAlert('Xóa trên CSDL thất bại: ' + (error.message || error), 'Lỗi kết nối');
     } finally {
-      // 3. Xóa cờ sau 1 giây (đủ thời gian cho Realtime phản hồi về và bỏ qua)
+      // 7. Dọn dẹp cờ đánh dấu sau 1.5 giây
       setTimeout(() => {
-        window.isLocalDeletingId = null;
-      }, 1000);
+        if (window.isLocalDeletingId === targetDeleteId) {
+          window.isLocalDeletingId = null;
+        }
+      }, 1500);
     }
   }
 }
