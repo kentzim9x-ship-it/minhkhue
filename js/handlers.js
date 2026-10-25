@@ -492,6 +492,7 @@ async function saveForm(module) {
 
   if (module === 'quotations') {
     const isNewStatusAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((rawData.status || '').toLowerCase());
+    const targetCustomer = (rawData.customer || '').trim();
 
     // Nếu tạo mới HOẶC cập nhật báo giá thành trạng thái "Duyệt":
     // CHỈ chuyển các báo giá ĐANG Ở TRẠNG THÁI DUYỆT của Khách hàng đó thành "Hết Hạn" ('expired')
