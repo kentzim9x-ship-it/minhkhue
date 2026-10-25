@@ -496,8 +496,10 @@ async function saveForm(module) {
 
     // Nếu tạo mới HOẶC cập nhật báo giá thành trạng thái "Duyệt":
     // CHỈ chuyển các báo giá ĐANG Ở TRẠNG THÁI DUYỆT của Khách hàng đó thành "Hết Hạn" ('expired')
-    if (isNewStatusAccepted && rawData.customer) {
-      const currentCust = rawData.customer.trim().toLowerCase();
+    if (isNewStatusAccepted && targetCustomer) {
+      const currentCust = targetCustomer.toLowerCase();
+
+      // 1. Cập nhật trên Local Database (MEM)
       db.quotations.forEach(q => {
         if (q && q.customer && q.customer.trim().toLowerCase() === currentCust && String(q.id) !== String(rawData.id)) {
           const currentStatus = (q.status || '').toLowerCase();
@@ -510,13 +512,15 @@ async function saveForm(module) {
         }
       });
 
+      // 2. Cập nhật trên Supabase Database (Chỉ update những dòng có status là Duyệt)
       (async () => {
         try {
           await supabaseClient
             .from('quotations')
             .update({ status: 'expired' })
             .eq('customer', targetCustomer)
-            .neq('id', rawData.id);
+            .neq('id', rawData.id)
+            .in('status', ['accepted', 'approved', 'Duyệt', 'duyệt', 'Đã duyệt', 'đã duyệt']); // ĐIỀU KIỆN LỌC CHỈ CẬP NHẬT TRẠNG THÁI DUYỆT
         } catch (err) {
           console.error('Lỗi tự động chuyển báo giá cũ sang Hết hạn:', err);
         }
