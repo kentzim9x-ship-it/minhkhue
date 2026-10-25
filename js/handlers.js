@@ -494,7 +494,7 @@ async function saveForm(module) {
     const isNewStatusAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((rawData.status || '').toLowerCase());
     const targetCustomer = (rawData.customer || '').trim();
 
-    // 1. CẬP NHẬT CÁC BÁO GIÁ CŨ VỀ "HẾT HẠN" NẾU BÁO GIÁ MỚI LÀ "DUYỆT"
+    // 1. CẬP NHẬT CÁC BÁO GIÁ CỦ VỀ "HẾT HẠN" NẾU BÁO GIÁ MỚI LÀ "DUYỆT"
     if (isNewStatusAccepted && targetCustomer) {
       const currentCust = targetCustomer.toLowerCase();
 
@@ -522,7 +522,7 @@ async function saveForm(module) {
       }
     }
 
-    // 2. CHÈN THÔNG BÁO VÀO BẢNG NOTIFICATIONS (CÓ AWAIT RÕ RÀNG)
+    // 2. CHÈN THÔNG BÁO VÀO BẢNG NOTIFICATIONS
     try {
       const session = getAuthSession();
       const userObj = session.currentUser || {};
@@ -549,7 +549,6 @@ async function saveForm(module) {
         actor: actorName
       };
 
-      // Gọi await trực tiếp để đẩy vào Supabase thành công trước khi chuyển trang
       const { data: insertedNotif, error: notifErr } = await supabaseClient
         .from('notifications')
         .insert([notifPayload])
@@ -653,56 +652,55 @@ async function saveForm(module) {
     delete supabasePayload.lineItems;
   }
 
-  // CẬP NHẬT TRỰC TIẾP VÀO LOCAL DB (MEM) DÙNG CHO CẢ ADD & EDIT
+  // CẬP NHẬT CSDL TRÊN SUPABASE
   const currentMode = state.mode;
-  if (rawData.lineItems || rawData.lineitems) {
-    const lines = rawData.lineItems || rawData.lineitems;
-    dbPayload.lineItems = lines;
-    dbPayload.lineitems = lines;
-  }
-  if (currentMode === 'add') {
-    db[targetKey].unshift(dbPayload);
-  } else {
-    const idx = db[targetKey].findIndex(item => String(item.id) === String(dbPayload.id));
-    if (idx !== -1) db[targetKey][idx] = dbPayload;
-  }
-
-  if (['quotations', 'orders', 'returns', 'grns'].includes(targetKey)) {
-    db[targetKey].sort(sortDescById);
-  }
-
-  // XỬ LÝ CHUYỂN HƯỚNG TƯƠNG ỨNG VOI CÁC CHẾ ĐỘ
-  invalidateStockCache();
-  if (currentMode === 'add') {
-    state.formData = null;
-    state.mode = 'list';
-    navigate(module, 'list');
-  } else {
-    // Nếu là chế độ edit: Giữ ở lại Form chi tiết và chuyển sang chế độ view với ID bản ghi vừa sửa
-    navigate(module, 'view', dbPayload.id);
-  }
-
-  // GỬI YÊU CẦU LƯU XUỐNG DB CHẠY NGẦM (BACKGROUND ASYNC)
-  (async () => {
-    try {
-      if (currentMode === 'add') {
-        const { error } = await supabaseClient.from(tableName).insert([supabasePayload]);
-        if (error) throw error;
-      } else {
-        const { error } = await supabaseClient.from(tableName).update(supabasePayload).eq('id', dbPayload.id);
-        if (error) throw error;
+  try {
+    if (currentMode === 'add') {
+      const { data: insertedData, error } = await supabaseClient.from(tableName).insert([supabasePayload]).select();
+      if (error) throw error;
+      if (insertedData && insertedData[0]) {
+        dbPayload = { ...dbPayload, ...insertedData[0] };
       }
-
-      showToast(currentMode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
-      await fetchDataFromSupabase();
-      if (state.mode === 'list' || state.mode === 'view') render();
-    } catch (error) {
-      console.error('Lỗi lưu Supabase:', error);
-      showAlert('Lưu thất bại: ' + (error.message || error), 'Lỗi DB');
-      await fetchDataFromSupabase();
-      if (state.mode === 'list' || state.mode === 'view') render();
+    } else {
+      const { error } = await supabaseClient.from(tableName).update(supabasePayload).eq('id', dbPayload.id);
+      if (error) throw error;
     }
-  })();
+
+    // CẬP NHẬT VÀO LOCAL MEMORY (db[targetKey])
+    if (rawData.lineItems || rawData.lineitems) {
+      const lines = rawData.lineItems || rawData.lineitems;
+      dbPayload.lineItems = lines;
+      dbPayload.lineitems = lines;
+    }
+
+    if (currentMode === 'add') {
+      if (!db[targetKey]) db[targetKey] = [];
+      db[targetKey].unshift(dbPayload);
+    } else {
+      const idx = db[targetKey].findIndex(item => String(item.id) === String(dbPayload.id));
+      if (idx !== -1) db[targetKey][idx] = dbPayload;
+    }
+
+    if (['quotations', 'orders', 'returns', 'grns'].includes(targetKey)) {
+      db[targetKey].sort(sortDescById);
+    }
+
+    invalidateStockCache();
+    showToast(currentMode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
+
+    // CHUYỂN HƯỚNG VÀ RENDER LẠI TỰ ĐỘNG KHÔNG CẦN F5
+    if (currentMode === 'add') {
+      state.formData = null;
+      state.mode = 'list';
+      navigate(module, 'list');
+    } else {
+      navigate(module, 'view', dbPayload.id);
+    }
+
+  } catch (error) {
+    console.error('Lỗi lưu Supabase:', error);
+    showAlert('Lưu thất bại: ' + (error.message || error), 'Lỗi DB');
+  }
 }
 
 async function deleteItem(module, id) {
@@ -731,11 +729,13 @@ async function deleteItem(module, id) {
       const { error } = await supabaseClient.from(tableName).delete().eq('id', id);
       if (error) throw error;
 
-      // 2. Xóa thành công -> Xóa cache tồn kho & Nạp lại dữ liệu mới nhất từ máy chủ
-      invalidateStockCache();
-      await fetchDataFromSupabase();
+      // 2. Cập nhật ngay bộ nhớ cục bộ (Local Memory)
+      if (db[targetKey]) {
+        db[targetKey] = db[targetKey].filter(item => String(item.id) !== String(id));
+      }
 
-      // 3. Render lại giao diện danh sách
+      // 3. Xóa cache tồn kho & Render lại giao diện ngay lập tức
+      invalidateStockCache();
       render();
 
       // 4. Bắn tín hiệu đồng bộ Realtime cho các Tab/Cửa sổ khác trên cùng thiết bị
@@ -749,8 +749,6 @@ async function deleteItem(module, id) {
     } catch (error) {
       console.error('Lỗi khi xóa bản ghi:', error);
       await showAlert('Xóa trên CSDL thất bại: ' + (error.message || error), 'Lỗi kết nối');
-      await fetchDataFromSupabase();
-      render();
     }
   }
 }
@@ -769,7 +767,18 @@ function initFormData(module, id) {
       if (['quotations', 'sales-orders', 'returns', 'grn'].includes(module)) {
         // Chuẩn hóa lineItems (hỗ trợ cả lineitems lẫn lineItems)
         const rawLines = state.formData.lineItems || state.formData.lineitems || [];
-        state.formData.lineItems = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
+        let items = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
+
+        // Tự động sắp xếp danh sách sản phẩm theo Mã hàng (SKU) tăng dần khi xem/sửa
+        if (['quotations', 'returns', 'grn'].includes(module)) {
+          items.sort((a, b) => {
+            const skuA = (a.sku || a.id || '').trim();
+            const skuB = (b.sku || b.id || '').trim();
+            return skuA.localeCompare(skuB, undefined, { numeric: true, sensitivity: 'base' });
+          });
+        }
+
+        state.formData.lineItems = items;
       }
 
       if (module === 'quotations') {
