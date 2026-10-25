@@ -864,7 +864,51 @@ function handleMaterialSelectInLine(lineId, selectedName) {
   if (mat) {
     line.name = mat.name || '';
     line.sku = mat.id || '';
-    line.unitPrice = mat.cost || 0;
+    
+    // Đơn giá mặc định lấy từ Danh mục sản phẩm (Giá vốn/Giá niêm yết)
+    let finalUnitPrice = mat.cost || 0;
+
+    // KIỂM TRA ƯU TIÊN LẤY GIÁ TỪ BẢNG BÁO GIÁ ĐÃ DUYỆT CỦA KHÁCH HÀNG (cho Sales Orders & Returns)
+    if (['sales-orders', 'returns'].includes(state.view)) {
+      const currentCustomer = (state.formData.customer || '').trim();
+      const orderDate = state.formData.date || getTodayDateStr();
+
+      if (currentCustomer) {
+        // Tìm Báo giá có trạng thái "Duyệt" và còn hiệu lực của Khách hàng hiện tại
+        const activeQuotation = (db.quotations || [])
+          .filter(q => {
+            if (!q || !q.customer) return false;
+            if (q.customer.trim().toLowerCase() !== currentCustomer.toLowerCase()) return false;
+            
+            const status = (q.status || '').toLowerCase();
+            const isAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
+            if (!isAccepted) return false;
+
+            const vBegin = q.validbegin || q.validBegin || q.date || '';
+            const vUntil = q.validUntil || q.validuntil || '';
+
+            if (vBegin && vUntil) {
+              return orderDate >= vBegin && orderDate <= vUntil;
+            }
+            return true; // Nếu không cài ngày hết hạn thì mặc định hiểu là có hiệu lực
+          })
+          .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
+
+        // Nếu tìm thấy Báo giá hợp lệ -> Tìm sản phẩm trong Báo giá đó
+        if (activeQuotation && Array.isArray(activeQuotation.lineItems)) {
+          const quotedItem = activeQuotation.lineItems.find(item => 
+            (item.sku && item.sku === mat.id) || 
+            (item.name && item.name.toLowerCase() === mat.name.toLowerCase())
+          );
+
+          if (quotedItem && quotedItem.unitPrice !== undefined && quotedItem.unitPrice !== null) {
+            finalUnitPrice = Number(quotedItem.unitPrice) || 0;
+          }
+        }
+      }
+    }
+
+    line.unitPrice = finalUnitPrice;
     line.unitCost = mat.cost || 0;
   } else {
     line.name = cleanName;
