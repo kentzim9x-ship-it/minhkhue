@@ -559,7 +559,11 @@ async function saveForm(module) {
       } else {
         if (!db.notifications) db.notifications = [];
         const newNotif = (insertedNotif && insertedNotif[0]) ? insertedNotif[0] : notifPayload;
-        db.notifications.unshift(newNotif);
+
+        const isExist = db.notifications.some(n => n.id === newNotif.id || (n.itemid === newNotif.itemid && n.title === newNotif.title && n.time === newNotif.time));
+        if (!isExist) {
+          db.notifications.unshift(newNotif);
+        }
 
         if (typeof updateNotificationBadge === 'function') {
           updateNotificationBadge();
@@ -733,6 +737,8 @@ async function deleteItem(module, id) {
       if (db[targetKey]) {
         db[targetKey] = db[targetKey].filter(item => String(item.id) !== String(id));
       }
+
+      sessionStorage.removeItem(`scroll_pos_${module}`);
 
       // 3. Xóa cache tồn kho & Render lại giao diện ngay lập tức
       invalidateStockCache();
