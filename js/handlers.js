@@ -591,12 +591,16 @@ async function saveForm(module) {
     db[targetKey].sort(sortDescById);
   }
 
-  // THOÁT FORM NGAY LẬP TỨC VỀ DẠNG LIST
+  // XỬ LÝ CHUYỂN HƯỚNG TƯƠNG ỨNG VOI CÁC CHẾ ĐỘ
   invalidateStockCache();
-  state.formData = null;
-  state.mode = 'list';
-  navigate(module, 'list');
-  // showToast(currentMode === 'add' ? 'Đã gửi yêu cầu thêm mới!' : 'Đã gửi yêu cầu cập nhật!', 'info');
+  if (currentMode === 'add') {
+    state.formData = null;
+    state.mode = 'list';
+    navigate(module, 'list');
+  } else {
+    // Nếu là chế độ edit: Giữ ở lại Form chi tiết và chuyển sang chế độ view với ID bản ghi vừa sửa
+    navigate(module, 'view', dbPayload.id);
+  }
 
   // GỬI YÊU CẦU LƯU XUỐNG DB CHẠY NGẦM (BACKGROUND ASYNC)
   (async () => {
@@ -611,12 +615,12 @@ async function saveForm(module) {
 
       showToast(currentMode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
       await fetchDataFromSupabase();
-      if (state.mode === 'list') render();
+      if (state.mode === 'list' || state.mode === 'view') render();
     } catch (error) {
       console.error('Lỗi lưu Supabase:', error);
       showAlert('Lưu thất bại: ' + (error.message || error), 'Lỗi DB');
       await fetchDataFromSupabase();
-      if (state.mode === 'list') render();
+      if (state.mode === 'list' || state.mode === 'view') render();
     }
   })();
 }
