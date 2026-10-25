@@ -537,13 +537,16 @@ async function saveForm(module) {
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
       const notifPayload = {
+        id: 'NOTIF-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+        type: 'quotations',
         title: notifTitle,
         detail: notifDetail,
-        actor: actorName,
-        date: dateStr,
+        targetview: 'quotations',
+        itemid: String(rawData.id || ''),
         time: timeStr,
-        ref_id: String(rawData.id || ''),
-        created_at: now.toISOString()
+        date: dateStr,
+        created_at: now.toISOString(),
+        actor: actorName
       };
 
       // Gọi await trực tiếp để đẩy vào Supabase thành công trước khi chuyển trang
