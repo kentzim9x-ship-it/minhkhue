@@ -1769,11 +1769,11 @@ function renderQuotationForm(c) {
               ${isView ? 'Quay Lại' : 'Hủy'}
             </button>
             <div style="display: flex; gap: 8px;">                          
+              ${isView ? `
                 ${hasPermission ? `
                   <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('quotations', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
                   <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('quotations', '${d.id}')">${Icons.trash} Xóa</button>
                 ` : ''}
-                ${isView ? `
                 <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; font-size: 13px; cursor: pointer;">Xuất PDF</button>
               ` : ''}
               ${!isView ? `
@@ -1967,11 +1967,11 @@ function renderSalesOrderForm(c) {
               ${isView ? 'Quay Lại' : 'Hủy'}
             </button>
             <div style="display: flex; gap: 8px;">              
+              ${isView ? `
                 ${hasPermission ? `
                   <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('sales-orders', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
                   <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('sales-orders', '${d.id}')">${Icons.trash} Xóa</button>
                 ` : ''}
-                ${isView ? `
                 <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; font-size: 13px; cursor: pointer;">Xuất PDF</button>
               ` : ''}
               ${!isView ? `
