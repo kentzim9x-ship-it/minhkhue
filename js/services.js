@@ -884,6 +884,16 @@ function subscribeAppRealtimeChanges() {
           if (!exists) {
             db[targetKey].unshift(newRecord);
           }
+
+          if (tbl === 'quotations' && newRecord) {
+            const vUntil = newRecord.validuntil || newRecord.validUntil || '';
+            const vBegin = newRecord.validbegin || newRecord.validBegin || newRecord.date || '';
+
+            newRecord.validUntil = vUntil;
+            newRecord.validuntil = vUntil;
+            newRecord.validBegin = vBegin;
+            newRecord.validbegin = vBegin;
+          }
         }
 
         // --- B. XỬ LÝ UPDATE (SỬA) ---
@@ -898,11 +908,31 @@ function subscribeAppRealtimeChanges() {
           } else {
             db[targetKey].unshift(newRecord);
           }
+
+          if (tbl === 'quotations' && newRecord) {
+            const vUntil = newRecord.validuntil || newRecord.validUntil || '';
+            const vBegin = newRecord.validbegin || newRecord.validBegin || newRecord.date || '';
+
+            newRecord.validUntil = vUntil;
+            newRecord.validuntil = vUntil;
+            newRecord.validBegin = vBegin;
+            newRecord.validbegin = vBegin;
+          }
         }
 
         // --- C. XỬ LÝ DELETE (XÓA) ---
         else if (eventType === 'DELETE' && oldRecord) {
-          db[targetKey] = db[targetKey].filter(x => String(x.id) !== String(oldRecord.id));
+          db[targetKey] = db[targetKey].filter(x => String(x.id) !== deletedId);
+
+          // KIỂM TRA: Nếu ID bị xóa KHÔNG PHẢI do máy này chủ động bấm xóa (chỉ hiển thị cho người khác đang xem)
+          if (window.isLocalDeletingId !== deletedId) {
+            if (state.mode !== 'list' && state.formData && String(state.formData.id) === deletedId) {
+              showAlert('Bản ghi bạn đang mở đã bị xóa bởi người dùng khác!', 'Thông báo');
+              state.formData = null;
+              navigate(state.view, 'list');
+              return;
+            }
+          }
 
           // Cảnh báo nếu B đang mở đúng bản ghi bị A xóa
           if (state.mode !== 'list' && state.formData && String(state.formData.id) === String(oldRecord.id)) {

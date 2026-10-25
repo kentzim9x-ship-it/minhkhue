@@ -834,6 +834,9 @@ async function deleteItem(module, id) {
   const confirmDelete = await showConfirm(`Bạn có chắc chắn muốn xóa thông tin có ID: ${id}?`, 'Xác nhận xóa');
 
   if (confirmDelete) {
+    // 1. ĐÁNH DẤU CỜ: Người dùng tại máy này đang chủ động xóa bản ghi này
+    window.isLocalDeletingId = String(id);
+
     const tableMap = {
       'materials': 'materials',
       'customers': 'customers',
@@ -879,6 +882,11 @@ async function deleteItem(module, id) {
     } catch (error) {
       console.error('Lỗi khi xóa bản ghi:', error);
       await showAlert('Xóa trên CSDL thất bại: ' + (error.message || error), 'Lỗi kết nối');
+    } finally {
+      // 3. Xóa cờ sau 1 giây (đủ thời gian cho Realtime phản hồi về và bỏ qua)
+      setTimeout(() => {
+        window.isLocalDeletingId = null;
+      }, 1000);
     }
   }
 }
