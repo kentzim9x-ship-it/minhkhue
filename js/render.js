@@ -515,32 +515,32 @@ function renderMaterialsList(c) {
 `).join('');
 
   const rowsHtml = paginatedItems.map(m => `
-  <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
-    <td data-label="Mã Hàng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${m.id}</td>
-    <td data-label="Tên Hàng" style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
-    <td data-label="Đơn Vị" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--foreground);">${m.unit || '—'}</td>
-    <td data-label="Danh Mục" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${m.category || '—'}</td>
-    <td data-label="Vị Trí Lưu Kho" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${m.location || '—'}</td>
-    <td data-label="Tồn Kho Ban Đầu" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${m.stock ?? 0}</td>
-    <td data-label="Đơn Giá" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${fmtUSD(m.cost || 0)}</td>
-    <td data-label="Trạng Thái" style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'CÒN HÀNG' : m.status.toUpperCase()}</span></td>
-    
-    <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
-    <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
-    <td data-label="Giờ Táo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
-    <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
-    <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
-    <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
+      <td data-label="Mã Hàng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${m.id}</td>
+      <td data-label="Tên Hàng" style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
+      <td data-label="Đơn Vị" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--foreground);">${m.unit || '—'}</td>
+      <td data-label="Danh Mục" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${m.category || '—'}</td>
+      <td data-label="Vị Trí Lưu Kho" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${m.location || '—'}</td>
+      <td data-label="Tồn Kho Ban Đầu" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${m.stock ?? 0}</td>
+      <td data-label="Đơn Giá" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${fmtUSD(m.cost || 0)}</td>
+      <td data-label="Trạng Thái" style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'CÒN HÀNG' : m.status.toUpperCase()}</span></td>
+      
+      <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
+      <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
+      <td data-label="Giờ Táo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
+      <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
+      <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
+      <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
 
-    <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-      <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
-        <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>
-        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : ''}
-        ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''}
-      </div>
-    </td>
-  </tr>
-`).join('');
+      <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
+        <div style="display: flex; gap: 6px; justify-content: flex-end; align-items: center;">
+          <button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'view', '${m.id}')">${Icons.view} Xem</button>
+          ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('materials', 'edit', '${m.id}')">${Icons.edit} Sửa</button>` : ''}
+          ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('materials', '${m.id}')">${Icons.trash} Xóa</button>` : ''}
+        </div>
+      </td>
+    </tr>
+  `).join('');
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -981,29 +981,29 @@ function renderOrdersList(c) {
 `).join('');
 
   const rowsHtml = paginatedItems.map(o => `
-  <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', '${hasPermission ? 'edit' : 'view'}', '${o.id}')" onclick="navigate('sales-orders', 'view', '${o.id}')">
-    <td data-label="Mã Đơn Hàng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${o.id}</td>
-    <td data-label="Ngày Lập Phiếu" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${o.date}</td>
-    <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${o.customer}</td>
-    <td data-label="Mã Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${o.warehouseCode || o.warehouse_code || '—'}</td>
-    <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${(o.lineItems || o.lineitems || []).length || o.items || 0}</td>
-    <td data-label="Tổng Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: center;">${fmtUSD(o.total)}</td>
-    <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(o.status)}">${getStatusLabel(o.status)}</span></td>
+    <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('sales-orders', '${hasPermission ? 'edit' : 'view'}', '${o.id}')" onclick="navigate('sales-orders', 'view', '${o.id}')">
+      <td data-label="Mã Đơn Hàng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${o.id}</td>
+      <td data-label="Ngày Lập Phiếu" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${o.date}</td>
+      <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${o.customer}</td>
+      <td data-label="Mã Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${o.warehouseCode || o.warehouse_code || '—'}</td>
+      <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${(o.lineItems || o.lineitems || []).length || o.items || 0}</td>
+      <td data-label="Tổng Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: center;">${fmtUSD(o.total)}</td>
+      <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(o.status)}">${getStatusLabel(o.status)}</span></td>
 
-    <td data-label="Người Tạo" style="padding: 12px 16px; font-size: 12px;">${getUserFullName(o.user_id0)}</td>
-    <td data-label="Ngày Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(o.date0)}</td>
-    <td data-label="Giờ Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(o.time0)}</td>
-    <td data-label="Người Sửa" style="padding: 12px 16px; font-size: 12px;">${getUserFullName(o.user_id2)}</td>
-    <td data-label="Ngày Sửa" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(o.date2)}</td>
-    <td data-label="Giờ Sửa" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(o.time2)}</td>
+      <td data-label="Người Tạo" style="padding: 12px 16px; font-size: 12px;">${getUserFullName(o.user_id0)}</td>
+      <td data-label="Ngày Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(o.date0)}</td>
+      <td data-label="Giờ Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(o.time0)}</td>
+      <td data-label="Người Sửa" style="padding: 12px 16px; font-size: 12px;">${getUserFullName(o.user_id2)}</td>
+      <td data-label="Ngày Sửa" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(o.date2)}</td>
+      <td data-label="Giờ Sửa" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(o.time2)}</td>
 
-    <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
-      <button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'view', '${o.id}')">${Icons.view} Xem</button>
-      ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'edit', '${o.id}')">${Icons.edit} Sửa</button>` : ''}
-      ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('sales-orders', '${o.id}')">${Icons.trash} Xóa</button>` : ''}
-    </td>
-  </tr>
-`).join('');
+      <td data-label="Hành Động" style="padding: 8px 16px; text-align: center; white-space: nowrap;">
+        <button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'view', '${o.id}')">${Icons.view} Xem</button>
+        ${hasPermission ? `<button class="btn-action" onclick="event.stopPropagation(); navigate('sales-orders', 'edit', '${o.id}')">${Icons.edit} Sửa</button>` : ''}
+        ${hasPermission ? `<button class="btn-action btn-action-del" onclick="event.stopPropagation(); deleteItem('sales-orders', '${o.id}')">${Icons.trash} Xóa</button>` : ''}
+      </td>
+    </tr>
+  `).join('');
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -1417,15 +1417,15 @@ function renderMaterialForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('materials', 'view', '${d.id}') : navigate('materials')">
-            ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('materials', 'view', '${d.id}') : navigate('materials')">
+            ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
               <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('materials', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('materials', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
-            ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu sản phẩm' : 'Cập nhật'}</button>` : ''}
+            ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;">${state.mode === 'add' ? 'Lưu sản phẩm' : 'Cập nhật'}</button>` : ''}
           </div>
         </div>
       </form>
@@ -1513,15 +1513,15 @@ function renderCustomerForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('customers', 'view', '${d.id}') : navigate('customers')">
-            ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('customers', 'view', '${d.id}') : navigate('customers')">
+            ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
               <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('customers', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('customers', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
-            ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu khách hàng' : 'Cập nhật'}</button>` : ''}
+            ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;">${state.mode === 'add' ? 'Lưu khách hàng' : 'Cập nhật'}</button>` : ''}
           </div>
         </div>
       </form>
@@ -1591,15 +1591,15 @@ function renderWarehouseForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('warehouses', 'view', '${d.id}') : navigate('warehouses')">
-            ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('warehouses', 'view', '${d.id}') : navigate('warehouses')">
+            ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
               <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('warehouses', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('warehouses', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
-            ${!isView ? `<button type="submit" class="btn-submit">${state.mode === 'add' ? 'Lưu kho hàng' : 'Cập nhật'}</button>` : ''}
+            ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;">${state.mode === 'add' ? 'Lưu kho hàng' : 'Cập nhật'}</button>` : ''}
           </div>
         </div>
       </form>
@@ -1641,37 +1641,37 @@ function renderQuotationForm(c) {
     const unitName = mat ? (mat.unit || '—') : '—';
 
     return `
-  <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
-    <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
-    
-    <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'quotations\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng chọn khách hàng...' : 'Chọn/nhập tên hàng...'}" required>
-    
-    <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính">
-    
-    <input type="number" id="line-item-${l.lineId}-qty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
-    
-    <input 
-      type="text" 
-      id="line-item-${l.lineId}-unitPrice"
-      inputmode="numeric"
-      class="form-input" 
-      style="padding: 6px 8px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
-      value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
-      ${(isView || isDetailsDisabled) ? 'readonly' : `
-        onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'unitPrice')"
-        onfocus="this.value = parseNumberInput(this.value) || ''" 
-        onblur="this.value = formatVNDInput(this.value)" 
-        onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
-      `}
-    >
-    
-    <input type="number" id="line-item-${l.lineId}-discount" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
-    
-    <input type="number" id="line-item-${l.lineId}-tax" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
-    
-    <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500;">${fmtUSD(lineTotal)}</div>
-    ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
-  </div>
+      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+        <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
+        
+        <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'quotations\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng chọn khách hàng...' : 'Chọn/nhập tên hàng...'}" required>
+        
+        <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính">
+        
+        <input type="number" id="line-item-${l.lineId}-qty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
+        
+        <input 
+          type="text" 
+          id="line-item-${l.lineId}-unitPrice"
+          inputmode="numeric"
+          class="form-input" 
+          style="padding: 6px 8px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
+          value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
+          ${(isView || isDetailsDisabled) ? 'readonly' : `
+            onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'unitPrice')"
+            onfocus="this.value = parseNumberInput(this.value) || ''" 
+            onblur="this.value = formatVNDInput(this.value)" 
+            onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
+          `}
+        >
+        
+        <input type="number" id="line-item-${l.lineId}-discount" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
+        
+        <input type="number" id="line-item-${l.lineId}-tax" step="any" inputmode="decimal" class="form-input" style="padding: 6px 8px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'quotations', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
+        
+        <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500;">${fmtUSD(lineTotal)}</div>
+        ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
+      </div>
 `;
   }).join('');
 
@@ -1765,19 +1765,19 @@ function renderQuotationForm(c) {
           </div>
 
           <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-            <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('quotations', 'view', '${d.id}') : navigate('quotations')">
-              ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+            <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('quotations', 'view', '${d.id}') : navigate('quotations')">
+              ${isView ? 'Quay Lại' : 'Hủy'}
             </button>
-            <div style="display: flex; gap: 8px;">                            
+            <div style="display: flex; gap: 8px;">             
                 ${hasPermission ? `
                   <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('quotations', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
                   <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('quotations', '${d.id}')">${Icons.trash} Xóa</button>
                 ` : ''}
                 ${isView ? `
-                <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>
+                <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; font-size: 13px; cursor: pointer;">Xuất PDF</button>
               ` : ''}
               ${!isView ? `
-                <button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>
+                <button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>
                   ${state.mode === 'add' ? 'Tạo báo giá' : 'Cập nhật'}
                 </button>
               ` : ''}
@@ -1835,42 +1835,42 @@ function renderSalesOrderForm(c) {
     const stockQty = calculateRealtimeStock(l.sku, d.warehouseCode, d.id);
 
     return `
-  <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
-    <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
-    
-    <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'sales-orders\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng chọn khách hàng...' : 'Chọn/nhập tên hàng...'}" required>
-    
-    <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 6px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính từ danh mục hàng">
-    
-    <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01">
-    
-    <input type="number" id="line-item-${l.lineId}-qty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
-    
-    <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
-    
-    <input 
-      type="text" 
-      id="line-item-${l.lineId}-unitPrice"
-      inputmode="numeric"
-      class="form-input" 
-      style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
-      value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
-      ${(isView || isDetailsDisabled) ? 'readonly' : `
-        onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'unitPrice')"
-        onfocus="this.value = parseNumberInput(this.value) || ''" 
-        onblur="this.value = formatVNDInput(this.value)" 
-        onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
-      `}
-    >
-    
-    <input type="number" id="line-item-${l.lineId}-discount" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
-    
-    <input type="number" id="line-item-${l.lineId}-tax" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
-    
-    <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500; font-size: 12px;">${fmtUSD(lineTotal)}</div>
-    ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
-  </div>
-`;
+      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+        <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
+        
+        <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'sales-orders\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng chọn khách hàng...' : 'Chọn/nhập tên hàng...'}" required>
+        
+        <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 6px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính từ danh mục hàng">
+        
+        <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01">
+        
+        <input type="number" id="line-item-${l.lineId}-qty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qty ?? 1}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'qty')" onchange="updateLine('${l.lineId}', 'qty', this.value, 'number')"`}>
+        
+        <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
+        
+        <input 
+          type="text" 
+          id="line-item-${l.lineId}-unitPrice"
+          inputmode="numeric"
+          class="form-input" 
+          style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
+          value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
+          ${(isView || isDetailsDisabled) ? 'readonly' : `
+            onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'unitPrice')"
+            onfocus="this.value = parseNumberInput(this.value) || ''" 
+            onblur="this.value = formatVNDInput(this.value)" 
+            onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
+          `}
+        >
+        
+        <input type="number" id="line-item-${l.lineId}-discount" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.discount ?? 0}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'discount')" onchange="updateLine('${l.lineId}', 'discount', this.value, 'number')"`}>
+        
+        <input type="number" id="line-item-${l.lineId}-tax" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.tax ?? 0}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'sales-orders', ${idx}, 'tax')" onchange="updateLine('${l.lineId}', 'tax', this.value, 'number')"`}>
+        
+        <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500; font-size: 12px;">${fmtUSD(lineTotal)}</div>
+        ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
+      </div>
+    `;
   }).join('');
 
   c.innerHTML = `
@@ -1963,19 +1963,19 @@ function renderSalesOrderForm(c) {
           </div>
 
           <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-            <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('sales-orders', 'view', '${d.id}') : navigate('sales-orders')">
-              ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+            <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('sales-orders', 'view', '${d.id}') : navigate('sales-orders')">
+              ${isView ? 'Quay Lại' : 'Hủy'}
             </button>
-            <div style="display: flex; gap: 8px;">                          
+            <div style="display: flex; gap: 8px;">             
                 ${hasPermission ? `
                   <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('sales-orders', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
                   <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('sales-orders', '${d.id}')">${Icons.trash} Xóa</button>
                 ` : ''}
                 ${isView ? `
-                <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; cursor: pointer;">Xuất PDF</button>
+                <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; font-size: 13px; cursor: pointer;">Xuất PDF</button>
               ` : ''}
               ${!isView ? `
-                <button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>
+                <button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>
                   ${state.mode === 'add' ? 'Tạo đơn hàng' : 'Cập nhật'}
                 </button>
               ` : ''}
@@ -2023,38 +2023,38 @@ function renderReturnForm(c) {
     const stockQty = calculateRealtimeStock(l.sku, d.warehouseCode, d.id);
 
     return `
-    <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
-      <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng không cho sửa">
-      
-      <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'returns\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng chọn khách hàng...' : 'Chọn/nhập tên hàng...'}" required>
-      
-      <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ Material">
-      
-      <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho lấy từ mục 01 xuống">
-      
-      <input type="number" id="line-item-${l.lineId}-qtyReturned" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qtyReturned ?? 1}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'qtyReturned')" onchange="updateLine('${l.lineId}', 'qtyReturned', this.value, 'number')"`}>
-      
-      <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
-      
-      <input 
-        type="text" 
-        id="line-item-${l.lineId}-unitPrice"
-        inputmode="numeric"
-        class="form-input" 
-        style="padding: 6px 6px; text-align: right; ${(isView || hasOrder || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
-        value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
-        ${(isView || hasOrder || isDetailsDisabled) ? 'readonly' : `
-          onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'unitPrice')"
-          onfocus="this.value = parseNumberInput(this.value) || ''" 
-          onblur="this.value = formatVNDInput(this.value)" 
-          onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
-        `}
-      >
-      
-      <div style="font-family: var(--font-dm-mono); text-align: right; color: #f87171; font-weight: 500; font-size: 12px;">${fmtUSD((l.qtyReturned || 0) * (l.unitPrice || 0))}</div>
-      ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
-    </div>
-  `;
+      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+        <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng không cho sửa">
+        
+        <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'returns\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng chọn khách hàng...' : 'Chọn/nhập tên hàng...'}" required>
+        
+        <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ Material">
+        
+        <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho lấy từ mục 01 xuống">
+        
+        <input type="number" id="line-item-${l.lineId}-qtyReturned" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.qtyReturned ?? 1}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'qtyReturned')" onchange="updateLine('${l.lineId}', 'qtyReturned', this.value, 'number')"`}>
+        
+        <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế">
+        
+        <input 
+          type="text" 
+          id="line-item-${l.lineId}-unitPrice"
+          inputmode="numeric"
+          class="form-input" 
+          style="padding: 6px 6px; text-align: right; ${(isView || hasOrder || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
+          value="${(l.unitPrice ?? 0).toLocaleString('vi-VN')}" 
+          ${(isView || hasOrder || isDetailsDisabled) ? 'readonly' : `
+            onkeydown="handleLineItemKeyDown(event, 'returns', ${idx}, 'unitPrice')"
+            onfocus="this.value = parseNumberInput(this.value) || ''" 
+            onblur="this.value = formatVNDInput(this.value)" 
+            onchange="updateLine('${l.lineId}', 'unitPrice', parseNumberInput(this.value), 'number')"
+          `}
+        >
+        
+        <div style="font-family: var(--font-dm-mono); text-align: right; color: #f87171; font-weight: 500; font-size: 12px;">${fmtUSD((l.qtyReturned || 0) * (l.unitPrice || 0))}</div>
+        ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
+      </div>
+    `;
   }).join('');
 
   c.innerHTML = `
@@ -2143,15 +2143,15 @@ function renderReturnForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('returns', 'view', '${d.id}') : navigate('returns')">
-            ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('returns', 'view', '${d.id}') : navigate('returns')">
+            ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
               <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('returns', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('returns', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
-            ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
+            ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
           </div>
         </div>
       </form>
@@ -2191,38 +2191,38 @@ function renderGRNForm(c) {
     const qtyVal = l.receivedQty ?? l.qtyImport ?? 1;
 
     return `
-    <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
-      <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động điền theo tên hàng">
-      
-      <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'grn\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng nhập nhà cung cấp...' : 'Chọn/nhập tên hàng...'}" required>
-      
-      <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ danh mục">
-      
-      <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01 xuống">
-      
-      <input type="number" id="line-item-${l.lineId}-receivedQty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${qtyVal}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'receivedQty')" onchange="updateLine('${l.lineId}', 'receivedQty', this.value, 'number'); updateLine('${l.lineId}', 'qtyImport', this.value, 'number');"`}>
-      
-      <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế tính tự động">
-      
-      <input 
-        type="text" 
-        id="line-item-${l.lineId}-unitCost"
-        inputmode="numeric"
-        class="form-input" 
-        style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
-        value="${(l.unitCost ?? 0).toLocaleString('vi-VN')}" 
-        ${(isView || isDetailsDisabled) ? 'readonly' : `
-          onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'unitCost')"
-          onfocus="this.value = parseNumberInput(this.value) || ''" 
-          onblur="this.value = formatVNDInput(this.value)" 
-          onchange="updateLine('${l.lineId}', 'unitCost', parseNumberInput(this.value), 'number')"
-        `}
-      >
-      
-      <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500; font-size: 12px;">${fmtUSD((qtyVal) * (l.unitCost || 0))}</div>
-      ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
-    </div>
-  `;
+      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+        <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động điền theo tên hàng">
+        
+        <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'grn\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng nhập nhà cung cấp...' : 'Chọn/nhập tên hàng...'}" required>
+        
+        <input type="text" id="line-item-${l.lineId}-unit" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${unitName}" readonly title="Đơn vị tính lấy từ danh mục">
+        
+        <input type="text" id="line-item-${l.lineId}-warehouseCode" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; text-align: center;" value="${d.warehouseCode || '—'}" readonly title="Mã kho từ mục 01 xuống">
+        
+        <input type="number" id="line-item-${l.lineId}-receivedQty" step="any" inputmode="decimal" class="form-input" style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${qtyVal}" ${(isView || isDetailsDisabled) ? 'readonly' : `onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'receivedQty')" onchange="updateLine('${l.lineId}', 'receivedQty', this.value, 'number'); updateLine('${l.lineId}', 'qtyImport', this.value, 'number');"`}>
+        
+        <input type="text" id="line-item-${l.lineId}-stock" class="form-input" style="padding: 6px 6px; text-align: right; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: ${stockQty < 0 ? '#f87171' : 'var(--foreground)'};" value="${stockQty}" readonly title="Tồn thực tế tính tự động">
+        
+        <input 
+          type="text" 
+          id="line-item-${l.lineId}-unitCost"
+          inputmode="numeric"
+          class="form-input" 
+          style="padding: 6px 6px; text-align: right; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" 
+          value="${(l.unitCost ?? 0).toLocaleString('vi-VN')}" 
+          ${(isView || isDetailsDisabled) ? 'readonly' : `
+            onkeydown="handleLineItemKeyDown(event, 'grn', ${idx}, 'unitCost')"
+            onfocus="this.value = parseNumberInput(this.value) || ''" 
+            onblur="this.value = formatVNDInput(this.value)" 
+            onchange="updateLine('${l.lineId}', 'unitCost', parseNumberInput(this.value), 'number')"
+          `}
+        >
+        
+        <div style="font-family: var(--font-dm-mono); text-align: right; font-weight: 500; font-size: 12px;">${fmtUSD((qtyVal) * (l.unitCost || 0))}</div>
+        ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
+      </div>
+    `;
   }).join('');
 
   c.innerHTML = `
@@ -2309,15 +2309,15 @@ function renderGRNForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" onclick="state.mode === 'edit' ? navigate('grn', 'view', '${d.id}') : navigate('grn')">
-            ${(isView || state.mode === 'edit') ? 'Quay lại' : 'Hủy'}
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('grn', 'view', '${d.id}') : navigate('grn')">
+            ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
               <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('grn', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('grn', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
-            ${!isView ? `<button type="submit" class="btn-submit" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}
+            ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}
           </div>
         </div>
       </form>
@@ -2444,7 +2444,7 @@ function renderReportInventory(c) {
           <td data-label="Trạng Thái" style="padding: 11px 16px; text-align: right;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'Đủ hàng' : m.status}</span></td>
         </tr>
         `;
-}).join('');
+    }).join('');
   };
 
   c.innerHTML = `
@@ -2875,8 +2875,8 @@ function renderReportSales(c) {
           <!-- KHU VỰC SENTINEL LAZY LOADING -->
           <div id="sales-report-lazy-sentinel" style="padding: 16px; text-align: center; font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground); background: var(--card); border-top: 1px solid var(--border);">
             ${(state.reportSalesLimit < totalDisplayItemsCount)
-            ? `⏳ Đang hiển thị ${Math.min(state.reportSalesLimit, totalDisplayItemsCount)} / ${totalDisplayItemsCount} mục. Cuộn xuống để tải thêm...`
-            : `✔ Đã hiển thị toàn bộ ${totalDisplayItemsCount} mục.`}
+        ? `⏳ Đang hiển thị ${Math.min(state.reportSalesLimit, totalDisplayItemsCount)} / ${totalDisplayItemsCount} mục. Cuộn xuống để tải thêm...`
+        : `✔ Đã hiển thị toàn bộ ${totalDisplayItemsCount} mục.`}
           </div>
         ` : ''}
       </div>
