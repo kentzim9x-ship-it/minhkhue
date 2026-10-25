@@ -527,6 +527,51 @@ async function saveForm(module) {
       })();
     }
 
+    (async () => {
+      try {
+        const session = getAuthSession();
+        const actionText = state.mode === 'add' ? 'Tạo mới' : 'Cập nhật';
+        const notifTitle = `Báo Giá (${actionText})`;
+        const notifDetail = `${session.fullName || session.username || 'Người dùng'} đã ${actionText.toLowerCase()} báo giá ${rawData.id} cho khách hàng ${rawData.customer || ''}`;
+
+        const now = new Date();
+        const dateStr = getTodayDateStr();
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+        const notifPayload = {
+          title: notifTitle,
+          detail: notifDetail,
+          actor: session.fullName || session.username || 'Hệ thống',
+          date: dateStr,
+          time: timeStr,
+          module: 'quotations',
+          ref_id: rawData.id,
+          created_at: now.toISOString()
+        };
+
+        // Gửi thông báo lên cơ sở dữ liệu Supabase
+        const { data: insertedNotif, error: notifErr } = await supabaseClient
+          .from('notifications')
+          .insert([notifPayload])
+          .select();
+
+        if (notifErr) {
+          console.error('Lỗi khi đẩy thông báo vào database:', notifErr);
+        } else {
+          // Thêm thông báo mới lên đầu danh sách Local Memory để hiển thị ngay trên UI Chuông
+          if (!db.notifications) db.notifications = [];
+          db.notifications.unshift(insertedNotif && insertedNotif[0] ? insertedNotif[0] : notifPayload);
+
+          // Re-render giao diện để cập nhật số lượng/chấm đỏ thông báo trên Chuông
+          if (typeof updateNotificationBadge === 'function') {
+            updateNotificationBadge();
+          }
+        }
+      } catch (err) {
+        console.error('Lỗi tạo thông báo:', err);
+      }
+    })();
+
     rawData.validuntil = rawData.validUntil;
     rawData.validbegin = rawData.validbegin || rawData.validBegin || rawData.date;
     rawData.lineitems = rawData.lineItems;
