@@ -542,7 +542,6 @@ async function saveForm(module) {
         actor: actorName,
         date: dateStr,
         time: timeStr,
-        module: 'quotations',
         ref_id: String(rawData.id || ''),
         created_at: now.toISOString()
       };
