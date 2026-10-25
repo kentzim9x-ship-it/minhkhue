@@ -833,16 +833,24 @@ function markAllNotificationsAsRead() {
 // ==========================================
 
 function subscribeAppRealtimeChanges() {
-  const tables = ['materials', 'customers', 'warehouses', 'quotations', 'orders', 'returns', 'grns', 'notifications', 'userinfo'];
+  const tableMap = {
+    'materials': 'materials',
+    'customers': 'customers',
+    'warehouses': 'warehouses',
+    'quotations': 'quotations',
+    'orders': 'orders',
+    'returns': 'returns',
+    'grns': 'grns',
+    'notifications': 'notifications',
+    'userinfo': 'userinfo'
+  };
 
-  // 1. Lắng nghe và đồng bộ giữa các Tab/Cửa sổ trên CÙNG MỘT TRÌNH DUYỆT
+  // 1. Đồng bộ qua BroadcastChannel cho các tab trên CÙNG trình duyệt
   if (typeof BroadcastChannel !== 'undefined') {
     const appChannel = new BroadcastChannel('app_data_sync_channel');
-    appChannel.onmessage = async (event) => {
+    appChannel.onmessage = (event) => {
       if (event.data === 'REFRESH_DATA') {
-        invalidateStockCache();
-        await fetchDataFromSupabase();
-        // Cập nhật lại UI nếu đang đứng ở danh sách
+        if (typeof invalidateStockCache === 'function') invalidateStockCache();
         if (state.mode === 'list') {
           render();
         }
@@ -850,38 +858,85 @@ function subscribeAppRealtimeChanges() {
     };
   }
 
-  // 2. Lắng nghe sự kiện Realtime trực tiếp từ CƠ SỞ DỮ LIỆU SUPABASE (ĐA MÁY / KHÁC TRÌNH DUYỆT)
-  tables.forEach(tbl => {
+  // 2. Lắng nghe sự kiện Realtime trực tiếp từ SUPABASE (Khác trình duyệt / Khác thiết bị)
+  Object.keys(tableMap).forEach(tbl => {
+    const targetKey = tableMap[tbl];
+
     supabaseClient
       .channel(`public:${tbl}-changes-global`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: tbl }, async (payload) => {
-        // Xóa bộ nhớ đệm tồn kho
-        invalidateStockCache();
-
-        // Nạp lại toàn bộ dữ liệu mới nhất từ Supabase
-        await fetchDataFromSupabase();
-
-        // Kiểm tra ID bị xóa từ payload
-        const deletedId = payload.old ? payload.old.id : null;
-
-        // Nếu người dùng đang xem/chỉnh sửa một bản ghi mà bản ghi đó vừa bị XÓA từ máy/tab khác
-        if (payload.eventType === 'DELETE' && state.mode !== 'list' && state.formData && String(state.formData.id) === String(deletedId)) {
-          showAlert('Bản ghi bạn đang mở đã bị xóa bởi người dùng khác!', 'Thông báo');
-          state.formData = null;
-          state.mode = 'list';
-          navigate(state.view, 'list');
-          return;
+      .on('postgres_changes', { event: '*', schema: 'public', table: tbl }, (payload) => {
+        if (!Array.isArray(db[targetKey])) {
+          db[targetKey] = [];
         }
 
-        // Nếu đang ở màn hình danh sách (list), tự động render lại bảng
-        if (state.mode === 'list') {
-          render();
+        const eventType = payload.eventType; // 'INSERT', 'UPDATE', 'DELETE'
+        const newRecord = payload.new;
+        const oldRecord = payload.old;
+
+        // --- A. XỬ LÝ INSERT (THÊM MỚI) ---
+        if (eventType === 'INSERT' && newRecord) {
+          // Chuẩn hóa lineItems nếu có
+          const rawLines = newRecord.lineItems || newRecord.lineitems || [];
+          newRecord.lineItems = Array.isArray(rawLines) ? rawLines : [];
+          newRecord.lineitems = newRecord.lineItems;
+
+          const exists = db[targetKey].some(x => String(x.id) === String(newRecord.id));
+          if (!exists) {
+            db[targetKey].unshift(newRecord);
+          }
         }
 
-        // Bắn tín hiệu đồng bộ sang các Tab khác trên cùng thiết bị
-        if (typeof BroadcastChannel !== 'undefined') {
-          const appChannel = new BroadcastChannel('app_data_sync_channel');
-          appChannel.postMessage('REFRESH_DATA');
+        // --- B. XỬ LÝ UPDATE (SỬA) ---
+        else if (eventType === 'UPDATE' && newRecord) {
+          const rawLines = newRecord.lineItems || newRecord.lineitems || [];
+          newRecord.lineItems = Array.isArray(rawLines) ? rawLines : [];
+          newRecord.lineitems = newRecord.lineItems;
+
+          const idx = db[targetKey].findIndex(x => String(x.id) === String(newRecord.id));
+          if (idx !== -1) {
+            db[targetKey][idx] = { ...db[targetKey][idx], ...newRecord };
+          } else {
+            db[targetKey].unshift(newRecord);
+          }
+        }
+
+        // --- C. XỬ LÝ DELETE (XÓA) ---
+        else if (eventType === 'DELETE' && oldRecord) {
+          db[targetKey] = db[targetKey].filter(x => String(x.id) !== String(oldRecord.id));
+
+          // Cảnh báo nếu B đang mở đúng bản ghi bị A xóa
+          if (state.mode !== 'list' && state.formData && String(state.formData.id) === String(oldRecord.id)) {
+            showAlert('Bản ghi bạn đang mở đã bị xóa bởi người dùng khác!', 'Thông báo');
+            state.formData = null;
+            state.mode = 'list';
+            navigate(state.view, 'list');
+            return;
+          }
+        }
+
+        // --- D. SẮP XẾP LẠI THEO ID GIẢM DẦN CHO CÁC PHIẾU ---
+        if (['quotations', 'orders', 'returns', 'grns'].includes(targetKey)) {
+          if (typeof sortDescById === 'function') {
+            db[targetKey].sort(sortDescById);
+          }
+        }
+
+        // --- E. XÓA CACHE VÀ RE-RENDER MÀN HÌNH B TỰ ĐỘNG ---
+        if (typeof invalidateStockCache === 'function') invalidateStockCache();
+
+        // Kiểm tra xem module hiện tại có khớp với bảng vừa thay đổi không
+        const currentViewModuleMap = {
+          'materials': 'materials',
+          'customers': 'customers',
+          'warehouses': 'warehouses',
+          'quotations': 'quotations',
+          'sales-orders': 'orders',
+          'returns': 'returns',
+          'grn': 'grns'
+        };
+
+        if (state.mode === 'list' && currentViewModuleMap[state.view] === targetKey) {
+          render(); // Làm mới danh sách tức thì trên trình duyệt B
         }
       })
       .subscribe((status) => {
