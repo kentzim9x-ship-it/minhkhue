@@ -489,19 +489,52 @@ async function saveForm(module) {
             'Cảnh báo xung đột dữ liệu'
           );
 
-          // Chuẩn hóa nạp mảng lineItems/lineitems và ngày kết thúc (validUntil / validuntil)
+          // CHUẨN HÓA ĐẦY ĐỦ TẤT CẢ CÁC TRƯỜNG DỮ LIỆU CỦA MỌI MODULE KHI NẠP TỪ SUPABASE
           const rawLines = latestRecord.lineItems || latestRecord.lineitems || [];
-          latestRecord.lineItems = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
-          latestRecord.lineitems = latestRecord.lineItems;
+          const normalizedLines = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
+          latestRecord.lineItems = normalizedLines;
+          latestRecord.lineitems = normalizedLines;
 
           if (module === 'quotations') {
-            latestRecord.validUntil = latestRecord.validUntil || latestRecord.validuntil || '';
-            latestRecord.validuntil = latestRecord.validUntil;
-            latestRecord.validbegin = latestRecord.validbegin || latestRecord.validBegin || latestRecord.date || '';
-            latestRecord.validBegin = latestRecord.validbegin;
+            const vUntil = latestRecord.validUntil || latestRecord.validuntil || '';
+            const vBegin = latestRecord.validbegin || latestRecord.validBegin || latestRecord.date || '';
+            latestRecord.validUntil = vUntil;
+            latestRecord.validuntil = vUntil;
+            latestRecord.validBegin = vBegin;
+            latestRecord.validbegin = vBegin;
           }
 
-          // Cập nhật đè dữ liệu mới nhất vào bộ nhớ Local Memory
+          if (module === 'returns') {
+            // Giữ nguyên đồng bộ cả dạng camelCase và snake_case cho Phiếu đổi trả
+            const oId = latestRecord.orderId || latestRecord.order_id || null;
+            const whCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
+            latestRecord.orderId = oId;
+            latestRecord.order_id = oId;
+            latestRecord.warehouseCode = whCode;
+            latestRecord.warehouse_code = whCode;
+          }
+
+          if (module === 'sales-orders') {
+            // Đồng bộ Đơn bán hàng (Mã báo giá, Mã kho)
+            const qId = latestRecord.quotationId || latestRecord.quotation_id || null;
+            const whCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
+            latestRecord.quotationId = qId;
+            latestRecord.quotation_id = qId;
+            latestRecord.warehouseCode = whCode;
+            latestRecord.warehouse_code = whCode;
+          }
+
+          if (module === 'grn') {
+            // Đồng bộ Phiếu nhập kho (Mã kho, Tổng giá trị)
+            const whCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
+            const totalVal = latestRecord.totalValue ?? latestRecord.totalvalue ?? 0;
+            latestRecord.warehouseCode = whCode;
+            latestRecord.warehousecode = whCode;
+            latestRecord.totalValue = totalVal;
+            latestRecord.totalvalue = totalVal;
+          }
+
+          // Cập nhật đè dữ liệu chuẩn hóa vào Local Memory (db[targetKey])
           if (!db[targetKey]) db[targetKey] = [];
           const idx = db[targetKey].findIndex(item => String(item.id) === String(rawData.id));
           if (idx !== -1) {
@@ -510,10 +543,10 @@ async function saveForm(module) {
             db[targetKey].unshift(latestRecord);
           }
 
-          // Cập nhật lại state và chuyển sang giao diện VIEW
+          // Cập nhật state và tự động chuyển sang giao diện VIEW
           state.formData = JSON.parse(JSON.stringify(latestRecord));
           navigate(module, 'view', rawData.id);
-          return;
+          return; // Dừng thao tác lưu
         }
       }
     } catch (checkEx) {
