@@ -1813,6 +1813,80 @@ function renderSalesOrderForm(c) {
   }, 0);
   d.total = d.subtotal - d.discountTotal + d.tax;
 
+  // LỰA CHỌN VÀ SẮP XẾP SẢN PHẨM ƯU TIÊN THEO BẢNG BÁO GIÁ CÓ HIỆU LỰC (DUYỆT) KÈM THEO MÃ SKU TĂNG DẦN
+  const currentCustomer = (d.customer || '').trim();
+  const orderDate = d.date || getTodayDateStr();
+
+  let activeQuotation = null;
+  if (currentCustomer) {
+    activeQuotation = (db.quotations || [])
+      .filter(q => {
+        if (!q || !q.customer) return false;
+        if (q.customer.trim().toLowerCase() !== currentCustomer.toLowerCase()) return false;
+        const status = (q.status || '').toLowerCase();
+        const isAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
+        if (!isAccepted) return false;
+
+        const vBegin = q.validbegin || q.validBegin || q.date || '';
+        const vUntil = q.validUntil || q.validuntil || '';
+        if (vBegin && vUntil) {
+          return orderDate >= vBegin && orderDate <= vUntil;
+        }
+        return true;
+      })
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
+  }
+
+  const sortBySkuAsc = (a, b) => (a.id || '').localeCompare(b.id || '', undefined, { numeric: true, sensitivity: 'base' });
+  const allMaterials = JSON.parse(JSON.stringify(db.materials || []));
+
+  let sortedMaterials = [];
+  if (activeQuotation && Array.isArray(activeQuotation.lineItems) && activeQuotation.lineItems.length > 0) {
+    const quotedSkus = new Set(
+      activeQuotation.lineItems
+        .map(item => (item.sku || item.id || '').trim().toLowerCase())
+        .filter(Boolean)
+    );
+    const quotedNames = new Set(
+      activeQuotation.lineItems
+        .map(item => (item.name || '').trim().toLowerCase())
+        .filter(Boolean)
+    );
+
+    const inQuotationList = [];
+    const outQuotationList = [];
+
+    allMaterials.forEach(m => {
+      const matSku = (m.id || '').trim().toLowerCase();
+      const matName = (m.name || '').trim().toLowerCase();
+      if (quotedSkus.has(matSku) || quotedNames.has(matName)) {
+        inQuotationList.push(m);
+      } else {
+        outQuotationList.push(m);
+      }
+    });
+
+    inQuotationList.sort(sortBySkuAsc);
+    outQuotationList.sort(sortBySkuAsc);
+    sortedMaterials = [...inQuotationList, ...outQuotationList];
+  } else {
+    sortedMaterials = allMaterials.sort(sortBySkuAsc);
+  }
+
+  // CẬP NHẬT HOẶC TẠO LẠI DATALIST RIÊNG DÀNH CHO FORM ĐƠN BÁN HÀNG
+  let datalistEl = document.getElementById('global-materials-list');
+  if (!datalistEl) {
+    datalistEl = document.createElement('datalist');
+    datalistEl.id = 'global-materials-list';
+    document.body.appendChild(datalistEl);
+  }
+  datalistEl.innerHTML = sortedMaterials.map(m => {
+    const safeName = m.name || '';
+    const safeId = m.id || '';
+    const safeCost = m.cost || 0;
+    return `<option value="${safeName}">${safeId} - ${safeName} (${fmtUSD(safeCost)})</option>`;
+  }).join('');
+
   const customerOptions = (db.customers || []).map(cust =>
     `<option value="${cust.name || ''}" ${d.customer === cust.name ? 'selected' : ''}>${cust.name || ''}</option>`
   ).join('');

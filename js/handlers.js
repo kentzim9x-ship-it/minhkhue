@@ -820,6 +820,78 @@ function initFormData(module, id) {
 // ==========================================
 // 7. CÁC HÀM XỬ LÝ CHỌN LỌC TỰ ĐỘNG DỮ LIỆU
 // ==========================================
+// Hàm lấy danh sách sản phẩm đã được sắp xếp theo đúng ưu tiên cho Đơn bán hàng
+
+function getSortedMaterialsForOrder(customerName, orderDateStr) {
+  const materials = JSON.parse(JSON.stringify(db.materials || []));
+  const currentCust = (customerName || '').trim().toLowerCase();
+  const currentDate = orderDateStr || getTodayDateStr();
+
+  // Hàm bổ trợ so sánh mã SKU tăng dần
+  const sortBySkuAsc = (a, b) => (a.id || '').localeCompare(b.id || '', undefined, { numeric: true, sensitivity: 'base' });
+
+  // 1. Tìm Báo giá có trạng thái "Duyệt" và còn hiệu lực của Khách hàng
+  let activeQuotation = null;
+  if (currentCust) {
+    activeQuotation = (db.quotations || [])
+      .filter(q => {
+        if (!q || !q.customer) return false;
+        if (q.customer.trim().toLowerCase() !== currentCust) return false;
+
+        const status = (q.status || '').toLowerCase();
+        const isAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
+        if (!isAccepted) return false;
+
+        const vBegin = q.validbegin || q.validBegin || q.date || '';
+        const vUntil = q.validUntil || q.validuntil || '';
+
+        if (vBegin && vUntil) {
+          return currentDate >= vBegin && currentDate <= vUntil;
+        }
+        return true;
+      })
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
+  }
+
+  // 2. Trường hợp KHÔNG có báo giá hợp lệ -> Trả về tất cả sản phẩm xếp theo SKU tăng dần
+  if (!activeQuotation || !Array.isArray(activeQuotation.lineItems) || activeQuotation.lineItems.length === 0) {
+    return materials.sort(sortBySkuAsc);
+  }
+
+  // 3. Trường hợp CÓ báo giá hợp lệ -> Tách thành 2 nhóm
+  const quotedSkus = new Set(
+    activeQuotation.lineItems
+      .map(item => (item.sku || item.id || '').trim().toLowerCase())
+      .filter(Boolean)
+  );
+  const quotedNames = new Set(
+    activeQuotation.lineItems
+      .map(item => (item.name || '').trim().toLowerCase())
+      .filter(Boolean)
+  );
+
+  const inQuotationList = [];
+  const outQuotationList = [];
+
+  materials.forEach(m => {
+    const matSku = (m.id || '').trim().toLowerCase();
+    const matName = (m.name || '').trim().toLowerCase();
+
+    // Kiểm tra sản phẩm có trong báo giá không (theo SKU hoặc theo Tên)
+    if (quotedSkus.has(matSku) || quotedNames.has(matName)) {
+      inQuotationList.push(m);
+    } else {
+      outQuotationList.push(m);
+    }
+  });
+
+  // Sắp xếp từng nhóm theo SKU tăng dần
+  inQuotationList.sort(sortBySkuAsc);
+  outQuotationList.sort(sortBySkuAsc);
+
+  // Ghép Nhóm trong báo giá lên trước, nhóm còn lại phía sau
+  return [...inQuotationList, ...outQuotationList];
+}
 
 function updateGlobalMaterialDatalist() {
   let dl = document.getElementById('global-materials-list');
