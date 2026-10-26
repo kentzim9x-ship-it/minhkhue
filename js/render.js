@@ -2571,17 +2571,17 @@ function renderReportInventory(c) {
     `).join('');
 
   const columnConfig = [
-    { title: 'Mã Hàng (SKU)', width: '50px', align: 'left' },
-    { title: 'Tên Hàng', width: '100px', align: 'left' },
-    { title: 'ĐVT', width: '40px', align: 'left' },
-    { title: 'Danh Mục', width: '80px', align: 'left' },
-    { title: 'Vị Trí', width: '80px', align: 'left' },
-    { title: 'Tồn Đầu Kỳ', width: '80px', align: 'right' },
-    { title: 'Tồn Thực Tế', width: '80px', align: 'right' },
-    { title: 'Có Thể Bán', width: '80px', align: 'right' },
-    { title: 'Mức Cảnh Báo', width: '80px', align: 'right' },
-    { title: 'Giá Vốn', width: '80px', align: 'right' },
-    { title: 'Trạng Thái', width: '80px', align: 'right' }
+    { title: 'Mã Hàng (SKU)', width: '50px', align: 'center' },
+    { title: 'Tên Hàng', width: '100px', align: 'center' },
+    { title: 'ĐVT', width: '40px', align: 'center' },
+    { title: 'Danh Mục', width: '80px', align: 'center' },
+    { title: 'Vị Trí', width: '80px', align: 'center' },
+    { title: 'Tồn Đầu Kỳ', width: '80px', align: 'center' },
+    { title: 'Tồn Thực Tế', width: '80px', align: 'center' },
+    { title: 'Có Thể Bán', width: '80px', align: 'center' },
+    { title: 'Mức Cảnh Báo', width: '80px', align: 'center' },
+    { title: 'Giá Vốn', width: '80px', align: 'center' },
+    { title: 'Trạng Thái', width: '80px', align: 'center' }
   ];
 
   const headersHtml = columnConfig.map(col => `
