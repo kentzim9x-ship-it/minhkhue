@@ -2651,7 +2651,7 @@ function renderReportInventory(c) {
         <div style="padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Báo Cáo Tồn Kho Chi Tiết & Định Giá</span>
 
-          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: ${isMobile ? '100%' : 'auto'}; flex-direction: ${isMobile ? 'column-reverse' : 'row'};">
+          <div style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap; width: ${isMobile ? '100%' : 'auto'}; flex-direction: ${isMobile ? 'column-reverse' : 'row'};">
             
             <!-- Ô TÌM KIẾM (Trên Mobile tự động xuống dưới và giãn 100%) -->
             <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 2px; width: ${isMobile ? '100%' : '220px'}; box-sizing: border-box;">
@@ -2673,7 +2673,7 @@ function renderReportInventory(c) {
                     cursor: pointer;
                     transition: all 0.2s ease;
                     ${state.filter === cat
-      ? 'background: #f0a030; color: #000000; border: 1px solid #f0a030; font-weight: 600;'
+      ? 'background: #f0a030; color: #000000; border: 1px solid #f0a030; font-weight: 400;'
       : 'background: rgba(255, 255, 255, 0.03); color: var(--muted-foreground); border: 1px solid var(--border);'
     }
                   "
