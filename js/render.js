@@ -2648,18 +2648,15 @@ function renderReportInventory(c) {
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;" id="inventory-report-table-box">
 
-        <div style="padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div style="padding: ${isMobile ? '12px 12px' : '13px 20px'}; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Báo Cáo Tồn Kho Chi Tiết & Định Giá</span>
-
           <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: ${isMobile ? '100%' : 'auto'}; flex-direction: ${isMobile ? 'column-reverse' : 'row'};">
             
-            <!-- Ô TÌM KIẾM (Trên Mobile tự động xuống dưới và giãn 100%) -->
-            <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 4px; width: ${isMobile ? '100%' : '220px'}; box-sizing: border-box;">
+            <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 2px; width: ${isMobile ? '100%' : '220px'}; box-sizing: border-box;">
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
               <input type="text" id="report-inv-search-input" placeholder="Tìm kiếm..." value="${state.reportInvSearch}" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; box-sizing: border-box; padding: 8px 0;">
             </div>
 
-            <!-- NÚT LỌC DANH MỤC (Trên Mobile tự động lên trên) -->
             <div style="display: flex; gap: 8px; flex-wrap: wrap; width: ${isMobile ? '100%' : 'auto'}; justify-content: flex-start;">
               ${['all', ...categories].map(cat => `
                 <button 
@@ -2669,7 +2666,7 @@ function renderReportInventory(c) {
                     font-family: var(--font-dm-mono); 
                     font-size: 11px; 
                     text-transform: uppercase; 
-                    border-radius: 4px; 
+                    border-radius: 2px; 
                     cursor: pointer;
                     transition: all 0.2s ease;
                     ${state.filter === cat 
