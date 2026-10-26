@@ -17,6 +17,17 @@ async function navigate(view, mode = 'list', itemId = null, extraState = null) {
     }
   }
 
+  // --- LƯU VỊ TRÍ CUỘN HIỆN TẠI TRƯỚC KHITHAY ĐỔI STATE ---
+  const contentBox = document.getElementById('app-content');
+  const currentWindowScrollY = window.scrollY;
+  const currentContentScrollTop = contentBox ? contentBox.scrollTop : 0;
+
+  // Kiểm tra xem có phải thao tác chuyển đổi View <-> Edit trên cùng một Form/ID hay không
+  const isSameModule = state.view === view;
+  const isSwitchingBetweenViewAndEdit = isSameModule &&
+    (state.mode === 'view' || state.mode === 'edit') &&
+    (mode === 'view' || mode === 'edit');
+
   // --- BỔ SUNG: Lưu vị trí cuộn và trạng thái danh sách trước khi rời đi ---
   if (state.mode === 'list') {
     const contentBox = document.getElementById('app-content');
@@ -98,13 +109,22 @@ async function navigate(view, mode = 'list', itemId = null, extraState = null) {
 
   render();
 
-  // --- BỔ SUNG: Khôi phục vị trí cuộn sau khi render ---
-  if (mode === 'list') {
+  // --- XỬ LÝ KHÔI PHỤC VỊ TRÍ CUỘN MÀN HÌNH ---
+  if (isSwitchingBetweenViewAndEdit) {
+    // Nếu chuyển View <-> Edit: Giữ nguyên vị trí cuộn hiện tại của người dùng
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: currentWindowScrollY, behavior: 'instant' });
+      const activeContentBox = document.getElementById('app-content');
+      if (activeContentBox) activeContentBox.scrollTop = currentContentScrollTop;
+    });
+  } else if (mode === 'list') {
+    // Nếu quay về danh sách: Khôi phục vị trí cuộn đã lưu trước đó của danh sách
     restoreScrollPosition(view);
   } else {
+    // Nếu chuyển sang tạo mới (add) hoặc chuyển module khác: Cuộn về đầu trang
     window.scrollTo({ top: 0, behavior: 'instant' });
-    const contentBox = document.getElementById('app-content');
-    if (contentBox) contentBox.scrollTop = 0;
+    const activeContentBox = document.getElementById('app-content');
+    if (activeContentBox) activeContentBox.scrollTop = 0;
   }
 }
 

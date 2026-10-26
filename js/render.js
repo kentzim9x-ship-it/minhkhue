@@ -1445,12 +1445,12 @@ function renderMaterialForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('materials', 'view', '${d.id}') : navigate('materials')">
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="state.mode === 'edit' ? navigate('materials', 'view', '${d.id}') : navigate('materials')">
             ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
-              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('materials', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="navigate('materials', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('materials', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
             ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;">${state.mode === 'add' ? 'Lưu sản phẩm' : 'Cập nhật'}</button>` : ''}
@@ -1541,12 +1541,12 @@ function renderCustomerForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('customers', 'view', '${d.id}') : navigate('customers')">
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="state.mode === 'edit' ? navigate('customers', 'view', '${d.id}') : navigate('customers')">
             ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
-              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('customers', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="navigate('customers', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('customers', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
             ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;">${state.mode === 'add' ? 'Lưu khách hàng' : 'Cập nhật'}</button>` : ''}
@@ -1810,13 +1810,13 @@ function renderQuotationForm(c) {
           </div>
 
           <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-            <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('quotations', 'view', '${d.id}') : navigate('quotations')">
+            <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="state.mode === 'edit' ? navigate('quotations', 'view', '${d.id}') : navigate('quotations')">
               ${isView ? 'Quay Lại' : 'Hủy'}
             </button>
             <div style="display: flex; gap: 8px;">                          
               ${isView ? `
                 ${hasPermission ? `
-                  <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('quotations', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                  <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="navigate('quotations', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
                   <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('quotations', '${d.id}')">${Icons.trash} Xóa</button>
                 ` : ''}
                 <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; font-size: 13px; cursor: pointer;">Xuất PDF</button>
@@ -2104,13 +2104,13 @@ function renderSalesOrderForm(c) {
           </div>
 
           <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-            <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('sales-orders', 'view', '${d.id}') : navigate('sales-orders')">
+            <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="state.mode === 'edit' ? navigate('sales-orders', 'view', '${d.id}') : navigate('sales-orders')">
               ${isView ? 'Quay Lại' : 'Hủy'}
             </button>
             <div style="display: flex; gap: 8px;">              
               ${isView ? `
                 ${hasPermission ? `
-                  <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('sales-orders', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                  <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="navigate('sales-orders', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
                   <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('sales-orders', '${d.id}')">${Icons.trash} Xóa</button>
                 ` : ''}
                 <button type="button" class="btn-primary" onclick="exportSalesOrderToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; font-size: 13px; cursor: pointer;">Xuất PDF</button>
@@ -2301,12 +2301,12 @@ function renderReturnForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('returns', 'view', '${d.id}') : navigate('returns')">
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="state.mode === 'edit' ? navigate('returns', 'view', '${d.id}') : navigate('returns')">
             ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
-              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('returns', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="navigate('returns', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('returns', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
             ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
@@ -2484,12 +2484,12 @@ function renderGRNForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('grn', 'view', '${d.id}') : navigate('grn')">
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="state.mode === 'edit' ? navigate('grn', 'view', '${d.id}') : navigate('grn')">
             ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
-              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('grn', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="navigate('grn', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('grn', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
             ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}
