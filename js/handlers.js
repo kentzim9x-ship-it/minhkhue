@@ -1576,11 +1576,11 @@ async function exportQuotationToPDF() {
     <table style="width: 100%; font-size: 10.5pt; margin-bottom: 8px; border-collapse: collapse; line-height: 1.5;">
       <tr>
         <td style="width: 50%; padding: 1px 0; vertical-align: top;">Khách hàng: ${d.customer || ''}</td>
-        <td style="width: 50%; padding: 1px 0; text-align: right; vertical-align: top;">Bảng báo giá: ${d.id || ''}</td>
+        <td style="width: 50%; padding: 1px 0; text-align: left; vertical-align: top;">Bảng báo giá: ${d.id || ''}</td>
       </tr>
       <tr>
         <td style="padding: 1px 0;">Địa chỉ: ${custAddress}</td>
-        <td style="padding: 1px 0; text-align: right;">Ngày hiệu lực: từ ngày ${fromDateVN} - đến ngày ${toDateVN}</td>
+        <td style="padding: 1px 0; text-align: left;">Ngày hiệu lực: từ ngày ${fromDateVN} - đến ngày ${toDateVN}</td>
       </tr>
     </table>
 
@@ -1715,11 +1715,11 @@ async function exportSalesOrderToPDF() {
     <table style="width: 100%; font-size: 10.5pt; margin-bottom: 8px; border-collapse: collapse; line-height: 1.5;">
       <tr>
         <td style="width: 50%; padding: 1px 0; vertical-align: top;">Khách hàng: ${d.customer || ''}</td>
-        <td style="width: 50%; padding: 1px 0; text-align: right; vertical-align: top;">Đơn hàng bán: ${d.id || ''}</td>
+        <td style="width: 50%; padding: 1px 0; text-align: left; vertical-align: top;">Đơn hàng bán: ${d.id || ''}</td>
       </tr>
       <tr>
         <td style="padding: 1px 0;">Địa chỉ: ${custAddress}</td>
-        <td style="padding: 1px 0; text-align: right;">Ghi chú: ${d.notes || ''}</td>
+        <td style="padding: 1px 0; text-align: left;">Ghi chú: ${d.notes || ''}</td>
       </tr>
     </table>
 
@@ -1991,7 +1991,7 @@ async function exportSalesReportToPDF() {
     <table style="width: 100%; font-size: 10.5pt; margin-bottom: 8px; border-collapse: collapse; line-height: 1.5;">
       <tr>
         <td style="width: 50%; padding: 1px 0; vertical-align: top;">Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</td>
-        <td style="width: 50%; padding: 1px 0; text-align: right; vertical-align: top;">Báo cáo: tháng ${selectedMonth} năm ${currentYear}</td>
+        <td style="width: 50%; padding: 1px 0; text-align: left; vertical-align: top;">Báo cáo: tháng ${selectedMonth} năm ${currentYear}</td>
       </tr>
       <tr>
         <td colspan="2" style="padding: 1px 0;">Địa chỉ: ${custAddress}</td>
