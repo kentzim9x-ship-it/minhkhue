@@ -2933,9 +2933,9 @@ function renderReportSales(c) {
   }
 
   const customersHtml = topCustomersReal.slice(0, 5).map((cus, i) => `
-    <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
+    <tr style="border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="state.search='${cus.name.replace(/'/g, "\\'")}'; state.page=1; navigate('sales-orders');" title="Click để xem danh sách đơn hàng của ${cus.name}">
       <td data-label="" style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); width: 28px;">${String(i + 1).padStart(2, '0')}</td>
-      <td data-label="" style="padding: 9px 14px; font-size: 13px;">${cus.name}</td>
+      <td data-label="" style="padding: 9px 14px; font-size: 13px; font-weight: 500; color: var(--foreground);">${cus.name}</td>
       <td data-label="" style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--primary);">${fmtUSD(cus.revenue)}</td>
       <td data-label="" style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; text-align: right; color: var(--muted-foreground);">${cus.orders} đơn</td>
     </tr>
