@@ -497,21 +497,21 @@ function renderMaterialsList(c) {
   `).join('');
 
   const columnConfig = [
-    { title: 'Mã Hàng', width: '50px', align: 'center' },
+    { title: 'Mã Hàng', width: '30px', align: 'center' },
     { title: 'Tên Hàng', width: '100px', align: 'center' },
-    { title: 'Đơn Vị', width: '40px', align: 'center' },
-    { title: 'Danh Mục', width: '80px', align: 'center' },
-    { title: 'Vị Trí Lưu Kho', width: '80px', align: 'center' },
-    { title: 'Tồn Kho Ban Đầu', width: '80px', align: 'center' },
-    { title: 'Đơn Giá', width: '80px', align: 'center' },
-    { title: 'Trạng Thái', width: '80px', align: 'center' },
-    { title: 'Người Tạo', width: '80px', align: 'center' },
-    { title: 'Ngày Tạo', width: '60px', align: 'center' },
-    { title: 'Giờ Tạo', width: '40px', align: 'center' },
-    { title: 'Người Sửa', width: '80px', align: 'center' },
-    { title: 'Ngày Sửa', width: '60px', align: 'center' },
-    { title: 'Giờ Sửa', width: '40px', align: 'center' },
-    { title: 'Hành Động', width: '120px', align: 'center' }
+    { title: 'Đơn Vị', width: '20px', align: 'center' },
+    { title: 'Danh Mục', width: '40px', align: 'center' },
+    { title: 'Vị Trí Lưu Kho', width: '40px', align: 'center' },
+    { title: 'Tồn Kho Ban Đầu', width: '30px', align: 'center' },
+    { title: 'Đơn Giá', width: '30px', align: 'center' },
+    { title: 'Trạng Thái', width: '50px', align: 'center' },
+    { title: 'Người Tạo', width: '50px', align: 'center' },
+    { title: 'Ngày Tạo', width: '30px', align: 'center' },
+    { title: 'Giờ Tạo', width: '20px', align: 'center' },
+    { title: 'Người Sửa', width: '50px', align: 'center' },
+    { title: 'Ngày Sửa', width: '30px', align: 'center' },
+    { title: 'Giờ Sửa', width: '20px', align: 'center' },
+    { title: 'Hành Động', width: '80px', align: 'center' }
   ];
 
   const headersHtml = columnConfig.map(col => `
@@ -636,20 +636,20 @@ function renderCustomersList(c) {
   `).join('');
 
   const columnConfig = [
-    { title: 'Mã KH', width: '50px', align: 'center' },
+    { title: 'Mã KH', width: '30px', align: 'center' },
     { title: 'Tên Công Ty / KH', width: '100px', align: 'center' },
-    { title: 'Người Liên Hệ', width: '80px', align: 'center' },
-    { title: 'Email', width: '80px', align: 'center' },
-    { title: 'SĐT', width: '80px', align: 'center' },
-    { title: 'Địa Chỉ', width: '150px', align: 'center' },
-    { title: 'Trạng Thái', width: '80px', align: 'center' },
-    { title: 'Người Tạo', width: '80px', align: 'center' },
-    { title: 'Ngày Tạo', width: '60px', align: 'center' },
-    { title: 'Giờ Tạo', width: '40px', align: 'center' },
-    { title: 'Người Sửa', width: '80px', align: 'center' },
-    { title: 'Ngày Sửa', width: '60px', align: 'center' },
-    { title: 'Giờ Sửa', width: '40px', align: 'center' },
-    { title: 'Hành Động', width: '120px', align: 'center' }
+    { title: 'Người Liên Hệ', width: '50px', align: 'center' },
+    { title: 'Email', width: '50px', align: 'center' },
+    { title: 'SĐT', width: '30px', align: 'center' },
+    { title: 'Địa Chỉ', width: '100px', align: 'center' },
+    { title: 'Trạng Thái', width: '50px', align: 'center' },
+    { title: 'Người Tạo', width: '50px', align: 'center' },
+    { title: 'Ngày Tạo', width: '30px', align: 'center' },
+    { title: 'Giờ Tạo', width: '20px', align: 'center' },
+    { title: 'Người Sửa', width: '50px', align: 'center' },
+    { title: 'Ngày Sửa', width: '30px', align: 'center' },
+    { title: 'Giờ Sửa', width: '20px', align: 'center' },
+    { title: 'Hành Động', width: '80px', align: 'center' }
   ];
 
   const headersHtml = columnConfig.map(col => `
@@ -2571,17 +2571,17 @@ function renderReportInventory(c) {
     `).join('');
 
   const columnConfig = [
-    { title: 'Mã Hàng (SKU)', width: '50px', align: 'center' },
+    { title: 'Mã Hàng (SKU)', width: '30px', align: 'center' },
     { title: 'Tên Hàng', width: '100px', align: 'center' },
-    { title: 'ĐVT', width: '40px', align: 'center' },
-    { title: 'Danh Mục', width: '80px', align: 'center' },
-    { title: 'Vị Trí', width: '80px', align: 'center' },
-    { title: 'Tồn Đầu Kỳ', width: '80px', align: 'center' },
-    { title: 'Tồn Thực Tế', width: '80px', align: 'center' },
-    { title: 'Có Thể Bán', width: '80px', align: 'center' },
-    { title: 'Mức Cảnh Báo', width: '80px', align: 'center' },
-    { title: 'Giá Vốn', width: '80px', align: 'center' },
-    { title: 'Trạng Thái', width: '80px', align: 'center' }
+    { title: 'ĐVT', width: '20px', align: 'center' },
+    { title: 'Danh Mục', width: '40px', align: 'center' },
+    { title: 'Vị Trí', width: '50px', align: 'center' },
+    { title: 'Tồn Đầu Kỳ', width: '30px', align: 'center' },
+    { title: 'Tồn Thực Tế', width: '30px', align: 'center' },
+    { title: 'Có Thể Bán', width: '30px', align: 'center' },
+    { title: 'Mức Cảnh Báo', width: '30px', align: 'center' },
+    { title: 'Giá Vốn', width: '30px', align: 'center' },
+    { title: 'Trạng Thái', width: '50px', align: 'center' }
   ];
 
   const headersHtml = columnConfig.map(col => `
