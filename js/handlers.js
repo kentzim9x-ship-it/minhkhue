@@ -653,12 +653,38 @@ async function saveForm(module) {
     // GỬI THÔNG BÁO: Chỉ chèn duy nhất 1 bản ghi vào CSDL Supabase
     // Realtime Listener tại Client sẽ tự nhận sự kiện này để hiển thị icon chuông (Tránh bị double notification)
     try {
+      const actorName = currentUserFullname;
       const actionText = state.mode === 'add' ? 'Tạo mới' : 'Cập nhật';
+
       const notifTitle = `Báo Giá (${actionText})`;
-      const notifDetail = `${currentUserFullname} đã ${actionText.toLowerCase()} báo giá ${rawData.id} cho khách hàng ${rawData.customer || ''}`;
+      const notifDetail = `${actorName} đã ${actionText.toLowerCase()} báo giá ${rawData.id} cho khách hàng ${rawData.customer || ''}`;
+
+      const now = new Date();
+      const dateStr = getTodayDateStr();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+      const notifPayload = {
+        id: 'NOTIF-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+        type: 'quotations',
+        title: notifTitle,
+        detail: notifDetail,
+        targetview: 'quotations',
+        itemid: String(rawData.id || ''),
+        time: timeStr,
+        date: dateStr,
+        created_at: now.toISOString(),
+        actor: actorName
+      };
 
       asyncBackgroundTasks.push(
-        addNotification('quotations', notifTitle, notifDetail, 'quotations', String(rawData.id || ''), currentUserFullname)
+        (async () => {
+          try {
+            const { error: notifErr } = await supabaseClient.from('notifications').insert([notifPayload]);
+            if (notifErr) console.error('Lỗi Supabase khi chèn notifications:', notifErr);
+          } catch (err) {
+            console.error('Lỗi tạo thông báo:', err);
+          }
+        })()
       );
     } catch (err) {
       console.error('Lỗi chuẩn bị thông báo:', err);
@@ -1420,9 +1446,9 @@ async function generateAndSharePDF(htmlElement, fileName, shareTitle) {
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true, logging: false },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: {
+    pagebreak: { 
       mode: ['css', 'legacy'], // Chỉ ngắt trang theo dòng tr, không chặn toàn bộ bảng
-      avoid: ['tr', '.signature-block']
+      avoid: ['tr', '.signature-block'] 
     }
   };
 
