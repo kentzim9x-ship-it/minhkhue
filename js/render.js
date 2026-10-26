@@ -638,10 +638,10 @@ function renderCustomersList(c) {
   const columnConfig = [
     { title: 'Mã KH', width: '30px', align: 'center' },
     { title: 'Tên Công Ty / KH', width: '100px', align: 'center' },
-    { title: 'Người Liên Hệ', width: '50px', align: 'center' },
-    { title: 'Email', width: '50px', align: 'center' },
-    { title: 'SĐT', width: '30px', align: 'center' },
-    { title: 'Địa Chỉ', width: '100px', align: 'center' },
+    { title: 'Người Liên Hệ', width: '60px', align: 'center' },
+    { title: 'Email', width: '60px', align: 'center' },
+    { title: 'SĐT', width: '40px', align: 'center' },
+    { title: 'Địa Chỉ', width: '120px', align: 'center' },
     { title: 'Trạng Thái', width: '50px', align: 'center' },
     { title: 'Người Tạo', width: '50px', align: 'center' },
     { title: 'Ngày Tạo', width: '30px', align: 'center' },
@@ -2576,11 +2576,11 @@ function renderReportInventory(c) {
     { title: 'ĐVT', width: '20px', align: 'center' },
     { title: 'Danh Mục', width: '40px', align: 'center' },
     { title: 'Vị Trí', width: '50px', align: 'center' },
-    { title: 'Tồn Đầu Kỳ', width: '30px', align: 'center' },
-    { title: 'Tồn Thực Tế', width: '30px', align: 'center' },
-    { title: 'Có Thể Bán', width: '30px', align: 'center' },
-    { title: 'Mức Cảnh Báo', width: '30px', align: 'center' },
-    { title: 'Giá Vốn', width: '30px', align: 'center' },
+    { title: 'Tồn Đầu Kỳ', width: '20px', align: 'center' },
+    { title: 'Tồn Thực Tế', width: '20px', align: 'center' },
+    { title: 'Có Thể Bán', width: '20px', align: 'center' },
+    { title: 'Mức Cảnh Báo', width: '20px', align: 'center' },
+    { title: 'Giá Vốn', width: '20px', align: 'center' },
     { title: 'Trạng Thái', width: '50px', align: 'center' }
   ];
 
@@ -2599,11 +2599,11 @@ function renderReportInventory(c) {
 
       return `
         <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
-          <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${m.id}</td>
+          <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${m.id}</td>
           <td data-label="Tên Hàng" style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
-          <td data-label="ĐVT" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--foreground);">${m.unit || '—'}</td>
-          <td data-label="Danh Mục" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">${m.category || '—'}</td>
-          <td data-label="Vị Trí" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px;">${m.location || '—'}</td>
+          <td data-label="ĐVT" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--foreground);">${m.unit || '—'}</td>
+          <td data-label="Danh Mục" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${m.category || '—'}</td>
+          <td data-label="Vị Trí" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${m.location || '—'}</td>
           <td data-label="Tồn Đầu Kỳ" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${tonDauKy}</td>
           <td data-label="Tồn Thực Tế" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; font-weight: 600; color: var(--primary);">${tonThucTe}</td>
           <td data-label="Có Thể Bán" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${coTheBan}</td>
