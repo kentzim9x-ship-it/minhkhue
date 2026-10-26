@@ -479,11 +479,16 @@ function renderMaterialsList(c) {
   const startIndex = (state.page - 1) * state.pageSize;
   const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
 
+  const totalSku = db.materials.length;
+  const totalStock = db.materials.reduce((a, i) => a + (Number(i.stock) || 0), 0);
+  const lowCount = db.materials.filter(i => (i.status || '').toLowerCase() === 'low').length;
+  const outCount = db.materials.filter(i => (i.status || '').toLowerCase() === 'out').length;
+
   const kpiHtml = [
-    { label: 'Tổng số SKU', value: fmt(db.materials.length), color: 'var(--foreground)' },
-    { label: 'Tổng tồn kho', value: fmt(db.materials.reduce((a, i) => a + i.stock, 0)), color: '#f0a030' },
-    { label: 'Đang tạm giữ', value: fmt(db.materials.reduce((a, i) => a + i.reserved, 0)), color: '#60a5fa' },
-    { label: 'Thấp/Cảnh báo', value: fmt(db.materials.filter(i => ['low', 'critical', 'out'].includes(i.status)).length), color: '#f87171' }
+    { label: 'TỔNG SỐ SKU', value: fmt(totalSku), color: 'var(--foreground)' },
+    { label: 'TỔNG TỒN KHO', value: fmt(totalStock), color: '#34d399' },
+    { label: 'SẮP HẾT', value: fmt(lowCount), color: '#fbbf24' },   // Thống kê Sắp hết (Màu vàng/cam)
+    { label: 'HẾT HÀNG', value: fmt(outCount), color: '#f87171' }    // Thống kê Hết hàng (Màu đỏ)
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
@@ -524,7 +529,9 @@ function renderMaterialsList(c) {
       <td data-label="Vị Trí Lưu Kho" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${m.location || '—'}</td>
       <td data-label="Tồn Kho Ban Đầu" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${m.stock ?? 0}</td>
       <td data-label="Đơn Giá" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
-      <td data-label="Trạng Thái" style="padding: 11px 16px;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'CÒN HÀNG' : m.status.toUpperCase()}</span></td>
+      <td data-label="Trạng Thái" style="padding: 11px 16px; text-align: center;">
+        <span class="badge ${getBadgeClass(m.status)}">${getStatusLabel(m.status)}</span>
+      </td>
       
       <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
       <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
@@ -549,7 +556,7 @@ function renderMaterialsList(c) {
         ${kpiHtml}
       </div>
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['ok', 'Đủ hàng'], ['low', 'Sắp hết'], ['critical', 'Nguy cấp'], ['out', 'Hết hàng']])}
+        ${getFilterBar([['all', 'TẤT CẢ'], ['ok', 'ĐỦ HÀNG'], ['low', 'SẮP HẾT'], ['out', 'HẾT HÀNG']])}
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
             <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>

@@ -355,7 +355,7 @@ function getBadgeClass(status) {
     'out': 'badge-red', 'hết hàng': 'badge-red',
 
 
-    // #60a5fa XANH DƯƠNG / BLUE (Dành riêng cho Hoàn thành / Đã xử lý)
+    // 🔵 XANH DƯƠNG / BLUE
     'processed': 'badge-blue', 'Hoàn thành': 'badge-blue',
     'completed': 'badge-blue', 'Hoàn thành': 'badge-blue',
 
@@ -399,9 +399,11 @@ function getStatusLabel(status) {
 
     // Vật tư & Tồn kho
     'ok': 'Đủ hàng',
+    'còn hàng': 'Còn hàng',
     'low': 'Sắp hết',
-    'critical': 'Nguy cấp',
-    'out': 'Hết hàng'
+    'sắp hết': 'Sắp hết',
+    'out': 'Hết hàng',
+    'hết hàng': 'Hết hàng'
   };
 
   return map[s] || (status ? String(status).toUpperCase() : '—');
