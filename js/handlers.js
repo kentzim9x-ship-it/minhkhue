@@ -483,12 +483,17 @@ async function saveForm(module) {
   const tableName = tableMap[module];
   const targetKey = module === 'sales-orders' ? 'orders' : (module === 'grn' ? 'grns' : module);
 
-  let rawData = JSON.parse(JSON.stringify(state.formData));
+  // TỐI ƯU 1: Dùng shallow copy thay cho JSON.parse(JSON.stringify(...)) để tiết kiệm CPU
+  let rawData = { ...state.formData };
+  if (Array.isArray(state.formData.lineItems)) {
+    rawData.lineItems = state.formData.lineItems.map(item => ({ ...item }));
+  }
+
   const currentDate = getTodayDateStr();
   const currentTime = getCurrentTimeStr();
 
   // =========================================================================
-  // 1. KIỂM TRA XUNG ĐỘT KHI SỬA (LẤY FULLNAME & NẠP ĐẦY ĐỦ TRƯỜNG DỮ LIỆU)
+  // 1. KIỂM TRA XUNG ĐỘT KHI SỬA
   // =========================================================================
   if (state.mode === 'edit') {
     try {
@@ -502,7 +507,6 @@ async function saveForm(module) {
         const localLastTime = `${rawData.date2 || ''} ${rawData.time2 || ''}`.trim();
         const dbLastTime = `${latestRecord.date2 || ''} ${latestRecord.time2 || ''}`.trim();
 
-        // So sánh theo user_id2 kiểu BigInt/String
         if (dbLastTime && localLastTime && dbLastTime !== localLastTime && String(latestRecord.user_id2) !== String(currentUserId)) {
 
           let editorName = latestRecord.user_id2 || 'Một người dùng khác';
@@ -519,9 +523,8 @@ async function saveForm(module) {
             'Cảnh báo xung đột dữ liệu'
           );
 
-          // NẠP ĐẦY ĐỦ TẤT CẢ CÁC TRƯỜNG CỦA MỌI MODULE KHI TỰ ĐỘNG LÀM MỚI
           const rawLines = latestRecord.lineItems || latestRecord.lineitems || [];
-          const normalizedLines = Array.isArray(rawLines) ? JSON.parse(JSON.stringify(rawLines)) : [];
+          const normalizedLines = Array.isArray(rawLines) ? rawLines.map(l => ({ ...l })) : [];
           latestRecord.lineItems = normalizedLines;
           latestRecord.lineitems = normalizedLines;
 
@@ -534,22 +537,16 @@ async function saveForm(module) {
             latestRecord.validbegin = vBegin;
           }
 
-          if (module === 'returns') {
-            const oId = latestRecord.orderId || latestRecord.order_id || null;
-            const whCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
-            latestRecord.orderId = oId;
-            latestRecord.order_id = oId;
-            latestRecord.warehouseCode = whCode;
-            latestRecord.warehouse_code = whCode;
-          }
-
-          if (module === 'sales-orders') {
-            const qId = latestRecord.quotationId || latestRecord.quotation_id || null;
-            const whCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
-            latestRecord.quotationId = qId;
-            latestRecord.quotation_id = qId;
-            latestRecord.warehouseCode = whCode;
-            latestRecord.warehouse_code = whCode;
+          if (module === 'returns' || module === 'sales-orders') {
+            latestRecord.warehouseCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
+            latestRecord.warehouse_code = latestRecord.warehouseCode;
+            if (module === 'returns') {
+              latestRecord.orderId = latestRecord.orderId || latestRecord.order_id || null;
+              latestRecord.order_id = latestRecord.orderId;
+            } else {
+              latestRecord.quotationId = latestRecord.quotationId || latestRecord.quotation_id || null;
+              latestRecord.quotation_id = latestRecord.quotationId;
+            }
           }
 
           if (module === 'grn') {
@@ -561,7 +558,6 @@ async function saveForm(module) {
             latestRecord.totalvalue = totalVal;
           }
 
-          // Cập nhật đè dữ liệu mới vào Local Memory
           if (!db[targetKey]) db[targetKey] = [];
           const idx = db[targetKey].findIndex(item => String(item.id) === String(rawData.id));
           if (idx !== -1) {
@@ -570,7 +566,7 @@ async function saveForm(module) {
             db[targetKey].unshift(latestRecord);
           }
 
-          state.formData = JSON.parse(JSON.stringify(latestRecord));
+          state.formData = { ...latestRecord };
           navigate(module, 'view', rawData.id);
           return;
         }
@@ -580,7 +576,6 @@ async function saveForm(module) {
     }
   }
 
-  // LƯU ĐÚNG USER_ID DẠNG ID NGUYÊN (TRÁNH LỖI INVALID INPUT SYNTAX FOR TYPE BIGINT)
   if (state.mode === 'add') {
     rawData.user_id0 = currentUserId;
     rawData.date0 = currentDate;
@@ -590,7 +585,7 @@ async function saveForm(module) {
     rawData.date2 = currentDate;
     rawData.time2 = currentTime;
   } else if (state.mode === 'edit') {
-    const existing = db[targetKey].find(item => String(item.id) === String(rawData.id));
+    const existing = db[targetKey]?.find(item => String(item.id) === String(rawData.id));
     if (existing) {
       rawData.user_id0 = existing.user_id0 || currentUserId;
       rawData.date0 = existing.date0 || currentDate;
@@ -611,11 +606,13 @@ async function saveForm(module) {
     if (rawData.creditLimit !== undefined) rawData.creditlimit = rawData.creditLimit;
   }
 
+  // TỐI ƯU 2: Gom các tác vụ async không phụ thuộc để chạy song song (Non-blocking Background tasks)
+  const asyncBackgroundTasks = [];
+
   if (module === 'quotations') {
     const isNewStatusAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((rawData.status || '').toLowerCase());
     const targetCustomer = (rawData.customer || '').trim();
 
-    // CẬP NHẬT CÁC BÁO GIÁ CỦ VỀ "HẾT HẠN" NẾU BÁO GIÁ MỚI LÀ "DUYỆT"
     if (isNewStatusAccepted && targetCustomer) {
       const currentCust = targetCustomer.toLowerCase();
 
@@ -625,8 +622,6 @@ async function saveForm(module) {
           const isCurrentAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(currentStatus);
           if (isCurrentAccepted) {
             q.status = 'expired';
-
-            // --- ĐÃ BỔ SUNG: BẢO TỒN VÀ CHUẨN HÓA CẢ 2 DẠNG TÊN TRƯỜNG NGÀY KẾT THÚC VÀ NGÀY BẮT ĐẦU ---
             const vUntil = q.validUntil || q.validuntil || '';
             const vBegin = q.validbegin || q.validBegin || q.date || '';
             q.validUntil = vUntil;
@@ -637,19 +632,19 @@ async function saveForm(module) {
         }
       });
 
-      try {
-        await supabaseClient
+      // Đưa task update báo giá cũ vào mảng chạy song song
+      asyncBackgroundTasks.push(
+        supabaseClient
           .from('quotations')
           .update({ status: 'expired' })
           .eq('customer', targetCustomer)
           .neq('id', rawData.id)
-          .in('status', ['accepted', 'approved', 'Duyệt', 'duyệt', 'Đã duyệt', 'đã duyệt']);
-      } catch (err) {
-        console.error('Lỗi tự động chuyển báo giá cũ sang Hết hạn:', err);
-      }
+          .in('status', ['accepted', 'approved', 'Duyệt', 'duyệt', 'Đã duyệt', 'đã duyệt'])
+          .catch(err => console.error('Lỗi tự động chuyển báo giá cũ sang Hết hạn:', err))
+      );
     }
 
-    // CHÈN THÔNG BÁO VÀO BẢNG NOTIFICATIONS (CHỐNG LẶP TRÙNG DUPLICATE)
+    // Đưa task chèn thông báo notification vào mảng chạy song song
     try {
       const actorName = currentUserFullname;
       const actionText = state.mode === 'add' ? 'Tạo mới' : 'Cập nhật';
@@ -674,19 +669,19 @@ async function saveForm(module) {
         actor: actorName
       };
 
-      // Chỉ gửi dữ liệu lên CSDL Supabase. Realtime Listener trên Client sẽ tự nhận sự kiện Insert để hiển thị chuông
-      const { error: notifErr } = await supabaseClient
-        .from('notifications')
-        .insert([notifPayload]);
-
-      if (notifErr) {
-        console.error('Lỗi Supabase khi chèn notifications:', notifErr);
-      }
+      asyncBackgroundTasks.push(
+        supabaseClient
+          .from('notifications')
+          .insert([notifPayload])
+          .then(({ error: notifErr }) => {
+            if (notifErr) console.error('Lỗi Supabase khi chèn notifications:', notifErr);
+          })
+          .catch(err => console.error('Lỗi tạo thông báo:', err))
+      );
     } catch (err) {
-      console.error('Lỗi tạo thông báo:', err);
+      console.error('Lỗi chuẩn bị thông báo:', err);
     }
 
-    // ĐỒNG BỘ ĐẦY ĐỦ CẢ 2 DẠNG TÊN TRƯỜNG DỮ LIỆU ĐỂ BẢNG LIST KHÔNG BỊ NULL
     const validUntilVal = rawData.validUntil || rawData.validuntil || '';
     const validBeginVal = rawData.validbegin || rawData.validBegin || rawData.date || '';
 
@@ -849,6 +844,11 @@ async function saveForm(module) {
   // =========================================================================
   const currentMode = state.mode;
   try {
+    // Thực thi các công việc chạy nền độc lập đồng thời với việc lưu bản ghi
+    if (asyncBackgroundTasks.length > 0) {
+      Promise.all(asyncBackgroundTasks).catch(err => console.error('Lỗi task nền:', err));
+    }
+
     if (currentMode === 'add') {
       const { data: insertedData, error } = await supabaseClient.from(tableName).insert([supabasePayload]).select();
       if (error) throw error;
@@ -860,7 +860,6 @@ async function saveForm(module) {
       if (error) throw error;
     }
 
-    // ĐỒNG BỘ CẬP NHẬT TRỰC TIẾP VÀO BỘ NHỚ LOCAL (db[targetKey])
     if (rawData.lineItems || rawData.lineitems) {
       const lines = rawData.lineItems || rawData.lineitems;
       dbPayload.lineItems = lines;
@@ -870,24 +869,22 @@ async function saveForm(module) {
     if (!db[targetKey]) db[targetKey] = [];
 
     if (currentMode === 'add') {
-      db[targetKey].unshift(dbPayload); // Thêm vào đầu danh sách
+      db[targetKey].unshift(dbPayload);
     } else {
       const idx = db[targetKey].findIndex(item => String(item.id) === String(dbPayload.id));
       if (idx !== -1) {
-        db[targetKey][idx] = dbPayload; // Cập nhật bản ghi hiện tại
+        db[targetKey][idx] = dbPayload;
       } else {
         db[targetKey].unshift(dbPayload);
       }
     }
 
-    // Sắp xếp giảm dần theo ID đối với các phiếu giao dịch
     if (['quotations', 'orders', 'returns', 'grns'].includes(targetKey)) {
       if (typeof sortDescById === 'function') {
         db[targetKey].sort(sortDescById);
       }
     }
 
-    // Cập nhật datalist tự động gợi ý vật tư nếu là module materials
     if (module === 'materials' && typeof updateGlobalMaterialDatalist === 'function') {
       updateGlobalMaterialDatalist();
     }
@@ -898,12 +895,11 @@ async function saveForm(module) {
 
     showToast(currentMode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
 
-    // CHUYỂN HƯỚNG VỀ LIST / VIEW VÀ RENDER LẠI GIAO DIỆN NGAY LẬP TỨC
     if (currentMode === 'add') {
       state.formData = null;
-      navigate(module, 'list'); // Chuyển về danh sách
+      navigate(module, 'list');
     } else {
-      navigate(module, 'view', dbPayload.id); // Hoặc chuyển về màn hình xem chi tiết
+      navigate(module, 'view', dbPayload.id);
     }
 
   } catch (error) {
