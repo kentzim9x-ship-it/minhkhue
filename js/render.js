@@ -2667,7 +2667,7 @@ function renderReportInventory(c) {
                     font-size: 10px; 
                     letter-spacing: 0.05em;
                     text-transform: uppercase; 
-                    border-radius: 4px; 
+                    border-radius: 2px; 
                     cursor: pointer;
                     transition: all 0.2s ease;
                     ${state.filter === cat 
