@@ -2623,6 +2623,8 @@ function renderReportInventory(c) {
     }).join('');
   };
 
+  const isMobile = window.innerWidth <= 768;
+
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 24px;">
       <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background-color: var(--border);" class="kpi-grid">
