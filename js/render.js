@@ -463,12 +463,12 @@ function renderDashboard(c) {
 function renderMaterialsList(c) {
   const hasPermission = checkModulePermission('materials');
 
- const filtered = db.materials.filter(m => {
-  if (state.filter !== 'all' && m.status !== state.filter) return false;
-  const searchKey = normalizeSearchText(state.search);
-  if (searchKey && !normalizeSearchText(m.name).includes(searchKey) && !normalizeSearchText(m.id).includes(searchKey)) return false;
-  return true;
-});
+  const filtered = db.materials.filter(m => {
+    if (state.filter !== 'all' && m.status !== state.filter) return false;
+    const searchKey = normalizeSearchText(state.search);
+    if (searchKey && !normalizeSearchText(m.name).includes(searchKey) && !normalizeSearchText(m.id).includes(searchKey)) return false;
+    return true;
+  });
 
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
@@ -774,14 +774,25 @@ function renderQuotationsList(c) {
   const hasPermission = checkModulePermission('quotations');
 
   const filtered = db.quotations.filter(q => {
-  const matchStatus = (state.filter === 'all' || q.status === state.filter);
-  const searchKey = normalizeSearchText(state.search);
-  const matchSearch = !searchKey ||
-    normalizeSearchText(q.customer).includes(searchKey) ||
-    normalizeSearchText(q.customerId || q.customerid).includes(searchKey) ||
-    normalizeSearchText(q.id).includes(searchKey);
-  return matchStatus && matchSearch;
-});
+    const matchStatus = (state.filter === 'all' || q.status === state.filter);
+    const searchKey = normalizeSearchText(state.search);
+
+    // Đổi định dạng ngàyYYYY-MM-DD sang DD/MM/YYYY để gõ định dạng nào cũng tìm ra
+    const dateStr = q.date || '';
+    const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
+    const statusLabel = getStatusLabel(q.status);
+
+    const matchSearch = !searchKey ||
+      normalizeSearchText(q.customer).includes(searchKey) ||
+      normalizeSearchText(q.customerId || q.customerid).includes(searchKey) ||
+      normalizeSearchText(q.id).includes(searchKey) ||
+      normalizeSearchText(dateStr).includes(searchKey) ||
+      normalizeSearchText(dateFormatted).includes(searchKey) ||
+      normalizeSearchText(q.status).includes(searchKey) ||
+      normalizeSearchText(statusLabel).includes(searchKey);
+
+    return matchStatus && matchSearch;
+  });
 
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
@@ -917,14 +928,24 @@ function renderOrdersList(c) {
   const hasPermission = checkModulePermission('sales-orders');
 
   const filtered = db.orders.filter(o => {
-  const matchStatus = (state.filter === 'all' || o.status === state.filter);
-  const searchKey = normalizeSearchText(state.search);
-  const matchSearch = !searchKey ||
-    normalizeSearchText(o.customer).includes(searchKey) ||
-    normalizeSearchText(o.customerId || o.customerid).includes(searchKey) ||
-    normalizeSearchText(o.id).includes(searchKey);
-  return matchStatus && matchSearch;
-});
+    const matchStatus = (state.filter === 'all' || o.status === state.filter);
+    const searchKey = normalizeSearchText(state.search);
+
+    const dateStr = o.date || '';
+    const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
+    const statusLabel = getStatusLabel(o.status);
+
+    const matchSearch = !searchKey ||
+      normalizeSearchText(o.customer).includes(searchKey) ||
+      normalizeSearchText(o.customerId || o.customerid).includes(searchKey) ||
+      normalizeSearchText(o.id).includes(searchKey) ||
+      normalizeSearchText(dateStr).includes(searchKey) ||
+      normalizeSearchText(dateFormatted).includes(searchKey) ||
+      normalizeSearchText(o.status).includes(searchKey) ||
+      normalizeSearchText(statusLabel).includes(searchKey);
+
+    return matchStatus && matchSearch;
+  });
 
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
@@ -1046,15 +1067,25 @@ function renderReturnsList(c) {
   const hasPermission = checkModulePermission('returns');
 
   const filtered = db.returns.filter(r => {
-  const matchStatus = (state.filter === 'all' || r.status === state.filter);
-  const searchKey = normalizeSearchText(state.search);
-  const matchSearch = !searchKey ||
-    normalizeSearchText(r.id).includes(searchKey) ||
-    normalizeSearchText(r.orderId).includes(searchKey) ||
-    normalizeSearchText(r.customer).includes(searchKey) ||
-    normalizeSearchText(r.reason).includes(searchKey);
-  return matchStatus && matchSearch;
-});
+    const matchStatus = (state.filter === 'all' || r.status === state.filter);
+    const searchKey = normalizeSearchText(state.search);
+
+    const dateStr = r.date || '';
+    const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
+    const statusLabel = getStatusLabel(r.status);
+
+    const matchSearch = !searchKey ||
+      normalizeSearchText(r.id).includes(searchKey) ||
+      normalizeSearchText(r.orderId).includes(searchKey) ||
+      normalizeSearchText(r.customer).includes(searchKey) ||
+      normalizeSearchText(r.reason).includes(searchKey) ||
+      normalizeSearchText(dateStr).includes(searchKey) ||
+      normalizeSearchText(dateFormatted).includes(searchKey) ||
+      normalizeSearchText(r.status).includes(searchKey) ||
+      normalizeSearchText(statusLabel).includes(searchKey);
+
+    return matchStatus && matchSearch;
+  });
 
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
@@ -1181,14 +1212,24 @@ function renderGRNList(c) {
   const hasPermission = checkModulePermission('grn');
 
   const filtered = db.grns.filter(g => {
-  const matchStatus = (state.filter === 'all' || g.status === state.filter);
-  const searchKey = normalizeSearchText(state.search);
-  const matchSearch = !searchKey ||
-    normalizeSearchText(g.id).includes(searchKey) ||
-    normalizeSearchText(g.supplier).includes(searchKey) ||
-    normalizeSearchText(g.warehouseCode || g.warehouse_code).includes(searchKey);
-  return matchStatus && matchSearch;
-});
+    const matchStatus = (state.filter === 'all' || g.status === state.filter);
+    const searchKey = normalizeSearchText(state.search);
+
+    const dateStr = g.date || '';
+    const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
+    const statusLabel = getStatusLabel(g.status);
+
+    const matchSearch = !searchKey ||
+      normalizeSearchText(g.id).includes(searchKey) ||
+      normalizeSearchText(g.supplier).includes(searchKey) ||
+      normalizeSearchText(g.warehouseCode || g.warehouse_code).includes(searchKey) ||
+      normalizeSearchText(dateStr).includes(searchKey) ||
+      normalizeSearchText(dateFormatted).includes(searchKey) ||
+      normalizeSearchText(g.status).includes(searchKey) ||
+      normalizeSearchText(statusLabel).includes(searchKey);
+
+    return matchStatus && matchSearch;
+  });
 
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
@@ -2098,11 +2139,11 @@ function renderReturnForm(c) {
     document.body.appendChild(datalistEl);
   }
 
-  const sortedMaterials = JSON.parse(JSON.stringify(db.materials || [])).sort((a, b) => 
+  const sortedMaterials = JSON.parse(JSON.stringify(db.materials || [])).sort((a, b) =>
     (a.id || '').localeCompare(b.id || '', undefined, { numeric: true, sensitivity: 'base' })
   );
 
-  datalistEl.innerHTML = sortedMaterials.map(m => 
+  datalistEl.innerHTML = sortedMaterials.map(m =>
     `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(m.cost || 0)})</option>`
   ).join('');
 
@@ -2288,11 +2329,11 @@ function renderGRNForm(c) {
     document.body.appendChild(datalistEl);
   }
 
-  const sortedMaterials = JSON.parse(JSON.stringify(db.materials || [])).sort((a, b) => 
+  const sortedMaterials = JSON.parse(JSON.stringify(db.materials || [])).sort((a, b) =>
     (a.id || '').localeCompare(b.id || '', undefined, { numeric: true, sensitivity: 'base' })
   );
 
-  datalistEl.innerHTML = sortedMaterials.map(m => 
+  datalistEl.innerHTML = sortedMaterials.map(m =>
     `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(m.cost || 0)})</option>`
   ).join('');
 
@@ -2459,12 +2500,14 @@ function renderReportInventory(c) {
   };
 
   const getFilteredList = () => {
-    const searchKey = (state.reportInvSearch || '').trim().toLowerCase();
+    const searchKey = normalizeSearchText(state.reportInvSearch);
     return materials.filter(m => {
       const matchCat = (state.filter === 'all' || m.category === state.filter);
       const matchSearch = !searchKey ||
-        (m.id && m.id.toLowerCase().includes(searchKey)) ||
-        (m.name && m.name.toLowerCase().includes(searchKey));
+        normalizeSearchText(m.id).includes(searchKey) ||
+        normalizeSearchText(m.name).includes(searchKey) ||
+        normalizeSearchText(m.location).includes(searchKey) ||
+        normalizeSearchText(m.unit).includes(searchKey);
       return matchCat && matchSearch;
     });
   };
