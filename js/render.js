@@ -497,7 +497,7 @@ function renderMaterialsList(c) {
   `).join('');
 
   const columnConfig = [
-    { title: 'Mã Hàng', width: '30px', align: 'center' },
+    { title: 'Mã Hàng (SKU)', width: '30px', align: 'center' },
     { title: 'Tên Hàng', width: '100px', align: 'center' },
     { title: 'Đơn Vị', width: '20px', align: 'center' },
     { title: 'Danh Mục', width: '40px', align: 'center' },
@@ -636,11 +636,11 @@ function renderCustomersList(c) {
   `).join('');
 
   const columnConfig = [
-    { title: 'Mã KH', width: '30px', align: 'center' },
+    { title: 'Mã Khách Hàng', width: '30px', align: 'center' },
     { title: 'Tên Công Ty / KH', width: '100px', align: 'center' },
     { title: 'Người Liên Hệ', width: '60px', align: 'center' },
     { title: 'Email', width: '60px', align: 'center' },
-    { title: 'SĐT', width: '40px', align: 'center' },
+    { title: 'Số Điện Thoại', width: '40px', align: 'center' },
     { title: 'Địa Chỉ', width: '120px', align: 'center' },
     { title: 'Trạng Thái', width: '50px', align: 'center' },
     { title: 'Người Tạo', width: '50px', align: 'center' },
@@ -2773,7 +2773,7 @@ function renderReportSales(c) {
   // Cấu hình Cột Header: Đổi cột đầu tiên thành 'Đơn Hàng Bán' ở Báo cáo Chi tiết
   const headersConfig = reportType === 'detail'
     ? ['Đơn Hàng Bán', 'Tên Hàng', 'ĐVT', 'Số Lượng', 'Đơn Giá', 'Thành Tiền']
-    : ['Mã Hàng', 'Tên Hàng', 'ĐVT', 'Tổng Số Lượng', 'Tổng Tiền'];
+    : ['Mã Hàng (SKU)', 'Tên Hàng', 'ĐVT', 'Tổng Số Lượng', 'Tổng Tiền'];
 
   const detailHeaders = headersConfig
     .map(h => `<th style="padding: 10px 16px; text-align: ${['Số Lượng', 'Tổng Số Lượng', 'Đơn Giá', 'Thành Tiền', 'Tổng Tiền'].includes(h) ? 'right' : (h === 'ĐVT' ? 'center' : 'left')}; font-family: var(--font-dm-mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
@@ -2818,7 +2818,7 @@ function renderReportSales(c) {
 
     detailRowsHtml = paginatedDetailItems.map(item => `
       <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
-        <td data-label="Mã Hàng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${item.sku}</td>
+        <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${item.sku}</td>
         <td data-label="Tên Hàng" style="padding: 11px 16px; font-size: 13px; font-weight: 500;">${item.name}</td>
         <td data-label="ĐVT" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${item.unit}</td>
         <td data-label="Tổng Số Lượng" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(item.qty)}</td>
