@@ -2627,8 +2627,8 @@ function renderReportInventory(c) {
 
   const filterOptions = [
     ['all', 'TẤT CẢ'],
-    ['Rau Củ', 'RAU CỦ'],
-    ['Hoa Quả', 'HOA QUẢ'],
+    ['Rau củ', 'RAU CỦ'],
+    ['Hoa quả', 'HOA QUẢ'],
     ['Khác', 'KHÁC']
   ];
 
