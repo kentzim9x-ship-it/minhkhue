@@ -452,7 +452,7 @@ async function saveForm(module) {
     return;
   }
 
-  // Validation dữ liệu cơ bản
+  // Validation dữ liệu cơ bản cho các chứng từ giao dịch
   if (['quotations', 'sales-orders', 'returns', 'grn'].includes(module)) {
     const lineItems = state.formData?.lineItems || [];
     for (let i = 0; i < lineItems.length; i++) {
@@ -483,7 +483,7 @@ async function saveForm(module) {
   const tableName = tableMap[module];
   const targetKey = module === 'sales-orders' ? 'orders' : (module === 'grn' ? 'grns' : module);
 
-  // TỐI ƯU 1: Dùng shallow copy thay cho JSON.parse(JSON.stringify(...)) để tiết kiệm CPU
+  // Shallow copy dữ liệu form hiện tại
   let rawData = { ...state.formData };
   if (Array.isArray(state.formData.lineItems)) {
     rawData.lineItems = state.formData.lineItems.map(item => ({ ...item }));
@@ -493,7 +493,7 @@ async function saveForm(module) {
   const currentTime = getCurrentTimeStr();
 
   // =========================================================================
-  // 1. KIỂM TRA XUNG ĐỘT KHI SỬA
+  // 1. KIỂM TRA XUNG ĐỘT KHI SỬA (NẠP ĐẦY ĐỦ DỮ LIỆU BẢN GHI MỚI NHẤT)
   // =========================================================================
   if (state.mode === 'edit') {
     try {
@@ -576,6 +576,7 @@ async function saveForm(module) {
     }
   }
 
+  // Cập nhật thông tin Người tạo / Người sửa
   if (state.mode === 'add') {
     rawData.user_id0 = currentUserId;
     rawData.date0 = currentDate;
@@ -606,7 +607,7 @@ async function saveForm(module) {
     if (rawData.creditLimit !== undefined) rawData.creditlimit = rawData.creditLimit;
   }
 
-  // TỐI ƯU 2: Gom các tác vụ async không phụ thuộc chạy song song (sử dụng async IIFE để tránh lỗi .catch)
+  // Mảng chứa các công việc chạy nền (Non-blocking async background tasks)
   const asyncBackgroundTasks = [];
 
   if (module === 'quotations') {
@@ -632,7 +633,7 @@ async function saveForm(module) {
         }
       });
 
-      // Đưa query Supabase vào async IIFE để tránh lỗi .catch()
+      // Đưa query chuyển báo giá cũ sang Hết hạn vào chạy nền
       asyncBackgroundTasks.push(
         (async () => {
           try {
@@ -649,7 +650,8 @@ async function saveForm(module) {
       );
     }
 
-    // Đưa task chèn thông báo notification vào mảng chạy song song
+    // GỬI THÔNG BÁO: Chỉ chèn duy nhất 1 bản ghi vào CSDL Supabase
+    // Realtime Listener tại Client sẽ tự nhận sự kiện này để hiển thị icon chuông (Tránh bị double notification)
     try {
       const actorName = currentUserFullname;
       const actionText = state.mode === 'add' ? 'Tạo mới' : 'Cập nhật';
@@ -688,6 +690,7 @@ async function saveForm(module) {
       console.error('Lỗi chuẩn bị thông báo:', err);
     }
 
+    // CHUẨN HÓA CÁC TRƯỜNG NGÀY & HÀNG HÓA CHO QUOTATIONS
     const validUntilVal = rawData.validUntil || rawData.validuntil || '';
     const validBeginVal = rawData.validbegin || rawData.validBegin || rawData.date || '';
 
@@ -695,7 +698,11 @@ async function saveForm(module) {
     rawData.validUntil = validUntilVal;
     rawData.validbegin = validBeginVal;
     rawData.validBegin = validBeginVal;
-    rawData.lineitems = rawData.lineItems;
+
+    // CHỈ GÁN LINEITEMS NẾU CÓ DỮ LIỆU LINEITEMS TRÁNH LỖI UNDEFINED CHO DANH MỤC
+    if (Array.isArray(rawData.lineItems)) {
+      rawData.lineitems = rawData.lineItems;
+    }
 
     delete rawData.discountTotal;
     delete rawData.subtotal;
@@ -704,6 +711,9 @@ async function saveForm(module) {
   let dbPayload = { ...rawData };
   let supabasePayload = { ...rawData };
 
+  // =========================================================================
+  // 2. TẠO PAYLOAD CHUẨN CHO TỪNG MODULE (DANH MỤC & CHỨNG TỪ)
+  // =========================================================================
   if (module === 'materials') {
     supabasePayload = {
       id: rawData.id,
@@ -846,7 +856,7 @@ async function saveForm(module) {
   }
 
   // =========================================================================
-  // 2. LƯU DỮ LIỆU CSDL VÀ TỰ ĐỘNG LÀM MỚI GIAO DIỆN KHÔNG CẦN F5
+  // 3. THỰC THI THÊM / CẬP NHẬT CSDL & RENDER LẠI GIAO DIỆN
   // =========================================================================
   const currentMode = state.mode;
   try {
@@ -866,8 +876,9 @@ async function saveForm(module) {
       if (error) throw error;
     }
 
-    if (rawData.lineItems || rawData.lineitems) {
-      const lines = rawData.lineItems || rawData.lineitems;
+    // Bảo tồn dòng sản phẩm cho Local Memory nếu là các module chứng từ
+    if (['quotations', 'sales-orders', 'returns', 'grn'].includes(module)) {
+      const lines = rawData.lineItems || rawData.lineitems || [];
       dbPayload.lineItems = lines;
       dbPayload.lineitems = lines;
     }
