@@ -2776,7 +2776,7 @@ function renderReportSales(c) {
     : ['Mã Hàng', 'Tên Hàng', 'ĐVT', 'Tổng Số Lượng', 'Tổng Tiền'];
 
   const detailHeaders = headersConfig
-    .map(h => `<th style="padding: 10px 16px; text-align: ${['Số Lượng', 'Tổng Số Lượng', 'Đơn Giá', 'Thành Tiền', 'Tổng Tiền'].includes(h) ? 'right' : (h === 'ĐVT' ? 'center' : 'left')}; font-family: var(--font-dm-mono); font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: #ffffff; font-weight: 600; white-space: nowrap;">${h}</th>`)
+    .map(h => `<th style="padding: 10px 16px; text-align: ${['Số Lượng', 'Tổng Số Lượng', 'Đơn Giá', 'Thành Tiền', 'Tổng Tiền'].includes(h) ? 'right' : (h === 'ĐVT' ? 'center' : 'left')}; font-family: var(--font-dm-mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
     .join('');
 
   if (reportType === 'summary') {
