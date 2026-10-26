@@ -1428,15 +1428,14 @@ async function generateAndSharePDF(htmlElement, fileName, shareTitle) {
 
   const fullFileName = `${fileName}.pdf`;
   const opt = {
-    margin: [10, 10, 10, 10],
+    margin: [6, 8, 6, 8], // Lề trên, trái, dưới, phải (mm)
     filename: fullFileName,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true, logging: false },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    // Thuộc tính quan trọng giúp tự động tránh ngắt trang đè lên dòng bảng / khối chữ
     pagebreak: { 
-      mode: ['avoid-all', 'css', 'legacy'],
-      avoid: ['tr', '.no-break', 'table'] 
+      mode: ['css', 'legacy'], // Chỉ ngắt trang theo dòng tr, không chặn toàn bộ bảng
+      avoid: ['tr', '.signature-block'] 
     }
   };
 
@@ -1519,20 +1518,20 @@ async function exportQuotationToPDF() {
       totalAmount += lineTotal;
 
       rowsHtml += `
-       <tr style="height: 26px; page-break-inside: avoid; break-inside: avoid;">
-          <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${i + 1}</td>
-          <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px;">${l.name || ''}</td>
-          <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${unitName}</td>
-          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${price ? Math.round(price).toLocaleString('vi-VN') : ''}</td>
-          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${qty ? qty.toLocaleString('vi-VN') : ''}</td>
-          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${discount ? discount + '%' : '0%'}</td>
-          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${tax ? tax + '%' : '0%'}</td>
-          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : ''}</td>
+       <tr style="height: 24px; page-break-inside: avoid; break-inside: avoid;">
+          <td style="border: 1px solid #000; text-align: center; font-size: 10pt; padding: 2px 3px;">${i + 1}</td>
+          <td style="border: 1px solid #000; text-align: left; font-size: 10pt; padding: 2px 5px;">${l.name || ''}</td>
+          <td style="border: 1px solid #000; text-align: center; font-size: 10pt; padding: 2px 3px;">${unitName}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${price ? Math.round(price).toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${qty ? qty.toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${discount ? discount + '%' : '0%'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${tax ? tax + '%' : '0%'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : ''}</td>
         </tr>
       `;
     } else {
       rowsHtml += `
-       <tr style="height: 26px; page-break-inside: avoid; break-inside: avoid;">
+       <tr style="height: 24px; page-break-inside: avoid; break-inside: avoid;">
           <td style="border: 1px solid #000;"></td>
           <td style="border: 1px solid #000;"></td>
           <td style="border: 1px solid #000;"></td>
@@ -1549,20 +1548,20 @@ async function exportQuotationToPDF() {
   const container = document.createElement('div');
   container.style.width = '100%';
   container.style.boxSizing = 'border-box';
-  container.style.padding = '10px';
+  container.style.padding = '0px';
   container.style.background = '#ffffff';
   container.style.color = '#000000';
   container.style.fontFamily = "'Times New Roman', serif";
 
   container.innerHTML = `
-    <table style="width: 100%; border-collapse: collapse; font-size: 11pt; page-break-inside: auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 10pt; page-break-inside: auto; margin-bottom: 6px;">
       <tr>
-        <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
+        <td style="width: 50%; font-size: 9.5pt; text-align: center; vertical-align: top; line-height: 1.3;">
           ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
           Xã Sơn Đồng – TP Hà Nội<br>
           ĐT: 0936.35.31.37
         </td>
-        <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
+        <td style="width: 50%; font-size: 9.5pt; text-align: center; vertical-align: top; line-height: 1.3;">
           Giấy phép ĐKKD số: 01U8005300<br>
           Địa chỉ nhận hóa đơn: nhambc@gmail.com<br>
           MST: 0110640531
@@ -1570,25 +1569,25 @@ async function exportQuotationToPDF() {
       </tr>
     </table>
 
-    <div style="font-size: 16pt; font-weight: bold; text-align: center; margin: 15px 0 12px 0;">
+    <div style="font-size: 15pt; font-weight: bold; text-align: center; margin: 10px 0 10px 0;">
       CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
     </div>
 
-    <table style="width: 100%; font-size: 11pt; margin-bottom: 12px; border-collapse: collapse;">
+    <table style="width: 100%; font-size: 10.5pt; margin-bottom: 8px; border-collapse: collapse; line-height: 1.5;">
       <tr>
-        <td style="width: 50%; padding: 3px 0;">Khách hàng: ${d.customer || ''}</td>
-        <td style="width: 50%; padding: 3px 0;">Bảng báo giá: ${d.id || ''}</td>
+        <td style="width: 50%; padding: 1px 0; vertical-align: top;">Khách hàng: ${d.customer || ''}</td>
+        <td style="width: 50%; padding: 1px 0; text-align: right; vertical-align: top;">Bảng báo giá: ${d.id || ''}</td>
       </tr>
       <tr>
-        <td style="padding: 3px 0;">Địa chỉ: ${custAddress}</td>
-        <td style="padding: 3px 0;">Ngày hiệu lực: từ ngày ${fromDateVN} - đến ngày ${toDateVN}</td>
+        <td style="padding: 1px 0;">Địa chỉ: ${custAddress}</td>
+        <td style="padding: 1px 0; text-align: right;">Ngày hiệu lực: từ ngày ${fromDateVN} - đến ngày ${toDateVN}</td>
       </tr>
     </table>
 
     <div style="border: 1.5px solid #000000; box-sizing: border-box;">
-      <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
         <thead>
-          <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
+          <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 24px;">
             <td style="border: 1px solid #000000; width: 4%;">STT</td>
             <td style="border: 1px solid #000000; width: 32%;">Tên Hàng</td>
             <td style="border: 1px solid #000000; width: 8%;">ĐVT</td>
@@ -1601,21 +1600,21 @@ async function exportQuotationToPDF() {
         </thead>
         <tbody>
           ${rowsHtml}
-          <tr style="height: 26px; font-weight: bold;">
+          <tr style="height: 24px; font-weight: bold; page-break-inside: avoid; break-inside: avoid;">
             <td colspan="4" style="border: 1px solid #000000; text-align: center;">Tổng Cộng</td>
-            <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
+            <td style="border: 1px solid #000000; text-align: right; padding-right: 5px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
             <td style="border: 1px solid #000000;"></td>
             <td style="border: 1px solid #000000;"></td>
-            <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
+            <td style="border: 1px solid #000000; text-align: right; padding-right: 5px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <div style="margin-top: 15px; display: flex; justify-content: flex-end; page-break-inside: avoid; break-inside: avoid;">
-      <div style="width: 250px; text-align: center; font-size: 11pt;">
+    <div class="signature-block" style="margin-top: 12px; display: flex; justify-content: flex-end; page-break-inside: avoid; break-inside: avoid;">
+      <div style="width: 240px; text-align: center; font-size: 10pt;">
         <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
-        <div style="font-weight: bold; margin-top: 4px; margin-bottom: 55px;">Đại diện nhà cung cấp</div>
+        <div style="font-weight: bold; margin-top: 4px; margin-bottom: 45px;">Đại diện nhà cung cấp</div>
         <div style="font-weight: bold;">BÙI CAO NHÂM</div>
       </div>
     </div>
@@ -1658,20 +1657,20 @@ async function exportSalesOrderToPDF() {
       totalAmount += lineTotal;
 
       rowsHtml += `
-        <tr style="height: 26px; page-break-inside: avoid; break-inside: avoid;">
-          <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${i + 1}</td>
-          <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px;">${l.name || ''}</td>
-          <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${unitName}</td>
-          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${price ? Math.round(price).toLocaleString('vi-VN') : ''}</td>
-          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${qty ? qty.toLocaleString('vi-VN') : ''}</td>
-          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${discount ? discount + '%' : '0%'}</td>
-          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${tax ? tax + '%' : '0%'}</td>
-          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : ''}</td>
+        <tr style="height: 24px; page-break-inside: avoid; break-inside: avoid;">
+          <td style="border: 1px solid #000; text-align: center; font-size: 10pt; padding: 2px 3px;">${i + 1}</td>
+          <td style="border: 1px solid #000; text-align: left; font-size: 10pt; padding: 2px 5px;">${l.name || ''}</td>
+          <td style="border: 1px solid #000; text-align: center; font-size: 10pt; padding: 2px 3px;">${unitName}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${price ? Math.round(price).toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${qty ? qty.toLocaleString('vi-VN') : ''}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${discount ? discount + '%' : '0%'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${tax ? tax + '%' : '0%'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : ''}</td>
         </tr>
       `;
     } else {
       rowsHtml += `
-        <tr style="height: 26px; page-break-inside: avoid; break-inside: avoid;">
+        <tr style="height: 24px; page-break-inside: avoid; break-inside: avoid;">
           <td style="border: 1px solid #000;"></td>
           <td style="border: 1px solid #000;"></td>
           <td style="border: 1px solid #000;"></td>
@@ -1688,20 +1687,20 @@ async function exportSalesOrderToPDF() {
   const container = document.createElement('div');
   container.style.width = '100%';
   container.style.boxSizing = 'border-box';
-  container.style.padding = '10px';
+  container.style.padding = '0px';
   container.style.background = '#ffffff';
   container.style.color = '#000000';
   container.style.fontFamily = "'Times New Roman', serif";
 
   container.innerHTML = `
-    <table style="width: 100%; border-collapse: collapse; font-size: 11pt; page-break-inside: auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 10pt; page-break-inside: auto; margin-bottom: 6px;">
       <tr>
-        <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
+        <td style="width: 50%; font-size: 9.5pt; text-align: center; vertical-align: top; line-height: 1.3;">
           ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
           Xã Sơn Đồng – TP Hà Nội<br>
           ĐT: 0936.35.31.37
         </td>
-        <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
+        <td style="width: 50%; font-size: 9.5pt; text-align: center; vertical-align: top; line-height: 1.3;">
           Giấy phép ĐKKD số: 01U8005300<br>
           Địa chỉ nhận hóa đơn: nhambc@gmail.com<br>
           MST: 0110640531
@@ -1709,25 +1708,25 @@ async function exportSalesOrderToPDF() {
       </tr>
     </table>
 
-    <div style="font-size: 16pt; font-weight: bold; text-align: center; margin: 15px 0 12px 0;">
+    <div style="font-size: 15pt; font-weight: bold; text-align: center; margin: 10px 0 10px 0;">
       CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
     </div>
 
-    <table style="width: 100%; font-size: 11pt; margin-bottom: 12px; border-collapse: collapse;">
+    <table style="width: 100%; font-size: 10.5pt; margin-bottom: 8px; border-collapse: collapse; line-height: 1.5;">
       <tr>
-        <td style="width: 50%; padding: 3px 0;">Khách hàng: ${d.customer || ''}</td>
-        <td style="width: 50%; padding: 3px 0;">Đơn hàng bán: ${d.id || ''}</td>
+        <td style="width: 50%; padding: 1px 0; vertical-align: top;">Khách hàng: ${d.customer || ''}</td>
+        <td style="width: 50%; padding: 1px 0; text-align: right; vertical-align: top;">Đơn hàng bán: ${d.id || ''}</td>
       </tr>
       <tr>
-        <td style="padding: 3px 0;">Địa chỉ: ${custAddress}</td>
-        <td style="padding: 3px 0;">Ghi chú: ${d.notes || ''}</td>
+        <td style="padding: 1px 0;">Địa chỉ: ${custAddress}</td>
+        <td style="padding: 1px 0; text-align: right;">Ghi chú: ${d.notes || ''}</td>
       </tr>
     </table>
 
     <div style="border: 1.5px solid #000000; box-sizing: border-box;">
-      <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
         <thead>
-          <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
+          <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 24px;">
             <td style="border: 1px solid #000000; width: 4%;">STT</td>
             <td style="border: 1px solid #000000; width: 32%;">Tên Hàng</td>
             <td style="border: 1px solid #000000; width: 8%;">ĐVT</td>
@@ -1740,21 +1739,21 @@ async function exportSalesOrderToPDF() {
         </thead>
         <tbody>
           ${rowsHtml}
-          <tr style="height: 26px; font-weight: bold;">
+          <tr style="height: 24px; font-weight: bold; page-break-inside: avoid; break-inside: avoid;">
             <td colspan="4" style="border: 1px solid #000000; text-align: center;">Tổng Cộng</td>
-            <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
+            <td style="border: 1px solid #000000; text-align: right; padding-right: 5px;">${totalQty ? totalQty.toLocaleString('vi-VN') : ''}</td>
             <td style="border: 1px solid #000000;"></td>
             <td style="border: 1px solid #000000;"></td>
-            <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
+            <td style="border: 1px solid #000000; text-align: right; padding-right: 5px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : ''}</td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <div style="margin-top: 15px; display: flex; justify-content: flex-end; page-break-inside: avoid; break-inside: avoid;">
-      <div style="width: 250px; text-align: center; font-size: 11pt;">
+    <div class="signature-block" style="margin-top: 12px; display: flex; justify-content: flex-end; page-break-inside: avoid; break-inside: avoid;">
+      <div style="width: 240px; text-align: center; font-size: 10pt;">
         <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
-        <div style="font-weight: bold; margin-top: 4px; margin-bottom: 55px;">Đại diện nhà cung cấp</div>
+        <div style="font-weight: bold; margin-top: 4px; margin-bottom: 45px;">Đại diện nhà cung cấp</div>
         <div style="font-weight: bold;">BÙI CAO NHÂM</div>
       </div>
     </div>
@@ -1764,8 +1763,7 @@ async function exportSalesOrderToPDF() {
 }
 
 // ==========================================
-// XUẤT PDF BÁO CÁO BÁN HÀNG (TỔNG HỢP & CHI TIẾT)
-// Cập nhật: Thêm "Báo cáo tháng X năm Y" ở trên dòng Khách hàng (cả 2 mẫu)
+// 3. XUẤT PDF BÁO CÁO BÁN HÀNG (TỔNG HỢP & CHI TIẾT)
 // ==========================================
 async function exportSalesReportToPDF() {
   const selectedCustomer = state.reportSalesCustomer || '';
@@ -1832,18 +1830,18 @@ async function exportSalesReportToPDF() {
         totalQty += it.qty;
         totalAmount += it.totalAmount;
         rowsHtml += `
-          <tr style="height: 26px; page-break-inside: avoid; break-inside: avoid;">
-            <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${i + 1}</td>
-            <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${it.sku}</td>
-            <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px;">${it.name}</td>
-            <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${it.unit}</td>
-            <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${it.qty ? it.qty.toLocaleString('vi-VN') : '0'}</td>
-            <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${it.totalAmount ? Math.round(it.totalAmount).toLocaleString('vi-VN') : '0'}</td>
+          <tr style="height: 22px; page-break-inside: avoid; break-inside: avoid;">
+            <td style="border: 1px solid #000; text-align: center; font-size: 10pt; padding: 2px;">${i + 1}</td>
+            <td style="border: 1px solid #000; text-align: center; font-size: 10pt; padding: 2px;">${it.sku}</td>
+            <td style="border: 1px solid #000; text-align: left; font-size: 10pt; padding: 2px 5px;">${it.name}</td>
+            <td style="border: 1px solid #000; text-align: center; font-size: 10pt; padding: 2px;">${it.unit}</td>
+            <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${it.qty ? it.qty.toLocaleString('vi-VN') : '0'}</td>
+            <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${it.totalAmount ? Math.round(it.totalAmount).toLocaleString('vi-VN') : '0'}</td>
           </tr>
         `;
       } else {
         rowsHtml += `
-          <tr style="height: 26px; page-break-inside: avoid; break-inside: avoid;">
+          <tr style="height: 22px; page-break-inside: avoid; break-inside: avoid;">
             <td style="border: 1px solid #000;"></td>
             <td style="border: 1px solid #000;"></td>
             <td style="border: 1px solid #000;"></td>
@@ -1898,47 +1896,44 @@ async function exportSalesReportToPDF() {
           totalQty += qty;
           totalAmount += lineTotal;
 
-          // Chỉ hiển thị số đơn hàng ở dòng đầu tiên của mỗi phiếu
           const displayOrderNum = itemIndex === 0 ? (o.id || '—') : '';
 
           dayRowsHtml += `
-            <tr style="height: 26px;">
-              <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px; font-family: 'Times New Roman', serif;">${displayOrderNum}</td>
-              <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px;">${name}</td>
-              <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${unit}</td>
-              <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${qty ? qty.toLocaleString('vi-VN') : '0'}</td>
-              <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${price ? Math.round(price).toLocaleString('vi-VN') : '0'}</td>
-              <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : '0'}</td>
+            <tr style="height: 22px; page-break-inside: avoid; break-inside: avoid;">
+              <td style="border: 1px solid #000; text-align: center; font-size: 10pt; padding: 2px; font-family: 'Times New Roman', serif;">${displayOrderNum}</td>
+              <td style="border: 1px solid #000; text-align: left; font-size: 10pt; padding: 2px 5px;">${name}</td>
+              <td style="border: 1px solid #000; text-align: center; font-size: 10pt; padding: 2px;">${unit}</td>
+              <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${qty ? qty.toLocaleString('vi-VN') : '0'}</td>
+              <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${price ? Math.round(price).toLocaleString('vi-VN') : '0'}</td>
+              <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${lineTotal ? Math.round(lineTotal).toLocaleString('vi-VN') : '0'}</td>
             </tr>
           `;
         });
       });
 
-      // Dòng gom nhóm Ngày (Cột 1 để trống, Ngày tháng hiển thị ở Cột 2 Tên Hàng)
       rowsHtml += `
-        <tr style="height: 26px; background-color: #f2f2f2; font-weight: bold;">
+        <tr style="height: 22px; background-color: #f2f2f2; font-weight: bold; page-break-inside: avoid; break-inside: avoid;">
           <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px; color: #d97706;">${formattedDate}</td>
+          <td style="border: 1px solid #000; text-align: left; font-size: 10pt; padding: 2px 5px; color: #d97706;">${formattedDate}</td>
           <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px; color: #d97706;">${dayTotalQty ? dayTotalQty.toLocaleString('vi-VN') : '0'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px; color: #d97706;">${dayTotalQty ? dayTotalQty.toLocaleString('vi-VN') : '0'}</td>
           <td style="border: 1px solid #000;"></td>
-          <td style="border: 1px solid #000; text-align: right; font-size: 11pt; padding: 3px 6px; color: #d97706;">${dayTotalAmount ? Math.round(dayTotalAmount).toLocaleString('vi-VN') : '0'}</td>
+          <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px; color: #d97706;">${dayTotalAmount ? Math.round(dayTotalAmount).toLocaleString('vi-VN') : '0'}</td>
         </tr>
       ` + dayRowsHtml;
     });
   }
 
-  // Khởi tạo HTML container theo đúng mẫu A4
   const container = document.createElement('div');
   container.style.width = '100%';
   container.style.boxSizing = 'border-box';
-  container.style.padding = '10px';
+  container.style.padding = '0px';
   container.style.background = '#ffffff';
   container.style.color = '#000000';
   container.style.fontFamily = "'Times New Roman', serif";
 
   const tableHeaderHtml = !isDetail ? `
-    <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
+    <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 24px;">
       <td style="border: 1px solid #000000; width: 6%;">STT</td>
       <td style="border: 1px solid #000000; width: 18%;">Mã Hàng (SKU)</td>
       <td style="border: 1px solid #000000; width: 38%;">Tên Hàng</td>
@@ -1947,7 +1942,7 @@ async function exportSalesReportToPDF() {
       <td style="border: 1px solid #000000; width: 16%;">Tổng Số Tiền</td>
     </tr>
   ` : `
-    <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 26px;">
+    <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 24px;">
       <td style="border: 1px solid #000000; width: 18%;">Đơn Hàng Bán</td>
       <td style="border: 1px solid #000000; width: 35%;">Tên Hàng</td>
       <td style="border: 1px solid #000000; width: 9%;">ĐVT</td>
@@ -1958,29 +1953,29 @@ async function exportSalesReportToPDF() {
   `;
 
   const totalRowHtml = !isDetail ? `
-    <tr style="height: 26px; font-weight: bold;">
+    <tr style="height: 24px; font-weight: bold; page-break-inside: avoid; break-inside: avoid;">
       <td colspan="4" style="border: 1px solid #000000; text-align: center;">Tổng Cộng</td>
-      <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : '0'}</td>
-      <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : '0'}</td>
+      <td style="border: 1px solid #000000; text-align: right; padding-right: 5px;">${totalQty ? totalQty.toLocaleString('vi-VN') : '0'}</td>
+      <td style="border: 1px solid #000000; text-align: right; padding-right: 5px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : '0'}</td>
     </tr>
   ` : `
-    <tr style="height: 26px; font-weight: bold;">
+    <tr style="height: 24px; font-weight: bold; page-break-inside: avoid; break-inside: avoid;">
       <td colspan="3" style="border: 1px solid #000000; text-align: center;">Tổng Cộng</td>
-      <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalQty ? totalQty.toLocaleString('vi-VN') : '0'}</td>
+      <td style="border: 1px solid #000000; text-align: right; padding-right: 5px;">${totalQty ? totalQty.toLocaleString('vi-VN') : '0'}</td>
       <td style="border: 1px solid #000000;"></td>
-      <td style="border: 1px solid #000000; text-align: right; padding-right: 6px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : '0'}</td>
+      <td style="border: 1px solid #000000; text-align: right; padding-right: 5px;">${totalAmount ? Math.round(totalAmount).toLocaleString('vi-VN') : '0'}</td>
     </tr>
   `;
 
   container.innerHTML = `
-    <table style="width: 100%; border-collapse: collapse; font-size: 11pt; page-break-inside: auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 10pt; page-break-inside: auto; margin-bottom: 6px;">
       <tr>
-        <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
+        <td style="width: 50%; font-size: 9.5pt; text-align: center; vertical-align: top; line-height: 1.3;">
           ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
           Xã Sơn Đồng – TP Hà Nội<br>
           ĐT: 0936.35.31.37
         </td>
-        <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
+        <td style="width: 50%; font-size: 9.5pt; text-align: center; vertical-align: top; line-height: 1.3;">
           Giấy phép ĐKKD số: 01U8005300<br>
           Địa chỉ nhận hóa đơn: nhambc@gmail.com<br>
           MST: 0110640531
@@ -1988,23 +1983,23 @@ async function exportSalesReportToPDF() {
       </tr>
     </table>
 
-    <div style="font-size: 16pt; font-weight: bold; text-align: center; margin: 15px 0 12px 0;">
+    <div style="font-size: 15pt; font-weight: bold; text-align: center; margin: 10px 0 10px 0;">
       CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
     </div>
 
-    <!-- KHU VỰC THÔNG TIN THÁNG BÁO CÁO, KHÁCH HÀNG & ĐỊA CHỈ -->
-    <table style="width: 100%; font-size: 11pt; margin-bottom: 12px; border-collapse: collapse; line-height: 1.6;">
+    <!-- KHU VỰC THÔNG TIN KHÁCH HÀNG & THÁNG BÁO CÁO (NẰM CÙNG 1 HÀNG) -->
+    <table style="width: 100%; font-size: 10.5pt; margin-bottom: 8px; border-collapse: collapse; line-height: 1.5;">
       <tr>
-        <td style="width: 60%; padding: 2px 0; vertical-align: top;">Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</td>
-        <td style="width: 40%; padding: 2px 0; text-align: right; vertical-align: top;">Báo cáo: tháng ${selectedMonth} năm ${currentYear}</td>
+        <td style="width: 50%; padding: 1px 0; vertical-align: top;">Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</td>
+        <td style="width: 50%; padding: 1px 0; text-align: right; vertical-align: top;">Báo cáo: tháng ${selectedMonth} năm ${currentYear}</td>
       </tr>
       <tr>
-        <td colspan="2" style="padding: 2px 0;">Địa chỉ: ${custAddress}</td>
+        <td colspan="2" style="padding: 1px 0;">Địa chỉ: ${custAddress}</td>
       </tr>
     </table>
 
     <div style="border: 1.5px solid #000000; box-sizing: border-box;">
-      <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
         <thead>
           ${tableHeaderHtml}
         </thead>
@@ -2015,16 +2010,15 @@ async function exportSalesReportToPDF() {
       </table>
     </div>
 
-    <div style="margin-top: 15px; display: flex; justify-content: flex-end; page-break-inside: avoid; break-inside: avoid;">
-      <div style="width: 250px; text-align: center; font-size: 11pt;">
+    <div class="signature-block" style="margin-top: 12px; display: flex; justify-content: flex-end; page-break-inside: avoid; break-inside: avoid;">
+      <div style="width: 240px; text-align: center; font-size: 10pt;">
         <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
-        <div style="font-weight: bold; margin-top: 4px; margin-bottom: 55px;">Đại diện nhà cung cấp</div>
+        <div style="font-weight: bold; margin-top: 4px; margin-bottom: 45px;">Đại diện nhà cung cấp</div>
         <div style="font-weight: bold;">BÙI CAO NHÂM</div>
       </div>
     </div>
   `;
 
-  // Gọi hàm bổ trợ dùng chung để tạo và tải/chia sẻ file PDF
   const custTitle = selectedCustomer ? selectedCustomer.replace(/\s+/g, '_') : 'Tat_Ca';
   const filePrefix = isDetail ? `Bao_cao_ban_hang_chi_tiet_${custTitle}` : `Bao_cao_tong_hop_${custTitle}`;
   await generateAndSharePDF(container, filePrefix, `Báo cáo bán hàng ${isDetail ? 'Chi tiết' : 'Tổng hợp'}`);
