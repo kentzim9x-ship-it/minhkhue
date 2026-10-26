@@ -2531,7 +2531,7 @@ function renderReportInventory(c) {
   const visibleList = filtered.slice(startIndex, startIndex + state.pageSize);
 
   const totalVal = filtered.reduce((s, m) => s + getActualStock(m) * (m.cost || 0), 0);
-  
+
   const lowCount = filtered.filter(m => (m.status || '').toLowerCase() === 'low').length;
   const outCount = filtered.filter(m => (m.status || '').toLowerCase() === 'out').length;
 
@@ -2896,7 +2896,7 @@ function renderReportSales(c) {
 
             dayRows.push(`
               <tr style="border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'view', '${o.id}')" ondblclick="navigate('sales-orders', 'edit', '${o.id}')">
-                <td data-label="Đơn Hàng Bán" style="padding: 9px 16px 9px 32px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); font-weight: 500;">${displayOrderNum}</td>
+                <td data-label="Đơn Hàng Bán" style="padding: 9px 16px;; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); font-weight: 500;">${displayOrderNum}</td>
                 <td data-label="Tên Hàng" style="padding: 9px 16px; font-size: 13px;">${name}</td>
                 <td data-label="Đơn Vị" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${unit}</td>
                 <td data-label="Số Lượng" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(qty)}</td>
