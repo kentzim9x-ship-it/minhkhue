@@ -1407,7 +1407,7 @@ function renderMaterialForm(c) {
             <div class="form-group">
               <label class="form-label">Danh mục</label>
               <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'category\', this.value)"'}>
-                ${['Hoa Quả', 'Rau Củ', 'Khác'].map(cat => `<option value="${cat}" ${d.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+                ${['Hoa quả', 'Rau củ', 'Khác'].map(cat => `<option value="${cat}" ${d.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
               </select>
             </div>
           </div>
