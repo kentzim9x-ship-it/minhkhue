@@ -2660,12 +2660,28 @@ function renderReportInventory(c) {
             </div>
 
             <!-- NÚT LỌC DANH MỤC (Trên Mobile tự động lên trên) -->
-            <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: space-between; align-items: center; width: ${isMobile ? '100%' : 'auto'};">
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; width: ${isMobile ? '100%' : 'auto'};">
               ${['all', ...categories].map(cat => `
-              <button onclick="state.filter='${cat}'; state.page=1; render();" style="padding: 5px 12px; font-family: var(--font-dm-mono); font-size: 10px; text-transform: uppercase; background: ${state.filter === cat ? 'var(--primary)' : 'var(--muted)'}; color: ${state.filter === cat ? 'var(--primary-foreground)' : 'var(--muted-foreground)'}; border: none; cursor: pointer;">${cat === 'all' ? 'Tất cả' : cat}</button>
-            `).join('')}
+                <button 
+                  onclick="state.filter='${cat}'; state.page=1; render();" 
+                  style="
+                    padding: 8px 16px; 
+                    font-family: var(--font-dm-mono); 
+                    font-size: 11px; 
+                    text-transform: uppercase; 
+                    border-radius: 4px; 
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    ${state.filter === cat
+      ? 'background: #f0a030; color: #000000; border: 1px solid #f0a030; font-weight: 600;'
+      : 'background: rgba(255, 255, 255, 0.03); color: var(--muted-foreground); border: 1px solid var(--border);'
+    }
+                  "
+                >
+                  ${cat === 'all' ? 'TẤT CẢ' : cat}
+                </button>
+              `).join('')}
             </div>
-
           </div>
         </div>
 
