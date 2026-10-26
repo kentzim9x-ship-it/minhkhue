@@ -1775,7 +1775,7 @@ function renderQuotationForm(c) {
             </div>
 
             <div style="overflow-x: auto;">
-              <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 8px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 900px;">
+              <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 900px; box-sizing: border-box;">
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn Vị</span>
@@ -2065,7 +2065,7 @@ function renderSalesOrderForm(c) {
             </div>
 
             <div style="overflow-x: auto;">
-              <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 1000px;">
+              <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 1000px; box-sizing: border-box;">
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn Vị</span>
@@ -2268,7 +2268,7 @@ function renderReturnForm(c) {
             ${getAddLineButton('returns', isDetailsDisabled, 'header')}
           </div>
           <div style="overflow-x: auto;">
-            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
+            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px; box-sizing: border-box;">
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn Vị</span>
@@ -2445,7 +2445,7 @@ function renderGRNForm(c) {
             ${getAddLineButton('grn', isDetailsDisabled, 'header')}
           </div>
           <div style="overflow-x: auto;">
-            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 8px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px;">
+            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px; box-sizing: border-box;">
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn Vị</span>
