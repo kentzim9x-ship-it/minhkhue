@@ -2665,11 +2665,11 @@ function renderReportInventory(c) {
                 <button 
                   onclick="state.filter='${cat}'; state.page=1; render();" 
                   style="
-                    padding: 8px 16px; 
+                    padding: 8px 8px; 
                     font-family: var(--font-dm-mono); 
                     font-size: 11px; 
                     text-transform: uppercase; 
-                    border-radius: 4px; 
+                    border-radius: 2px; 
                     cursor: pointer;
                     transition: all 0.2s ease;
                     ${state.filter === cat
