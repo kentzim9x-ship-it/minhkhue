@@ -2412,9 +2412,9 @@ function renderGRNForm(c) {
                   class="form-input" 
                   value="${d.supplier || ''}" 
                   ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-                    oninput="updateField('supplier', this.value);" 
+                    oninput="this.value = toTitleCase(this.value); updateField('supplier', this.value);" 
                     onblur="if(this.value.trim()) render();"
-                    onchange="updateField('supplier', this.value); render();"
+                    onchange="this.value = toTitleCase(this.value.trim()); updateField('supplier', this.valuetrim()); render();"
                   `} 
                   placeholder="Nhập tên nhà cung cấp..." 
                   required
