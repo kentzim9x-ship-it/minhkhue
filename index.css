@@ -1530,6 +1530,21 @@ div[style*="overflow: auto"],
     max-width: 100% !important;
     box-sizing: border-box !important;
   }
+
+  .filter-search-container,
+  .toolbar-container {
+    display: flex !important;
+    flex-direction: column-reverse !important; /* Đảo ngược vị trí: Lọc ở trên, Tìm kiếm ở dưới */
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  /* Đảm bảo ô tìm kiếm giãn hết chiều rộng màn hình mobile */
+  .filter-search-container input[type="text"],
+  .toolbar-container input[type="text"] {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
 }
 
 @media (min-width: 769px) {
