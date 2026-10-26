@@ -1513,6 +1513,23 @@ div[style*="overflow: auto"],
     padding-bottom: 0 !important;
   }
   */
+
+  .search-box, 
+  .search-container, 
+  div:has(> input[type="text"][placeholder*="Tìm kiếm"]) {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Ô input tìm kiếm giãn hết chiều rộng */
+  input[type="text"][placeholder*="Tìm kiếm"],
+  .search-input,
+  #search-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
 }
 
 @media (min-width: 769px) {
