@@ -2657,20 +2657,21 @@ function renderReportInventory(c) {
               <input type="text" id="report-inv-search-input" placeholder="Tìm kiếm..." value="${state.reportInvSearch}" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; box-sizing: border-box; padding: 8px 0;">
             </div>
 
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; width: ${isMobile ? '100%' : 'auto'}; justify-content: flex-start;">
+            <div style="display: flex; gap: 4px; flex-wrap: wrap; width: ${isMobile ? '100%' : 'auto'}; justify-content: flex-start;">
               ${['all', ...categories].map(cat => `
                 <button 
                   onclick="state.filter='${cat}'; state.page=1; render();" 
                   style="
-                    padding: 8px 16px; 
+                    padding: 6px 10px; 
                     font-family: var(--font-dm-mono); 
-                    font-size: 11px; 
+                    font-size: 10px; 
+                    letter-spacing: 0.05em;
                     text-transform: uppercase; 
-                    border-radius: 2px; 
+                    border-radius: 4px; 
                     cursor: pointer;
                     transition: all 0.2s ease;
                     ${state.filter === cat 
-                      ? 'background: #f0a030; color: #000000; border: 1px solid #f0a030;' 
+                      ? 'background: #f0a030; color: #000000; border: 1px solid #f0a030; font-weight: 500;' 
                       : 'background: rgba(255, 255, 255, 0.03); color: var(--muted-foreground); border: 1px solid var(--border);'
                     }
                   "
