@@ -695,6 +695,27 @@ async function saveForm(module) {
   let dbPayload = { ...rawData };
   let supabasePayload = { ...rawData };
 
+  if (module === 'materials') {
+    supabasePayload = {
+      id: rawData.id,
+      name: rawData.name,
+      category: rawData.category || '',
+      location: rawData.location || '',
+      stock: Number(rawData.stock || 0),
+      reserved: Number(rawData.reserved || 0),
+      reorder: Number(rawData.reorder || 0),
+      cost: Number(rawData.cost || 0),
+      status: rawData.status || 'ok',
+      unit: rawData.unit || '',
+      user_id0: rawData.user_id0,
+      date0: rawData.date0,
+      time0: rawData.time0,
+      user_id2: rawData.user_id2,
+      date2: rawData.date2,
+      time2: rawData.time2
+    };
+  }
+
   if (module === 'quotations') {
     delete supabasePayload.validUntil;
     delete supabasePayload.validBegin;

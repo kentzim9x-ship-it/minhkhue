@@ -2638,7 +2638,7 @@ function renderReportInventory(c) {
           <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
             <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 2px; width: 220px;">
               <span style="color: var(--muted-foreground);">${Icons.search}</span>
-              <input type="text" id="report-inv-search-input" placeholder="Tìm mã, tên hàng..." value="${state.reportInvSearch}" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; padding: 6px 0;">
+              <input type="text" id="report-inv-search-input" placeholder="Tìm kiếm..." value="${state.reportInvSearch}" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; padding: 6px 0;">
             </div>
 
             <div style="display: flex; gap: 1px;">
