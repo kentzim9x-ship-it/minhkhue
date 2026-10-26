@@ -2625,59 +2625,12 @@ function renderReportInventory(c) {
 
   const isMobile = window.innerWidth <= 768;
 
-  const filterButtonsHtml = ['all', 'Rau Củ', 'Hoa Quả', 'Khác'].map((cat, idx, arr) => {
-    const isSelected = state.filter === cat;
-    const label = cat === 'all' ? 'TẤT CẢ' : cat.toUpperCase();
-
-    if (isMobile) {
-      return `
-        <button 
-          onclick="state.filter='${cat}'; state.page=1; render();" 
-          style="
-            padding: 6px 10px; 
-            font-family: var(--font-dm-mono); 
-            font-size: 10px; 
-            letter-spacing: 0.05em;
-            text-transform: uppercase; 
-            border-radius: 2px; 
-            cursor: pointer;
-            transition: all 0.2s ease;
-            ${isSelected
-          ? 'background: #f0a030; color: #000000; border: 1px solid #f0a030;'
-          : 'background: rgba(255, 255, 255, 0.03); color: var(--muted-foreground); border: 1px solid var(--border);'
-        }
-          "
-        >
-          ${label}
-        </button>
-      `;
-    }
-
-    return `
-      <button 
-        onclick="state.filter='${cat}'; state.page=1; render();" 
-        style="
-          height: 36px;
-          padding: 0 16px;
-          font-family: var(--font-dm-mono);
-          font-size: 11px;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          cursor: pointer;
-          border: none;
-          box-sizing: border-box;
-          border-right: ${idx < arr.length - 1 ? '1px solid rgba(255, 255, 255, 0.08)' : 'none'};
-          transition: all 0.2s ease;
-          ${isSelected
-        ? 'background: #f0a030; color: #000000; font-weight: 600;'
-        : 'background: transparent; color: #818cf8;'
-      }
-        "
-      >
-        ${label}
-      </button>
-    `;
-  }).join('');
+  const filterOptions = [
+    ['all', 'TẤT CẢ'],
+    ['Rau Củ', 'RAU CỦ'],
+    ['Hoa Quả', 'HOA QUẢ'],
+    ['Khác', 'KHÁC']
+  ];
 
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 24px;">
@@ -2706,20 +2659,38 @@ function renderReportInventory(c) {
           <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Báo Cáo Tồn Kho Chi Tiết & Định Giá</span>
           <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: ${isMobile ? '100%' : 'auto'}; flex-direction: ${isMobile ? 'column-reverse' : 'row'};">
             
-            <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 2px; width: ${isMobile ? '100%' : '220px'}; height: 36px; box-sizing: border-box;">
+            <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 10px; border-radius: 2px; width: ${isMobile ? '100%' : '220px'}; height: 31px; box-sizing: border-box;">
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
               <input type="text" id="report-inv-search-input" placeholder="Tìm kiếm..." value="${state.reportInvSearch}" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 12px; width: 100%; box-sizing: border-box; padding: 0;">
             </div>
 
+            <!-- Tự động áp dụng getFilterBar trên PC và giữ giao diện mobile -->
             ${isMobile ? `
               <div style="display: flex; gap: 4px; flex-wrap: wrap; width: 100%; justify-content: flex-start;">
-                ${filterButtonsHtml}
+                ${filterOptions.map(([val, label]) => `
+                  <button 
+                    onclick="state.filter='${val}'; state.page=1; render();" 
+                    style="
+                      padding: 6px 10px; 
+                      font-family: var(--font-dm-mono); 
+                      font-size: 10px; 
+                      letter-spacing: 0.05em;
+                      text-transform: uppercase; 
+                      border-radius: 2px; 
+                      cursor: pointer;
+                      transition: all 0.2s ease;
+                      ${state.filter === val 
+                        ? 'background: #f0a030; color: #000000; border: 1px solid #f0a030;' 
+                        : 'background: rgba(255, 255, 255, 0.03); color: var(--muted-foreground); border: 1px solid var(--border);'
+                      }
+                    "
+                  >
+                    ${label}
+                  </button>
+                `).join('')}
               </div>
-            ` : `
-              <div style="display: inline-flex; background: #232730; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden; align-items: center;">
-                ${filterButtonsHtml}
-              </div>
-            `}
+            ` : getFilterBar(filterOptions)}
+
           </div>
         </div>
 
