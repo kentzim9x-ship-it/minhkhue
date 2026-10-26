@@ -2670,7 +2670,7 @@ function renderReportInventory(c) {
                     cursor: pointer;
                     transition: all 0.2s ease;
                     ${state.filter === cat 
-                      ? 'background: #f0a030; color: #000000; border: 1px solid #f0a030; font-weight: 600;' 
+                      ? 'background: #f0a030; color: #000000; border: 1px solid #f0a030;' 
                       : 'background: rgba(255, 255, 255, 0.03); color: var(--muted-foreground); border: 1px solid var(--border);'
                     }
                   "
