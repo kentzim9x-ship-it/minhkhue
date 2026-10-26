@@ -559,7 +559,7 @@ function initNotificationUI() {
   });
 
   fetchNotificationsFromSupabase();
-  // subscribeRealtimeNotifications();
+  subscribeRealtimeNotifications();
 }
 
 function isWithinDays(dateStr, days) {

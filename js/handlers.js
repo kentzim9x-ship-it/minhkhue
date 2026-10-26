@@ -649,9 +649,7 @@ async function saveForm(module) {
         })()
       );
     }
-
-    // GỬI THÔNG BÁO: Chỉ chèn duy nhất 1 bản ghi vào CSDL Supabase
-    // Realtime Listener tại Client sẽ tự nhận sự kiện này để hiển thị icon chuông (Tránh bị double notification)
+    
     try {
       const actorName = currentUserFullname;
       const actionText = state.mode === 'add' ? 'Tạo mới' : 'Cập nhật';
