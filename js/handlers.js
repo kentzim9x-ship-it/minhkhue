@@ -56,6 +56,13 @@ async function navigate(view, mode = 'list', itemId = null) {
     state.page = 1;
   }
 
+  // --- BỔ SUNG: ƯU TIÊN GHI ĐÈ BỞI EXTRA STATE (NẾU ĐƯỢC TRUYỀN VÀO) ---
+  if (extraState && typeof extraState === 'object') {
+    if (extraState.search !== undefined) state.search = extraState.search;
+    if (extraState.filter !== undefined) state.filter = extraState.filter;
+    if (extraState.page !== undefined) state.page = extraState.page;
+  }
+
   state.view = view;
   state.mode = mode;
   // state.filter = 'all';
@@ -598,7 +605,7 @@ async function saveForm(module) {
           const isCurrentAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(currentStatus);
           if (isCurrentAccepted) {
             q.status = 'expired';
-            
+
             // --- ĐÃ BỔ SUNG: BẢO TỒN VÀ CHUẨN HÓA CẢ 2 DẠNG TÊN TRƯỜNG NGÀY KẾT THÚC VÀ NGÀY BẮT ĐẦU ---
             const vUntil = q.validUntil || q.validuntil || '';
             const vBegin = q.validbegin || q.validBegin || q.date || '';
@@ -874,7 +881,7 @@ async function deleteItem(module, id) {
       }
 
       sessionStorage.removeItem(`scroll_pos_${module}`);
-      
+
       // 4. XÓA CACHE TỒN KHO VÀ RENDER LẠI MÀN HÌNH DANH SÁCH TỰ ĐỘNG
       if (typeof invalidateStockCache === 'function') {
         invalidateStockCache();
