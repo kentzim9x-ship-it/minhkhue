@@ -2573,7 +2573,7 @@ function renderReportInventory(c) {
   const columnConfig = [
     { title: 'Mã Hàng (SKU)', width: '30px', align: 'center' },
     { title: 'Tên Hàng', width: '100px', align: 'center' },
-    { title: 'ĐVT', width: '20px', align: 'center' },
+    { title: 'Đơn Vị', width: '20px', align: 'center' },
     { title: 'Danh Mục', width: '40px', align: 'center' },
     { title: 'Vị Trí', width: '50px', align: 'center' },
     { title: 'Tồn Đầu Kỳ', width: '20px', align: 'center' },
@@ -2599,7 +2599,7 @@ function renderReportInventory(c) {
 
       return `
         <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
-          <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--primary);">${m.id}</td>
+          <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: left; color: var(--primary);">${m.id}</td>
           <td data-label="Tên Hàng" style="padding: 11px 16px; font-size: 13px;">${m.name}</td>
           <td data-label="ĐVT" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--foreground);">${m.unit || '—'}</td>
           <td data-label="Danh Mục" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${m.category || '—'}</td>
@@ -2772,8 +2772,8 @@ function renderReportSales(c) {
 
   // Cấu hình Cột Header: Đổi cột đầu tiên thành 'Đơn Hàng Bán' ở Báo cáo Chi tiết
   const headersConfig = reportType === 'detail'
-    ? ['Đơn Hàng Bán', 'Tên Hàng', 'ĐVT', 'Số Lượng', 'Đơn Giá', 'Thành Tiền']
-    : ['Mã Hàng (SKU)', 'Tên Hàng', 'ĐVT', 'Tổng Số Lượng', 'Tổng Tiền'];
+    ? ['Đơn Hàng Bán', 'Tên Hàng', 'Đơn Vị', 'Số Lượng', 'Đơn Giá', 'Thành Tiền']
+    : ['Mã Hàng (SKU)', 'Tên Hàng', 'Đơn Vị', 'Tổng Số Lượng', 'Tổng Tiền'];
 
   const detailHeaders = headersConfig
     .map(h => `<th style="padding: 10px 16px; text-align: ${['Số Lượng', 'Tổng Số Lượng', 'Đơn Giá', 'Thành Tiền', 'Tổng Tiền'].includes(h) ? 'right' : (h === 'ĐVT' ? 'center' : 'left')}; font-family: var(--font-dm-mono); font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 400; white-space: nowrap;">${h}</th>`)
