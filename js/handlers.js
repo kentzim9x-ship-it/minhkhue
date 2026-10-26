@@ -1432,7 +1432,12 @@ async function generateAndSharePDF(htmlElement, fileName, shareTitle) {
     filename: fullFileName,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true, logging: false },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    // Thuộc tính quan trọng giúp tự động tránh ngắt trang đè lên dòng bảng / khối chữ
+    pagebreak: { 
+      mode: ['avoid-all', 'css', 'legacy'],
+      avoid: ['tr', '.no-break', 'table'] 
+    }
   };
 
   try {
@@ -1514,7 +1519,7 @@ async function exportQuotationToPDF() {
       totalAmount += lineTotal;
 
       rowsHtml += `
-        <tr style="height: 26px;">
+       <tr style="height: 26px; page-break-inside: avoid; break-inside: avoid;">
           <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${i + 1}</td>
           <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px;">${l.name || ''}</td>
           <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${unitName}</td>
@@ -1527,7 +1532,7 @@ async function exportQuotationToPDF() {
       `;
     } else {
       rowsHtml += `
-        <tr style="height: 26px;">
+       <tr style="height: 26px; page-break-inside: avoid; break-inside: avoid;">
           <td style="border: 1px solid #000;"></td>
           <td style="border: 1px solid #000;"></td>
           <td style="border: 1px solid #000;"></td>
@@ -1550,7 +1555,7 @@ async function exportQuotationToPDF() {
   container.style.fontFamily = "'Times New Roman', serif";
 
   container.innerHTML = `
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 11pt; page-break-inside: auto;">
       <tr>
         <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
           ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
@@ -1607,7 +1612,7 @@ async function exportQuotationToPDF() {
       </table>
     </div>
 
-    <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+    <div style="margin-top: 15px; display: flex; justify-content: flex-end; page-break-inside: avoid; break-inside: avoid;">
       <div style="width: 250px; text-align: center; font-size: 11pt;">
         <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
         <div style="font-weight: bold; margin-top: 4px; margin-bottom: 55px;">Đại diện nhà cung cấp</div>
@@ -1653,7 +1658,7 @@ async function exportSalesOrderToPDF() {
       totalAmount += lineTotal;
 
       rowsHtml += `
-        <tr style="height: 26px;">
+        <tr style="height: 26px; page-break-inside: avoid; break-inside: avoid;">
           <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${i + 1}</td>
           <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px;">${l.name || ''}</td>
           <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${unitName}</td>
@@ -1666,7 +1671,7 @@ async function exportSalesOrderToPDF() {
       `;
     } else {
       rowsHtml += `
-        <tr style="height: 26px;">
+        <tr style="height: 26px; page-break-inside: avoid; break-inside: avoid;">
           <td style="border: 1px solid #000;"></td>
           <td style="border: 1px solid #000;"></td>
           <td style="border: 1px solid #000;"></td>
@@ -1689,7 +1694,7 @@ async function exportSalesOrderToPDF() {
   container.style.fontFamily = "'Times New Roman', serif";
 
   container.innerHTML = `
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 11pt; page-break-inside: auto;">
       <tr>
         <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
           ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
@@ -1746,7 +1751,7 @@ async function exportSalesOrderToPDF() {
       </table>
     </div>
 
-    <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+    <div style="margin-top: 15px; display: flex; justify-content: flex-end; page-break-inside: avoid; break-inside: avoid;">
       <div style="width: 250px; text-align: center; font-size: 11pt;">
         <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
         <div style="font-weight: bold; margin-top: 4px; margin-bottom: 55px;">Đại diện nhà cung cấp</div>
@@ -1827,7 +1832,7 @@ async function exportSalesReportToPDF() {
         totalQty += it.qty;
         totalAmount += it.totalAmount;
         rowsHtml += `
-          <tr style="height: 26px;">
+          <tr style="height: 26px; page-break-inside: avoid; break-inside: avoid;">
             <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${i + 1}</td>
             <td style="border: 1px solid #000; text-align: center; font-size: 11pt; padding: 3px;">${it.sku}</td>
             <td style="border: 1px solid #000; text-align: left; font-size: 11pt; padding: 3px 6px;">${it.name}</td>
@@ -1838,7 +1843,7 @@ async function exportSalesReportToPDF() {
         `;
       } else {
         rowsHtml += `
-          <tr style="height: 26px;">
+          <tr style="height: 26px; page-break-inside: avoid; break-inside: avoid;">
             <td style="border: 1px solid #000;"></td>
             <td style="border: 1px solid #000;"></td>
             <td style="border: 1px solid #000;"></td>
@@ -1968,7 +1973,7 @@ async function exportSalesReportToPDF() {
   `;
 
   container.innerHTML = `
-    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 11pt; page-break-inside: auto;">
       <tr>
         <td style="width: 50%; font-size: 10pt; text-align: center; vertical-align: top; line-height: 1.4;">
           ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1<br>
@@ -1988,11 +1993,15 @@ async function exportSalesReportToPDF() {
     </div>
 
     <!-- KHU VỰC THÔNG TIN THÁNG BÁO CÁO, KHÁCH HÀNG & ĐỊA CHỈ -->
-    <div style="font-size: 11pt; margin-bottom: 12px; line-height: 1.6;">
-      <div>Báo cáo: tháng ${selectedMonth} năm ${currentYear}</div>
-      <div>Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</div>
-      <div>Địa chỉ: ${custAddress}</div>
-    </div>
+    <table style="width: 100%; font-size: 11pt; margin-bottom: 12px; border-collapse: collapse; line-height: 1.6;">
+      <tr>
+        <td style="width: 60%; padding: 2px 0; vertical-align: top;">Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</td>
+        <td style="width: 40%; padding: 2px 0; text-align: right; vertical-align: top;">Báo cáo: tháng ${selectedMonth} năm ${currentYear}</td>
+      </tr>
+      <tr>
+        <td colspan="2" style="padding: 2px 0;">Địa chỉ: ${custAddress}</td>
+      </tr>
+    </table>
 
     <div style="border: 1.5px solid #000000; box-sizing: border-box;">
       <table style="width: 100%; border-collapse: collapse; font-size: 11pt;">
@@ -2006,7 +2015,7 @@ async function exportSalesReportToPDF() {
       </table>
     </div>
 
-    <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+    <div style="margin-top: 15px; display: flex; justify-content: flex-end; page-break-inside: avoid; break-inside: avoid;">
       <div style="width: 250px; text-align: center; font-size: 11pt;">
         <div>Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}</div>
         <div style="font-weight: bold; margin-top: 4px; margin-bottom: 55px;">Đại diện nhà cung cấp</div>
