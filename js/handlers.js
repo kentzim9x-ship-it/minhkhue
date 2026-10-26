@@ -6,7 +6,7 @@ if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
-async function navigate(view, mode = 'list', itemId = null) {
+async function navigate(view, mode = 'list', itemId = null, extraState = null) {
   if (hasUnsavedFormData() && (view !== state.view || mode === 'list')) {
     const confirmLeave = await showConfirm(
       'Bạn đang nhập dữ liệu dở dang. Nếu thoát ra, toàn bộ dữ liệu đang nhập sẽ bị mất!',
