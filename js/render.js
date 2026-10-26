@@ -2659,7 +2659,7 @@ function renderReportInventory(c) {
           <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Báo Cáo Tồn Kho Chi Tiết & Định Giá</span>
           <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; width: ${isMobile ? '100%' : 'auto'}; flex-direction: ${isMobile ? 'column-reverse' : 'row'};">
             
-            <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--secondary); padding: 0 12px; border-radius: 2px; width: ${isMobile ? '100%' : '220px'}; height: ${isMobile ? '38px' : '31px'}; box-sizing: border-box;">
+            <div style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; border-radius: 2px; width: ${isMobile ? '100%' : '220px'}; height: ${isMobile ? '38px' : '31px'}; box-sizing: border-box;">
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
               <input type="text" id="report-inv-search-input" placeholder="Tìm kiếm..." value="${state.reportInvSearch}" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; box-sizing: border-box; padding: 0;">
             </div>
