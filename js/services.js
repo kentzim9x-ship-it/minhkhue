@@ -592,6 +592,8 @@ function getDayLabel(dateStr) {
   return fmtDateStr(dateStr);
 }
 
+let ringTimeout = null; // Khai báo biến toàn cục để lưu bộ đếm thời gian rung
+
 function updateNotificationUI() {
   const allList = db.notifications || [];
   const recentList = allList.filter(n => isWithinDays(n.date || n.created_at, 2));
@@ -604,10 +606,29 @@ function updateNotificationUI() {
 
   if (hasUnread) {
     if (dot) dot.style.display = 'block';
-    if (bellBtn) bellBtn.classList.add('bell-ring-active');
+    if (bellBtn) {
+      if (!bellBtn.classList.contains('bell-ring-active')) {
+        bellBtn.classList.add('bell-ring-active');
+
+        // Hủy đếm giờ cũ (nếu có) trước khi tạo đếm giờ mới 2 phút
+        if (ringTimeout) clearTimeout(ringTimeout);
+
+        // Sau 2 phút (120000ms) sẽ tự động xóa class rung bell-ring-active
+        ringTimeout = setTimeout(() => {
+          if (bellBtn) {
+            bellBtn.classList.remove('bell-ring-active');
+          }
+        }, 120000);
+      }
+    }
   } else {
+    // Nếu đã đọc hết thông báo: tắt cả chấm đỏ và hiệu ứng rung ngay lập tức
     if (dot) dot.style.display = 'none';
     if (bellBtn) bellBtn.classList.remove('bell-ring-active');
+    if (ringTimeout) {
+      clearTimeout(ringTimeout);
+      ringTimeout = null;
+    }
   }
 
   const dropdown = document.getElementById('notif-dropdown');

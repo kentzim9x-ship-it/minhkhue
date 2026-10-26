@@ -1383,8 +1383,8 @@ function renderMaterialForm(c) {
                   class="form-input" 
                   value="${d.name || ''}" 
                   ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-                    oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
-                    onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
+                    oninput="this.value = toTitleCase(this.value); updateField('name', this.value.trim());"
+                    onchange="this.value = toTitleCase(this.value.trim()); updateField('name', this.value.trim());"
                   `} 
                   placeholder="Nhập tên sản phẩm..." 
                   required
@@ -1397,8 +1397,8 @@ function renderMaterialForm(c) {
                 class="form-input" 
                 value="${d.unit || ''}" 
                 ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-                  oninput="this.value = toUpperCaseStr(this.value); updateField('unit', this.value);"
-                  onchange="this.value = toUpperCaseStr(this.value); updateField('unit', this.value);"
+                  oninput="this.value = toUpperCaseStr(this.value); updateField('unit', this.value.trim());"
+                  onchange="this.value = toUpperCaseStr(this.value.trim()); updateField('unit', this.value.trim());"
                 `} 
                 placeholder="CÁI, HỘP, BỘ, KG..." 
                 required
@@ -1421,7 +1421,7 @@ function renderMaterialForm(c) {
           <div class="section-body grid-4">
             <div class="form-group">
               <label class="form-label">Vị trí lưu kho</label>
-              <input type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'location\', this.value)"'} placeholder="Ví dụ: A-12-03">
+              <input type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'location\', this.value.trim())"'} placeholder="Ví dụ: A-12-03">
             </div>
             <div class="form-group">
               <label class="form-label">Tồn kho ban đầu</label>
@@ -1445,12 +1445,12 @@ function renderMaterialForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="state.mode === 'edit' ? navigate('materials', 'view', '${d.id}') : navigate('materials')">
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('materials', 'view', '${d.id}') : navigate('materials')">
             ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
-              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="navigate('materials', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('materials', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('materials', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
             ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;">${state.mode === 'add' ? 'Lưu sản phẩm' : 'Cập nhật'}</button>` : ''}
@@ -1481,8 +1481,8 @@ function renderCustomerForm(c) {
             <div class="form-group" style="grid-column: span 2;">
               <label class="form-label">Tên công ty / Khách hàng *</label>
               <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
-                oninput="this.value = toTitleCase(this.value); updateField('name', this.value);"
-                onchange="this.value = toTitleCase(this.value); updateField('name', this.value);"
+                oninput="this.value = toTitleCase(this.value); updateField('name', this.value.trim());"
+                onchange="this.value = toTitleCase(this.value.trim()); updateField('name', this.value.trim());"
               `} placeholder="Nhập tên công ty hoặc tên khách hàng..." required>
             </div>
             <div class="form-group">
@@ -1495,20 +1495,20 @@ function renderCustomerForm(c) {
               <label class="form-label">Người liên hệ</label>
               <input type="text" class="form-input" value="${d.contact || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
                 oninput="this.value = toTitleCase(this.value); updateField('contact', this.value);"
-                onchange="this.value = toTitleCase(this.value); updateField('contact', this.value);"
+                onchange="this.value = toTitleCase(this.value.trim()); updateField('contact', this.value.trim());"
               `} placeholder="Tên người đại diện...">
             </div>
             <div class="form-group">
               <label class="form-label">Email</label>
-              <input type="email" class="form-input" value="${d.email || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'email\', this.value)"'} placeholder="example@domain.com">
+              <input type="email" class="form-input" value="${d.email || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'email\', this.value.trim())"'} placeholder="example@domain.com">
             </div>
             <div class="form-group">
               <label class="form-label">Số điện thoại</label>
-              <input type="tel" inputmode="tel" class="form-input" value="${d.phone || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'phone\', this.value)"'} placeholder="090x xxx xxx">
+              <input type="tel" inputmode="tel" class="form-input" value="${d.phone || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'phone\', this.value.trim())"'} placeholder="090x xxx xxx">
             </div>
             <div class="form-group" style="grid-column: span 3;">
               <label class="form-label">Địa chỉ</label>
-              <input type="text" class="form-input" value="${d.address || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'address\', this.value)"'} placeholder="Nhập địa chỉ trụ sở/giao hàng...">
+              <input type="text" class="form-input" value="${d.address || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'address\', this.value.trim())"'} placeholder="Nhập địa chỉ trụ sở/giao hàng...">
             </div>
           </div>
         </div>
@@ -1541,12 +1541,12 @@ function renderCustomerForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="state.mode === 'edit' ? navigate('customers', 'view', '${d.id}') : navigate('customers')">
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('customers', 'view', '${d.id}') : navigate('customers')">
             ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
-              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="navigate('customers', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('customers', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('customers', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
             ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;">${state.mode === 'add' ? 'Lưu khách hàng' : 'Cập nhật'}</button>` : ''}
@@ -1576,15 +1576,15 @@ function renderWarehouseForm(c) {
           <div class="section-body grid-3">
             <div class="form-group">
               <label class="form-label">Mã kho (Tự động) *</label>
-              <input type="text" class="form-input" value="${d.code || ''}" readonly style="background: var(--muted); cursor: not-allowed; color: var(--primary);" title="Mã kho tự động sinh">
+              <input type="text" class="form-input" value="${(d.code || '').trim()}" readonly style="background: var(--muted); cursor: not-allowed; color: var(--primary);" title="Mã kho tự động sinh">
             </div>
             <div class="form-group" style="grid-column: span 2;">
               <label class="form-label">Tên kho *</label>
-              <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'name\', this.value)"'} placeholder="Nhập tên kho hàng..." required>
+              <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="this.value = this.value.trim(); updateField(\'name\', this.value.trim())"'} placeholder="Nhập tên kho hàng..." required>
             </div>
             <div class="form-group" style="grid-column: span 3;">
               <label class="form-label">Địa chỉ / Vị trí *</label>
-              <input type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'location\', this.value)"'} placeholder="Nhập địa chỉ kho hàng..." required>
+              <input type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="this.value = this.value.trim(); updateField(\'location\', this.value.trim())"'} placeholder="Nhập địa chỉ kho hàng..." required>
             </div>
           </div>
         </div>
@@ -1605,7 +1605,7 @@ function renderWarehouseForm(c) {
             </div>
             <div class="form-group">
               <label class="form-label">Quản lý kho</label>
-              <input type="text" class="form-input" value="${d.manager || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'manager\', this.value)"'} placeholder="Tên quản lý kho...">
+              <input type="text" class="form-input" value="${d.manager || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="this.value = this.value.trim(); updateField(\'manager\', this.value.trim())"'} placeholder="Tên quản lý kho...">
             </div>
             <div class="form-group">
               <label class="form-label">Trạng thái</label>
