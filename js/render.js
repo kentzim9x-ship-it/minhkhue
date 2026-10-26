@@ -666,7 +666,7 @@ function renderCustomersList(c) {
       <td data-label="Email" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); text-align: left;">${c.email || '—'}</td>
       <td data-label="Số Điện Thoại" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: left;">${c.phone || '—'}</td>
       <td data-label="Địa Chỉ" style="padding: 11px 16px; font-size: 13px; text-align: left;">${c.address || c.diachi || '—'}</td>
-      <td data-label="Trạng Thái" style="padding: 11px 16px; text-align: left;"><span class="badge ${getBadgeClass(c.status)}">${getStatusLabel(c.status)}</span></td>
+      <td data-label="Trạng Thái" style="padding: 11px 16px; text-align: center;"><span class="badge ${getBadgeClass(c.status)}">${getStatusLabel(c.status)}</span></td>
 
       <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(c.user_id0)}</td>
       <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(c.date0)}</td>
@@ -867,7 +867,7 @@ function renderQuotationsList(c) {
       <td data-label="Ngày Bắt Đầu" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${q.validbegin || q.validBegin || '—'}</td>
       <td data-label="Ngày Kết Thúc" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${q.validUntil}</td>
       <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${(q.lineItems || []).length}</td>
-      <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(q.status)}">${getStatusLabel(q.status)}</span></td>
+      <td data-label="Trạng Thái" style="padding: 12px 16px; text-align: center;"><span class="badge ${getBadgeClass(q.status)}">${getStatusLabel(q.status)}</span></td>
 
       <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(q.user_id0)}</td>
       <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(q.date0)}</td>
@@ -1007,7 +1007,7 @@ function renderOrdersList(c) {
       <td data-label="Mã Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${o.warehouseCode || o.warehouse_code || '—'}</td>
       <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${(o.lineItems || o.lineitems || []).length || o.items || 0}</td>
       <td data-label="Tổng Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(o.total)}</td>
-      <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(o.status)}">${getStatusLabel(o.status)}</span></td>
+      <td data-label="Trạng Thái" style="padding: 12px 16px; text-align: center;"><span class="badge ${getBadgeClass(o.status)}">${getStatusLabel(o.status)}</span></td>
 
       <td data-label="Người Tạo" style="padding: 12px 16px; font-size: 12px;">${getUserFullName(o.user_id0)}</td>
       <td data-label="Ngày Tạo" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(o.date0)}</td>
@@ -1151,7 +1151,7 @@ function renderReturnsList(c) {
         <td data-label="Lý Do" style="padding: 12px 16px; font-size: 13px;">${r.reason}</td>
         <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${totalLines}</td>
         <td data-label="Tổng Hoàn Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; color: #f87171; text-align: right;">${fmtUSD(r.total)}</td>
-        <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(r.status)}">${getStatusLabel(r.status)}</span></td>
+        <td data-label="Trạng Thái" style="padding: 12px 16px; text-align: center;"><span class="badge ${getBadgeClass(r.status)}">${getStatusLabel(r.status)}</span></td>
 
         <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(r.user_id0)}</td>
         <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(r.date0)}</td>
@@ -1294,7 +1294,7 @@ function renderGRNList(c) {
         <td data-label="Mã Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${wCode}</td>
         <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${totalLines}</td>
         <td data-label="Tổng Giá Trị" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(g.totalValue)}</td>
-        <td data-label="Trạng Thái" style="padding: 12px 16px;"><span class="badge ${getBadgeClass(g.status)}">${getStatusLabel(g.status)}</span></td>
+        <td data-label="Trạng Thái" style="padding: 12px 16px; text-align: center;"><span class="badge ${getBadgeClass(g.status)}">${getStatusLabel(g.status)}</span></td>
 
         <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(g.user_id0)}</td>
         <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(g.date0)}</td>
@@ -2531,8 +2531,9 @@ function renderReportInventory(c) {
   const visibleList = filtered.slice(startIndex, startIndex + state.pageSize);
 
   const totalVal = filtered.reduce((s, m) => s + getActualStock(m) * (m.cost || 0), 0);
-  const reservedVal = filtered.reduce((s, m) => s + (m.reserved || 0) * (m.cost || 0), 0);
-  const alertCount = filtered.filter(m => ['low', 'critical', 'out'].includes(m.status)).length;
+  
+  const lowCount = filtered.filter(m => (m.status || '').toLowerCase() === 'low').length;
+  const outCount = filtered.filter(m => (m.status || '').toLowerCase() === 'out').length;
 
   const categories = Array.from(new Set(materials.map(m => m.category)));
   const catBreakdown = categories.map(cat => {
@@ -2610,7 +2611,7 @@ function renderReportInventory(c) {
           <td data-label="Có Thể Bán" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${coTheBan}</td>
           <td data-label="Mức Cảnh Báo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${m.reorder ?? 0}</td>
           <td data-label="Giá Vốn" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
-          <td data-label="Trạng Thái" style="padding: 11px 16px; text-align: right;"><span class="badge ${getBadgeClass(m.status)}">${m.status === 'ok' ? 'Đủ hàng' : m.status}</span></td>
+          <td data-label="Trạng Thái" style="padding: 11px 16px; text-align: center;"><span class="badge ${getBadgeClass(m.status)}">${getStatusLabel(m.status)}</span></td>
         </tr>
         `;
     }).join('');
@@ -2658,7 +2659,7 @@ function renderReportInventory(c) {
 
         <div style="padding: 8px 20px 4px; display: flex; justify-content: flex-end; border-bottom: 1px solid var(--border); background: var(--secondary);">
           <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);" id="report-inv-summary-text">
-            Đang hiển thị <strong>${totalItems === 0 ? 0 : startIndex + 1}-${Math.min(startIndex + state.pageSize, totalItems)}/${totalItems}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(totalVal)}</strong> · Đã tạm giữ: ${fmtUSD(reservedVal)} · Cảnh báo: ${alertCount}
+            Đang hiển thị <strong>${totalItems === 0 ? 0 : startIndex + 1}-${Math.min(startIndex + state.pageSize, totalItems)}/${totalItems}</strong> mặt hàng · Tổng giá trị: <strong style="color: var(--primary);">${fmtUSD(totalVal)}</strong> · Sắp hết: ${lowCount} · Hết hàng: ${outCount}
           </span>
         </div>
 
