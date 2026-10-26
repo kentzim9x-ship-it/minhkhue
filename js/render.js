@@ -463,11 +463,12 @@ function renderDashboard(c) {
 function renderMaterialsList(c) {
   const hasPermission = checkModulePermission('materials');
 
-  const filtered = db.materials.filter(m => {
-    if (state.filter !== 'all' && m.status !== state.filter) return false;
-    if (state.search && !m.name.toLowerCase().includes(state.search.toLowerCase()) && !m.id.toLowerCase().includes(state.search.toLowerCase())) return false;
-    return true;
-  });
+ const filtered = db.materials.filter(m => {
+  if (state.filter !== 'all' && m.status !== state.filter) return false;
+  const searchKey = normalizeSearchText(state.search);
+  if (searchKey && !normalizeSearchText(m.name).includes(searchKey) && !normalizeSearchText(m.id).includes(searchKey)) return false;
+  return true;
+});
 
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
@@ -592,12 +593,12 @@ function renderCustomersList(c) {
 
   const filtered = db.customers.filter(c => {
     const matchStatus = (state.filter === 'all' || c.status === state.filter);
-    const searchKey = (state.search || '').trim().toLowerCase();
+    const searchKey = normalizeSearchText(state.search);
     const matchSearch = !searchKey ||
-      (c.name && c.name.toLowerCase().includes(searchKey)) ||
-      (c.id && c.id.toLowerCase().includes(searchKey)) ||
-      (c.contact && c.contact.toLowerCase().includes(searchKey)) ||
-      (c.address && c.address.toLowerCase().includes(searchKey));
+      normalizeSearchText(c.name).includes(searchKey) ||
+      normalizeSearchText(c.id).includes(searchKey) ||
+      normalizeSearchText(c.contact).includes(searchKey) ||
+      normalizeSearchText(c.address || c.diachi).includes(searchKey);
     return matchStatus && matchSearch;
   });
 
@@ -773,19 +774,14 @@ function renderQuotationsList(c) {
   const hasPermission = checkModulePermission('quotations');
 
   const filtered = db.quotations.filter(q => {
-    const matchStatus = (state.filter === 'all' || q.status === state.filter);
-    const searchKey = (state.search || '').trim().toLowerCase();
-    const custId = (q.customerId || q.customerid || '').toLowerCase();
-    const custName = (q.customer || '').toLowerCase();
-    const qId = (q.id || '').toLowerCase();
-
-    const matchSearch = !searchKey ||
-      custName.includes(searchKey) ||
-      custId.includes(searchKey) ||
-      qId.includes(searchKey);
-
-    return matchStatus && matchSearch;
-  });
+  const matchStatus = (state.filter === 'all' || q.status === state.filter);
+  const searchKey = normalizeSearchText(state.search);
+  const matchSearch = !searchKey ||
+    normalizeSearchText(q.customer).includes(searchKey) ||
+    normalizeSearchText(q.customerId || q.customerid).includes(searchKey) ||
+    normalizeSearchText(q.id).includes(searchKey);
+  return matchStatus && matchSearch;
+});
 
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
@@ -921,19 +917,14 @@ function renderOrdersList(c) {
   const hasPermission = checkModulePermission('sales-orders');
 
   const filtered = db.orders.filter(o => {
-    const matchStatus = (state.filter === 'all' || o.status === state.filter);
-    const searchKey = (state.search || '').trim().toLowerCase();
-    const custId = (o.customerId || o.customerid || '').toLowerCase();
-    const custName = (o.customer || '').toLowerCase();
-    const orderId = (o.id || '').toLowerCase();
-
-    const matchSearch = !searchKey ||
-      custName.includes(searchKey) ||
-      custId.includes(searchKey) ||
-      orderId.includes(searchKey);
-
-    return matchStatus && matchSearch;
-  });
+  const matchStatus = (state.filter === 'all' || o.status === state.filter);
+  const searchKey = normalizeSearchText(state.search);
+  const matchSearch = !searchKey ||
+    normalizeSearchText(o.customer).includes(searchKey) ||
+    normalizeSearchText(o.customerId || o.customerid).includes(searchKey) ||
+    normalizeSearchText(o.id).includes(searchKey);
+  return matchStatus && matchSearch;
+});
 
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
@@ -1055,21 +1046,15 @@ function renderReturnsList(c) {
   const hasPermission = checkModulePermission('returns');
 
   const filtered = db.returns.filter(r => {
-    const matchStatus = (state.filter === 'all' || r.status === state.filter);
-    const searchKey = (state.search || '').trim().toLowerCase();
-    const rId = (r.id || '').toLowerCase();
-    const orderId = (r.orderId || '').toLowerCase();
-    const customer = (r.customer || '').toLowerCase();
-    const reason = (r.reason || '').toLowerCase();
-
-    const matchSearch = !searchKey ||
-      rId.includes(searchKey) ||
-      orderId.includes(searchKey) ||
-      customer.includes(searchKey) ||
-      reason.includes(searchKey);
-
-    return matchStatus && matchSearch;
-  });
+  const matchStatus = (state.filter === 'all' || r.status === state.filter);
+  const searchKey = normalizeSearchText(state.search);
+  const matchSearch = !searchKey ||
+    normalizeSearchText(r.id).includes(searchKey) ||
+    normalizeSearchText(r.orderId).includes(searchKey) ||
+    normalizeSearchText(r.customer).includes(searchKey) ||
+    normalizeSearchText(r.reason).includes(searchKey);
+  return matchStatus && matchSearch;
+});
 
   const totalItems = filtered.length;
   const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
@@ -1196,19 +1181,14 @@ function renderGRNList(c) {
   const hasPermission = checkModulePermission('grn');
 
   const filtered = db.grns.filter(g => {
-    const matchStatus = (state.filter === 'all' || g.status === state.filter);
-    const searchKey = (state.search || '').trim().toLowerCase();
-    const gId = (g.id || '').toLowerCase();
-    const supplier = (g.supplier || '').toLowerCase();
-    const wCode = (g.warehouseCode || g.warehouse_code || '').toLowerCase();
-
-    const matchSearch = !searchKey ||
-      gId.includes(searchKey) ||
-      supplier.includes(searchKey) ||
-      wCode.includes(searchKey);
-
-    return matchStatus && matchSearch;
-  });
+  const matchStatus = (state.filter === 'all' || g.status === state.filter);
+  const searchKey = normalizeSearchText(state.search);
+  const matchSearch = !searchKey ||
+    normalizeSearchText(g.id).includes(searchKey) ||
+    normalizeSearchText(g.supplier).includes(searchKey) ||
+    normalizeSearchText(g.warehouseCode || g.warehouse_code).includes(searchKey);
+  return matchStatus && matchSearch;
+});
 
   // TÍNH TOÁN PHÂN TRANG
   const totalItems = filtered.length;
@@ -3099,4 +3079,13 @@ function getAddLineButton(moduleName, isDetailsDisabled, position) {
       ${Icons.plus} Thêm dòng
     </button>
   `;
+}
+
+// Hàm chuẩn hóa chuỗi tìm kiếm (chống lỗi Unicode tổ hợp & khoảng trắng)
+function normalizeSearchText(str) {
+  if (!str) return '';
+  return String(str)
+    .normalize('NFC')
+    .toLowerCase()
+    .trim();
 }
