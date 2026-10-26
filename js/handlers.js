@@ -606,7 +606,7 @@ async function saveForm(module) {
     if (rawData.creditLimit !== undefined) rawData.creditlimit = rawData.creditLimit;
   }
 
-  // TỐI ƯU 2: Gom các tác vụ async không phụ thuộc để chạy song song (Non-blocking Background tasks)
+  // TỐI ƯU 2: Gom các tác vụ async không phụ thuộc chạy song song (sử dụng async IIFE để tránh lỗi .catch)
   const asyncBackgroundTasks = [];
 
   if (module === 'quotations') {
@@ -632,15 +632,20 @@ async function saveForm(module) {
         }
       });
 
-      // Đưa task update báo giá cũ vào mảng chạy song song
+      // Đưa query Supabase vào async IIFE để tránh lỗi .catch()
       asyncBackgroundTasks.push(
-        supabaseClient
-          .from('quotations')
-          .update({ status: 'expired' })
-          .eq('customer', targetCustomer)
-          .neq('id', rawData.id)
-          .in('status', ['accepted', 'approved', 'Duyệt', 'duyệt', 'Đã duyệt', 'đã duyệt'])
-          .catch(err => console.error('Lỗi tự động chuyển báo giá cũ sang Hết hạn:', err))
+        (async () => {
+          try {
+            await supabaseClient
+              .from('quotations')
+              .update({ status: 'expired' })
+              .eq('customer', targetCustomer)
+              .neq('id', rawData.id)
+              .in('status', ['accepted', 'approved', 'Duyệt', 'duyệt', 'Đã duyệt', 'đã duyệt']);
+          } catch (err) {
+            console.error('Lỗi tự động chuyển báo giá cũ sang Hết hạn:', err);
+          }
+        })()
       );
     }
 
@@ -670,13 +675,14 @@ async function saveForm(module) {
       };
 
       asyncBackgroundTasks.push(
-        supabaseClient
-          .from('notifications')
-          .insert([notifPayload])
-          .then(({ error: notifErr }) => {
+        (async () => {
+          try {
+            const { error: notifErr } = await supabaseClient.from('notifications').insert([notifPayload]);
             if (notifErr) console.error('Lỗi Supabase khi chèn notifications:', notifErr);
-          })
-          .catch(err => console.error('Lỗi tạo thông báo:', err))
+          } catch (err) {
+            console.error('Lỗi tạo thông báo:', err);
+          }
+        })()
       );
     } catch (err) {
       console.error('Lỗi chuẩn bị thông báo:', err);
@@ -844,7 +850,7 @@ async function saveForm(module) {
   // =========================================================================
   const currentMode = state.mode;
   try {
-    // Thực thi các công việc chạy nền độc lập đồng thời với việc lưu bản ghi
+    // Kích hoạt các task nền chạy song song
     if (asyncBackgroundTasks.length > 0) {
       Promise.all(asyncBackgroundTasks).catch(err => console.error('Lỗi task nền:', err));
     }
