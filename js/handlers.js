@@ -674,25 +674,13 @@ async function saveForm(module) {
         actor: actorName
       };
 
-      const { data: insertedNotif, error: notifErr } = await supabaseClient
+      // Chỉ gửi dữ liệu lên CSDL Supabase. Realtime Listener trên Client sẽ tự nhận sự kiện Insert để hiển thị chuông
+      const { error: notifErr } = await supabaseClient
         .from('notifications')
-        .insert([notifPayload])
-        .select();
+        .insert([notifPayload]);
 
       if (notifErr) {
         console.error('Lỗi Supabase khi chèn notifications:', notifErr);
-      } else {
-        if (!db.notifications) db.notifications = [];
-        const newNotif = (insertedNotif && insertedNotif[0]) ? insertedNotif[0] : notifPayload;
-
-        const isExist = db.notifications.some(n => n.id === newNotif.id || (n.itemid === newNotif.itemid && n.title === newNotif.title && n.time === newNotif.time));
-        if (!isExist) {
-          // db.notifications.unshift(newNotif);
-        }
-
-        if (typeof updateNotificationBadge === 'function') {
-          updateNotificationBadge();
-        }
       }
     } catch (err) {
       console.error('Lỗi tạo thông báo:', err);
