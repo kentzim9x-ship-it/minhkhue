@@ -253,7 +253,7 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
     const status = (o.status || '').toLowerCase();
     const oWh = o.warehouseCode || o.warehousecode || o.warehouse_code || '';
 
-    if (oWh === warehouseCode && ['accepted', 'completed', 'duyệt', 'hoàn thành'].includes(status)) {
+    if (oWh === warehouseCode && ['processed', 'hoàn thành', 'đã xử lý', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
       (o.lineItems || o.lineitems || []).forEach(item => {
         if (item.sku === sku) {
           totalOrders += Number(item.qty || 0);
@@ -268,7 +268,7 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
     const status = (r.status || '').toLowerCase();
     const rWh = r.warehouseCode || r.warehousecode || r.warehouse_code || '';
 
-    if (rWh === warehouseCode && ['accepted', 'completed', 'duyệt', 'hoàn thành'].includes(status)) {
+    if (rWh === warehouseCode && ['processed', 'hoàn thành', 'đã xử lý', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
       (r.lineItems || r.lineitems || []).forEach(item => {
         if (item.sku === sku) {
           totalReturns += Number(item.qtyReturned || item.qty || 0);
@@ -327,64 +327,40 @@ function fmtTimeStr(timeStr) {
 function getBadgeClass(status) {
   const s = String(status || '').toLowerCase().trim();
   const map = {
-    // 🟢 XANH LÁ
-    'accepted': 'badge-emerald', 
-    'duyệt': 'badge-emerald', 
+    // 🟢 XANH LÁ (Thành công / Hoàn thành / Duyệt / Đã xác minh / Hoạt động)
+    'completed': 'badge-emerald', 'hoàn thành': 'badge-emerald',
+    'approved': 'badge-emerald', 'đã duyệt': 'badge-emerald',
+    'accepted': 'badge-emerald', 'duyệt': 'badge-emerald', 'đã chấp nhận': 'badge-emerald',
+    'verified': 'badge-emerald', 'đã xác minh': 'badge-emerald',
+    'active': 'badge-emerald', 'hoạt động': 'badge-emerald', 'đang hoạt động': 'badge-emerald',
+    'ok': 'badge-emerald', 'đủ hàng': 'badge-emerald', 'còn hàng': 'badge-emerald',
 
-    'verified': 'badge-emerald', 
-    'đã xác minh': 'badge-emerald',
+    // 🟡 VÀNG / CAM (Đang xử lý / Chờ duyệt / Đã nhận / Sắp hết)
+    'processing': 'badge-amber', 'đang xử lý': 'badge-amber',
+    'received': 'badge-amber', 'đã nhận': 'badge-amber',
+    'maintenance': 'badge-amber', 'bảo trì': 'badge-amber',
+    'low': 'badge-amber', 'sắp hết': 'badge-amber',
 
-    'active': 'badge-emerald', 
-    'hoạt động': 'badge-emerald', 
-    'đang hoạt động': 'badge-emerald',
+    // 🔘 XÁM (Ngừng hoạt động / Bản nháp)
+    'inactive': 'badge-zinc', 'ngừng hoạt động': 'badge-zinc',
+    'draft': 'badge-zinc', 'bản nháp': 'badge-zinc',
+    'pending': 'badge-zinc', 'chờ duyệt': 'badge-zinc', 'chờ xử lý': 'badge-zinc',
 
-    'ok': 'badge-emerald', 'đủ hàng': 'badge-emerald', 
-    'còn hàng': 'badge-emerald',
-
-    // 🟡 VÀNG / CAM
-    'received': 'badge-amber', 
-    'đã nhận': 'badge-amber',
-
-    'maintenance': 'badge-amber', 
-    'bảo trì': 'badge-amber',
-
-    'low': 'badge-amber', 
-    'sắp hết': 'badge-amber',
-
-    // 🔘 XÁM
-    'inactive': 'badge-zinc', 
-    'ngừng hoạt động': 'badge-zinc',
-
-    'draft': 'badge-zinc', 
-    'bản nháp': 'badge-zinc',
-
-    'pending': 'badge-zinc', 
-    'chờ duyệt': 'badge-zinc', 
-
-    // 🔴 ĐỎ
-    'cancelled': 'badge-red', 
-    'đã hủy': 'badge-red',
-
-    'suspended': 'badge-red', 
-    'tạm khóa': 'badge-red',
-
-    'expired': 'badge-red', 
-    'hết hạn': 'badge-red',
-
-    'closed': 'badge-red', 
-    'đóng cửa': 'badge-red',
-
-    'out': 'badge-red', 
-    'hết hàng': 'badge-red',
+    // 🔴 ĐỎ (Đã hủy / Từ chối / Tạm khóa / Hết hạn)
+    'cancelled': 'badge-red', 'đã hủy': 'badge-red',
+    'suspended': 'badge-red', 'tạm khóa': 'badge-red',
+    'expired': 'badge-red', 'hết hạn': 'badge-red',
+    'closed': 'badge-red', 'đóng cửa': 'badge-red',
+    'critical': 'badge-red', 'nguy cấp': 'badge-red',
+    'out': 'badge-red', 'hết hàng': 'badge-red',
 
 
     // 🔵 XANH DƯƠNG / BLUE
-    'completed': 'badge-blue', 
-    'hoàn thành': 'badge-blue',
+    'processed': 'badge-blue', 'Hoàn thành': 'badge-blue',
+    'completed': 'badge-blue', 'Hoàn thành': 'badge-blue',
 
     // 🟪 XANH CHÀM / INDIGO
-    'rejected': 'badge-indigo', 
-    'từ chối': 'badge-indigo'
+    'rejected': 'badge-indigo', 'từ chối': 'badge-indigo'
   };
   return map[s] || 'badge-zinc';
 }
@@ -392,29 +368,36 @@ function getBadgeClass(status) {
 function getStatusLabel(status) {
   const s = String(status || '').toLowerCase().trim();
   const map = {
+    // Đơn hàng bán & Báo giá
     'completed': 'Hoàn thành',
     'hoàn thành': 'Hoàn thành',
     'accepted': 'Duyệt',
+    'approved': 'Duyệt',
     'duyệt': 'Duyệt',
     'pending': 'Chờ duyệt',
     'chờ duyệt': 'Chờ duyệt',
+    'processing': 'Đang xử lý',
     'cancelled': 'Đã hủy',
     'đã hủy': 'Đã hủy',
     'rejected': 'Từ chối',
-    'từ chối': 'Từ chối',
     'expired': 'Hết hạn',
-    'hết hạn': 'Hết hạn',
     'draft': 'Bản nháp',
-    'bản nháp': 'Bản nháp',
+
+    // Đổi trả hàng bán
+    'processed': 'Hoàn thành',
+
+    // Phiếu nhập kho (GRN)
     'received': 'Đã nhận',
-    'đã nhận': 'Đã nhận',
     'verified': 'Đã xác minh',
-    'đã xác minh': 'Đã xác minh',
+
+    // Khách hàng & Kho hàng
     'active': 'Đang hoạt động',
     'inactive': 'Ngừng hoạt động',
     'suspended': 'Tạm khóa',
     'maintenance': 'Bảo trì',
     'closed': 'Đóng cửa',
+
+    // Vật tư & Tồn kho
     'ok': 'Đủ hàng',
     'còn hàng': 'Còn hàng',
     'low': 'Sắp hết',
