@@ -1937,13 +1937,11 @@ function renderSalesOrderForm(c) {
   // TAO OPTION VỚI ĐƯỜNG KẺ NGANG VÀ NHÃN NHÓM TRỰC QUAN CHO CẢ SAFARI MOBILE VÀ PC
   if (inQuotationList.length > 0 && outQuotationList.length > 0) {
     const quotedHtml = inQuotationList.map(m => {
-      const displayPrice = (m.price !== undefined && m.price !== null) ? m.price : (m.cost || 0);
-      return `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(displayPrice)}) ★ Báo giá</option>`;
+      return `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(m.cost || 0)}) ★ Báo giá</option>`;
     }).join('');
 
     const otherHtml = outQuotationList.map(m => {
-      const displayPrice = (m.price !== undefined && m.price !== null) ? m.price : (m.cost || 0);
-      return `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(displayPrice)})</option>`;
+      return `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(m.cost || 0)})</option>`;
     }).join('');
 
     datalistEl.innerHTML = `
@@ -1952,9 +1950,8 @@ function renderSalesOrderForm(c) {
       ${otherHtml}
     `;
   } else {
-    datalistEl.innerHTML = sortedMaterials.map(m => {
-      const displayPrice = (m.price !== undefined && m.price !== null) ? m.price : (m.cost || 0);
-      return `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(displayPrice)})${m.isQuoted ? ' ★ Báo giá' : ''}</option>`;
+    datalistEl.innerHTML = (inQuotationList.length > 0 ? inQuotationList : outQuotationList).map(m => {
+      return `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(m.cost || 0)})</option>`;
     }).join('');
   }
 
