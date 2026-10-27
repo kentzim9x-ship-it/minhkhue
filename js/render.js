@@ -2841,7 +2841,7 @@ function renderReportSales(c) {
     .join('');
 
   if (reportType === 'summary') {
-    // === BÁO CÁO TỔNG HỢP (Không có cột Đơn Giá - Giữ nguyên Phân Trang theo hệ thống) ===
+    // === BÁO CÁO TỔNG HỢP ===
     const itemSummaryMap = {};
     let grandTotalQty = 0;
     let grandTotalAmount = 0;
@@ -2885,8 +2885,8 @@ function renderReportSales(c) {
 
     // Dòng tổng cộng ngay dưới header cho mẫu tổng hợp
     const grandTotalRowHtml = `
-      <tr style="border-bottom: 2px solid var(--border); background: var(--secondary); font-weight: 600;">
-        <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;"></td>
+      <tr style="border-bottom: 2px solid var(--border); background-color: rgba(251, 191, 36, 0.08); font-weight: 600;">
+        <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;">TỔNG CỘNG</td>
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmt(grandTotalQty)}</td>
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmtUSD(grandTotalAmount)}</td>
       </tr>
@@ -2905,7 +2905,7 @@ function renderReportSales(c) {
     detailRowsHtml = grandTotalRowHtml + rowsHtml;
 
   } else {
-    // === BÁO CÁO CHI TIẾT (Dạng Lazy Loading, tự động tải thêm khi cuộn) ===
+    // === BÁO CÁO CHI TIẾT ===
     if (!selectedCustomer) {
       detailRowsHtml = `
         <tr>
@@ -2966,9 +2966,29 @@ function renderReportSales(c) {
         let dayTotalAmount = 0;
         let dayRows = [];
 
+        // Dòng tổng cộng ngày tháng: Cột 1 (Đơn Hàng Bán) hiển thị Ngày Tháng
+        dayRows.push(`
+          <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="state.search='${selectedCustomer}'; navigate('sales-orders');" title="Click để xem các Đơn hàng bán của ${selectedCustomer} ngày ${formattedDate}">
+            <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030; font-family: var(--font-dm-mono);">${formattedDate}</td>
+            <td style="padding: 8px 16px;"></td>
+            <td style="padding: 8px 16px; text-align: center;"></td>
+            <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: #f0a030;">DAY_QTY_PLACEHOLDER</td>
+            <td style="padding: 8px 16px; text-align: right;"></td>
+            <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: #f0a030;">DAY_AMT_PLACEHOLDER</td>
+          </tr>
+        `);
+
         dayData.orders.forEach(o => {
+          let orderQty = 0;
+          let orderTotalAmount = 0;
           const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
-          items.forEach((item, itemIndex) => {
+
+          // 1. Dòng Tổng Cộng Đơn Hàng Bán (Mã Đơn Hàng ở Cột 1, Ghi chú ở Cột 2)
+          const orderHeaderIndex = dayRows.length;
+          dayRows.push(''); // Phao chờ chèn HTML dòng tổng đơn hàng
+
+          // 2. Chi tiết từng dòng sản phẩm trong đơn hàng
+          items.forEach(item => {
             const qty = Number(item.qty || 0);
             const price = Number(item.unitPrice || 0);
             const disc = Number(item.discount || 0);
@@ -2979,17 +2999,16 @@ function renderReportSales(c) {
             const name = item.name || '—';
             const unit = item.unit || getMaterialUnit(sku, name);
 
+            orderQty += qty;
+            orderTotalAmount += lineTotal;
             dayTotalQty += qty;
             dayTotalAmount += lineTotal;
             itemCount++;
             renderedItemCount++;
 
-            // Chỉ hiển thị Mã Đơn Hàng ở dòng đầu tiên của phiếu (cột 1), các dòng sau để trống
-            const displayOrderNum = itemIndex === 0 ? (o.id || '—') : '';
-
             dayRows.push(`
               <tr style="border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'view', '${o.id}')" ondblclick="navigate('sales-orders', 'edit', '${o.id}')">
-                <td data-label="Đơn Hàng Bán" style="padding: 9px 16px;; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); font-weight: 500;">${displayOrderNum}</td>
+                <td data-label="Đơn Hàng Bán" style="padding: 9px 16px;"></td>
                 <td data-label="Tên Hàng" style="padding: 9px 16px; font-size: 13px;">${name}</td>
                 <td data-label="Đơn Vị" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${unit}</td>
                 <td data-label="Số Lượng" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmt(qty)}</td>
@@ -2998,19 +3017,24 @@ function renderReportSales(c) {
               </tr>
             `);
           });
+
+          // Cập nhật Dòng Tổng Cộng cho Đơn Hàng Bán
+          dayRows[orderHeaderIndex] = `
+            <tr style="border-bottom: 1px solid var(--border); background-color: rgba(255, 255, 255, 0.02); font-weight: 600;" class="hover-row" onclick="navigate('sales-orders', 'view', '${o.id}')" ondblclick="navigate('sales-orders', 'edit', '${o.id}')">
+              <td data-label="Đơn Hàng Bán" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); font-weight: 600;">${o.id || '—'}</td>
+              <td data-label="Ghi Chú" style="padding: 9px 16px; font-size: 12px; color: var(--muted-foreground); font-style: italic;">${o.notes || '—'}</td>
+              <td style="padding: 9px 16px;"></td>
+              <td data-label="Tổng Số Lượng" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--foreground);">${fmt(orderQty)}</td>
+              <td style="padding: 9px 16px;"></td>
+              <td data-label="Tổng Tiền" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--foreground);">${fmtUSD(orderTotalAmount)}</td>
+            </tr>
+          `;
         });
 
-        // Dòng tổng cộng ngày tháng: Cột 1 (Đơn Hàng Bán) để trống, Ngày tháng hiển thị ở Cột 2 (Tên Hàng)
-        rows.push(`
-          <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="state.search='${selectedCustomer}'; navigate('sales-orders');" title="Click để xem các Đơn hàng bán của ${selectedCustomer} ngày ${formattedDate}">
-            <td style="padding: 8px 16px;"></td>
-            <td style="padding: 8px 16px; font-font-size: 13px; font-weight: 700; color: #f0a030; font-family: var(--font-dm-mono);">${formattedDate}</td>
-            <td style="padding: 8px 16px; text-align: center;"></td>
-            <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: #f0a030;">${fmt(dayTotalQty)}</td>
-            <td style="padding: 8px 16px; text-align: right;"></td>
-            <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: #f0a030;">${fmtUSD(dayTotalAmount)}</td>
-          </tr>
-        `);
+        // Cập nhật tổng của Ngày vào Dòng Ngày Tháng (Index 0)
+        dayRows[0] = dayRows[0]
+          .replace('DAY_QTY_PLACEHOLDER', fmt(dayTotalQty))
+          .replace('DAY_AMT_PLACEHOLDER', fmtUSD(dayTotalAmount));
 
         rows.push(...dayRows);
       }
@@ -3027,8 +3051,8 @@ function renderReportSales(c) {
         `;
       } else {
         const grandTotalRowHtml = `
-          <tr style="border-bottom: 2px solid var(--border); background: var(--secondary); font-weight: 600;">
-            <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;"></td>
+          <tr style="border-bottom: 2px solid var(--border); background-color: rgba(251, 191, 36, 0.08); font-weight: 600;">
+            <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;">TỔNG CỘNG</td>
             <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmt(grandTotalQty)}</td>
             <td style="padding: 12px 16px;"></td>
             <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmtUSD(grandTotalAmount)}</td>
@@ -3119,7 +3143,7 @@ function renderReportSales(c) {
               </select>
             </div>
 
-            <!-- NÚT XUẤT PDF LÔ GICH MỚI: Luôn hiển thị, disable khi chọn mẫu Chi tiết mà chưa chọn Khách hàng -->
+            <!-- NÚT XUẤT PDF -->
             <button 
               type="button" 
               class="btn-primary" 
