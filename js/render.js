@@ -1004,7 +1004,7 @@ function renderOrdersList(c) {
       <td data-label="Mã Đơn Hàng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: left; color: var(--primary);">${o.id}</td>
       <td data-label="Ngày Lập Phiếu" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${o.date}</td>
       <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${o.customer}</td>
-      td data-label="Ghi Chú" style="padding: 12px 16px; font-size: 12px; text-align: left; color: var(--muted-foreground);">${o.notes || '—'}</td>
+      <td data-label="Ghi Chú" style="padding: 12px 16px; font-size: 12px; text-align: left; color: var(--muted-foreground);">${o.notes || '—'}</td>
       <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${(o.lineItems || o.lineitems || []).length || o.items || 0}</td>
       <td data-label="Tổng Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(o.total)}</td>
       <td data-label="Trạng Thái" style="padding: 12px 16px; text-align: center;"><span class="badge ${getBadgeClass(o.status)}">${getStatusLabel(o.status)}</span></td>
@@ -1975,6 +1975,9 @@ function renderSalesOrderForm(c) {
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+        <span style="font-family: var(--font-dm-mono, monospace); font-size: 11px; font-weight: 600; color: var(--muted-foreground); min-width: 14px; text-align: right; user-select: none;">
+          ${idx + 1}.
+        </span>
         <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
         
         <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'sales-orders\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng chọn khách hàng...' : 'Chọn/nhập tên hàng...'}" required>
