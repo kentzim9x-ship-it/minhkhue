@@ -2885,8 +2885,8 @@ function renderReportSales(c) {
 
     // Dòng tổng cộng ngay dưới header cho mẫu tổng hợp
     const grandTotalRowHtml = `
-      <tr style="border-bottom: 2px solid var(--border); background-color: rgba(251, 191, 36, 0.08); font-weight: 600;">
-        <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;">TỔNG CỘNG</td>
+      <tr style="border-bottom: 2px solid var(--border); background: var(--secondary); font-weight: 600;">
+        <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;"></td>
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmt(grandTotalQty)}</td>
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmtUSD(grandTotalAmount)}</td>
       </tr>
@@ -2966,11 +2966,10 @@ function renderReportSales(c) {
         let dayTotalAmount = 0;
         let dayRows = [];
 
-        // Dòng tổng cộng ngày tháng: Cột 1 (Đơn Hàng Bán) hiển thị Ngày Tháng
         dayRows.push(`
           <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="state.search='${selectedCustomer}'; navigate('sales-orders');" title="Click để xem các Đơn hàng bán của ${selectedCustomer} ngày ${formattedDate}">
-            <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030; font-family: var(--font-dm-mono);">${formattedDate}</td>
             <td style="padding: 8px 16px;"></td>
+            <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030; font-family: var(--font-dm-mono);">${formattedDate}</td>
             <td style="padding: 8px 16px; text-align: center;"></td>
             <td style="padding: 8px 16px; font-family: var(--font-dm-mono); font-size: 12px; font-weight: 700; text-align: right; color: #f0a030;">DAY_QTY_PLACEHOLDER</td>
             <td style="padding: 8px 16px; text-align: right;"></td>
@@ -3051,8 +3050,8 @@ function renderReportSales(c) {
         `;
       } else {
         const grandTotalRowHtml = `
-          <tr style="border-bottom: 2px solid var(--border); background-color: rgba(251, 191, 36, 0.08); font-weight: 600;">
-            <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;">TỔNG CỘNG</td>
+          <tr style="border-bottom: 2px solid var(--border); background: var(--secondary); font-weight: 600;">
+            <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;"></td>
             <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmt(grandTotalQty)}</td>
             <td style="padding: 12px 16px;"></td>
             <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmtUSD(grandTotalAmount)}</td>
