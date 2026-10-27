@@ -1147,7 +1147,7 @@ function getSortedMaterialsForOrder(customerName, orderDateStr) {
     return materials.sort(sortBySkuAsc);
   }
 
-  // 3. Trường hợp CÓ báo giá hợp lệ: Map giá từ Báo giá vào Sản phẩm
+  // 3. Trường hợp CÓ báo giá hợp lệ: Map đơn giá từ Báo Giá vào Sản phẩm
   const quoteItemMap = {};
   activeQuotation.lineItems.forEach(item => {
     const sku = (item.sku || '').trim().toLowerCase();
@@ -1166,17 +1166,17 @@ function getSortedMaterialsForOrder(customerName, orderDateStr) {
     const matName = (m.name || '').trim().toLowerCase();
 
     const hasInQuote = (matSku && quoteItemMap[`sku:${matSku}`] !== undefined) ||
-      (matName && quoteItemMap[`name:${matName}`] !== undefined);
+                       (matName && quoteItemMap[`name:${matName}`] !== undefined);
 
     if (hasInQuote) {
-      // ĐỔI GIÁ SẢN PHẨM BẰNG GIÁ KHAI BÁO TRONG BÁO GIÁ (Ví dụ: 34.000đ)
-      const quotedPrice = (matSku && quoteItemMap[`sku:${matSku}`] !== undefined)
-        ? quoteItemMap[`sku:${matSku}`]
+      // LẤY ĐƠN GIÁ ĐANG KHAI BÁO TRONG BÁO GIÁ ĐỂ GHI ĐÈ GIÁ DANH MỤC
+      const quotedPrice = (matSku && quoteItemMap[`sku:${matSku}`] !== undefined) 
+        ? quoteItemMap[`sku:${matSku}`] 
         : quoteItemMap[`name:${matName}`];
 
       m.price = quotedPrice;
-      m.cost = quotedPrice; // Để các hàm hiển thị datalist lấy luôn mức giá 34.000đ này
-      m.isQuoted = true;    // Đánh dấu để hiển thị thẻ "★ Báo giá"
+      m.cost = quotedPrice; // Đảm bảo Datalist lấy đúng giá Báo giá (VD: 34.000 đ)
+      m.isQuoted = true;    // Đánh dấu thẻ "★ Báo giá"
 
       inQuotationList.push(m);
     } else {
@@ -1188,7 +1188,7 @@ function getSortedMaterialsForOrder(customerName, orderDateStr) {
   inQuotationList.sort(sortBySkuAsc);
   outQuotationList.sort(sortBySkuAsc);
 
-  // Ghép nhóm trong Báo giá (mang giá từ báo giá) lên trước, các mặt hàng khác phía sau
+  // Ghép nhóm trong Báo giá (mang giá Báo giá) lên trước, các mặt hàng khác phía sau
   return [...inQuotationList, ...outQuotationList];
 }
 
