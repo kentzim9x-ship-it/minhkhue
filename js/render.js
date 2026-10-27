@@ -980,7 +980,7 @@ function renderOrdersList(c) {
     { title: 'Mã Đơn Hàng', width: '30px', align: 'center' },
     { title: 'Ngày Lập Phiếu', width: '30px', align: 'center' },
     { title: 'Khách Hàng', width: '50px', align: 'center' },
-    { title: 'Mã Kho', width: '30px', align: 'center' },
+    { title: 'Ghi Chú', width: '60px', align: 'center' },
     { title: 'Số Dòng', width: '20px', align: 'center' },
     { title: 'Tổng Tiền', width: '30px', align: 'center' },
     { title: 'Trạng Thái', width: '40px', align: 'center' },
@@ -1004,7 +1004,7 @@ function renderOrdersList(c) {
       <td data-label="Mã Đơn Hàng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: left; color: var(--primary);">${o.id}</td>
       <td data-label="Ngày Lập Phiếu" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${o.date}</td>
       <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${o.customer}</td>
-      <td data-label="Mã Kho" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${o.warehouseCode || o.warehouse_code || '—'}</td>
+      td data-label="Ghi Chú" style="padding: 12px 16px; font-size: 12px; text-align: left; color: var(--muted-foreground);">${o.notes || '—'}</td>
       <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${(o.lineItems || o.lineitems || []).length || o.items || 0}</td>
       <td data-label="Tổng Tiền" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right;">${fmtUSD(o.total)}</td>
       <td data-label="Trạng Thái" style="padding: 12px 16px; text-align: center;"><span class="badge ${getBadgeClass(o.status)}">${getStatusLabel(o.status)}</span></td>
@@ -2679,10 +2679,10 @@ function renderReportInventory(c) {
                       border-radius: 2px; 
                       cursor: pointer;
                       transition: all 0.2s ease;
-                      ${state.filter === val 
-                        ? 'background: #f0a030; color: #000000; border: 1px solid #f0a030;' 
-                        : 'background: rgba(255, 255, 255, 0.03); color: var(--muted-foreground); border: 1px solid var(--border);'
-                      }
+                      ${state.filter === val
+      ? 'background: #f0a030; color: #000000; border: 1px solid #f0a030;'
+      : 'background: rgba(255, 255, 255, 0.03); color: var(--muted-foreground); border: 1px solid var(--border);'
+    }
                     "
                   >
                     ${label}
