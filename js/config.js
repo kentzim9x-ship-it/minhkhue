@@ -324,6 +324,57 @@ function fmtTimeStr(timeStr) {
 // 4. TIỆN ÍCH (HELPERS) & FORMATTER
 // ==========================================
 
+// Hàm tiện ích lấy ngày đầu tiên & ngày cuối cùng của tháng hiện tại (định dạng YYYY-MM-DD)
+function getDefaultDateRange() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  const formatDate = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  return {
+    fromDate: formatDate(firstDay),
+    toDate: formatDate(lastDay)
+  };
+}
+
+// Khởi tạo ngày mặc định trong state nếu chưa có
+if (!state.fromDate || !state.toDate) {
+  const defaultDates = getDefaultDateRange();
+  state.fromDate = state.fromDate || defaultDates.fromDate;
+  state.toDate = state.toDate || defaultDates.toDate;
+}
+
+// Component HTML hiển thị 2 ô chọn ngày ở giữa
+function getDateRangeFilterUI() {
+  return `
+    <div style="display: flex; align-items: center; gap: 8px; font-family: var(--font-dm-mono, monospace); font-size: 12px; color: var(--muted-foreground);">
+      <span>Từ:</span>
+      <input 
+        type="date" 
+        value="${state.fromDate}" 
+        onchange="state.fromDate = this.value; state.page = 1; render();"
+        style="border: 1px solid var(--border); background: var(--card); color: var(--foreground); padding: 6px 10px; font-family: var(--font-jost); font-size: 13px; outline: none; border-radius: 2px;"
+      />
+      <span>đến:</span>
+      <input 
+        type="date" 
+        value="${state.toDate}" 
+        onchange="state.toDate = this.value; state.page = 1; render();"
+        style="border: 1px solid var(--border); background: var(--card); color: var(--foreground); padding: 6px 10px; font-family: var(--font-jost); font-size: 13px; outline: none; border-radius: 2px;"
+      />
+    </div>
+  `;
+}
+
 function getBadgeClass(status) {
   const s = String(status || '').toLowerCase().trim();
   const map = {

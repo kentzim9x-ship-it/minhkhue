@@ -1887,7 +1887,7 @@ async function exportSalesReportToPDF() {
     }
 
   } else {
-    // === 2. TẠO BÁO CÁO CHI TIẾT (CỘT 1: ĐƠN HÀNG BÁN, CỘT 2: TÊN HÀNG) ===
+    // === 2. TẠO BÁO CÁO CHI TIẾT (ĐÃ ĐIỀU CHỈNH ĐÚNG YÊU CẦU DÒNG MÃ ĐƠN HÀNG) ===
     const customerOrders = filteredOrders.filter(o =>
       o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
     );
@@ -1913,7 +1913,13 @@ async function exportSalesReportToPDF() {
 
       dayOrders.forEach(o => {
         const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
-        items.forEach((item, itemIndex) => {
+        
+        let orderTotalQty = 0;
+        let orderTotalAmount = 0;
+        let orderItemsHtml = '';
+
+        // Tính toán các mặt hàng trong phiếu và tổng của phiếu
+        items.forEach(item => {
           const qty = Number(item.qty || 0);
           const price = Number(item.unitPrice || 0);
           const disc = Number(item.discount || 0);
@@ -1924,16 +1930,12 @@ async function exportSalesReportToPDF() {
           const name = item.name || '—';
           const unit = resolveUnit(sku, name, item.unit);
 
-          dayTotalQty += qty;
-          dayTotalAmount += lineTotal;
-          totalQty += qty;
-          totalAmount += lineTotal;
+          orderTotalQty += qty;
+          orderTotalAmount += lineTotal;
 
-          const displayOrderNum = itemIndex === 0 ? (o.id || '—') : '';
-
-          dayRowsHtml += `
+          orderItemsHtml += `
             <tr style="height: 22px; page-break-inside: avoid; break-inside: avoid;">
-              <td style="border: 1px solid #000; text-align: center; font-size: 10pt; padding: 2px; font-family: 'Times New Roman', serif;">${displayOrderNum}</td>
+              <td style="border: 1px solid #000; text-align: center; font-size: 10pt; padding: 2px;"></td>
               <td style="border: 1px solid #000; text-align: left; font-size: 10pt; padding: 2px 5px;">${name}</td>
               <td style="border: 1px solid #000; text-align: center; font-size: 10pt; padding: 2px;">${unit}</td>
               <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${qty ? qty.toLocaleString('vi-VN') : '0'}</td>
@@ -1942,6 +1944,25 @@ async function exportSalesReportToPDF() {
             </tr>
           `;
         });
+
+        dayTotalQty += orderTotalQty;
+        dayTotalAmount += orderTotalAmount;
+        totalQty += orderTotalQty;
+        totalAmount += orderTotalAmount;
+
+        // Dòng tiêu đề Đơn hàng (Cột Tên = Ghi chú, ĐVT/Đơn giá = Trống, SL = Tổng SL phiếu, Thành tiền = Tổng tiền phiếu)
+        const orderHeaderHtml = `
+          <tr style="height: 22px; background-color: #f8fafc; font-weight: bold; page-break-inside: avoid; break-inside: avoid;">
+            <td style="border: 1px solid #000; text-align: left; font-size: 10pt; padding: 2px 5px; color: #d97706;">${o.id || '—'}</td>
+            <td style="border: 1px solid #000; text-align: left; font-size: 10pt; padding: 2px 5px; font-weight: normal;">${o.notes || '—'}</td>
+            <td style="border: 1px solid #000;"></td>
+            <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${orderTotalQty ? orderTotalQty.toLocaleString('vi-VN') : '0'}</td>
+            <td style="border: 1px solid #000;"></td>
+            <td style="border: 1px solid #000; text-align: right; font-size: 10pt; padding: 2px 5px;">${orderTotalAmount ? Math.round(orderTotalAmount).toLocaleString('vi-VN') : '0'}</td>
+          </tr>
+        `;
+
+        dayRowsHtml += orderHeaderHtml + orderItemsHtml;
       });
 
       rowsHtml += `
@@ -2020,7 +2041,7 @@ async function exportSalesReportToPDF() {
       CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
     </div>
 
-    <!-- KHU VỰC THÔNG TIN KHÁCH HÀNG & THÁNG BÁO CÁO (NẰM CÙNG 1 HÀNG) -->
+    <!-- KHU VỰC THÔNG TIN KHÁCH HÀNG & THÁNG BÁO CÁO -->
     <table style="width: 100%; font-size: 10.5pt; margin-bottom: 8px; border-collapse: collapse; line-height: 1.5;">
       <tr>
         <td style="width: 50%; padding: 1px 0; vertical-align: top;">Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</td>

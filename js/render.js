@@ -781,24 +781,28 @@ function renderQuotationsList(c) {
   const hasPermission = checkModulePermission('quotations');
 
   const filtered = db.quotations.filter(q => {
+    // 1. Lọc theo trạng thái
     const matchStatus = (state.filter === 'all' || q.status === state.filter);
-    const searchKey = normalizeSearchText(state.search);
 
-    // Đổi định dạng ngàyYYYY-MM-DD sang DD/MM/YYYY để gõ định dạng nào cũng tìm ra
-    const dateStr = q.date || '';
-    const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
+    // 2. Lọc theo khoảng ngày
+    const qDate = q.date || '';
+    const matchDate = (!state.fromDate || qDate >= state.fromDate) && (!state.toDate || qDate <= state.toDate);
+
+    // 3. Lọc theo từ khóa tìm kiếm
+    const searchKey = normalizeSearchText(state.search);
+    const dateFormatted = qDate.includes('-') ? qDate.split('-').reverse().join('/') : qDate;
     const statusLabel = getStatusLabel(q.status);
 
     const matchSearch = !searchKey ||
       normalizeSearchText(q.customer).includes(searchKey) ||
       normalizeSearchText(q.customerId || q.customerid).includes(searchKey) ||
       normalizeSearchText(q.id).includes(searchKey) ||
-      normalizeSearchText(dateStr).includes(searchKey) ||
+      normalizeSearchText(qDate).includes(searchKey) ||
       normalizeSearchText(dateFormatted).includes(searchKey) ||
       normalizeSearchText(q.status).includes(searchKey) ||
       normalizeSearchText(statusLabel).includes(searchKey);
 
-    return matchStatus && matchSearch;
+    return matchStatus && matchDate && matchSearch;
   });
 
   // TÍNH TOÁN PHÂN TRANG
