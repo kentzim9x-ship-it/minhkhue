@@ -1254,31 +1254,39 @@ function handleMaterialSelectInLine(lineId, selectedName) {
     return;
   }
 
+  // 1. TÁCH SẠCH CHUỖI GỢI Ý (loại bỏ SKU, Giá tiền, Icon Báo giá)
+  // Ví dụ chuỗi đầu vào: "SKU-0006 - Cam Xanh (30.000 đ) ★ Báo giá"
   let cleanName = valStr;
+  let extractedSku = '';
+
   if (valStr.includes(' - ')) {
     const parts = valStr.split(' - ');
-    cleanName = parts.length > 1 ? parts.slice(1).join(' - ').split(' (')[0].trim() : valStr;
+    extractedSku = parts[0].trim(); // Lấy "SKU-0006"
+    // Lấy phần giữa "Cam Xanh (30.000 đ) ★ Báo giá" và xóa sạch ngoặc đơn + ngôi sao
+    cleanName = parts.slice(1).join(' - ').replace(/\s*\([^)]*\).*/g, '').trim();
   }
 
+  // 2. Tra cứu mặt hàng trong Danh mục Vật tư/Sản phẩm (db.materials)
   const mat = (db.materials || []).find(m =>
-    (m.name && m.name.toLowerCase() === cleanName.toLowerCase()) ||
-    (m.id && m.id.toLowerCase() === valStr.toLowerCase())
+    (extractedSku && m.id && m.id.toLowerCase() === extractedSku.toLowerCase()) ||
+    (m.id && m.id.toLowerCase() === cleanName.toLowerCase()) ||
+    (m.name && m.name.toLowerCase() === cleanName.toLowerCase())
   );
 
   if (mat) {
-    line.name = mat.name || '';
-    line.sku = mat.id || '';
+    line.name = mat.name || cleanName;
+    line.sku = mat.id || extractedSku;
 
-    // Đơn giá mặc định lấy từ Danh mục sản phẩm (Giá vốn/Giá niêm yết)
+    // Đơn giá mặc định từ danh mục
     let finalUnitPrice = (mat.price !== undefined && mat.price !== null) ? Number(mat.price) : (mat.cost || 0);
 
-    // KIỂM TRA ƯU TIÊN LẤY GIÁ TỪ BẢNG BÁO GIÁ ĐÃ DUYỆT CỦA KHÁCH HÀNG (cho Sales Orders & Returns)
+    // 3. ƯU TIÊN LẤY ĐƠN GIÁ TỪ BẢNG BÁO GIÁ ĐÃ DUYỆT CỦA KHÁCH HÀNG
     if (['sales-orders', 'returns'].includes(state.view)) {
       const currentCustomer = (state.formData.customer || '').trim();
       const orderDate = state.formData.date || getTodayDateStr();
 
       if (currentCustomer) {
-        // Tìm Báo giá có trạng thái "Duyệt" và còn hiệu lực của Khách hàng hiện tại
+        // Tìm Báo giá hiệu lực gần nhất của Khách hàng
         const activeQuotation = (db.quotations || [])
           .filter(q => {
             if (!q || !q.customer) return false;
@@ -1294,17 +1302,22 @@ function handleMaterialSelectInLine(lineId, selectedName) {
             if (vBegin && vUntil) {
               return orderDate >= vBegin && orderDate <= vUntil;
             }
-            return true; // Nếu không cài ngày hết hạn thì mặc định hiểu là có hiệu lực
+            return true;
           })
           .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
 
-        // Nếu tìm thấy Báo giá hợp lệ -> Tìm sản phẩm trong Báo giá đó
+        // Nếu tìm thấy Báo giá -> Tìm dòng sản phẩm trong báo giá đó
         if (activeQuotation && Array.isArray(activeQuotation.lineItems)) {
-          const quotedItem = activeQuotation.lineItems.find(item =>
-            (item.sku && mat.id && item.sku.toLowerCase() === mat.id.toLowerCase()) ||
-            (item.name && mat.name && item.name.toLowerCase() === mat.name.toLowerCase())
-          );
+          const quotedItem = activeQuotation.lineItems.find(item => {
+            const qSku = (item.sku || '').trim().toLowerCase();
+            const qName = (item.name || '').trim().toLowerCase();
+            const targetSku = (mat.id || extractedSku).trim().toLowerCase();
+            const targetName = (mat.name || cleanName).trim().toLowerCase();
 
+            return (qSku && targetSku && qSku === targetSku) || (qName && targetName && qName === targetName);
+          });
+
+          // Lấy chính xác Đơn giá đã khai báo trong Báo giá (VD: 30.000 đ)
           if (quotedItem && quotedItem.unitPrice !== undefined && quotedItem.unitPrice !== null && !isNaN(Number(quotedItem.unitPrice))) {
             finalUnitPrice = Number(quotedItem.unitPrice);
           }
@@ -1316,6 +1329,11 @@ function handleMaterialSelectInLine(lineId, selectedName) {
     line.unitCost = mat.cost || 0;
   } else {
     line.name = cleanName;
+  }
+
+  // Tự động tính toán lại tổng tiền của các dòng sau khi cập nhật giá
+  if (typeof updateLine === 'function') {
+    updateLine(lineId, 'unitPrice', line.unitPrice, 'number');
   }
 
   render();
