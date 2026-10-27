@@ -2967,7 +2967,7 @@ function renderReportSales(c) {
         let dayRows = [];
 
         dayRows.push(`
-          <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="state.search='${selectedCustomer}'; navigate('sales-orders');" title="Click để xem các Đơn hàng bán của ${selectedCustomer} ngày ${formattedDate}">
+          <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'list', null, { search: '${dateStr}', page: 1 });" title="Click để xem các Đơn hàng bán ngày ${formattedDate}">
             <td style="padding: 8px 16px;"></td>
             <td style="padding: 8px 16px;"></td>
             <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030; font-family: var(--font-dm-mono); text-align: center;">${formattedDate}</td>
@@ -3021,10 +3021,10 @@ function renderReportSales(c) {
           dayRows[orderHeaderIndex] = `
             <tr style="border-bottom: 1px solid var(--border); background: var(--secondary); font-weight: 600;" class="hover-row" onclick="navigate('sales-orders', 'view', '${o.id}')" ondblclick="navigate('sales-orders', 'edit', '${o.id}')">
               <td data-label="Đơn Hàng Bán" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); font-weight: 600;">${o.id || '—'}</td>
-              <td data-label="Ghi Chú" style="padding: 9px 16px; font-size: 12px; color: var(--muted-foreground); font-weight: 400;">${o.notes || '—'}</td>
-              <td style="padding: 9px 16px;"></td>
+              <td data-label="Ghi Chú" style="padding: 9px 16px; font-size: 12px; color: var(--muted-foreground); font-weight: 600;">${o.notes || '—'}</td>
+              <td style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); font-weight: 600;">-</td>
               <td data-label="Tổng Số Lượng" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--foreground);">${fmt(orderQty)}</td>
-              <td style="padding: 9px 16px;"></td>
+              <td style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); font-weight: 600;">-</td>
               <td data-label="Tổng Tiền" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--foreground);">${fmtUSD(orderTotalAmount)}</td>
             </tr>
           `;
