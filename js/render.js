@@ -2174,7 +2174,14 @@ function renderReturnForm(c) {
     `<option value="${cust.name || ''}" ${d.customer === cust.name ? 'selected' : ''}>${cust.name || ''}</option>`
   ).join('');
 
-  const orderOptions = (db.orders || []).map(o =>
+  // Lọc danh sách Đơn Hàng Bán: Nếu đã chọn Khách Hàng -> Chỉ lấy các đơn của KH đó
+  const filteredOrders = (db.orders || []).filter(o => {
+    if (!d.customer) return true; // Nếu chưa chọn Khách Hàng -> Hiển thị tất cả đơn hàng
+    return o.customer && String(o.customer).trim().toLowerCase() === String(d.customer).trim().toLowerCase();
+  });
+
+  // Tạo các thẻ <option> từ danh sách đã lọc
+  const orderOptions = filteredOrders.map(o =>
     `<option value="${o.id}" ${d.orderId === o.id ? 'selected' : ''}>${o.id} - ${o.customer || 'Khách không tên'}</option>`
   ).join('');
 
@@ -2486,7 +2493,7 @@ function renderGRNForm(c) {
           </div>
 
           <!-- BỐ TRÍ KHU VỰC TỔNG TIỀN VÀ NÚT THÊM DÒNG TRÊN PC -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 26px 10px 26px; flex-wrap: wrap; gap: 12px;">
             <div style="width: 110px; flex-shrink: 0;">
               ${getAddLineButton('grn', isDetailsDisabled, 'footer')}
             </div>
