@@ -303,7 +303,7 @@ function getSalesAnalyticsData() {
 
   (db.orders || []).forEach(o => {
     const status = (o.status || '').toLowerCase();
-    if (['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) {
+    if (['completed', 'accepted', 'hoàn thành', 'duyệt'].includes(status)) {
       const dateStr = o.date || '';
       const key = dateStr.substring(0, 7);
       const total = Number(o.total || 0);
@@ -323,7 +323,7 @@ function getSalesAnalyticsData() {
 
   (db.returns || []).forEach(r => {
     const status = (r.status || '').toLowerCase();
-    if (['processed', 'approved', 'đã xử lý', 'đã duyệt'].includes(status)) {
+    if (['completed', 'accepted', 'hoàn thành', 'duyệt'].includes(status)) {
       const dateStr = r.date || '';
       const key = dateStr.substring(0, 7);
       if (monthlyMap[key]) {
@@ -338,7 +338,7 @@ function getSalesAnalyticsData() {
   let ytdOrders = 0;
   (db.orders || []).forEach(o => {
     const status = (o.status || '').toLowerCase();
-    if (['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) {
+    if (['completed', 'accepted', 'hoàn thành', 'duyệt'].includes(status)) {
       if (o.date && o.date.startsWith(String(currentYear))) {
         ytdRevenue += Number(o.total || 0);
         ytdOrders += 1;
@@ -349,7 +349,7 @@ function getSalesAnalyticsData() {
   const customerMap = {};
   (db.orders || []).forEach(o => {
     const status = (o.status || '').toLowerCase();
-    if (['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) {
+    if (['completed', 'accepted', 'hoàn thành', 'duyệt'].includes(status)) {
       const cName = o.customer || 'Khách lẻ';
       if (!customerMap[cName]) customerMap[cName] = { name: cName, revenue: 0, orders: 0 };
       customerMap[cName].revenue += Number(o.total || 0);
@@ -392,7 +392,7 @@ function renderDashboard(c) {
     recentActivityReal
   } = getSalesAnalyticsData();
 
-  const openQuotationsCount = (db.quotations || []).filter(q => ['draft', 'accepted', 'bản nháp', 'đã chấp nhận'].includes((q.status || '').toLowerCase())).length;
+  const openQuotationsCount = (db.quotations || []).filter(q => ['pending', 'chờ duyệt'].includes((q.status || '').toLowerCase())).length;
 
   const totalOrdersCount = (db.orders || []).length;
   const completedOrdersCount = (db.orders || []).filter(o => ['completed', 'hoàn thành'].includes((o.status || '').toLowerCase())).length;
@@ -416,8 +416,8 @@ function renderDashboard(c) {
       <div class="kpi-grid">
         <div class="kpi-card"><span class="kpi-label">Doanh thu tháng này</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(currentMonthRevenue)}</span></div><span class="kpi-sub">${currentMonthStr}</span></div>
         <div class="kpi-card"><span class="kpi-label">Đơn hàng tháng này</span><div class="kpi-value-row"><span class="kpi-value">${fmt(currentMonthOrders)}</span></div><span class="kpi-sub">${currentMonthStr}</span></div>
-        <div class="kpi-card"><span class="kpi-label">Báo giá chưa khóa</span><div class="kpi-value-row"><span class="kpi-value">${openQuotationsCount}</span></div><span class="kpi-sub">nháp + chấp nhận</span></div>
-        <div class="kpi-card"><span class="kpi-label">Tỷ lệ hoàn thành</span><div class="kpi-value-row"><span class="kpi-value">${completionRate}%</span></div><span class="kpi-sub">giao đúng hạn</span></div>
+        <div class="kpi-card"><span class="kpi-label">Báo giá chưa khóa</span><div class="kpi-value-row"><span class="kpi-value">${openQuotationsCount}</span></div><span class="kpi-sub">Chờ Duyệt</span></div>
+        <div class="kpi-card"><span class="kpi-label">Tỷ lệ hoàn thành</span><div class="kpi-value-row"><span class="kpi-value">${completionRate}%</span></div><span class="kpi-sub">Giao Đúng Hạn</span></div>
       </div>
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="grid-2">
         <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
@@ -819,9 +819,8 @@ function renderQuotationsList(c) {
   ].map(([s, label]) => {
     const count = s === 'all'
       ? db.quotations.length
-      : db.quotations.filter(q => q.status === s || (s === 'accepted' && q.status === 'approved') || (s === 'pending' && q.status === 'draft')).length;
+      : db.quotations.filter(q => q.status === s || s === 'accepted' || s === 'pending' ).length;
 
-    // Màu sắc tương ứng từng thẻ: Tổng (Trắng/Mặc định), Duyệt (Xanh lá), Chờ duyệt (Cam), Từ chối (Xám), Hết hạn (Đỏ)
     const color = s === 'all' ? 'var(--foreground)'
       : s === 'accepted' ? '#34d399'
         : s === 'pending' ? 'var(--foreground)'
@@ -966,8 +965,8 @@ function renderOrdersList(c) {
   const kpiHtml = [
     { label: 'Tổng đơn hàng', val: db.orders.length, color: 'var(--foreground)' },
     { label: 'Hoàn thành', val: db.orders.filter(o => ['completed', 'hoàn thành'].includes((o.status || '').toLowerCase())).length, color: '#60a5fa' },
-    { label: 'Duyệt', val: db.orders.filter(o => ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((o.status || '').toLowerCase())).length, color: '#34d399' },
-    { label: 'Chờ duyệt', val: db.orders.filter(o => ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((o.status || '').toLowerCase())).color = '#fbbf24', val: db.orders.filter(o => ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((o.status || '').toLowerCase())).length },
+    { label: 'Duyệt', val: db.orders.filter(o => ['accepted', 'duyệt'].includes((o.status || '').toLowerCase())).length, color: '#34d399' },
+    { label: 'Chờ duyệt', val: db.orders.filter(o => ['pending', 'chờ duyệt'].includes((o.status || '').toLowerCase())).length, color = '#fbbf24' },
     { label: 'Đã Hủy', val: db.orders.filter(o => ['cancelled', 'đã hủy'].includes((o.status || '').toLowerCase())).length, color: '#f87171' },
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
@@ -1105,8 +1104,8 @@ function renderReturnsList(c) {
   // ĐỒNG BỘ ĐỔI TRẢ HÀNG BÁN: ĐÃ XỬ LÝ -> HOÀN THÀNH
   const kpiHtml = [
     { label: 'Tổng số lượt đổi trả', val: db.returns.length, color: 'var(--foreground)' },
-    { label: 'Hoàn thành', val: db.returns.filter(r => ['processed', 'hoàn thành', 'đã xử lý'].includes((r.status || '').toLowerCase())).length, color: '#60a5fa' },
-    { label: 'Duyệt', val: db.returns.filter(r => ['approved', 'duyệt', 'đã duyệt'].includes((r.status || '').toLowerCase())).length, color: '#34d399' },
+    { label: 'Hoàn thành', val: db.returns.filter(r => ['completed', 'hoàn thành'].includes((r.status || '').toLowerCase())).length, color: '#60a5fa' },
+    { label: 'Duyệt', val: db.returns.filter(r => ['accepted', 'duyệt'].includes((r.status || '').toLowerCase())).length, color: '#34d399' },
     { label: 'Chờ duyệt', val: db.returns.filter(r => ['pending', 'chờ duyệt'].includes((r.status || '').toLowerCase())).length, color: 'var(--foreground)' },
     { label: 'Từ chối', val: db.returns.filter(r => ['rejected', 'từ chối'].includes((r.status || '').toLowerCase())).length, color: '#818cf8' }
   ].map(s => `
@@ -1176,7 +1175,7 @@ function renderReturnsList(c) {
       </div>
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['processed', 'Hoàn thành'], ['approved', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối']])}
+        ${getFilterBar([['all', 'Tất cả'], ['completed', 'Hoàn thành'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
@@ -1247,12 +1246,11 @@ function renderGRNList(c) {
   const startIndex = (state.page - 1) * state.pageSize;
   const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
 
-  // ĐỒNG BỘ 4 THẺ KPI ĐÚNG THỨ TỰ VÀ MÀU SẮC CHUẨN (Tổng số -> Đã nhận -> Bản nháp -> Đã xác minh)
   const kpiHtml = [
     { label: 'Tổng số phiếu nhập', val: db.grns.length, color: 'var(--foreground)' },
-    { label: 'Đã nhận', val: db.grns.filter(g => ['Đã nhận', 'received'].includes(g.status)).length, color: '#fbbf24' },
-    { label: 'Bản nháp', val: db.grns.filter(g => ['Bản nháp', 'draft'].includes(g.status)).length, color: 'var(--muted-foreground)' },
-    { label: 'Đã xác minh', val: db.grns.filter(g => ['Đã xác minh', 'verified'].includes(g.status)).length, color: '#34d399' }
+    { label: 'received', val: db.grns.filter(g => ['received', 'Đã nhận'].includes((g.status || '')..toLowerCase())).length, color: '#fbbf24' },
+    { label: 'draft', val: db.grns.filter(g => ['draft', 'Bản nháp'].includes((g.status || '').toLowerCase())).length, color: 'var(--muted-foreground)' },
+    { label: 'verified', val: db.grns.filter(g => ['verified', 'Đã xác minh'].includes((g.status || '').toLowerCase())).length, color: '#34d399' }
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
@@ -1319,7 +1317,7 @@ function renderGRNList(c) {
       </div>
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['Đã nhận', 'Đã nhận'], ['Bản nháp', 'Bản nháp'], ['Đã xác minh', 'Đã xác minh']])}
+        ${getFilterBar([['all', 'Tất cả'], ['received', 'Đã nhận'], ['draft', 'Bản nháp'], ['verified', 'Đã xác minh']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
@@ -1753,8 +1751,8 @@ function renderQuotationForm(c) {
               <div class="form-group">
                 <label class="form-label">Trạng thái</label>
                 <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                  <option value="accepted" ${['accepted', 'approved', 'Duyệt'].includes(d.status) ? 'selected' : ''}>Duyệt</option>
-                  <option value="pending" ${['pending', 'draft', 'bản nháp', 'Chờ Duyệt'].includes(d.status) || !d.status ? 'selected' : ''}>Chờ Duyệt</option>
+                  <option value="accepted" ${['accepted', 'Duyệt'].includes(d.status) ? 'selected' : ''}>Duyệt</option>
+                  <option value="pending" ${['pending', 'Chờ Duyệt'].includes(d.status) || !d.status ? 'selected' : ''}>Chờ Duyệt</option>
                   <option value="rejected" ${['rejected', 'Từ Chối'].includes(d.status) ? 'selected' : ''}>Từ Chối</option>
                   <option value="expired" ${['expired', 'Hết Hạn'].includes(d.status) ? 'selected' : ''}>Hết Hạn</option>
                 </select>
@@ -2047,8 +2045,8 @@ function renderSalesOrderForm(c) {
                 <label class="form-label">Trạng thái</label>
                 <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
                   <option value="completed" ${d.status && ['completed', 'hoàn thành'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
-                  <option value="accepted" ${(!d.status || ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((d.status || '').toLowerCase())) ? 'selected' : ''}>Duyệt</option>
-                  <option value="pending" ${d.status && ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Chờ duyệt</option>
+                  <option value="accepted" ${(!d.status || ['accepted', 'duyệt'].includes((d.status || '').toLowerCase())) ? 'selected' : ''}>Duyệt</option>
+                  <option value="pending" ${d.status && ['pending', 'chờ duyệt'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Chờ duyệt</option>
                   <option value="cancelled" ${d.status && ['cancelled', 'đã hủy'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Đã hủy</option>
                 </select>
               </div>
@@ -2253,8 +2251,8 @@ function renderReturnForm(c) {
             <div class="form-group">
               <label class="form-label">Trạng thái</label>
               <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>                                                      
-                <option value="processed" ${d.status && ['processed', 'hoàn thành', 'đã xử lý'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
-                <option value="approved" ${(!d.status || ['approved', 'duyệt', 'đã duyệt'].includes((d.status || '').toLowerCase())) ? 'selected' : ''}>Duyệt</option>
+                <option value="completed" ${d.status && ['completed', 'hoàn thành'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
+                <option value="accepted" ${(!d.status || ['accepted', 'duyệt'].includes((d.status || '').toLowerCase())) ? 'selected' : ''}>Duyệt</option>
                 <option value="pending" ${d.status && ['pending', 'chờ duyệt'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Chờ duyệt</option>
                 <option value="rejected" ${d.status && ['rejected', 'từ chối'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Từ chối</option>
               </select>
@@ -2433,9 +2431,9 @@ function renderGRNForm(c) {
             <div class="form-group">
               <label class="form-label">Trạng thái</label>
               <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
-                <option value="Đã nhận" ${d.status === 'Đã nhận' || d.status === 'received' ? 'selected' : ''}>Đã nhận</option>
-                <option value="Bản nháp" ${d.status === 'Bản nháp' || d.status === 'draft' ? 'selected' : ''}>Bản nháp</option>
-                <option value="Đã xác minh" ${d.status === 'Đã xác minh' || d.status === 'verified' ? 'selected' : ''}>Đã xác minh</option>
+                <option value="received" ${d.status === 'Đã nhận' || d.status === 'received' ? 'selected' : ''}>Đã nhận</option>
+                <option value="draft" ${d.status === 'Bản nháp' || d.status === 'draft' ? 'selected' : ''}>Bản nháp</option>
+                <option value="verified" ${d.status === 'Đã xác minh' || d.status === 'verified' ? 'selected' : ''}>Đã xác minh</option>
               </select>
             </div>
             <div class="form-group" style="grid-column: span 3;">
@@ -2554,7 +2552,7 @@ function renderReportInventory(c) {
     { label: 'Tổng số SKU', value: fmt(materials.length), sub: 'đang hoạt động' },
     { label: 'Giá trị tồn thực tế', value: fmtUSD(materials.reduce((s, m) => s + getActualStock(m) * (m.cost || 0), 0)), sub: 'theo giá vốn' },
     { label: 'Giá trị đã giữ', value: fmtUSD(materials.reduce((s, m) => s + (m.reserved || 0) * (m.cost || 0), 0)), sub: 'cam kết đơn hàng' },
-    { label: 'Sản phẩm cảnh báo', value: fmt(materials.filter(m => ['low', 'critical', 'out'].includes(m.status)).length), sub: 'dưới mức định mức' },
+    { label: 'Sản phẩm cảnh báo', value: fmt(materials.filter(m => ['low', 'out'].includes(m.status)).length), sub: 'dưới mức định mức' },
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
@@ -2571,7 +2569,7 @@ function renderReportInventory(c) {
     </div>
     `).join('');
 
-  const alertsHtml = materials.filter(m => ['low', 'critical', 'out'].includes(m.status)).map(m => `
+  const alertsHtml = materials.filter(m => ['low', 'out'].includes(m.status)).map(m => `
     <div style="padding: 8px 12px; border: 1px solid var(--border); background: var(--secondary);">
       <div style="font-size: 12px; font-weight: 500;">${m.name}</div>
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground);">${m.id} · ${getActualStock(m)} / ${m.reorder ?? 0} đơn vị</div>
@@ -2749,7 +2747,7 @@ function renderReportSales(c) {
     ytdOrders
   } = getSalesAnalyticsData();
 
-  const totalReturnsCount = (db.returns || []).filter(r => ['processed', 'approved', 'đã xử lý', 'đã duyệt'].includes((r.status || '').toLowerCase())).length;
+  const totalReturnsCount = (db.returns || []).filter(r => ['completed', 'accepted', 'hoàn thành', 'duyệt'].includes((r.status || '').toLowerCase())).length;
   const returnRatePercent = ytdOrders > 0 ? ((totalReturnsCount / ytdOrders) * 100).toFixed(1) : '0.0';
   const avgOrderValue = ytdOrders > 0 ? (ytdRevenue / ytdOrders) : 0;
 
@@ -2782,7 +2780,7 @@ function renderReportSales(c) {
   // Lọc dữ liệu đơn hàng theo tháng & Chỉ lấy trạng thái "Duyệt" hoặc "Hoàn thành"
   const filteredOrdersForMonth = (db.orders || []).filter(o => {
     const status = (o.status || '').toLowerCase();
-    const isValidStatus = ['completed', 'hoàn thành', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
+    const isValidStatus = ['completed', 'hoàn thành', 'accepted', 'approved', 'duyệt'].includes(status);
     if (!isValidStatus) return false;
     if (!o.date) return false;
 
