@@ -572,7 +572,7 @@ tr.hover-row {
 }
 
 tr:hover {
-  background-color: var(--secondary);
+  background-color: rgba(148, 163, 184, 0.08);
 }
 
 .badge {
