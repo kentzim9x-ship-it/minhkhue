@@ -1752,7 +1752,7 @@ function renderQuotationForm(c) {
                 <label class="form-label">Trạng thái</label>
                 <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
                   <option value="accepted" ${['accepted', 'Duyệt'].includes(d.status) ? 'selected' : ''}>Duyệt</option>
-                  <option value="pending" ${['pending', 'Chờ Duyệt'].includes(d.status) || !d.status ? 'selected' : ''}>Chờ Duyệt</option>
+                  <option value="pending" ${['pending', 'Chờ Duyệt'].includes(d.status) ? 'selected' : ''}>Chờ Duyệt</option>
                   <option value="rejected" ${['rejected', 'Từ Chối'].includes(d.status) ? 'selected' : ''}>Từ Chối</option>
                   <option value="expired" ${['expired', 'Hết Hạn'].includes(d.status) ? 'selected' : ''}>Hết Hạn</option>
                 </select>
@@ -2045,7 +2045,7 @@ function renderSalesOrderForm(c) {
                 <label class="form-label">Trạng thái</label>
                 <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
                   <option value="completed" ${d.status && ['completed', 'hoàn thành'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
-                  <option value="accepted" ${(!d.status || ['accepted', 'duyệt'].includes((d.status || '').toLowerCase())) ? 'selected' : ''}>Duyệt</option>
+                  <option value="accepted" ${d.status && ['accepted', 'duyệt'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Duyệt</option>
                   <option value="pending" ${d.status && ['pending', 'chờ duyệt'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Chờ duyệt</option>
                   <option value="cancelled" ${d.status && ['cancelled', 'đã hủy'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Đã hủy</option>
                 </select>
@@ -2252,7 +2252,7 @@ function renderReturnForm(c) {
               <label class="form-label">Trạng thái</label>
               <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>                                                      
                 <option value="completed" ${d.status && ['completed', 'hoàn thành'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
-                <option value="accepted" ${(!d.status || ['accepted', 'duyệt'].includes((d.status || '').toLowerCase())) ? 'selected' : ''}>Duyệt</option>
+                <option value="accepted" ${d.status && ['accepted', 'duyệt'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Duyệt</option>
                 <option value="pending" ${d.status && ['pending', 'chờ duyệt'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Chờ duyệt</option>
                 <option value="rejected" ${d.status && ['rejected', 'từ chối'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Từ chối</option>
               </select>
