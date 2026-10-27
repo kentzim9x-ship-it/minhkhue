@@ -328,7 +328,6 @@ function getBadgeClass(status) {
   const s = String(status || '').toLowerCase().trim();
   const map = {
     // 🟢 XANH LÁ (Thành công / Hoàn thành / Duyệt / Đã xác minh / Hoạt động)
-    'completed': 'badge-emerald', 'hoàn thành': 'badge-emerald',
     'approved': 'badge-emerald', 'đã duyệt': 'badge-emerald',
     'accepted': 'badge-emerald', 'duyệt': 'badge-emerald', 'đã chấp nhận': 'badge-emerald',
     'verified': 'badge-emerald', 'đã xác minh': 'badge-emerald',
