@@ -1142,22 +1142,21 @@ function getSortedMaterialsForOrder(customerName, orderDateStr) {
       .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
   }
 
-  // 2. Trường hợp KHÔNG có báo giá hợp lệ -> Trả về tất cả sản phẩm xếp theo SKU tăng dần
+  // 2. Trường hợp KHÔNG có báo giá hợp lệ -> Trả về danh sách sản phẩm gốc
   if (!activeQuotation || !Array.isArray(activeQuotation.lineItems) || activeQuotation.lineItems.length === 0) {
     return materials.sort(sortBySkuAsc);
   }
 
-  // 3. Trường hợp CÓ báo giá hợp lệ -> Tách thành 2 nhóm
-  const quotedSkus = new Set(
-    activeQuotation.lineItems
-      .map(item => (item.sku || item.id || '').trim().toLowerCase())
-      .filter(Boolean)
-  );
-  const quotedNames = new Set(
-    activeQuotation.lineItems
-      .map(item => (item.name || '').trim().toLowerCase())
-      .filter(Boolean)
-  );
+  // 3. Trường hợp CÓ báo giá hợp lệ: Map giá từ Báo giá vào Sản phẩm
+  const quoteItemMap = {};
+  activeQuotation.lineItems.forEach(item => {
+    const sku = (item.sku || '').trim().toLowerCase();
+    const name = (item.name || '').trim().toLowerCase();
+    const price = (item.unitPrice !== undefined && item.unitPrice !== null) ? Number(item.unitPrice) : 0;
+
+    if (sku) quoteItemMap[`sku:${sku}`] = price;
+    if (name) quoteItemMap[`name:${name}`] = price;
+  });
 
   const inQuotationList = [];
   const outQuotationList = [];
@@ -1166,8 +1165,19 @@ function getSortedMaterialsForOrder(customerName, orderDateStr) {
     const matSku = (m.id || '').trim().toLowerCase();
     const matName = (m.name || '').trim().toLowerCase();
 
-    // Kiểm tra sản phẩm có trong báo giá không (theo SKU hoặc theo Tên)
-    if (quotedSkus.has(matSku) || quotedNames.has(matName)) {
+    const hasInQuote = (matSku && quoteItemMap[`sku:${matSku}`] !== undefined) ||
+      (matName && quoteItemMap[`name:${matName}`] !== undefined);
+
+    if (hasInQuote) {
+      // ĐỔI GIÁ SẢN PHẨM BẰNG GIÁ KHAI BÁO TRONG BÁO GIÁ (Ví dụ: 34.000đ)
+      const quotedPrice = (matSku && quoteItemMap[`sku:${matSku}`] !== undefined)
+        ? quoteItemMap[`sku:${matSku}`]
+        : quoteItemMap[`name:${matName}`];
+
+      m.price = quotedPrice;
+      m.cost = quotedPrice; // Để các hàm hiển thị datalist lấy luôn mức giá 34.000đ này
+      m.isQuoted = true;    // Đánh dấu để hiển thị thẻ "★ Báo giá"
+
       inQuotationList.push(m);
     } else {
       outQuotationList.push(m);
@@ -1178,7 +1188,7 @@ function getSortedMaterialsForOrder(customerName, orderDateStr) {
   inQuotationList.sort(sortBySkuAsc);
   outQuotationList.sort(sortBySkuAsc);
 
-  // Ghép Nhóm trong báo giá lên trước, nhóm còn lại phía sau
+  // Ghép nhóm trong Báo giá (mang giá từ báo giá) lên trước, các mặt hàng khác phía sau
   return [...inQuotationList, ...outQuotationList];
 }
 
@@ -1254,39 +1264,31 @@ function handleMaterialSelectInLine(lineId, selectedName) {
     return;
   }
 
-  // 1. TÁCH SẠCH CHUỖI GỢI Ý (loại bỏ SKU, Giá tiền, Icon Báo giá)
-  // Ví dụ chuỗi đầu vào: "SKU-0006 - Cam Xanh (30.000 đ) ★ Báo giá"
   let cleanName = valStr;
-  let extractedSku = '';
-
   if (valStr.includes(' - ')) {
     const parts = valStr.split(' - ');
-    extractedSku = parts[0].trim(); // Lấy "SKU-0006"
-    // Lấy phần giữa "Cam Xanh (30.000 đ) ★ Báo giá" và xóa sạch ngoặc đơn + ngôi sao
-    cleanName = parts.slice(1).join(' - ').replace(/\s*\([^)]*\).*/g, '').trim();
+    cleanName = parts.length > 1 ? parts.slice(1).join(' - ').split(' (')[0].trim() : valStr;
   }
 
-  // 2. Tra cứu mặt hàng trong Danh mục Vật tư/Sản phẩm (db.materials)
   const mat = (db.materials || []).find(m =>
-    (extractedSku && m.id && m.id.toLowerCase() === extractedSku.toLowerCase()) ||
-    (m.id && m.id.toLowerCase() === cleanName.toLowerCase()) ||
-    (m.name && m.name.toLowerCase() === cleanName.toLowerCase())
+    (m.name && m.name.toLowerCase() === cleanName.toLowerCase()) ||
+    (m.id && m.id.toLowerCase() === valStr.toLowerCase())
   );
 
   if (mat) {
-    line.name = mat.name || cleanName;
-    line.sku = mat.id || extractedSku;
+    line.name = mat.name || '';
+    line.sku = mat.id || '';
 
-    // Đơn giá mặc định từ danh mục
-    let finalUnitPrice = (mat.price !== undefined && mat.price !== null) ? Number(mat.price) : (mat.cost || 0);
+    // Đơn giá mặc định lấy từ Danh mục sản phẩm (Giá vốn/Giá niêm yết)
+    let finalUnitPrice = mat.cost || 0;
 
-    // 3. ƯU TIÊN LẤY ĐƠN GIÁ TỪ BẢNG BÁO GIÁ ĐÃ DUYỆT CỦA KHÁCH HÀNG
+    // KIỂM TRA ƯU TIÊN LẤY GIÁ TỪ BẢNG BÁO GIÁ ĐÃ DUYỆT CỦA KHÁCH HÀNG (cho Sales Orders & Returns)
     if (['sales-orders', 'returns'].includes(state.view)) {
       const currentCustomer = (state.formData.customer || '').trim();
       const orderDate = state.formData.date || getTodayDateStr();
 
       if (currentCustomer) {
-        // Tìm Báo giá hiệu lực gần nhất của Khách hàng
+        // Tìm Báo giá có trạng thái "Duyệt" và còn hiệu lực của Khách hàng hiện tại
         const activeQuotation = (db.quotations || [])
           .filter(q => {
             if (!q || !q.customer) return false;
@@ -1302,24 +1304,19 @@ function handleMaterialSelectInLine(lineId, selectedName) {
             if (vBegin && vUntil) {
               return orderDate >= vBegin && orderDate <= vUntil;
             }
-            return true;
+            return true; // Nếu không cài ngày hết hạn thì mặc định hiểu là có hiệu lực
           })
           .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
 
-        // Nếu tìm thấy Báo giá -> Tìm dòng sản phẩm trong báo giá đó
+        // Nếu tìm thấy Báo giá hợp lệ -> Tìm sản phẩm trong Báo giá đó
         if (activeQuotation && Array.isArray(activeQuotation.lineItems)) {
-          const quotedItem = activeQuotation.lineItems.find(item => {
-            const qSku = (item.sku || '').trim().toLowerCase();
-            const qName = (item.name || '').trim().toLowerCase();
-            const targetSku = (mat.id || extractedSku).trim().toLowerCase();
-            const targetName = (mat.name || cleanName).trim().toLowerCase();
+          const quotedItem = activeQuotation.lineItems.find(item =>
+            (item.sku && item.sku === mat.id) ||
+            (item.name && item.name.toLowerCase() === mat.name.toLowerCase())
+          );
 
-            return (qSku && targetSku && qSku === targetSku) || (qName && targetName && qName === targetName);
-          });
-
-          // Lấy chính xác Đơn giá đã khai báo trong Báo giá (VD: 30.000 đ)
-          if (quotedItem && quotedItem.unitPrice !== undefined && quotedItem.unitPrice !== null && !isNaN(Number(quotedItem.unitPrice))) {
-            finalUnitPrice = Number(quotedItem.unitPrice);
+          if (quotedItem && quotedItem.unitPrice !== undefined && quotedItem.unitPrice !== null) {
+            finalUnitPrice = Number(quotedItem.unitPrice) || 0;
           }
         }
       }
@@ -1329,11 +1326,6 @@ function handleMaterialSelectInLine(lineId, selectedName) {
     line.unitCost = mat.cost || 0;
   } else {
     line.name = cleanName;
-  }
-
-  // Tự động tính toán lại tổng tiền của các dòng sau khi cập nhật giá
-  if (typeof updateLine === 'function') {
-    updateLine(lineId, 'unitPrice', line.unitPrice, 'number');
   }
 
   render();
