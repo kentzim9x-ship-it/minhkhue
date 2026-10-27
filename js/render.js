@@ -1674,8 +1674,8 @@ function renderQuotationForm(c) {
   ).join('');
 
   const gridLayout = isView
-    ? "5px 85px minmax(180px, 1.5fr) 65px 80px 100px 70px 70px 120px"
-    : "5px 85px minmax(180px, 1.5fr) 65px 80px 100px 70px 70px 120px 32px";
+    ? "10px 100px minmax(180px, 1.5fr) 55px 70px 100px 70px 70px 120px"
+    : "10px 100px minmax(180px, 1.5fr) 55px 70px 100px 70px 70px 120px 32px";
 
   const linesHtml = d.lineItems.map((l, idx) => {
     const lineSub = (l.qty || 0) * (l.unitPrice || 0) * (1 - (l.discount || 0) / 100);
@@ -1966,8 +1966,8 @@ function renderSalesOrderForm(c) {
   }).join('');
 
   const gridLayout = isView
-    ? "5px 85px minmax(180px, 1.5fr) 60px 80px 65px 65px 90px 70px 60px 120px"
-    : "5px 85px minmax(180px, 1.5fr) 60px 80px 65px 65px 90px 70px 60px 120px 32px";
+    ? "10px 100px minmax(170px, 1.5fr) 60px 70px 65px 65px 90px 70px 60px 120px"
+    : "10px 100px minmax(170px, 1.5fr) 60px 70px 65px 65px 90px 70px 60px 120px 32px";
 
   const linesHtml = d.lineItems.map((l, idx) => {
     const lineSub = (l.qty || 0) * (l.unitPrice || 0) * (1 - (l.discount || 0) / 100);
@@ -2179,7 +2179,7 @@ function renderReturnForm(c) {
     `<option value="${o.id}" ${d.orderId === o.id ? 'selected' : ''}>${o.id} - ${o.customer || 'Khách không tên'}</option>`
   ).join('');
 
-  const gridLayout = isView ? "5px 85px 1fr 65px 75px 65px 65px 100px 110px" : "5px 85px 1fr 65px 75px 65px 65px 100px 110px 32px";
+  const gridLayout = isView ? "10px 100px 1fr 60px 70px 65px 65px 100px 100px" : "10px 100px 1fr 60px 70px 65px 65px 100px 100px 32px";
 
   const linesHtml = d.lineItems.map((l, idx) => {
     const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
@@ -2367,7 +2367,7 @@ function renderGRNForm(c) {
     return `<option value="${wCode}" ${d.warehouseCode === wCode ? 'selected' : ''}>${wCode} - ${w.name}</option>`;
   }).join('');
 
-  const gridLayout = isView ? "5px 85px 1fr 65px 75px 65px 65px 100px 110px" : "5px 85px 1fr 65px 75px 65px 65px 100px 110px 32px";
+  const gridLayout = isView ? "10px 100px 1fr 60px 70px 65px 65px 100px 100px" : "10px 100px 1fr 60px 70px 65px 65px 100px 100px 32px";
 
   const linesHtml = d.lineItems.map((l, idx) => {
     const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
