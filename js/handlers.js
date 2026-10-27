@@ -1952,7 +1952,7 @@ async function exportSalesReportToPDF() {
 
         // Dòng tiêu đề Đơn hàng (Cột Tên = Ghi chú, ĐVT/Đơn giá = Trống, SL = Tổng SL phiếu, Thành tiền = Tổng tiền phiếu)
         const orderHeaderHtml = `
-          <tr style="height: 22px; background-color: #f8fafc; font-weight: bold; page-break-inside: avoid; break-inside: avoid;">
+          <tr style="height: 22px; background-color: #8db5e251; font-weight: bold; page-break-inside: avoid; break-inside: avoid;">
             <td style="border: 1px solid #000; text-align: left; font-size: 10pt; padding: 2px 5px; color: #d97706;">${o.id || '—'}</td>
             <td style="border: 1px solid #000; text-align: left; font-size: 10pt; padding: 2px 5px; font-weight: normal;">${o.notes || '—'}</td>
             <td style="border: 1px solid #000;"></td>
@@ -1966,7 +1966,7 @@ async function exportSalesReportToPDF() {
       });
 
       rowsHtml += `
-        <tr style="height: 22px; background-color: #f2f2f2; font-weight: bold; page-break-inside: avoid; break-inside: avoid;">
+        <tr style="height: 22px; background-color: #8db5e251; font-weight: bold; page-break-inside: avoid; break-inside: avoid;">
           <td style="border: 1px solid #000;"></td>
           <td style="border: 1px solid #000; text-align: left; font-size: 10pt; padding: 2px 5px; color: #d97706;">${formattedDate}</td>
           <td style="border: 1px solid #000;"></td>
