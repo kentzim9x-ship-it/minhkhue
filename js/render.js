@@ -1674,8 +1674,8 @@ function renderQuotationForm(c) {
   ).join('');
 
   const gridLayout = isView
-    ? "90px minmax(180px, 1.5fr) 65px 80px 100px 70px 70px 120px"
-    : "90px minmax(180px, 1.5fr) 65px 80px 100px 70px 70px 120px 32px";
+    ? "5px 85px minmax(180px, 1.5fr) 65px 80px 100px 70px 70px 120px"
+    : "5px 85px minmax(180px, 1.5fr) 65px 80px 100px 70px 70px 120px 32px";
 
   const linesHtml = d.lineItems.map((l, idx) => {
     const lineSub = (l.qty || 0) * (l.unitPrice || 0) * (1 - (l.discount || 0) / 100);
@@ -1685,6 +1685,9 @@ function renderQuotationForm(c) {
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+        <span style="font-family: var(--font-dm-mono, monospace); font-size: 11px; font-weight: 600; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
+          ${idx + 1}.
+        </span>
         <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
         
         <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'quotations\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng chọn khách hàng...' : 'Chọn/nhập tên hàng...'}" required>
@@ -1777,6 +1780,7 @@ function renderQuotationForm(c) {
             <div style="overflow-x: auto;">
               <!-- HEADER BẢNG: ĐỒNG BỘ MIN-WIDTH 850PX, GAP 8PX VÀ PADDING 10PX 24PX -->
               <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px; box-sizing: border-box;">
+                <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;"></span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn Vị</span>
@@ -1975,7 +1979,7 @@ function renderSalesOrderForm(c) {
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
-        <span style="font-family: var(--font-dm-mono, monospace); font-size: 11px; font-weight: 600; color: var(--muted-foreground); min-width: 14px; text-align: right; user-select: none;">
+        <span style="font-family: var(--font-dm-mono, monospace); font-size: 11px; font-weight: 600; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
           ${idx + 1}.
         </span>
         <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
@@ -2175,7 +2179,7 @@ function renderReturnForm(c) {
     `<option value="${o.id}" ${d.orderId === o.id ? 'selected' : ''}>${o.id} - ${o.customer || 'Khách không tên'}</option>`
   ).join('');
 
-  const gridLayout = isView ? "90px 1fr 65px 75px 65px 65px 100px 110px" : "90px 1fr 65px 75px 65px 65px 100px 110px 32px";
+  const gridLayout = isView ? "5px 85px 1fr 65px 75px 65px 65px 100px 110px" : "5px 85px 1fr 65px 75px 65px 65px 100px 110px 32px";
 
   const linesHtml = d.lineItems.map((l, idx) => {
     const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
@@ -2184,6 +2188,9 @@ function renderReturnForm(c) {
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+        <span style="font-family: var(--font-dm-mono, monospace); font-size: 11px; font-weight: 600; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
+          ${idx + 1}.
+        </span>
         <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng không cho sửa">
         
         <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'returns\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng chọn khách hàng...' : 'Chọn/nhập tên hàng...'}" required>
@@ -2278,6 +2285,7 @@ function renderReturnForm(c) {
           <div style="overflow-x: auto;">
             <!-- HEADER BẢNG: ĐỒNG BỘ MIN-WIDTH 850PX, GAP 6PX VÀ PADDING 10PX 16PX -->
             <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px; box-sizing: border-box;">
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;"></span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn Vị</span>
@@ -2359,7 +2367,7 @@ function renderGRNForm(c) {
     return `<option value="${wCode}" ${d.warehouseCode === wCode ? 'selected' : ''}>${wCode} - ${w.name}</option>`;
   }).join('');
 
-  const gridLayout = isView ? "90px 1fr 65px 75px 65px 65px 100px 110px" : "90px 1fr 65px 75px 65px 65px 100px 110px 32px";
+  const gridLayout = isView ? "5px 85px 1fr 65px 75px 65px 65px 100px 110px" : "5px 85px 1fr 65px 75px 65px 65px 100px 110px 32px";
 
   const linesHtml = d.lineItems.map((l, idx) => {
     const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
@@ -2369,6 +2377,9 @@ function renderGRNForm(c) {
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+        <span style="font-family: var(--font-dm-mono, monospace); font-size: 11px; font-weight: 600; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
+          ${idx + 1}.
+        </span>
         <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động điền theo tên hàng">
         
         <input type="text" id="line-item-${l.lineId}-name" autocomplete="off" ${(isView || isDetailsDisabled) ? '' : 'list="global-materials-list"'} class="form-input" style="padding: 6px 8px; ${(isView || isDetailsDisabled) ? 'background: var(--muted); cursor: not-allowed;' : ''}" value="${l.name || ''}" ${(isView || isDetailsDisabled) ? 'readonly' : 'onkeydown="handleLineItemKeyDown(event, \'grn\', ' + idx + ', \'name\')" onchange="handleMaterialSelectInLine(\'' + l.lineId + '\', this.value)"'} placeholder="${isDetailsDisabled ? 'Vui lòng nhập nhà cung cấp...' : 'Chọn/nhập tên hàng...'}" required>
@@ -2457,6 +2468,7 @@ function renderGRNForm(c) {
           <div style="overflow-x: auto;">
             <!-- HEADER BẢNG: ĐỒNG BỘ MIN-WIDTH 850PX, GAP 6PX VÀ PADDING 10PX 16PX -->
             <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px; box-sizing: border-box;">
+              <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;"></span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn Vị</span>
