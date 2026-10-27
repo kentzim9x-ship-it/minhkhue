@@ -1270,7 +1270,7 @@ function handleMaterialSelectInLine(lineId, selectedName) {
     line.sku = mat.id || '';
 
     // Đơn giá mặc định lấy từ Danh mục sản phẩm (Giá vốn/Giá niêm yết)
-    let finalUnitPrice = mat.cost || 0;
+    let finalUnitPrice = (mat.price !== undefined && mat.price !== null) ? Number(mat.price) : (mat.cost || 0);
 
     // KIỂM TRA ƯU TIÊN LẤY GIÁ TỪ BẢNG BÁO GIÁ ĐÃ DUYỆT CỦA KHÁCH HÀNG (cho Sales Orders & Returns)
     if (['sales-orders', 'returns'].includes(state.view)) {
@@ -1301,12 +1301,12 @@ function handleMaterialSelectInLine(lineId, selectedName) {
         // Nếu tìm thấy Báo giá hợp lệ -> Tìm sản phẩm trong Báo giá đó
         if (activeQuotation && Array.isArray(activeQuotation.lineItems)) {
           const quotedItem = activeQuotation.lineItems.find(item =>
-            (item.sku && item.sku === mat.id) ||
-            (item.name && item.name.toLowerCase() === mat.name.toLowerCase())
+            (item.sku && mat.id && item.sku.toLowerCase() === mat.id.toLowerCase()) ||
+            (item.name && mat.name && item.name.toLowerCase() === mat.name.toLowerCase())
           );
 
-          if (quotedItem && quotedItem.unitPrice !== undefined && quotedItem.unitPrice !== null) {
-            finalUnitPrice = Number(quotedItem.unitPrice) || 0;
+          if (quotedItem && quotedItem.unitPrice !== undefined && quotedItem.unitPrice !== null && !isNaN(Number(quotedItem.unitPrice))) {
+            finalUnitPrice = Number(quotedItem.unitPrice);
           }
         }
       }
