@@ -303,7 +303,7 @@ function getSalesAnalyticsData() {
 
   (db.orders || []).forEach(o => {
     const status = (o.status || '').toLowerCase();
-    if (['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) {
+    if (['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
       const dateStr = o.date || '';
       const key = dateStr.substring(0, 7);
       const total = Number(o.total || 0);
@@ -323,7 +323,7 @@ function getSalesAnalyticsData() {
 
   (db.returns || []).forEach(r => {
     const status = (r.status || '').toLowerCase();
-    if (['processed', 'approved', 'đã xử lý', 'đã duyệt'].includes(status)) {
+    if (['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
       const dateStr = r.date || '';
       const key = dateStr.substring(0, 7);
       if (monthlyMap[key]) {
@@ -338,7 +338,7 @@ function getSalesAnalyticsData() {
   let ytdOrders = 0;
   (db.orders || []).forEach(o => {
     const status = (o.status || '').toLowerCase();
-    if (['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) {
+    if (['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
       if (o.date && o.date.startsWith(String(currentYear))) {
         ytdRevenue += Number(o.total || 0);
         ytdOrders += 1;
@@ -349,7 +349,7 @@ function getSalesAnalyticsData() {
   const customerMap = {};
   (db.orders || []).forEach(o => {
     const status = (o.status || '').toLowerCase();
-    if (['completed', 'processing', 'hoàn thành', 'đang xử lý'].includes(status)) {
+    if (['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
       const cName = o.customer || 'Khách lẻ';
       if (!customerMap[cName]) customerMap[cName] = { name: cName, revenue: 0, orders: 0 };
       customerMap[cName].revenue += Number(o.total || 0);
@@ -392,10 +392,10 @@ function renderDashboard(c) {
     recentActivityReal
   } = getSalesAnalyticsData();
 
-  const openQuotationsCount = (db.quotations || []).filter(q => ['draft', 'accepted', 'bản nháp', 'đã chấp nhận'].includes((q.status || '').toLowerCase())).length;
+  const openQuotationsCount = (db.quotations || []).filter(q => ['pending', 'chờ duyệt'].includes((q.status || '').toLowerCase())).length;
 
   const totalOrdersCount = (db.orders || []).length;
-  const completedOrdersCount = (db.orders || []).filter(o => ['completed', 'hoàn thành'].includes((o.status || '').toLowerCase())).length;
+  const completedOrdersCount = (db.orders || []).filter(o => ['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes((o.status || '').toLowerCase())).length;
   const completionRate = totalOrdersCount > 0 ? ((completedOrdersCount / totalOrdersCount) * 100).toFixed(1) : '100.0';
 
   const activityHtml = recentActivityReal.map(a => `
@@ -416,7 +416,7 @@ function renderDashboard(c) {
       <div class="kpi-grid">
         <div class="kpi-card"><span class="kpi-label">Doanh thu tháng này</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(currentMonthRevenue)}</span></div><span class="kpi-sub">${currentMonthStr}</span></div>
         <div class="kpi-card"><span class="kpi-label">Đơn hàng tháng này</span><div class="kpi-value-row"><span class="kpi-value">${fmt(currentMonthOrders)}</span></div><span class="kpi-sub">${currentMonthStr}</span></div>
-        <div class="kpi-card"><span class="kpi-label">Báo giá chưa khóa</span><div class="kpi-value-row"><span class="kpi-value">${openQuotationsCount}</span></div><span class="kpi-sub">nháp + chấp nhận</span></div>
+        <div class="kpi-card"><span class="kpi-label">Báo giá chưa khóa</span><div class="kpi-value-row"><span class="kpi-value">${openQuotationsCount}</span></div><span class="kpi-sub">chờ duyệt</span></div>
         <div class="kpi-card"><span class="kpi-label">Tỷ lệ hoàn thành</span><div class="kpi-value-row"><span class="kpi-value">${completionRate}%</span></div><span class="kpi-sub">giao đúng hạn</span></div>
       </div>
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="grid-2">
