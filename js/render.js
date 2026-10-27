@@ -1684,7 +1684,7 @@ function renderQuotationForm(c) {
     const unitName = mat ? (mat.unit || '—') : '—';
 
     return `
-      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 24px 10px 10px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px 10px 10px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
         <span style="font-family: var(--font-dm-mono, monospace); font-size: 10px; font-weight: 400; color: var(--muted-foreground); min-width: 12px; text-align: left; user-select: none;">
           ${idx + 1}.
         </span>
@@ -1778,8 +1778,7 @@ function renderQuotationForm(c) {
             </div>
 
             <div style="overflow-x: auto;">
-              <!-- HEADER BẢNG: ĐỒNG BỘ MIN-WIDTH 850PX, GAP 8PX VÀ PADDING 10PX 24PX -->
-              <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px; box-sizing: border-box;">
+              <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px 10px 10px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px; box-sizing: border-box;">
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;"></span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
@@ -1978,7 +1977,7 @@ function renderSalesOrderForm(c) {
     const stockQty = calculateRealtimeStock(l.sku, d.warehouseCode, d.id);
 
     return `
-      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px 10px 10px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
         <span style="font-family: var(--font-dm-mono, monospace); font-size: 10px; font-weight: 400; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
           ${idx + 1}.
         </span>
@@ -2075,7 +2074,7 @@ function renderSalesOrderForm(c) {
 
             <div style="overflow-x: auto;">
               <!-- HEADER BẢNG: ĐỒNG BỘ MIN-WIDTH 1000PX, GAP 6PX VÀ PADDING 10PX 16PX -->
-              <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 1000px; box-sizing: border-box;">
+              <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px 10px 10px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 1000px; box-sizing: border-box;">
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;"></span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
@@ -2187,7 +2186,7 @@ function renderReturnForm(c) {
     const stockQty = calculateRealtimeStock(l.sku, d.warehouseCode, d.id);
 
     return `
-      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px 10px 10px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
         <span style="font-family: var(--font-dm-mono, monospace); font-size: 10px; font-weight: 400; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
           ${idx + 1}.
         </span>
@@ -2284,7 +2283,7 @@ function renderReturnForm(c) {
           </div>
           <div style="overflow-x: auto;">
             <!-- HEADER BẢNG: ĐỒNG BỘ MIN-WIDTH 850PX, GAP 6PX VÀ PADDING 10PX 16PX -->
-            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px; box-sizing: border-box;">
+            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px 10px 10px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px; box-sizing: border-box;">
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;"></span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
@@ -2376,7 +2375,7 @@ function renderGRNForm(c) {
     const qtyVal = l.receivedQty ?? l.qtyImport ?? 1;
 
     return `
-      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
+      <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px 10px 10px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
         <span style="font-family: var(--font-dm-mono, monospace); font-size: 10px; font-weight: 400; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
           ${idx + 1}.
         </span>
@@ -2467,7 +2466,7 @@ function renderGRNForm(c) {
           </div>
           <div style="overflow-x: auto;">
             <!-- HEADER BẢNG: ĐỒNG BỘ MIN-WIDTH 850PX, GAP 6PX VÀ PADDING 10PX 16PX -->
-            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px; box-sizing: border-box;">
+            <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px 10px 10px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 850px; box-sizing: border-box;">
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;"></span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
               <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên Hàng</span>
