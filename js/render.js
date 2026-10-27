@@ -1685,7 +1685,7 @@ function renderQuotationForm(c) {
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 8px; padding: 10px 24px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
-        <span style="font-family: var(--font-dm-mono, monospace); font-size: 11px; font-weight: 600; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
+        <span style="font-family: var(--font-dm-mono, monospace); font-size: 10px; font-weight: 400; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
           ${idx + 1}.
         </span>
         <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
@@ -1979,7 +1979,7 @@ function renderSalesOrderForm(c) {
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
-        <span style="font-family: var(--font-dm-mono, monospace); font-size: 11px; font-weight: 600; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
+        <span style="font-family: var(--font-dm-mono, monospace); font-size: 10px; font-weight: 400; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
           ${idx + 1}.
         </span>
         <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động">
@@ -2188,7 +2188,7 @@ function renderReturnForm(c) {
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
-        <span style="font-family: var(--font-dm-mono, monospace); font-size: 11px; font-weight: 600; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
+        <span style="font-family: var(--font-dm-mono, monospace); font-size: 10px; font-weight: 400; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
           ${idx + 1}.
         </span>
         <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng không cho sửa">
@@ -2377,7 +2377,7 @@ function renderGRNForm(c) {
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
-        <span style="font-family: var(--font-dm-mono, monospace); font-size: 11px; font-weight: 600; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
+        <span style="font-family: var(--font-dm-mono, monospace); font-size: 10px; font-weight: 400; color: var(--muted-foreground); min-width: 14px; text-align: left; user-select: none;">
           ${idx + 1}.
         </span>
         <input type="text" id="line-item-${l.lineId}-sku" class="form-input" style="padding: 6px 8px; font-family: var(--font-dm-mono); background: var(--muted); cursor: not-allowed; color: var(--primary);" value="${l.sku || ''}" readonly title="Mã hàng tự động điền theo tên hàng">
