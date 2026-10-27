@@ -2843,6 +2843,9 @@ function renderReportSales(c) {
   if (reportType === 'summary') {
     // === BÁO CÁO TỔNG HỢP (Không có cột Đơn Giá - Giữ nguyên Phân Trang theo hệ thống) ===
     const itemSummaryMap = {};
+    let grandTotalQty = 0;
+    let grandTotalAmount = 0;
+
     filteredOrdersForMonth.forEach(o => {
       if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
         const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
@@ -2862,6 +2865,9 @@ function renderReportSales(c) {
           }
           itemSummaryMap[sku].qty += qty;
           itemSummaryMap[sku].totalAmount += lineTotal;
+
+          grandTotalQty += qty;
+          grandTotalAmount += lineTotal;
         });
       }
     });
@@ -2877,7 +2883,16 @@ function renderReportSales(c) {
     const startIndex = (state.page - 1) * state.pageSize;
     const paginatedDetailItems = detailItemsList.slice(startIndex, startIndex + state.pageSize);
 
-    detailRowsHtml = paginatedDetailItems.map(item => `
+    // Dòng tổng cộng ngay dưới header cho mẫu tổng hợp
+    const grandTotalRowHtml = `
+      <tr style="border-bottom: 2px solid var(--border); background-color: rgba(251, 191, 36, 0.08); font-weight: 600;">
+        <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;">TỔNG CỘNG</td>
+        <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmt(grandTotalQty)}</td>
+        <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmtUSD(grandTotalAmount)}</td>
+      </tr>
+    `;
+
+    const rowsHtml = paginatedDetailItems.map(item => `
       <tr style="border-bottom: 1px solid var(--border);" class="hover-row">
         <td data-label="Mã Hàng (SKU)" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary);">${item.sku}</td>
         <td data-label="Tên Hàng" style="padding: 11px 16px; font-size: 13px; font-weight: 500;">${item.name}</td>
@@ -2886,6 +2901,8 @@ function renderReportSales(c) {
         <td data-label="Tổng Tiền" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 13px; font-weight: 500; text-align: right; color: var(--primary);">${fmtUSD(item.totalAmount)}</td>
       </tr>
     `).join('');
+
+    detailRowsHtml = grandTotalRowHtml + rowsHtml;
 
   } else {
     // === BÁO CÁO CHI TIẾT (Dạng Lazy Loading, tự động tải thêm khi cuộn) ===
@@ -2903,6 +2920,8 @@ function renderReportSales(c) {
       );
 
       const dailyMap = {};
+      let grandTotalQty = 0;
+      let grandTotalAmount = 0;
 
       customerOrders.forEach(o => {
         const orderDateStr = o.date;
@@ -2913,6 +2932,19 @@ function renderReportSales(c) {
           };
         }
         dailyMap[orderDateStr].orders.push(o);
+
+        const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
+        items.forEach(item => {
+          const qty = Number(item.qty || 0);
+          const price = Number(item.unitPrice || 0);
+          const disc = Number(item.discount || 0);
+          const tax = Number(item.tax || 0);
+          const lineSub = qty * price * (1 - disc / 100);
+          const lineTotal = lineSub * (1 + tax / 100);
+
+          grandTotalQty += qty;
+          grandTotalAmount += lineTotal;
+        });
       });
 
       const sortedDates = Object.keys(dailyMap).sort((a, b) => new Date(a) - new Date(b));
@@ -2994,7 +3026,15 @@ function renderReportSales(c) {
           </tr>
         `;
       } else {
-        detailRowsHtml = rows.join('');
+        const grandTotalRowHtml = `
+          <tr style="border-bottom: 2px solid var(--border); background-color: rgba(251, 191, 36, 0.08); font-weight: 600;">
+            <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;">TỔNG CỘNG</td>
+            <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmt(grandTotalQty)}</td>
+            <td style="padding: 12px 16px;"></td>
+            <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmtUSD(grandTotalAmount)}</td>
+          </tr>
+        `;
+        detailRowsHtml = grandTotalRowHtml + rows.join('');
       }
     }
   }
