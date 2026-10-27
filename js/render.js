@@ -967,7 +967,7 @@ function renderOrdersList(c) {
     { label: 'Hoàn thành', val: db.orders.filter(o => ['completed', 'hoàn thành'].includes((o.status || '').toLowerCase())).length, color: '#60a5fa' },
     { label: 'Duyệt', val: db.orders.filter(o => ['accepted', 'duyệt'].includes((o.status || '').toLowerCase())).length, color: '#34d399' },
     { label: 'Chờ duyệt', val: db.orders.filter(o => ['pending', 'chờ duyệt'].includes((o.status || '').toLowerCase())).length, color = '#fbbf24' },
-    { label: 'Đã Hủy', val: db.orders.filter(o => ['cancelled', 'đã hủy'].includes((o.status || '').toLowerCase())).length, color: '#f87171' },
+    { label: 'Đã Hủy', val: db.orders.filter(o => ['cancelled', 'đã hủy'].includes((o.status || '').toLowerCase())).length, color: '#f87171' }
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
