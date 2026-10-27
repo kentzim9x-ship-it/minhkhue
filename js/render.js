@@ -1896,7 +1896,7 @@ function renderSalesOrderForm(c) {
   if (activeQuotation && Array.isArray(activeQuotation.lineItems) && activeQuotation.lineItems.length > 0) {
     const matchedSkusAndNames = new Set();
 
-    // 1. Lấy đúng thứ tự theo Bảng Báo Giá
+    // 1. Lấy đúng thứ tự và GIÁ trong Báo Giá
     activeQuotation.lineItems.forEach(qItem => {
       const qSku = (qItem.sku || qItem.id || '').trim().toLowerCase();
       const qName = (qItem.name || '').trim().toLowerCase();
@@ -1911,7 +1911,12 @@ function renderSalesOrderForm(c) {
         const matKey = (mat.id || mat.name || '').toLowerCase();
         if (!matchedSkusAndNames.has(matKey)) {
           matchedSkusAndNames.add(matKey);
-          inQuotationList.push(mat);
+          // Gán giá báo giá ưu tiên vào object sản phẩm
+          const quotedPrice = qItem.unitPrice ?? qItem.price ?? mat.unitPrice ?? mat.price ?? mat.cost ?? 0;
+          inQuotationList.push({
+            ...mat,
+            quotedPrice: quotedPrice
+          });
         }
       }
     });
@@ -1934,14 +1939,16 @@ function renderSalesOrderForm(c) {
     document.body.appendChild(datalistEl);
   }
 
-  // TAO OPTION VỚI ĐƯỜNG KẺ NGANG VÀ NHÃN NHÓM TRỰC QUAN CHO CẢ SAFARI MOBILE VÀ PC
+  // TẠO OPTION HIỂN THỊ ĐÚNG GIÁ BÁO GIÁ
   if (inQuotationList.length > 0 && outQuotationList.length > 0) {
     const quotedHtml = inQuotationList.map(m => {
-      return `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(m.cost || 0)}) ★ Báo giá</option>`;
+      const priceToDisplay = m.quotedPrice ?? m.unitPrice ?? m.price ?? m.cost ?? 0;
+      return `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(priceToDisplay)}) ★ Báo giá</option>`;
     }).join('');
 
     const otherHtml = outQuotationList.map(m => {
-      return `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(m.cost || 0)})</option>`;
+      const priceToDisplay = m.unitPrice ?? m.price ?? m.cost ?? 0;
+      return `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(priceToDisplay)})</option>`;
     }).join('');
 
     datalistEl.innerHTML = `
@@ -1951,7 +1958,9 @@ function renderSalesOrderForm(c) {
     `;
   } else {
     datalistEl.innerHTML = (inQuotationList.length > 0 ? inQuotationList : outQuotationList).map(m => {
-      return `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(m.cost || 0)})</option>`;
+      const priceToDisplay = m.quotedPrice ?? m.unitPrice ?? m.price ?? m.cost ?? 0;
+      const isQuoted = m.quotedPrice !== undefined;
+      return `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(priceToDisplay)})${isQuoted ? ' ★ Báo giá' : ''}</option>`;
     }).join('');
   }
 
