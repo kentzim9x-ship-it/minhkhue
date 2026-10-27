@@ -819,7 +819,7 @@ function renderQuotationsList(c) {
   ].map(([s, label]) => {
     const count = s === 'all'
       ? db.quotations.length
-      : db.quotations.filter(q => q.status === s || s === 'accepted' || s === 'pending' ).length;
+      : db.quotations.filter(q => q.status === s || s === 'accepted').length;
 
     const color = s === 'all' ? 'var(--foreground)'
       : s === 'accepted' ? '#34d399'
@@ -1868,7 +1868,7 @@ function renderSalesOrderForm(c) {
         if (q.customer.trim().toLowerCase() !== currentCustomer.toLowerCase()) return false;
 
         const status = (q.status || '').toLowerCase();
-        const isAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
+        const isAccepted = ['accepted', 'duyệt'].includes(status);
         if (!isAccepted) return false;
 
         const vBegin = q.validbegin || q.validBegin || q.date || '';
@@ -2780,7 +2780,7 @@ function renderReportSales(c) {
   // Lọc dữ liệu đơn hàng theo tháng & Chỉ lấy trạng thái "Duyệt" hoặc "Hoàn thành"
   const filteredOrdersForMonth = (db.orders || []).filter(o => {
     const status = (o.status || '').toLowerCase();
-    const isValidStatus = ['completed', 'hoàn thành', 'accepted', 'approved', 'duyệt'].includes(status);
+    const isValidStatus = ['completed', 'hoàn thành', 'accepted', 'duyệt'].includes(status);
     if (!isValidStatus) return false;
     if (!o.date) return false;
 
