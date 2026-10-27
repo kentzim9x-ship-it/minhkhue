@@ -1248,7 +1248,7 @@ function renderGRNList(c) {
 
   const kpiHtml = [
     { label: 'Tổng số phiếu nhập', val: db.grns.length, color: 'var(--foreground)' },
-    { label: 'received', val: db.grns.filter(g => ['received', 'Đã nhận'].includes((g.status || '')..toLowerCase())).length, color: '#fbbf24' },
+    { label: 'received', val: db.grns.filter(g => ['received', 'Đã nhận'].includes((g.status || '').toLowerCase())).length, color: '#fbbf24' },
     { label: 'draft', val: db.grns.filter(g => ['draft', 'Bản nháp'].includes((g.status || '').toLowerCase())).length, color: 'var(--muted-foreground)' },
     { label: 'verified', val: db.grns.filter(g => ['verified', 'Đã xác minh'].includes((g.status || '').toLowerCase())).length, color: '#34d399' }
   ].map(s => `
