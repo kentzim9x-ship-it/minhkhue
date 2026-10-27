@@ -1962,8 +1962,8 @@ function renderSalesOrderForm(c) {
   }).join('');
 
   const gridLayout = isView
-    ? "10px 90px minmax(180px, 1.5fr) 60px 80px 65px 65px 90px 70px 60px 120px"
-    : "10px 90px minmax(180px, 1.5fr) 60px 80px 65px 65px 90px 70px 60px 120px 32px";
+    ? "5px 85px minmax(180px, 1.5fr) 60px 80px 65px 65px 90px 70px 60px 120px"
+    : "5px 85px minmax(180px, 1.5fr) 60px 80px 65px 65px 90px 70px 60px 120px 32px";
 
   const linesHtml = d.lineItems.map((l, idx) => {
     const lineSub = (l.qty || 0) * (l.unitPrice || 0) * (1 - (l.discount || 0) / 100);
@@ -2072,6 +2072,7 @@ function renderSalesOrderForm(c) {
             <div style="overflow-x: auto;">
               <!-- HEADER BẢNG: ĐỒNG BỘ MIN-WIDTH 1000PX, GAP 6PX VÀ PADDING 10PX 16PX -->
               <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px; background: var(--secondary); border-bottom: 1px solid var(--border); align-items: center; min-width: 1000px; box-sizing: border-box;">
+                <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;"></span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Mã Hàng</span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Tên sản phẩm</span>
                 <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--foreground); text-transform: uppercase; text-align: center;">Đơn Vị</span>
