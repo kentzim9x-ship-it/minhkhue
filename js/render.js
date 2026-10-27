@@ -966,7 +966,7 @@ function renderOrdersList(c) {
     { label: 'Tổng đơn hàng', val: db.orders.length, color: 'var(--foreground)' },
     { label: 'Hoàn thành', val: db.orders.filter(o => ['completed', 'hoàn thành'].includes((o.status || '').toLowerCase())).length, color: '#60a5fa' },
     { label: 'Duyệt', val: db.orders.filter(o => ['accepted', 'duyệt'].includes((o.status || '').toLowerCase())).length, color: '#34d399' },
-    { label: 'Chờ duyệt', val: db.orders.filter(o => ['pending', 'chờ duyệt'].includes((o.status || '').toLowerCase())).length, color = '#fbbf24' },
+    { label: 'Chờ duyệt', val: db.orders.filter(o => ['pending', 'chờ duyệt'].includes((o.status || '').toLowerCase())).length, color : '#fbbf24' },
     { label: 'Đã Hủy', val: db.orders.filter(o => ['cancelled', 'đã hủy'].includes((o.status || '').toLowerCase())).length, color: '#f87171' }
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
