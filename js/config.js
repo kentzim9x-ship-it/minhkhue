@@ -253,7 +253,7 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
     const status = (o.status || '').toLowerCase();
     const oWh = o.warehouseCode || o.warehousecode || o.warehouse_code || '';
 
-    if (oWh === warehouseCode && ['processed', 'hoàn thành', 'đã xử lý', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
+    if (oWh === warehouseCode && ['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
       (o.lineItems || o.lineitems || []).forEach(item => {
         if (item.sku === sku) {
           totalOrders += Number(item.qty || 0);
@@ -268,7 +268,7 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
     const status = (r.status || '').toLowerCase();
     const rWh = r.warehouseCode || r.warehousecode || r.warehouse_code || '';
 
-    if (rWh === warehouseCode && ['processed', 'hoàn thành', 'đã xử lý', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
+    if (rWh === warehouseCode && ['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
       (r.lineItems || r.lineitems || []).forEach(item => {
         if (item.sku === sku) {
           totalReturns += Number(item.qtyReturned || item.qty || 0);

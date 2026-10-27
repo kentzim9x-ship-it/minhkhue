@@ -2253,8 +2253,8 @@ function renderReturnForm(c) {
             <div class="form-group">
               <label class="form-label">Trạng thái</label>
               <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>                                                      
-                <option value="processed" ${d.status && ['processed', 'hoàn thành', 'đã xử lý'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
-                <option value="approved" ${(!d.status || ['approved', 'duyệt', 'đã duyệt'].includes((d.status || '').toLowerCase())) ? 'selected' : ''}>Duyệt</option>
+                <option value="completed" ${d.status && ['completed', 'hoàn thành', 'đã xử lý'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Hoàn thành</option>
+                <option value="accepted" ${(!d.status || ['accepted', 'duyệt', 'đã duyệt'].includes((d.status || '').toLowerCase())) ? 'selected' : ''}>Duyệt</option>
                 <option value="pending" ${d.status && ['pending', 'chờ duyệt'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Chờ duyệt</option>
                 <option value="rejected" ${d.status && ['rejected', 'từ chối'].includes((d.status || '').toLowerCase()) ? 'selected' : ''}>Từ chối</option>
               </select>
@@ -2749,7 +2749,7 @@ function renderReportSales(c) {
     ytdOrders
   } = getSalesAnalyticsData();
 
-  const totalReturnsCount = (db.returns || []).filter(r => ['processed', 'approved', 'đã xử lý', 'đã duyệt'].includes((r.status || '').toLowerCase())).length;
+  const totalReturnsCount = (db.returns || []).filter(r => ['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes((r.status || '').toLowerCase())).length;
   const returnRatePercent = ytdOrders > 0 ? ((totalReturnsCount / ytdOrders) * 100).toFixed(1) : '0.0';
   const avgOrderValue = ytdOrders > 0 ? (ytdRevenue / ytdOrders) : 0;
 
@@ -2782,7 +2782,7 @@ function renderReportSales(c) {
   // Lọc dữ liệu đơn hàng theo tháng & Chỉ lấy trạng thái "Duyệt" hoặc "Hoàn thành"
   const filteredOrdersForMonth = (db.orders || []).filter(o => {
     const status = (o.status || '').toLowerCase();
-    const isValidStatus = ['completed', 'hoàn thành', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
+    const isValidStatus = ['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
     if (!isValidStatus) return false;
     if (!o.date) return false;
 
