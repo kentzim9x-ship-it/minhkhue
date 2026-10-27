@@ -3019,7 +3019,7 @@ function renderReportSales(c) {
 
           // Cập nhật Dòng Tổng Cộng cho Đơn Hàng Bán
           dayRows[orderHeaderIndex] = `
-            <tr style="border-bottom: 1px solid var(--border); background-color: rgba(255, 255, 255, 0.02); font-weight: 600;" class="hover-row" onclick="navigate('sales-orders', 'view', '${o.id}')" ondblclick="navigate('sales-orders', 'edit', '${o.id}')">
+            <tr style="border-bottom: 1px solid var(--border); background: var(--secondary); font-weight: 600;" class="hover-row" onclick="navigate('sales-orders', 'view', '${o.id}')" ondblclick="navigate('sales-orders', 'edit', '${o.id}')">
               <td data-label="Đơn Hàng Bán" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); font-weight: 600;">${o.id || '—'}</td>
               <td data-label="Ghi Chú" style="padding: 9px 16px; font-size: 12px; color: var(--muted-foreground); font-style: italic;">${o.notes || '—'}</td>
               <td style="padding: 9px 16px;"></td>
