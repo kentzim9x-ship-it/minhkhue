@@ -2886,7 +2886,7 @@ function renderReportSales(c) {
     // Dòng tổng cộng ngay dưới header cho mẫu tổng hợp
     const grandTotalRowHtml = `
       <tr style="border-bottom: 2px solid var(--border); background: var(--secondary); font-weight: 600;">
-        <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;">TỔNG CỘNG</td>
+        <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;"></td>
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmt(grandTotalQty)}</td>
         <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmtUSD(grandTotalAmount)}</td>
       </tr>
@@ -3028,7 +3028,7 @@ function renderReportSales(c) {
       } else {
         const grandTotalRowHtml = `
           <tr style="border-bottom: 2px solid var(--border); background: var(--secondary); font-weight: 600;">
-            <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;">TỔNG CỘNG</td>
+            <td colspan="3" style="padding: 12px 16px; font-size: 13px; color: var(--foreground); text-transform: uppercase;"></td>
             <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmt(grandTotalQty)}</td>
             <td style="padding: 12px 16px;"></td>
             <td style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 13px; text-align: right; color: var(--primary);">${fmtUSD(grandTotalAmount)}</td>
