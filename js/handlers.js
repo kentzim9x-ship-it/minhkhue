@@ -649,7 +649,7 @@ async function saveForm(module) {
         })()
       );
     }
-
+    
     try {
       const actorName = currentUserFullname;
       const actionText = state.mode === 'add' ? 'Tạo mới' : 'Cập nhật';
@@ -1199,45 +1199,33 @@ function updateGlobalMaterialDatalist() {
 
 function handleOrderSelectInReturn(orderId) {
   if (!state.formData || state.mode === 'view') return;
+  state.formData.orderId = orderId;
 
-  const safeOrderId = String(orderId || '').trim();
-  state.formData.orderId = safeOrderId;
-
-  // Nếu người dùng chọn "-- Không theo đơn hàng --" (Bỏ chọn đơn)
-  if (!safeOrderId) {
-    // Nếu chưa có khách hàng thì khởi tạo 1 dòng trống
-    if (!state.formData.customer) {
-      state.formData.lineItems = [{
-        lineId: Date.now().toString(),
-        sku: '',
-        name: '',
-        qtyReturned: 1,
-        unitPrice: 0
-      }];
-    }
+  if (!orderId) {
+    state.formData.customer = '';
+    state.formData.lineItems = [{
+      lineId: Date.now().toString(),
+      sku: '',
+      name: '',
+      qtyReturned: 1,
+      unitPrice: 0
+    }];
     render();
     return;
   }
 
-  // Trường hợp chọn 1 Đơn hàng bán cụ thể
-  const targetOrder = (db.orders || []).find(o => String(o.id) === safeOrderId);
+  const targetOrder = db.orders.find(o => o.id === orderId);
 
   if (targetOrder) {
-    // Tự động gắn Khách hàng từ Đơn hàng bán và sao chép các dòng sản phẩm
     state.formData.customer = targetOrder.customer || '';
-
-    const rawLines = targetOrder.lineItems || targetOrder.lineitems || [];
-    if (Array.isArray(rawLines) && rawLines.length > 0) {
-      state.formData.lineItems = rawLines.map(item => ({
-        lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-        sku: item.sku || '',
-        name: item.name || '',
-        qtyReturned: Number(item.qty) || 1,
-        unitPrice: Number(item.unitPrice) || 0
-      }));
-    }
+    state.formData.lineItems = (targetOrder.lineItems || []).map(item => ({
+      lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+      sku: item.sku || '',
+      name: item.name || '',
+      qtyReturned: item.qty || 1,
+      unitPrice: item.unitPrice || 0
+    }));
   }
-
   render();
 }
 
@@ -1456,9 +1444,9 @@ async function generateAndSharePDF(htmlElement, fileName, shareTitle) {
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true, logging: false },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: {
+    pagebreak: { 
       mode: ['css', 'legacy'], // Chỉ ngắt trang theo dòng tr, không chặn toàn bộ bảng
-      avoid: ['tr', '.signature-block']
+      avoid: ['tr', '.signature-block'] 
     }
   };
 
