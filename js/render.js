@@ -1798,7 +1798,7 @@ function renderQuotationForm(c) {
             </div>
 
             <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 16px 10px 10px; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 26px 10px 26px; flex-wrap: wrap; gap: 12px;">
               <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
               <div style="width: 110px; flex-shrink: 0;">
                 ${getAddLineButton('quotations', isDetailsDisabled, 'footer')}
@@ -2096,7 +2096,7 @@ function renderSalesOrderForm(c) {
             </div>
 
             <!-- CẤU TRÚC PHÍA DƯỚI: NÚT THÊM DÒNG THẲNG HÀNG MÃ HÀNG & CÙNG HÀNG NGANG VỚI TẠM TÍNH -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 16px 10px 10px; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 26px 10px 26px; flex-wrap: wrap; gap: 12px;">
               <!-- Khung chứa nút Thêm Dòng: Chiều rộng cố định khớp đúng cột Mã hàng -->
               <div style="width: 110px; flex-shrink: 0;">
                 ${getAddLineButton('sales-orders', isDetailsDisabled, 'footer')}
@@ -2303,7 +2303,7 @@ function renderReturnForm(c) {
           </div>
 
           <!-- NÚT THÊM DÒNG RỘNG BẰNG CỘT MÃ HÀNG VÀ THẲNG HÀNG DỌC -->
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px 10px 10px; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 26px 10px 26px; flex-wrap: wrap; gap: 12px;">
               <div style="width: 110px; flex-shrink: 0;">
                 ${getAddLineButton('returns', isDetailsDisabled, 'footer')}
               </div>
@@ -2486,7 +2486,7 @@ function renderGRNForm(c) {
           </div>
 
           <!-- BỐ TRÍ KHU VỰC TỔNG TIỀN VÀ NÚT THÊM DÒNG TRÊN PC -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px 10px 10px; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 16px; flex-wrap: wrap; gap: 12px;">
             <div style="width: 110px; flex-shrink: 0;">
               ${getAddLineButton('grn', isDetailsDisabled, 'footer')}
             </div>
