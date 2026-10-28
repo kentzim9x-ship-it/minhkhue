@@ -1490,19 +1490,120 @@ function getSalesAnalyticsData() {
 
   const topCustomersReal = Object.values(customerMap).sort((a, b) => b.revenue - a.revenue);
 
-  const notifList = db.notifications || [];
-  const recentActivityReal = notifList.slice(0, 6).map(n => {
-    const formattedDate = fmtDateStr(n.date || n.created_at);
+  // ==========================================
+  // XỬ LÝ DỮ LIỆU HOẠT ĐỘNG MỚI NHẤT (RECENT ACTIVITIES)
+  // ==========================================
+  const allActivities = [];
+
+  // Hàm bổ trợ xác định thời gian và hành động (Tạo mới / Cập nhật) dựa theo date0/time0 & date2/time2
+  const extractActivityInfo = (item, defaultTypeLabel) => {
+    const isUpdated = Boolean(item.date2 && String(item.date2).trim() !== '');
+    
+    const dStr = isUpdated ? item.date2 : (item.date0 || item.date || item.createdAt);
+    const tStr = isUpdated ? (item.time2 || '00:00:00') : (item.time0 || item.time || '00:00:00');
+
+    let timestamp = 0;
+    let formattedTime = '—';
+
+    if (dStr) {
+      const cleanDate = typeof fmtDateStr === 'function' ? fmtDateStr(dStr) : dStr;
+      const cleanTime = tStr ? tStr.substring(0, 5) : '';
+      formattedTime = `${cleanDate} ${cleanTime}`.trim();
+
+      const fullDateTime = `${dStr} ${tStr}`.trim();
+      const pDate = new Date(fullDateTime);
+      timestamp = isNaN(pDate.getTime()) ? new Date(dStr).getTime() : pDate.getTime();
+      if (isNaN(timestamp)) timestamp = 0;
+    }
+
+    const actionText = isUpdated ? `Cập nhật ${defaultTypeLabel}` : `Tạo mới ${defaultTypeLabel}`;
+    return { isUpdated, timestamp, formattedTime, actionText };
+  };
+
+  // 1. Lấy hoạt động từ danh sách Thông báo (Notifications)
+  (db.notifications || []).forEach(n => {
+    const formattedDate = typeof fmtDateStr === 'function' ? fmtDateStr(n.date || n.created_at) : (n.date || n.created_at);
     const timeStr = n.time ? n.time.substring(0, 5) : '';
     const fullDateTime = `${formattedDate} ${timeStr}`.trim();
+    
+    const fullStr = `${n.date || n.created_at} ${n.time || ''}`.trim();
+    const pDate = new Date(fullStr);
+    let ts = pDate.getTime();
+    if (isNaN(ts)) ts = 0;
 
-    return {
+    allActivities.push({
+      timestamp: ts,
       time: fullDateTime || '—',
       event: n.title || 'Thông báo',
       detail: n.detail || '',
       actor: n.actor || n.user_fullname || ''
-    };
+    });
   });
+
+  // 2. Lấy hoạt động từ Đơn bán hàng (Orders)
+  (db.orders || []).forEach(o => {
+    const info = extractActivityInfo(o, 'đơn hàng');
+    allActivities.push({
+      timestamp: info.timestamp,
+      time: info.formattedTime,
+      event: info.actionText,
+      detail: `Mã phiếu: ${o.id || ''} - Khách: ${o.customer || 'Khách lẻ'} (${fmtUSD ? fmtUSD(o.total || 0) : o.total})`,
+      actor: o.user_id2 || o.user_id0 || '',
+      targetView: 'sales-orders', // Thêm targetView
+      itemId: o.id                // Thêm itemId
+    });
+  });
+
+  // 3. Lấy hoạt động từ Báo giá (Quotations)
+  (db.quotations || []).forEach(q => {
+    const info = extractActivityInfo(q, 'báo giá');
+    allActivities.push({
+      timestamp: info.timestamp,
+      time: info.formattedTime,
+      event: info.actionText,
+      detail: `Mã phiếu: ${q.id || ''} - Khách: ${q.customer || 'Khách hàng'}`,
+      actor: q.user_id2 || q.user_id0 || '',
+      targetView: 'quotations', // Thêm targetView
+      itemId: o.id                // Thêm itemId
+    });
+  });
+
+  // 4. Lấy hoạt động từ Phiếu trả hàng (Returns)
+  (db.returns || []).forEach(r => {
+    const info = extractActivityInfo(r, 'phiếu trả hàng');
+    allActivities.push({
+      timestamp: info.timestamp,
+      time: info.formattedTime,
+      event: info.actionText,
+      detail: `Mã phiếu: ${r.id || ''} - Khách: ${r.customer || 'Khách hàng'}`,
+      actor: r.user_id2 || r.user_id0 || '',
+      targetView: 'returns', // Thêm targetView
+      itemId: o.id                // Thêm itemId
+    });
+  });
+
+  // 5. Lấy hoạt động từ Phiếu nhập kho (GRN)
+  (db.grns || []).forEach(g => {
+    const info = extractActivityInfo(g, 'phiếu nhập kho');
+    allActivities.push({
+      timestamp: info.timestamp,
+      time: info.formattedTime,
+      event: info.actionText,
+      detail: `Mã phiếu: ${g.id || ''} - NCC: ${g.supplier || 'Nhà cung cấp'}`,
+      actor: g.user_id2 || g.user_id0 || '',
+      targetView: 'grn', // Thêm targetView
+      itemId: o.id                // Thêm itemId
+    });
+  });
+
+  // Sắp xếp các hoạt động theo mốc thời gian mới nhất lên đầu và lấy 6 mục đầu tiên
+  allActivities.sort((a, b) => b.timestamp - a.timestamp);
+  const recentActivityReal = allActivities.slice(0, 6).map(item => ({
+    time: item.time,
+    event: item.event,
+    detail: item.detail,
+    actor: item.actor
+  }));
 
   return {
     salesDataReal,

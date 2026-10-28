@@ -280,16 +280,28 @@ function renderDashboard(c) {
   const completedOrdersCount = (db.orders || []).filter(o => ['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes((o.status || '').toLowerCase())).length;
   const completionRate = totalOrdersCount > 0 ? ((completedOrdersCount / totalOrdersCount) * 100).toFixed(1) : '100.0';
 
-  const activityHtml = recentActivityReal.map(a => `
-    <div style="padding: 12px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; justify-content: space-between;">
-      <div style="font-size: 13px; font-weight: 500; flex: 1;">
-        <div style="color: var(--foreground); font-weight: 600;">${a.event}</div>
-        <div style="font-size: 12px; color: var(--muted-foreground); margin-top: 2px;">${a.detail}</div>
-        ${a.actor ? `<div style="font-size: 11px; color: #f0a030; font-family: var(--font-dm-mono); margin-top: 4px;">Thực hiện: ${a.actor}</div>` : ''}
+  // Render danh sách hoạt động với sự kiện click chuyển tới màn hình View tương ứng
+  const activityHtml = recentActivityReal.map(a => {
+    const hasTarget = Boolean(a.targetView && a.itemId);
+    const clickAttr = hasTarget ? `onclick="navigate('${a.targetView}', 'view', '${a.itemId}')"` : '';
+    const cursorStyle = hasTarget ? 'cursor: pointer;' : '';
+
+    return `
+      <div 
+        class="hover-row" 
+        ${clickAttr} 
+        style="padding: 12px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; ${cursorStyle} transition: background 0.15s ease;"
+        ${hasTarget ? `title="Click để xem chi tiết ${a.event}"` : ''}
+      >
+        <div style="font-size: 13px; font-weight: 500; flex: 1;">
+          <div style="color: var(--foreground); font-weight: 600;">${a.event}</div>
+          <div style="font-size: 12px; color: var(--muted-foreground); margin-top: 2px;">${a.detail}</div>
+          ${a.actor ? `<div style="font-size: 11px; color: #f0a030; font-family: var(--font-dm-mono); margin-top: 4px;">Thực hiện: ${a.actor}</div>` : ''}
+        </div>
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); white-space: nowrap; margin-left: 12px;">${a.time}</span>
       </div>
-      <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); white-space: nowrap; margin-left: 12px;">${a.time}</span>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
   const currentMonthStr = `Tháng ${new Date().getMonth() + 1}/${new Date().getFullYear()}`;
 
@@ -307,7 +319,7 @@ function renderDashboard(c) {
           <div style="height: 200px;"><canvas id="chart-rev"></canvas></div>
         </div>
         <div style="border: 1px solid var(--border); background: var(--card);">
-          <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Hoạt Động Mới Nhất</div>
+          <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">HOẠT ĐỘNG MỚI NHẤT</div>
           <div>
             ${activityHtml || '<div style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có hoạt động gần đây</div>'}
           </div>
