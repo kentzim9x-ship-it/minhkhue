@@ -3088,10 +3088,10 @@ function renderReportSales(c) {
             </span>
           </div>
 
-          <div class="report-filter-wrapper" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
-  
-            <!-- Hàng 1 trên Mobile: Từ ngày - Đến ngày -->
-            <div class="report-filter-row">
+          <div class="report-filter-wrapper" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+
+            <!-- CỤM 4 Ô LỌC: NẰM TRÊN 1 HÀNG NGANG TRÊN PC / TÁCH 2 HÀNG NGUYÊN BẢN TRÊN MOBILE -->
+            <div class="report-filter-row" style="display: flex; align-items: center; gap: 12px;">
               <div class="report-filter-item" style="display: flex; align-items: center; gap: 6px;">
                 <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">TỪ NGÀY:</label>
                 <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${selectedFromDate}" onchange="state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render();">
@@ -3103,8 +3103,7 @@ function renderReportSales(c) {
               </div>
             </div>
 
-            <!-- Hàng 2 trên Mobile: Loại báo cáo - Khách hàng -->
-            <div class="report-filter-row">
+            <div class="report-filter-row" style="display: flex; align-items: center; gap: 12px;">
               <div class="report-filter-item" style="display: flex; align-items: center; gap: 6px;">
                 <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">LOẠI BÁO CÁO:</label>
                 <select class="form-select" style="height: 38px; font-size: 12px;" onchange="state.reportType=this.value; state.reportSalesLimit=40; state.page=1; render();">
@@ -3120,8 +3119,6 @@ function renderReportSales(c) {
                   ${customerSelectOptions}
                 </select>
               </div>
-            </div>
-
           </div>
 
             <!-- NÚT XUẤT PDF -->

@@ -1073,7 +1073,8 @@ div[style*="overflow: auto"],
     flex: 1 !important;
     width: 50% !important;
     display: flex !important;
-    flex-direction: column !important; /* Đưa nhãn lên trên, ô chọn xuống dưới */
+    flex-direction: column !important;
+    /* Đưa nhãn lên trên, ô chọn xuống dưới */
     align-items: flex-start !important;
     gap: 4px !important;
   }
