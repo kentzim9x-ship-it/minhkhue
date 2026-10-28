@@ -907,21 +907,26 @@ function renderQuotationsList(c) {
         ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
-          <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+          <!-- HÀNG 1: Ô TÌM KIẾM VÀ NÚT THÊM MỚI -->
+          <div style="display: flex; gap: 8px; align-items: center; width: 100%; flex: 1; min-width: 200px;">
+            <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; height: 38px; box-sizing: border-box;">
+              <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+            </div>
+            ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')" style="white-space: nowrap; height: 38px;">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
 
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
-            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+          <!-- HÀNG 2: 2 Ô SELECT DATE TỪ NGÀY - ĐẾN NGÀY -->
+          <div style="display: flex; gap: 8px; align-items: center; width: 100%; flex-wrap: wrap; margin-top: 2px;">
+            <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 130px;">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">Từ ngày:</label>
+              <input type="date" class="form-input" style="width: 100%; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 130px;">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">Đến ngày:</label>
+              <input type="date" class="form-input" style="width: 100%; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+            </div>
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
       </div>
 
@@ -1064,21 +1069,26 @@ function renderOrdersList(c) {
         ${getFilterBar([['all', 'Tất cả'], ['completed', 'Hoàn thành'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['cancelled', 'Đã hủy']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
-          <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersFromDate}" onchange="state.ordersFromDate=this.value; state.page=1; render();">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersToDate}" onchange="state.ordersToDate=this.value; state.page=1; render();">
+          <!-- HÀNG 1: Ô TÌM KIẾM VÀ NÚT THÊM MỚI -->
+          <div style="display: flex; gap: 8px; align-items: center; width: 100%; flex: 1; min-width: 200px;">
+            <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; height: 38px; box-sizing: border-box;">
+              <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+            </div>
+            ${hasPermission ? `<button class="btn-primary" onclick="navigate('sales-orders', 'add')" style="white-space: nowrap; height: 38px;">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
 
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
-            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+          <!-- HÀNG 2: 2 Ô SELECT DATE TỪ NGÀY - ĐẾN NGÀY -->
+          <div style="display: flex; gap: 8px; align-items: center; width: 100%; flex-wrap: wrap; margin-top: 2px;">
+            <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 130px;">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">Từ ngày:</label>
+              <input type="date" class="form-input" style="width: 100%; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersFromDate}" onchange="state.ordersFromDate=this.value; state.page=1; render();">
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 130px;">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">Đến ngày:</label>
+              <input type="date" class="form-input" style="width: 100%; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersToDate}" onchange="state.ordersToDate=this.value; state.page=1; render();">
+            </div>
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="navigate('sales-orders', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
       </div>
 
@@ -1226,21 +1236,26 @@ function renderReturnsList(c) {
         ${getFilterBar([['all', 'Tất cả'], ['processed', 'Hoàn thành'], ['approved', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
-          <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsFromDate}" onchange="state.returnsFromDate=this.value; state.page=1; render();">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsToDate}" onchange="state.returnsToDate=this.value; state.page=1; render();">
+          <!-- HÀNG 1: Ô TÌM KIẾM VÀ NÚT THÊM MỚI -->
+          <div style="display: flex; gap: 8px; align-items: center; width: 100%; flex: 1; min-width: 200px;">
+            <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; height: 38px; box-sizing: border-box;">
+              <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+            </div>
+            ${hasPermission ? `<button class="btn-primary" onclick="navigate('returns', 'add')" style="white-space: nowrap; height: 38px;">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
 
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
-            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+          <!-- HÀNG 2: 2 Ô SELECT DATE TỪ NGÀY - ĐẾN NGÀY -->
+          <div style="display: flex; gap: 8px; align-items: center; width: 100%; flex-wrap: wrap; margin-top: 2px;">
+            <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 130px;">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">Từ ngày:</label>
+              <input type="date" class="form-input" style="width: 100%; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsFromDate}" onchange="state.returnsFromDate=this.value; state.page=1; render();">
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 130px;">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">Đến ngày:</label>
+              <input type="date" class="form-input" style="width: 100%; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsToDate}" onchange="state.returnsToDate=this.value; state.page=1; render();">
+            </div>
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
       </div>
 
@@ -1386,21 +1401,26 @@ function renderGRNList(c) {
         ${getFilterBar([['all', 'Tất cả'], ['Đã nhận', 'Đã nhận'], ['Bản nháp', 'Bản nháp'], ['Đã xác minh', 'Đã xác minh']])}
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
-          <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnFromDate}" onchange="state.grnFromDate=this.value; state.page=1; render();">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnToDate}" onchange="state.grnToDate=this.value; state.page=1; render();">
+          <!-- HÀNG 1: Ô TÌM KIẾM VÀ NÚT THÊM MỚI -->
+          <div style="display: flex; gap: 8px; align-items: center; width: 100%; flex: 1; min-width: 200px;">
+            <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; height: 38px; box-sizing: border-box;">
+              <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+            </div>
+            ${hasPermission ? `<button class="btn-primary" onclick="navigate('grn', 'add')" style="white-space: nowrap; height: 38px;">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
 
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
-            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+          <!-- HÀNG 2: 2 Ô SELECT DATE TỪ NGÀY - ĐẾN NGÀY -->
+          <div style="display: flex; gap: 8px; align-items: center; width: 100%; flex-wrap: wrap; margin-top: 2px;">
+            <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 130px;">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">Từ ngày:</label>
+              <input type="date" class="form-input" style="width: 100%; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnFromDate}" onchange="state.grnFromDate=this.value; state.page=1; render();">
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 130px;">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">Đến ngày:</label>
+              <input type="date" class="form-input" style="width: 100%; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnToDate}" onchange="state.grnToDate=this.value; state.page=1; render();">
+            </div>
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
       </div>
 
