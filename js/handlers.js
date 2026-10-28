@@ -1564,7 +1564,7 @@ function getSalesAnalyticsData() {
       detail: `Mã phiếu: ${q.id || ''} - Khách: ${q.customer || 'Khách hàng'}`,
       actor: q.user_id2 || q.user_id0 || '',
       targetView: 'quotations', // Thêm targetView
-      itemId: o.id                // Thêm itemId
+      itemId: q.id                // Thêm itemId
     });
   });
 
@@ -1578,7 +1578,7 @@ function getSalesAnalyticsData() {
       detail: `Mã phiếu: ${r.id || ''} - Khách: ${r.customer || 'Khách hàng'}`,
       actor: r.user_id2 || r.user_id0 || '',
       targetView: 'returns', // Thêm targetView
-      itemId: o.id                // Thêm itemId
+      itemId: r.id                // Thêm itemId
     });
   });
 
@@ -1592,7 +1592,7 @@ function getSalesAnalyticsData() {
       detail: `Mã phiếu: ${g.id || ''} - NCC: ${g.supplier || 'Nhà cung cấp'}`,
       actor: g.user_id2 || g.user_id0 || '',
       targetView: 'grn', // Thêm targetView
-      itemId: o.id                // Thêm itemId
+      itemId: g.id                // Thêm itemId
     });
   });
 
