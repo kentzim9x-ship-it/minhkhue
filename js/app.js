@@ -203,6 +203,12 @@ window.addEventListener('beforeunload', function (e) {
 document.addEventListener('keydown', function (e) {
   // Thao tác bấm ESC để đóng Form Thông báo / Form Lịch sử
   if (e.key === 'Escape' || e.key === 'Esc') {
+    // Nếu Custom Modal đang hiển thị thì ưu tiên ngắt sự kiện ở đây
+    const customModal = document.getElementById('custom-modal-overlay');
+    if (customModal && customModal.style.display === 'flex') {
+      return; 
+    }
+    
     const dropdown = document.getElementById('notif-dropdown');
     if (dropdown && dropdown.classList.contains('open')) {
       dropdown.classList.remove('open');

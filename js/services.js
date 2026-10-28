@@ -264,6 +264,14 @@ function showConfirm(message, title = 'Xác nhận thao tác') {
       resolve(false);
     };
 
+    // Bổ sung lắng nghe phím Escape riêng cho Modal Confirm
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        e.stopPropagation();
+        handleCancel(); // Tương đương với hành động bấm nút Hủy bỏ
+      }
+    };
+
     const cleanup = () => {
       overlay.style.display = 'none';
       btnConfirm.removeEventListener('click', handleConfirm);
