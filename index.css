@@ -1076,25 +1076,61 @@ div[style*="overflow: auto"],
 /* RESPONSIVE MOBILE (< 768px) */
 @media (max-width: 768px) {
 
-  .top-customers-card {
+ .top-customers-card {
     width: 100% !important;
     box-sizing: border-box;
-    overflow-x: hidden !important; /* Loại bỏ thanh cuộn ngang không cần thiết */
+    overflow-x: hidden !important; /* Ngắt thanh cuộn ngang */
   }
-  .top-customers-card table {
-    width: 100% !important;
-    table-layout: fixed; /* Thu nhỏ và cố định tỉ lệ các cột */
-  }
-  .top-customers-card td {
-    padding: 8px 6px !important; /* Thu gọn khoảng cách các ô */
-    white-space: normal !important;
-    word-break: break-word;
-  }
-  .top-customers-card td:nth-child(1) { width: 24px !important; padding-left: 10px !important; } /* Cột STT */
-  .top-customers-card td:nth-child(2) { width: auto !important; } /* Cột Tên KH (Co giãn) */
-  .top-customers-card td:nth-child(3) { width: 90px !important; text-align: right !important; } /* Cột Doanh Thu */
-  .top-customers-card td:nth-child(4) { width: 55px !important; text-align: right !important; padding-right: 10px !important; } /* Cột Số Đơn */
 
+  .top-customers-card table {
+    min-width: 100% !important;
+    width: 100% !important;
+    table-layout: fixed !important; /* Cố định tỷ lệ các cột */
+  }
+
+  .top-customers-card tr {
+    display: table-row !important;
+  }
+
+  .top-customers-card td {
+    padding: 10px 4px !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+    vertical-align: middle !important;
+  }
+
+  /* Cột 1: STT */
+  .top-customers-card td:nth-child(1) {
+    width: 30px !important;
+    padding-left: 8px !important;
+    white-space: nowrap !important;
+    font-size: 11px !important;
+  }
+
+  /* Cột 2: Tên Khách Hàng (Tự do co giãn & xuống dòng nếu dài) */
+  .top-customers-card td:nth-child(2) {
+    width: auto !important;
+    font-weight: 500 !important;
+  }
+
+  /* Cột 3: Doanh Thu */
+  .top-customers-card td:nth-child(3) {
+    width: 95px !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+    font-weight: 600 !important;
+  }
+
+  /* Cột 4: Số Đơn Hàng */
+  .top-customers-card td:nth-child(4) {
+    width: 50px !important;
+    text-align: right !important;
+    padding-right: 8px !important;
+    white-space: nowrap !important;
+  }
+  
   .sales-chart-box {
     display: none !important; /* Chỉ ẩn khung biểu đồ trên Mobile */
   }

@@ -3065,6 +3065,8 @@ function renderReportSales(c) {
         <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Biểu Đồ Doanh Thu & Sản Lượng Đơn Bán</div>
         <div style="height: 220px;"><canvas id="chart-sales"></canvas></div>
       </div>
+       
+      <!-- Bảng Top Khách Hàng (Tối ưu vừa màn hình Mobile) -->
         <div style="border: 1px solid var(--border); background: var(--card);" class="top-customers-card">
           <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng</div>
           <table style="width: 100%; border-collapse: collapse;">
