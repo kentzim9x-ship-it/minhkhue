@@ -208,7 +208,7 @@ document.addEventListener('keydown', function (e) {
     if (modalOverlay && modalOverlay.style.display === 'flex') {
       return;
     }
-
+    
     const dropdown = document.getElementById('notif-dropdown');
     if (dropdown && dropdown.classList.contains('open')) {
       dropdown.classList.remove('open');
@@ -234,7 +234,7 @@ document.addEventListener('keydown', function (e) {
 // 3. Khởi tạo ứng dụng khi DOM sẵn sàng
 document.addEventListener('DOMContentLoaded', async () => {
   sessionStorage.clear();
-
+  
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => navigate(btn.getAttribute('data-view')));
   });
@@ -286,30 +286,3 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNotificationUI();
   initTheme();
 });
-
-let touchStartX = 0;
-let touchEndX = 0;
-
-window.addEventListener('touchstart', (e) => {
-  touchStartX = e.changedTouches[0].screenX;
-}, { passive: true });
-
-window.addEventListener('touchend', (e) => {
-  touchEndX = e.changedTouches[0].screenX;
-  handleSwipeGesture();
-}, { passive: true });
-
-function handleSwipeGesture() {
-  const swipeDistance = touchEndX - touchStartX;
-  const MIN_DISTANCE = 80; // Khoảng cách tối thiểu để tính là cú vuốt (px)
-
-  if (Math.abs(swipeDistance) > MIN_DISTANCE) {
-    if (swipeDistance < 0) {
-      // Vuốt ngón tay sang TRÁI -> Tiến tới (Forward)
-      window.history.forward();
-    } else {
-      // Vuốt ngón tay sang PHẢI -> Quay lại (Back)
-      window.history.back();
-    }
-  }
-}
