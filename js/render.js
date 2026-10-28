@@ -237,6 +237,14 @@ function render() {
   }
 
   const activeId = document.activeElement ? document.activeElement.id : null;
+  const activeEl = document.activeElement;
+  let cursorStart = null;
+  let cursorEnd = null;
+
+  if (activeEl && typeof activeEl.selectionStart !== 'undefined') {
+    cursorStart = activeEl.selectionStart;
+    cursorEnd = activeEl.selectionEnd;
+  }
 
   c.innerHTML = '';
   updateGlobalMaterialDatalist();
@@ -271,9 +279,9 @@ function render() {
     if (el) {
       el.focus();
       try {
-        if (typeof el.selectionStart !== 'undefined' && el.type !== 'number' && el.type !== 'email') {
-          const len = el.value ? el.value.length : 0;
-          el.setSelectionRange(len, len);
+        if (cursorStart !== null && cursorEnd !== null && !['number', 'email', 'date'].includes(el.type)) {
+          // Khôi phục lại đúng vị trí con trỏ người dùng đang gõ dở
+          el.setSelectionRange(cursorStart, cursorEnd);
         }
       } catch (err) { }
     }
