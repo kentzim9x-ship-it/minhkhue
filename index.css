@@ -1054,6 +1054,25 @@ div[style*="overflow: auto"],
   box-sizing: border-box;
 }
 
+.report-filter-wrapper {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.report-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.report-pdf-btn-container {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
 /* RESPONSIVE MOBILE (< 768px) */
 @media (max-width: 768px) {
 
