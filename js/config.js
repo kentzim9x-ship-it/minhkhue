@@ -640,11 +640,23 @@ function getTodayDateStr() {
   return `${year}-${month}-${day}`;
 }
 
+// Hàm lấy ngày đầu tiên của tháng hiện tại (Định dạng: YYYY-MM-DD)
 function getFirstDayOfMonthStr() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
   return `${year}-${month}-01`;
+}
+
+// Hàm lấy ngày cuối cùng của tháng hiện tại (Định dạng: YYYY-MM-DD)
+function getLastDayOfMonthStr() {
+  const now = new Date();
+  // Ngày 0 của tháng tiếp theo chính là ngày cuối cùng của tháng hiện tại
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const year = lastDay.getFullYear();
+  const month = String(lastDay.getMonth() + 1).padStart(2, '0');
+  const day = String(lastDay.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function getCurrentTimeStr() {
