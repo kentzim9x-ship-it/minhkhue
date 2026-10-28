@@ -3121,17 +3121,15 @@ function renderReportSales(c) {
               </div>
           </div>
 
-            <!-- NÚT XUẤT PDF -->
-            <div style="width: 100%; display: flex; justify-content: flex-start; margin-top: 4px;">
-              <button 
-                type="button" 
-                class="btn-primary" 
-                onclick="exportSalesReportToPDF()" 
-                ${(reportType === 'detail' && !selectedCustomer) ? 'disabled style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"' : 'style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"'}
-              >
-                Xuất PDF
-              </button>
-            </div>
+            <!-- NÚT XUẤT PDF CÙNG HÀNG VÀ BẰNG CHIỀU CAO 38PX -->
+            <button 
+              type="button" 
+              class="btn-primary" 
+              onclick="exportSalesReportToPDF()" 
+              ${(reportType === 'detail' && !selectedCustomer) ? 'disabled style="height: 38px; box-sizing: border-box; background: #e11d48; color: #ffffff; padding: 0 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"' : 'style="height: 38px; box-sizing: border-box; background: #e11d48; color: #ffffff; padding: 0 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"'}
+            >
+              Xuất PDF
+            </button>
           </div>
 
         </div>
