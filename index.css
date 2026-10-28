@@ -985,56 +985,118 @@ div[style*="overflow: auto"],
   transform-origin: top center;
 }
 
-.filter-toolbar {
+.filter-controls-wrapper {
   display: flex;
-  flex-direction: column;
-  /* Mobile xếp dọc 2 nhóm */
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.action-group {
-  display: flex;
+  align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
   width: 100%;
+  max-width: 750px;
 }
 
-.date-group {
+.mobile-search-action-group {
   display: flex;
+  align-items: center;
   gap: 8px;
-  width: 100%;
-}
-
-.date-item {
-  display: flex;
-  flex-direction: column;
   flex: 1;
 }
 
-.date-item label {
-  font-size: 11px;
-  color: #666;
-  margin-bottom: 2px;
+.search-box-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 0 12px;
+  flex: 1;
+  min-width: 180px;
+  height: 38px;
+  box-sizing: border-box;
+}
+
+.search-box-input input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--foreground);
+  font-family: var(--font-jost);
+  font-size: 13px;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+.date-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-input-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-input-item label {
+  font-family: var(--font-dm-mono);
+  font-size: 10px;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.date-input-item input {
+  width: 125px;
+  padding: 4px 6px;
+  font-size: 12px;
+  height: 38px;
+  box-sizing: border-box;
 }
 
 /* RESPONSIVE MOBILE (< 768px) */
 @media (max-width: 768px) {
 
-  .filter-toolbar {
-    flex-direction: row;
-    /* PC sắp xếp thành 1 hàng ngang */
-    justify-content: space-between;
-    align-items: center;
+  .filter-controls-wrapper {
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 10px !important;
   }
 
-  .action-group,
-  .date-group {
-    width: auto;
+  /* Dòng 1: Cụm Thêm Mới & Tìm Kiếm */
+  .mobile-search-action-group {
+    display: flex !important;
+    flex-direction: row-reverse !important;
+    width: 100% !important;
+    gap: 8px !important;
   }
 
-  .date-item {
-    flex-direction: row;
-    align-items: center;
+  .search-box-input {
+    flex: 1 !important;
+    height: 40px !important;
+    min-width: 0 !important;
+  }
+
+  /* Dòng 2: Cụm Từ ngày - Đến ngày di chuyển xuống dưới */
+  .date-filter-group {
+    display: flex !important;
+    width: 100% !important;
+    gap: 8px !important;
+    justify-content: space-between !important;
+  }
+
+  .date-input-item {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+
+  .date-input-item input {
+    width: 100% !important;
+    height: 40px !important;
   }
 
   /* Ép khung chứa thành flexbox dòng ngang, căn thẳng lề trên (top) */

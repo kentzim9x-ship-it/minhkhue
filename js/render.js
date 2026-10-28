@@ -780,22 +780,27 @@ function renderQuotationsList(c) {
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
         
-        <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
-          <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+        <div class="filter-controls-wrapper">
+          <!-- Cụm ô Tìm kiếm & Thêm mới (Trên mobile sẽ nằm ở dòng trên) -->
+          <div class="mobile-search-action-group">
+            <div class="search-box-input">
+              <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();">
+            </div>
+            ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
 
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
-            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+          <!-- Cụm chọn Từ ngày - Đến ngày (Trên mobile sẽ nằm ở dòng dưới) -->
+          <div class="date-filter-group">
+            <div class="date-input-item">
+              <label>Từ ngày:</label>
+              <input type="date" class="form-input" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+            </div>
+            <div class="date-input-item">
+              <label>Đến ngày:</label>
+              <input type="date" class="form-input" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+            </div>
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
       </div>
 
@@ -935,24 +940,29 @@ function renderOrdersList(c) {
       </div>
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['completed', 'Hoàn thành'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['cancelled', 'Đã hủy']])}
+        ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
         
-        <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
-          <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersFromDate}" onchange="state.ordersFromDate=this.value; state.page=1; render();">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersToDate}" onchange="state.ordersToDate=this.value; state.page=1; render();">
+        <div class="filter-controls-wrapper">
+          <!-- Cụm ô Tìm kiếm & Thêm mới (Trên mobile sẽ nằm ở dòng trên) -->
+          <div class="mobile-search-action-group">
+            <div class="search-box-input">
+              <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();">
+            </div>
+            ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
 
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
-            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+          <!-- Cụm chọn Từ ngày - Đến ngày (Trên mobile sẽ nằm ở dòng dưới) -->
+          <div class="date-filter-group">
+            <div class="date-input-item">
+              <label>Từ ngày:</label>
+              <input type="date" class="form-input" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+            </div>
+            <div class="date-input-item">
+              <label>Đến ngày:</label>
+              <input type="date" class="form-input" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+            </div>
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="navigate('sales-orders', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
       </div>
 
@@ -1097,24 +1107,29 @@ function renderReturnsList(c) {
       </div>
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['processed', 'Hoàn thành'], ['approved', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối']])}
+        ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
         
-        <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
-          <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsFromDate}" onchange="state.returnsFromDate=this.value; state.page=1; render();">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsToDate}" onchange="state.returnsToDate=this.value; state.page=1; render();">
+        <div class="filter-controls-wrapper">
+          <!-- Cụm ô Tìm kiếm & Thêm mới (Trên mobile sẽ nằm ở dòng trên) -->
+          <div class="mobile-search-action-group">
+            <div class="search-box-input">
+              <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();">
+            </div>
+            ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
 
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
-            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+          <!-- Cụm chọn Từ ngày - Đến ngày (Trên mobile sẽ nằm ở dòng dưới) -->
+          <div class="date-filter-group">
+            <div class="date-input-item">
+              <label>Từ ngày:</label>
+              <input type="date" class="form-input" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+            </div>
+            <div class="date-input-item">
+              <label>Đến ngày:</label>
+              <input type="date" class="form-input" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+            </div>
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
       </div>
 
@@ -1257,24 +1272,29 @@ function renderGRNList(c) {
       </div>
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['Đã nhận', 'Đã nhận'], ['Bản nháp', 'Bản nháp'], ['Đã xác minh', 'Đã xác minh']])}
+        ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
         
-        <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
-          <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnFromDate}" onchange="state.grnFromDate=this.value; state.page=1; render();">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnToDate}" onchange="state.grnToDate=this.value; state.page=1; render();">
+        <div class="filter-controls-wrapper">
+          <!-- Cụm ô Tìm kiếm & Thêm mới (Trên mobile sẽ nằm ở dòng trên) -->
+          <div class="mobile-search-action-group">
+            <div class="search-box-input">
+              <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();">
+            </div>
+            ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
 
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
-            <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+          <!-- Cụm chọn Từ ngày - Đến ngày (Trên mobile sẽ nằm ở dòng dưới) -->
+          <div class="date-filter-group">
+            <div class="date-input-item">
+              <label>Từ ngày:</label>
+              <input type="date" class="form-input" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+            </div>
+            <div class="date-input-item">
+              <label>Đến ngày:</label>
+              <input type="date" class="form-input" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+            </div>
           </div>
-          ${hasPermission ? `<button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
       </div>
 
