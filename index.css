@@ -1057,6 +1057,34 @@ div[style*="overflow: auto"],
 /* RESPONSIVE MOBILE (< 768px) */
 @media (max-width: 768px) {
 
+  .report-filter-wrapper {
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .report-filter-row {
+    display: flex !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .report-filter-item {
+    flex: 1 !important;
+    width: 50% !important;
+    display: flex !important;
+    flex-direction: column !important; /* Đưa nhãn lên trên, ô chọn xuống dưới */
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+
+  .report-filter-item input,
+  .report-filter-item select {
+    width: 100% !important;
+    height: 40px !important;
+    box-sizing: border-box !important;
+  }
+
   .filter-controls-wrapper {
     flex-direction: column !important;
     width: 100% !important;

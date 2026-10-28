@@ -956,11 +956,11 @@ function renderOrdersList(c) {
           <div class="date-filter-group">
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersFromDate}" onchange="state.ordersFromDate=this.value; state.page=1; render();">
             </div>
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersToDate}" onchange="state.ordersToDate=this.value; state.page=1; render();">
             </div>
           </div>
         </div>
@@ -1123,11 +1123,11 @@ function renderReturnsList(c) {
           <div class="date-filter-group">
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsFromDate}" onchange="state.returnsFromDate=this.value; state.page=1; render();">
             </div>
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsToDate}" onchange="state.returnsToDate=this.value; state.page=1; render();">
             </div>
           </div>
         </div>
@@ -1288,11 +1288,11 @@ function renderGRNList(c) {
           <div class="date-filter-group">
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnFromDate}" onchange="state.grnFromDate=this.value; state.page=1; render();">
             </div>
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnToDate}" onchange="state.grnToDate=this.value; state.page=1; render();">
             </div>
           </div>
         </div>
@@ -3089,33 +3089,40 @@ function renderReportSales(c) {
           </div>
 
           <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-            <!-- ô chọn Từ ngày và Đến ngày -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-              <input type="date" class="form-input" style="width: 130px; padding: 4px 8px; font-size: 12px;" value="${selectedFromDate}" onchange="state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render();">
-            </div>
+            <div class="report-filter-wrapper" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+  
+              <!-- Hàng 1 trên Mobile: Từ ngày - Đến ngày -->
+              <div class="report-filter-row">
+                <div class="report-filter-item" style="display: flex; align-items: center; gap: 6px;">
+                  <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">TỪ NGÀY:</label>
+                  <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.salesReportFromDate}" onchange="state.salesReportFromDate=this.value; render();">
+                </div>
 
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-              <input type="date" class="form-input" style="width: 130px; padding: 4px 8px; font-size: 12px;" value="${selectedToDate}" onchange="state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render();">
-            </div>
+                <div class="report-filter-item" style="display: flex; align-items: center; gap: 6px;">
+                  <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">ĐẾN NGÀY:</label>
+                  <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.salesReportToDate}" onchange="state.salesReportToDate=this.value; render();">
+                </div>
+              </div>
 
-            <!-- Ô Chọn Loại Báo Cáo -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Loại báo cáo:</label>
-              <select class="form-select" style="width: 160px; padding: 5px 8px; font-size: 12px;" onchange="state.reportType=this.value; state.reportSalesLimit=40; state.page=1; render();">
-                <option value="summary" ${reportType === 'summary' ? 'selected' : ''}>Báo cáo tổng hợp</option>
-                <option value="detail" ${reportType === 'detail' ? 'selected' : ''}>Báo cáo chi tiết</option>
-              </select>
-            </div>
+              <!-- Hàng 2 trên Mobile: Loại báo cáo - Khách hàng -->
+              <div class="report-filter-row">
+                <div class="report-filter-item" style="display: flex; align-items: center; gap: 6px;">
+                  <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">LOẠI BÁO CÁO:</label>
+                  <select class="form-select" style="height: 38px; font-size: 12px;" onchange="state.salesReportType=this.value; render();">
+                    <option value="summary" ${state.salesReportType === 'summary' ? 'selected' : ''}>Báo cáo tổng hợp</option>
+                    <option value="detail" ${state.salesReportType === 'detail' ? 'selected' : ''}>Báo cáo chi tiết</option>
+                  </select>
+                </div>
 
-            <!-- Ô Chọn Khách Hàng -->
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Khách hàng:</label>
-              <select class="form-select" style="width: 190px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesCustomer=this.value; state.reportSalesLimit=40; state.page=1; render();">
-                <option value="">-- Tất cả khách hàng --</option>
-                ${customerSelectOptions}
-              </select>
+                <div class="report-filter-item" style="display: flex; align-items: center; gap: 6px;">
+                  <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">KHÁCH HÀNG:</label>
+                  <select class="form-select" style="height: 38px; font-size: 12px;" onchange="state.salesReportCustomer=this.value; render();">
+                    <option value="">-- Tất cả khách hàng --</option>
+                    ${customers.map(c => `<option value="${c.id}" ${state.salesReportCustomer == c.id ? 'selected' : ''}>${c.name}</option>`).join('')}
+                  </select>
+                </div>
+              </div>
+
             </div>
 
             <!-- NÚT XUẤT PDF -->
