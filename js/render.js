@@ -286,7 +286,7 @@ function renderDashboard(c) {
     const cursorStyle = hasTarget ? 'cursor: pointer;' : '';
 
     return `
-      <div 
+      <tr
         class="hover-row" 
         ${clickAttr}
         style="padding: 12px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; ${cursorStyle} transition: background 0.15s ease;"
