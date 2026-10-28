@@ -788,12 +788,18 @@ function renderWarehousesList(c) {
 function renderQuotationsList(c) {
   const hasPermission = checkModulePermission('quotations');
 
+  // Khởi tạo state ngày từ - đến cho Báo Giá
+  if (!state.quotationsFromDate) state.quotationsFromDate = getFirstDayOfMonthStr();
+  if (!state.quotationsToDate) state.quotationsToDate = getLastDayOfMonthStr();
+
   const filtered = db.quotations.filter(q => {
     const matchStatus = (state.filter === 'all' || q.status === state.filter);
-    const searchKey = normalizeSearchText(state.search);
-
-    // Đổi định dạng ngàyYYYY-MM-DD sang DD/MM/YYYY để gõ định dạng nào cũng tìm ra
+    
+    // Lọc theo khoảng ngày lập phiếu (date)
     const dateStr = q.date || '';
+    const matchDate = dateStr >= state.quotationsFromDate && dateStr <= state.quotationsToDate;
+
+    const searchKey = normalizeSearchText(state.search);
     const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
     const statusLabel = getStatusLabel(q.status);
 
@@ -806,7 +812,7 @@ function renderQuotationsList(c) {
       normalizeSearchText(q.status).includes(searchKey) ||
       normalizeSearchText(statusLabel).includes(searchKey);
 
-    return matchStatus && matchSearch;
+    return matchStatus && matchDate && matchSearch;
   });
 
   // TÍNH TOÁN PHÂN TRANG
@@ -829,7 +835,6 @@ function renderQuotationsList(c) {
       ? db.quotations.length
       : db.quotations.filter(q => q.status === s || (s === 'accepted' && q.status === 'approved') || (s === 'pending' && q.status === 'draft')).length;
 
-    // Màu sắc tương ứng từng thẻ: Tổng (Trắng/Mặc định), Duyệt (Xanh lá), Chờ duyệt (Cam), Từ chối (Xám), Hết hạn (Đỏ)
     const color = s === 'all' ? 'var(--foreground)'
       : s === 'accepted' ? '#34d399'
         : s === 'pending' ? 'var(--foreground)'
@@ -901,8 +906,18 @@ function renderQuotationsList(c) {
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
         
-        <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
+        <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
+          <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
+            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
+            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
             <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
@@ -942,11 +957,18 @@ function renderQuotationsList(c) {
 function renderOrdersList(c) {
   const hasPermission = checkModulePermission('sales-orders');
 
+  // Khởi tạo state ngày từ - đến cho Đơn Bán Hàng
+  if (!state.ordersFromDate) state.ordersFromDate = getFirstDayOfMonthStr();
+  if (!state.ordersToDate) state.ordersToDate = getLastDayOfMonthStr();
+
   const filtered = db.orders.filter(o => {
     const matchStatus = (state.filter === 'all' || o.status === state.filter);
-    const searchKey = normalizeSearchText(state.search);
 
+    // Lọc theo khoảng ngày lập phiếu (date)
     const dateStr = o.date || '';
+    const matchDate = dateStr >= state.ordersFromDate && dateStr <= state.ordersToDate;
+
+    const searchKey = normalizeSearchText(state.search);
     const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
     const statusLabel = getStatusLabel(o.status);
 
@@ -959,7 +981,7 @@ function renderOrdersList(c) {
       normalizeSearchText(o.status).includes(searchKey) ||
       normalizeSearchText(statusLabel).includes(searchKey);
 
-    return matchStatus && matchSearch;
+    return matchStatus && matchDate && matchSearch;
   });
 
   const totalItems = filtered.length;
@@ -975,7 +997,7 @@ function renderOrdersList(c) {
     { label: 'Tổng đơn hàng', val: db.orders.length, color: 'var(--foreground)' },
     { label: 'Hoàn thành', val: db.orders.filter(o => ['completed', 'hoàn thành'].includes((o.status || '').toLowerCase())).length, color: '#60a5fa' },
     { label: 'Duyệt', val: db.orders.filter(o => ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((o.status || '').toLowerCase())).length, color: '#34d399' },
-    { label: 'Chờ duyệt', val: db.orders.filter(o => ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((o.status || '').toLowerCase())).color = '#fbbf24', val: db.orders.filter(o => ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((o.status || '').toLowerCase())).length },
+    { label: 'Chờ duyệt', val: db.orders.filter(o => ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((o.status || '').toLowerCase())).length, color: '#fbbf24' },
     { label: 'Đã Hủy', val: db.orders.filter(o => ['cancelled', 'đã hủy'].includes((o.status || '').toLowerCase())).length, color: '#f87171' },
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
@@ -1041,8 +1063,18 @@ function renderOrdersList(c) {
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['completed', 'Hoàn thành'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['cancelled', 'Đã hủy']])}
         
-        <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
+        <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
+          <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
+            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersFromDate}" onchange="state.ordersFromDate=this.value; state.page=1; render();">
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
+            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersToDate}" onchange="state.ordersToDate=this.value; state.page=1; render();">
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
             <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
@@ -1081,11 +1113,18 @@ function renderOrdersList(c) {
 function renderReturnsList(c) {
   const hasPermission = checkModulePermission('returns');
 
+  // Khởi tạo state ngày từ - đến cho Đổi Trả Hàng
+  if (!state.returnsFromDate) state.returnsFromDate = getFirstDayOfMonthStr();
+  if (!state.returnsToDate) state.returnsToDate = getLastDayOfMonthStr();
+
   const filtered = db.returns.filter(r => {
     const matchStatus = (state.filter === 'all' || r.status === state.filter);
-    const searchKey = normalizeSearchText(state.search);
 
+    // Lọc theo khoảng ngày đổi trả (date)
     const dateStr = r.date || '';
+    const matchDate = dateStr >= state.returnsFromDate && dateStr <= state.returnsToDate;
+
+    const searchKey = normalizeSearchText(state.search);
     const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
     const statusLabel = getStatusLabel(r.status);
 
@@ -1099,7 +1138,7 @@ function renderReturnsList(c) {
       normalizeSearchText(r.status).includes(searchKey) ||
       normalizeSearchText(statusLabel).includes(searchKey);
 
-    return matchStatus && matchSearch;
+    return matchStatus && matchDate && matchSearch;
   });
 
   const totalItems = filtered.length;
@@ -1186,8 +1225,18 @@ function renderReturnsList(c) {
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['processed', 'Hoàn thành'], ['approved', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối']])}
         
-        <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
+        <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
+          <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
+            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsFromDate}" onchange="state.returnsFromDate=this.value; state.page=1; render();">
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
+            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsToDate}" onchange="state.returnsToDate=this.value; state.page=1; render();">
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
             <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
@@ -1226,11 +1275,18 @@ function renderReturnsList(c) {
 function renderGRNList(c) {
   const hasPermission = checkModulePermission('grn');
 
+  // Khởi tạo state ngày từ - đến cho Phiếu Nhập Kho
+  if (!state.grnFromDate) state.grnFromDate = getFirstDayOfMonthStr();
+  if (!state.grnToDate) state.grnToDate = getLastDayOfMonthStr();
+
   const filtered = db.grns.filter(g => {
     const matchStatus = (state.filter === 'all' || g.status === state.filter);
-    const searchKey = normalizeSearchText(state.search);
 
+    // Lọc theo khoảng ngày nhập kho (date)
     const dateStr = g.date || '';
+    const matchDate = dateStr >= state.grnFromDate && dateStr <= state.grnToDate;
+
+    const searchKey = normalizeSearchText(state.search);
     const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
     const statusLabel = getStatusLabel(g.status);
 
@@ -1243,7 +1299,7 @@ function renderGRNList(c) {
       normalizeSearchText(g.status).includes(searchKey) ||
       normalizeSearchText(statusLabel).includes(searchKey);
 
-    return matchStatus && matchSearch;
+    return matchStatus && matchDate && matchSearch;
   });
 
   // TÍNH TOÁN PHÂN TRANG
@@ -1329,8 +1385,18 @@ function renderGRNList(c) {
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'Tất cả'], ['Đã nhận', 'Đã nhận'], ['Bản nháp', 'Bản nháp'], ['Đã xác minh', 'Đã xác minh']])}
         
-        <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 450px;">
-          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
+        <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
+          <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
+            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnFromDate}" onchange="state.grnFromDate=this.value; state.page=1; render();">
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
+            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnToDate}" onchange="state.grnToDate=this.value; state.page=1; render();">
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
             <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
