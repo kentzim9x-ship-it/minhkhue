@@ -383,19 +383,62 @@ function handleLineItemKeyDown(e, module, lineIndex, fieldName) {
 
     const lineItems = state.formData?.lineItems || [];
     const isLastRow = lineIndex === lineItems.length - 1;
-    const isUnitPriceField = (fieldName === 'unitPrice' || fieldName === 'unitCost');
 
-    if (isLastRow && isUnitPriceField) {
-      addLineItem(module, true);
-    } else if (!isLastRow) {
-      const nextLineId = lineItems[lineIndex + 1].lineId;
-      setTimeout(() => {
-        const nextInput = document.getElementById(`line-item-${nextLineId}-${fieldName}`);
-        if (nextInput) {
-          nextInput.focus();
-          if (typeof nextInput.select === 'function') nextInput.select();
-        }
-      }, 50);
+    // Ánh xạ tên trường Số lượng & Đơn giá cho từng module
+    const fieldMapping = {
+      'quotations':   { name: 'name', qty: 'qty', price: 'unitPrice' },
+      'sales-orders': { name: 'name', qty: 'qty', price: 'unitPrice' },
+      'returns':      { name: 'name', qty: 'qtyReturned', price: 'unitPrice' },
+      'grn':          { name: 'name', qty: 'receivedQty', price: 'unitCost' }
+    };
+
+    const currentMap = fieldMapping[module] || { name: 'name', qty: 'qty', price: 'unitPrice' };
+    const firstLineId = lineItems[0]?.lineId;
+
+    if (isLastRow) {
+      // ==========================================
+      // XỬ LÝ KHI ĐANG Ở DÒNG CUỐI CÙNG
+      // ==========================================
+      
+      // 1. Nếu đang ở cột Tên sản phẩm -> Nhảy lên cột Số lượng của HÀNG ĐẦU TIÊN
+      if (fieldName === currentMap.name) {
+        setTimeout(() => {
+          const firstQtyInput = document.getElementById(`line-item-${firstLineId}-${currentMap.qty}`);
+          if (firstQtyInput) {
+            firstQtyInput.focus();
+            if (typeof firstQtyInput.select === 'function') firstQtyInput.select();
+          }
+        }, 50);
+      }
+      // 2. Nếu đang ở cột Số lượng -> Nhảy lên cột Đơn giá của HÀNG ĐẦU TIÊN
+      else if (fieldName === currentMap.qty) {
+        setTimeout(() => {
+          const firstPriceInput = document.getElementById(`line-item-${firstLineId}-${currentMap.price}`);
+          if (firstPriceInput) {
+            firstPriceInput.focus();
+            if (typeof firstPriceInput.select === 'function') firstPriceInput.select();
+          }
+        }, 50);
+      }
+      // 3. Nếu đang ở cột Đơn giá -> Tự động nhảy ra ngoài (hủy focus), không sang ô nào khác
+      else {
+        targetInput.blur();
+      }
+
+    } else {
+      // ==========================================
+      // XỬ LÝ KHI KHÔNG PHẢI DÒNG CUỐI (NHẢY XUỐNG DÒNG DƯỚI)
+      // ==========================================
+      const nextLineId = lineItems[lineIndex + 1]?.lineId;
+      if (nextLineId) {
+        setTimeout(() => {
+          const nextInput = document.getElementById(`line-item-${nextLineId}-${fieldName}`);
+          if (nextInput) {
+            nextInput.focus();
+            if (typeof nextInput.select === 'function') nextInput.select();
+          }
+        }, 50);
+      }
     }
   }
 }
@@ -1250,7 +1293,7 @@ function handleMaterialSelectInLine(lineId, selectedName) {
   render();
 }
 
-async function handleCustomerSelectInQuotation(customerName) {
+async function handleCustomerSelectInQuotation(customerName) { 
   if (!state.formData || state.mode === 'view') return;
   const safeCustomer = String(customerName || '').trim();
   state.formData.customer = safeCustomer;
