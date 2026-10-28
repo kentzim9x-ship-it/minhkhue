@@ -1077,19 +1077,34 @@ div[style*="overflow: auto"],
 @media (max-width: 768px) {
 
   .report-filter-wrapper {
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
+    flex-direction: column !important;
+    width: 100% !important;
   }
 
   .report-filter-row {
-    width: 100%;
-    justify-content: space-between;
+    display: flex !important;
+    width: 100% !important;
+  }
+
+  .report-filter-item {
+    flex: 1 !important;
+    width: 50% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    /* Đưa nhãn lên trên, ô chọn xuống dưới */
+    align-items: flex-start !important;
   }
 
   .report-pdf-btn-container {
     width: 100% !important;
     margin-top: 4px;
+  }
+
+  .report-filter-item input,
+  .report-filter-item select {
+    width: 100% !important;
+    height: 40px !important;
+    box-sizing: border-box !important;
   }
 
   .filter-controls-wrapper {
