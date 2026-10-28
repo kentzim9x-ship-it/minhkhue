@@ -949,7 +949,7 @@ function renderOrdersList(c) {
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
               <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();">
             </div>
-            ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
+            ${hasPermission ? `<button class="btn-primary" onclick="navigate('sales-orders', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
 
           <!-- Cụm Chọn Ngày (Nằm dưới ở Mobile) -->
@@ -1116,7 +1116,7 @@ function renderReturnsList(c) {
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
               <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();">
             </div>
-            ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
+            ${hasPermission ? `<button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
 
           <!-- Cụm Chọn Ngày (Nằm dưới ở Mobile) -->
@@ -1281,7 +1281,7 @@ function renderGRNList(c) {
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
               <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();">
             </div>
-            ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
+            ${hasPermission ? `<button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
 
           <!-- Cụm Chọn Ngày (Nằm dưới ở Mobile) -->
@@ -3061,10 +3061,10 @@ function renderReportSales(c) {
 
       <!-- BIỂU ĐỒ DOANH SỐ & TOP KHÁCH HÀNG -->
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="grid-2">
-        <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
-          <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Biểu Đồ Doanh Thu & Sản Lượng Đơn Bán</div>
-          <div style="height: 220px;"><canvas id="chart-sales"></canvas></div>
-        </div>
+       <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;" class="sales-chart-box">
+        <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Biểu Đồ Doanh Thu & Sản Lượng Đơn Bán</div>
+        <div style="height: 220px;"><canvas id="chart-sales"></canvas></div>
+      </div>
         <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
           <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng</div>
           <table style="width: 100%; border-collapse: collapse;">

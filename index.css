@@ -1076,6 +1076,10 @@ div[style*="overflow: auto"],
 /* RESPONSIVE MOBILE (< 768px) */
 @media (max-width: 768px) {
 
+  .sales-chart-box {
+    display: none !important; /* Chỉ ẩn khung biểu đồ trên Mobile */
+  }
+
   .report-filter-wrapper {
     flex-direction: column !important;
     width: 100% !important;
