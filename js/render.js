@@ -3122,15 +3122,16 @@ function renderReportSales(c) {
           </div>
 
             <!-- NÚT XUẤT PDF -->
-            <button 
-              type="button" 
-              class="btn-primary" 
-              onclick="exportSalesReportToPDF()" 
-              ${(reportType === 'detail' && !selectedCustomer) ? 'disabled style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"' : 'style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"'}
-            >
-              Xuất PDF
-            </button>
-
+            <div style="width: 100%; display: flex; justify-content: flex-start; margin-top: 4px;">
+              <button 
+                type="button" 
+                class="btn-primary" 
+                onclick="exportSalesReportToPDF()" 
+                ${(reportType === 'detail' && !selectedCustomer) ? 'disabled style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"' : 'style="background: #e11d48; color: #ffffff; padding: 5px 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px;"'}
+              >
+                Xuất PDF
+              </button>
+            </div>
           </div>
 
         </div>

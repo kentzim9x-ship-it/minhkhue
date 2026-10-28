@@ -1060,13 +1060,11 @@ div[style*="overflow: auto"],
   .report-filter-wrapper {
     flex-direction: column !important;
     width: 100% !important;
-    gap: 10px !important;
   }
 
   .report-filter-row {
     display: flex !important;
     width: 100% !important;
-    gap: 8px !important;
   }
 
   .report-filter-item {
@@ -1076,7 +1074,6 @@ div[style*="overflow: auto"],
     flex-direction: column !important;
     /* Đưa nhãn lên trên, ô chọn xuống dưới */
     align-items: flex-start !important;
-    gap: 4px !important;
   }
 
   .report-filter-item input,
