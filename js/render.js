@@ -2784,9 +2784,12 @@ function renderReportSales(c) {
   const returnRatePercent = ytdOrders > 0 ? ((totalReturnsCount / ytdOrders) * 100).toFixed(1) : '0.0';
   const avgOrderValue = ytdOrders > 0 ? (ytdRevenue / ytdOrders) : 0;
 
-  // 1. Khởi tạo State cho Tháng, Khách hàng & Loại Báo Cáo
-  if (!state.reportSalesMonth) {
-    state.reportSalesMonth = String(new Date().getMonth() + 1);
+  // 1. Khởi tạo State cho Ngày Từ - Đến, Khách hàng & Loại Báo Cáo
+  if (!state.reportSalesFromDate) {
+    state.reportSalesFromDate = getFirstDayOfMonthStr(); // Mặc định ngày đầu tiên của tháng
+  }
+  if (!state.reportSalesToDate) {
+    state.reportSalesToDate = getLastDayOfMonthStr();   // Mặc định ngày cuối cùng của tháng
   }
   if (state.reportSalesCustomer === undefined) {
     state.reportSalesCustomer = '';
@@ -2800,7 +2803,8 @@ function renderReportSales(c) {
   }
 
   const currentYear = new Date().getFullYear();
-  const selectedMonthNum = parseInt(state.reportSalesMonth, 10) || (new Date().getMonth() + 1);
+  const selectedFromDate = state.reportSalesFromDate;
+  const selectedToDate = state.reportSalesToDate;
   const selectedCustomer = state.reportSalesCustomer;
   const reportType = state.reportType;
 
@@ -2810,25 +2814,19 @@ function renderReportSales(c) {
     return mat ? (mat.unit || '—') : '—';
   };
 
-  // Lọc dữ liệu đơn hàng theo tháng & Chỉ lấy trạng thái "Duyệt" hoặc "Hoàn thành"
-  const filteredOrdersForMonth = (db.orders || []).filter(o => {
+  // Lọc dữ liệu đơn hàng: Trạng thái Duyệt / Hoàn Thành và Ngày lập (Date) nằm trong khoảng Từ Ngày - Đến Ngày
+  const filteredOrdersForDateRange = (db.orders || []).filter(o => {
     const status = (o.status || '').toLowerCase();
     const isValidStatus = ['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
     if (!isValidStatus) return false;
     if (!o.date) return false;
 
-    const parts = o.date.split('-');
-    if (parts.length >= 2) {
-      const oYear = parseInt(parts[0], 10);
-      const oMonth = parseInt(parts[1], 10);
-      return oYear === currentYear && oMonth === selectedMonthNum;
-    }
-    return false;
+    return o.date >= selectedFromDate && o.date <= selectedToDate;
   });
 
-  // Top khách hàng trong tháng
+  // Top khách hàng trong khoảng thời gian đã chọn
   const customerMap = {};
-  filteredOrdersForMonth.forEach(o => {
+  filteredOrdersForDateRange.forEach(o => {
     const cName = o.customer || 'Khách lẻ';
     if (!customerMap[cName]) customerMap[cName] = { name: cName, revenue: 0, orders: 0 };
     customerMap[cName].revenue += Number(o.total || 0);
@@ -2855,7 +2853,7 @@ function renderReportSales(c) {
     let grandTotalQty = 0;
     let grandTotalAmount = 0;
 
-    filteredOrdersForMonth.forEach(o => {
+    filteredOrdersForDateRange.forEach(o => {
       if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
         const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
         items.forEach(item => {
@@ -2924,7 +2922,7 @@ function renderReportSales(c) {
         </tr>
       `;
     } else {
-      const customerOrders = filteredOrdersForMonth.filter(o =>
+      const customerOrders = filteredOrdersForDateRange.filter(o =>
         o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
       );
 
@@ -2966,7 +2964,7 @@ function renderReportSales(c) {
         if (renderedItemCount >= state.reportSalesLimit) break;
 
         const dateParts = dateStr.split('-');
-        const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+        const formattedDate = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : dateStr;
 
         const dayData = dailyMap[dateStr];
         dayData.orders.sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')));
@@ -2991,11 +2989,9 @@ function renderReportSales(c) {
           let orderTotalAmount = 0;
           const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
 
-          // 1. Dòng Tổng Cộng Đơn Hàng Bán (Mã Đơn Hàng ở Cột 1, Ghi chú ở Cột 2)
           const orderHeaderIndex = dayRows.length;
           dayRows.push(''); // Phao chờ chèn HTML dòng tổng đơn hàng
 
-          // 2. Chi tiết từng dòng sản phẩm trong đơn hàng
           items.forEach(item => {
             const qty = Number(item.qty || 0);
             const price = Number(item.unitPrice || 0);
@@ -3026,7 +3022,6 @@ function renderReportSales(c) {
             `);
           });
 
-          // Cập nhật Dòng Tổng Cộng cho Đơn Hàng Bán
           dayRows[orderHeaderIndex] = `
             <tr style="border-bottom: 1px solid var(--border); background: var(--secondary); font-weight: 600;" class="hover-row" onclick="navigate('sales-orders', 'view', '${o.id}')" ondblclick="navigate('sales-orders', 'edit', '${o.id}')">
               <td data-label="Đơn Hàng Bán" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); font-weight: 600;">${o.id || '—'}</td>
@@ -3039,7 +3034,6 @@ function renderReportSales(c) {
           `;
         });
 
-        // Cập nhật tổng của Ngày vào Dòng Ngày Tháng (Index 0)
         dayRows[0] = dayRows[0]
           .replace('DAY_QTY_PLACEHOLDER', fmt(dayTotalQty))
           .replace('DAY_AMT_PLACEHOLDER', fmtUSD(dayTotalAmount));
@@ -3053,7 +3047,7 @@ function renderReportSales(c) {
         detailRowsHtml = `
           <tr>
             <td colspan="6" style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">
-              Không có dữ liệu đơn hàng chi tiết trong tháng đã chọn
+              Không có dữ liệu đơn hàng chi tiết trong khoảng thời gian đã chọn
             </td>
           </tr>
         `;
@@ -3102,7 +3096,7 @@ function renderReportSales(c) {
           <div style="height: 220px;"><canvas id="chart-sales"></canvas></div>
         </div>
         <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
-          <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng (Tháng ${selectedMonthNum})</div>
+          <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng</div>
           <table style="width: 100%; border-collapse: collapse;">
             <tbody>
               ${customersHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có dữ liệu khách hàng</td></tr>'}
@@ -3117,7 +3111,7 @@ function renderReportSales(c) {
 
           <div style="display: flex; flex-direction: column; gap: 2px;">
             <span style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--foreground);">
-              Thống Kê ${reportType === 'detail' ? 'Chi Tiết' : 'Tổng Hợp'} Theo Khách Hàng ${selectedCustomer ? `(${selectedCustomer})` : ''} - Tháng ${selectedMonthNum}/${currentYear}
+              Thống Kê ${reportType === 'detail' ? 'Chi Tiết' : 'Tổng Hợp'} Theo Khách Hàng ${selectedCustomer ? `(${selectedCustomer})` : ''}
             </span>
             <span style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--primary);">
               Tổng số mặt hàng: ${totalDisplayItemsCount}
@@ -3125,12 +3119,15 @@ function renderReportSales(c) {
           </div>
 
           <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-            <!-- Ô Chọn Tháng -->
+            <!-- ô chọn Từ ngày và Đến ngày -->
             <div style="display: flex; align-items: center; gap: 6px;">
-              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Tháng:</label>
-              <select class="form-select" style="width: 100px; padding: 5px 8px; font-size: 12px;" onchange="state.reportSalesMonth=this.value; state.reportSalesLimit=40; state.page=1; render();">
-                ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}" ${selectedMonthNum === (i + 1) ? 'selected' : ''}>Tháng ${i + 1}</option>`).join('')}
-              </select>
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
+              <input type="date" class="form-input" style="width: 130px; padding: 4px 8px; font-size: 12px;" value="${selectedFromDate}" onchange="state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render();">
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
+              <input type="date" class="form-input" style="width: 130px; padding: 4px 8px; font-size: 12px;" value="${selectedToDate}" onchange="state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render();">
             </div>
 
             <!-- Ô Chọn Loại Báo Cáo -->
