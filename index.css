@@ -985,8 +985,57 @@ div[style*="overflow: auto"],
   transform-origin: top center;
 }
 
+.filter-toolbar {
+  display: flex;
+  flex-direction: column;
+  /* Mobile xếp dọc 2 nhóm */
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.action-group {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.date-group {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.date-item {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.date-item label {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
 /* RESPONSIVE MOBILE (< 768px) */
 @media (max-width: 768px) {
+
+  .filter-toolbar {
+    flex-direction: row;
+    /* PC sắp xếp thành 1 hàng ngang */
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .action-group,
+  .date-group {
+    width: auto;
+  }
+
+  .date-item {
+    flex-direction: row;
+    align-items: center;
+  }
 
   /* Ép khung chứa thành flexbox dòng ngang, căn thẳng lề trên (top) */
   .mobile-search-action-group {
