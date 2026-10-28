@@ -3061,11 +3061,11 @@ function renderReportSales(c) {
 
       <!-- BIỂU ĐỒ DOANH SỐ & TOP KHÁCH HÀNG -->
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="grid-2">
-       <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;" class="sales-chart-box">
+        <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;" class="sales-chart-box">
         <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Biểu Đồ Doanh Thu & Sản Lượng Đơn Bán</div>
         <div style="height: 220px;"><canvas id="chart-sales"></canvas></div>
       </div>
-        <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
+        <div style="border: 1px solid var(--border); background: var(--card);" class="top-customers-card">
           <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng</div>
           <table style="width: 100%; border-collapse: collapse;">
             <tbody>
