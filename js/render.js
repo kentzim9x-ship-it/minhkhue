@@ -668,7 +668,7 @@ function renderQuotationsList(c) {
 
   const filtered = db.quotations.filter(q => {
     const matchStatus = (state.filter === 'all' || q.status === state.filter);
-    
+
     // Lọc theo khoảng ngày lập phiếu (date)
     const dateStr = q.date || '';
     const matchDate = dateStr >= state.quotationsFromDate && dateStr <= state.quotationsToDate;
@@ -782,13 +782,15 @@ function renderQuotationsList(c) {
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
           <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+          <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+            <div style="display: flex; align-items: center; gap-1 w-1/2 md:w-auto">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+            </div>
+            <div style="display: flex; align-items: center; gap-1 w-1/2 md:w-auto">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+            </div>
           </div>
 
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
@@ -939,13 +941,15 @@ function renderOrdersList(c) {
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
           <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersFromDate}" onchange="state.ordersFromDate=this.value; state.page=1; render();">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersToDate}" onchange="state.ordersToDate=this.value; state.page=1; render();">
+          <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+            <div style="display: flex; align-items: center; gap-1 w-1/2 md:w-auto">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+            </div>
+            <div style="display: flex; align-items: center; gap-1 w-1/2 md:w-auto">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+            </div>
           </div>
 
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
@@ -1101,13 +1105,15 @@ function renderReturnsList(c) {
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
           <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsFromDate}" onchange="state.returnsFromDate=this.value; state.page=1; render();">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsToDate}" onchange="state.returnsToDate=this.value; state.page=1; render();">
+          <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+            <div style="display: flex; align-items: center; gap-1 w-1/2 md:w-auto">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+            </div>
+            <div style="display: flex; align-items: center; gap-1 w-1/2 md:w-auto">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+            </div>
           </div>
 
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
@@ -1261,13 +1267,15 @@ function renderGRNList(c) {
         
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; max-width: 750px;">
           <!-- 2 ô chọn Từ Ngày - Đến Ngày đặt bên tay trái ô Tìm kiếm -->
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnFromDate}" onchange="state.grnFromDate=this.value; state.page=1; render();">
-          </div>
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-            <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnToDate}" onchange="state.grnToDate=this.value; state.page=1; render();">
+          <div class="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+            <div style="display: flex; align-items: center; gap-1 w-1/2 md:w-auto">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+            </div>
+            <div style="display: flex; align-items: center; gap-1 w-1/2 md:w-auto">
+              <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+            </div>
           </div>
 
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 180px; height: 38px; box-sizing: border-box;">
@@ -2617,6 +2625,7 @@ function renderReportInventory(c) {
         ${kpiHtml}
       </div>
 
+      <!--
       <div style="display: grid; grid-template-columns: 1fr 320px; gap: 16px;" class="grid-2">
         <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
           <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Giá Trị Tồn Kho Theo Danh Mục</div>
@@ -2631,6 +2640,7 @@ function renderReportInventory(c) {
           </div>
         </div>
       </div>
+      -->
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;" id="inventory-report-table-box">
 
@@ -3263,12 +3273,12 @@ function getSortedMaterialsForOrder(customerName, orderDateStr) {
     const matName = (m.name || '').trim().toLowerCase();
 
     const hasInQuote = (matSku && quoteItemMap[`sku:${matSku}`] !== undefined) ||
-                       (matName && quoteItemMap[`name:${matName}`] !== undefined);
+      (matName && quoteItemMap[`name:${matName}`] !== undefined);
 
     if (hasInQuote) {
       // LẤY ĐƠN GIÁ ĐANG KHAI BÁO TRONG BÁO GIÁ ĐỂ GHI ĐÈ GIÁ DANH MỤC
-      const quotedPrice = (matSku && quoteItemMap[`sku:${matSku}`] !== undefined) 
-        ? quoteItemMap[`sku:${matSku}`] 
+      const quotedPrice = (matSku && quoteItemMap[`sku:${matSku}`] !== undefined)
+        ? quoteItemMap[`sku:${matSku}`]
         : quoteItemMap[`name:${matName}`];
 
       m.price = quotedPrice;
