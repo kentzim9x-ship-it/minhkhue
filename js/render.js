@@ -286,9 +286,11 @@ function renderDashboard(c) {
     const cursorStyle = hasTarget ? 'cursor: pointer;' : '';
 
     return `
-      <tr
+      <div 
         class="hover-row" 
         ${clickAttr}
+        onmouseover="this.style.background='color-mix(in srgb, var(--secondary) 50%, transparent)'"
+        onmouseout="this.style.background='transparent'"
         style="padding: 12px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; ${cursorStyle} transition: background 0.15s ease;"
         ${hasTarget ? `title="Click để xem chi tiết ${a.event}"` : ''}
       >
