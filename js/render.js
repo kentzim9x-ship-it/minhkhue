@@ -280,7 +280,6 @@ function renderDashboard(c) {
   const completedOrdersCount = (db.orders || []).filter(o => ['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes((o.status || '').toLowerCase())).length;
   const completionRate = totalOrdersCount > 0 ? ((completedOrdersCount / totalOrdersCount) * 100).toFixed(1) : '100.0';
 
-  // Render danh sách hoạt động với sự kiện click chuyển tới màn hình View tương ứng
   const activityHtml = recentActivityReal.map(a => {
     const hasTarget = Boolean(a.targetView && a.itemId);
     const clickAttr = hasTarget ? `onclick="navigate('${a.targetView}', 'view', '${a.itemId}')"` : '';
@@ -289,7 +288,7 @@ function renderDashboard(c) {
     return `
       <div 
         class="hover-row" 
-        ${clickAttr} 
+        ${clickAttr}
         style="padding: 12px 18px; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; ${cursorStyle} transition: background 0.15s ease;"
         ${hasTarget ? `title="Click để xem chi tiết ${a.event}"` : ''}
       >

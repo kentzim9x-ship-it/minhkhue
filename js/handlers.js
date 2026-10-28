@@ -1491,14 +1491,24 @@ function getSalesAnalyticsData() {
   const topCustomersReal = Object.values(customerMap).sort((a, b) => b.revenue - a.revenue);
 
   // ==========================================
-  // XỬ LÝ DỮ LIỆU HOẠT ĐỘNG MỚI NHẤT (RECENT ACTIVITIES)
+  // XỬ LÝ DỮ LIỆU HOẠT ĐỘNG MỚI NHẤT & TRA CỨU HỌ TÊN USER
   // ==========================================
+  
+  // Hàm trợ giúp tra cứu Họ tên từ danh sách userinfo theo ID
+  const getActorFullName = (userId) => {
+    if (!userId) return '';
+    const userList = db.userinfo || db.users || db.user_info || [];
+    const matchedUser = userList.find(u => String(u.id) === String(userId));
+    if (matchedUser) {
+      return matchedUser.fullname || matchedUser.full_name || matchedUser.username || String(userId);
+    }
+    return String(userId);
+  };
+
   const allActivities = [];
 
-  // Hàm bổ trợ xác định thời gian và hành động (Tạo mới / Cập nhật) dựa theo date0/time0 & date2/time2
   const extractActivityInfo = (item, defaultTypeLabel) => {
     const isUpdated = Boolean(item.date2 && String(item.date2).trim() !== '');
-    
     const dStr = isUpdated ? item.date2 : (item.date0 || item.date || item.createdAt);
     const tStr = isUpdated ? (item.time2 || '00:00:00') : (item.time0 || item.time || '00:00:00');
 
@@ -1536,7 +1546,9 @@ function getSalesAnalyticsData() {
       time: fullDateTime || '—',
       event: n.title || 'Thông báo',
       detail: n.detail || '',
-      actor: n.actor || n.user_fullname || ''
+      actor: getActorFullName(n.actor || n.user_id || n.user_fullname),
+      targetView: n.targetview || n.type || '',
+      itemId: n.itemid || ''
     });
   });
 
@@ -1547,10 +1559,10 @@ function getSalesAnalyticsData() {
       timestamp: info.timestamp,
       time: info.formattedTime,
       event: info.actionText,
-      detail: `Mã phiếu: ${o.id || ''} - Khách: ${o.customer || 'Khách lẻ'} (${fmtUSD ? fmtUSD(o.total || 0) : o.total})`,
-      actor: o.user_id2 || o.user_id0 || '',
-      targetView: 'sales-orders', // Thêm targetView
-      itemId: o.id                // Thêm itemId
+      detail: `Mã phiếu: ${o.id || ''} - Khách: ${o.customer || 'Khách lẻ'} (${typeof fmtUSD === 'function' ? fmtUSD(o.total || 0) : o.total})`,
+      actor: getActorFullName(o.user_id2 || o.user_id0),
+      targetView: 'sales-orders',
+      itemId: o.id
     });
   });
 
@@ -1562,9 +1574,9 @@ function getSalesAnalyticsData() {
       time: info.formattedTime,
       event: info.actionText,
       detail: `Mã phiếu: ${q.id || ''} - Khách: ${q.customer || 'Khách hàng'}`,
-      actor: q.user_id2 || q.user_id0 || '',
-      targetView: 'quotations', // Thêm targetView
-      itemId: q.id                // Thêm itemId
+      actor: getActorFullName(q.user_id2 || q.user_id0),
+      targetView: 'quotations',
+      itemId: q.id
     });
   });
 
@@ -1576,9 +1588,9 @@ function getSalesAnalyticsData() {
       time: info.formattedTime,
       event: info.actionText,
       detail: `Mã phiếu: ${r.id || ''} - Khách: ${r.customer || 'Khách hàng'}`,
-      actor: r.user_id2 || r.user_id0 || '',
-      targetView: 'returns', // Thêm targetView
-      itemId: r.id                // Thêm itemId
+      actor: getActorFullName(r.user_id2 || r.user_id0),
+      targetView: 'returns',
+      itemId: r.id
     });
   });
 
@@ -1590,19 +1602,20 @@ function getSalesAnalyticsData() {
       time: info.formattedTime,
       event: info.actionText,
       detail: `Mã phiếu: ${g.id || ''} - NCC: ${g.supplier || 'Nhà cung cấp'}`,
-      actor: g.user_id2 || g.user_id0 || '',
-      targetView: 'grn', // Thêm targetView
-      itemId: g.id                // Thêm itemId
+      actor: getActorFullName(g.user_id2 || g.user_id0),
+      targetView: 'grn',
+      itemId: g.id
     });
   });
 
-  // Sắp xếp các hoạt động theo mốc thời gian mới nhất lên đầu và lấy 6 mục đầu tiên
   allActivities.sort((a, b) => b.timestamp - a.timestamp);
   const recentActivityReal = allActivities.slice(0, 6).map(item => ({
     time: item.time,
     event: item.event,
     detail: item.detail,
-    actor: item.actor
+    actor: item.actor,
+    targetView: item.targetView,
+    itemId: item.itemId
   }));
 
   return {
