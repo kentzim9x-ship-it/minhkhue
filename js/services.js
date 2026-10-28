@@ -264,11 +264,12 @@ function showConfirm(message, title = 'Xác nhận thao tác') {
       resolve(false);
     };
 
-    // Bổ sung lắng nghe phím Escape riêng cho Modal Confirm
+    // Bắt phím Escape ở pha Capture (true) để đảm bảo luôn ưu tiên bắt phím ESC trước
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault();
         e.stopPropagation();
-        handleCancel(); // Tương đương với hành động bấm nút Hủy bỏ
+        handleCancel(); // Thực hiện đóng và trả về false (tương đương bấm Hủy)
       }
     };
 
@@ -276,10 +277,12 @@ function showConfirm(message, title = 'Xác nhận thao tác') {
       overlay.style.display = 'none';
       btnConfirm.removeEventListener('click', handleConfirm);
       btnCancel.removeEventListener('click', handleCancel);
+      window.removeEventListener('keydown', handleKeyDown, true);
     };
 
     btnConfirm.addEventListener('click', handleConfirm);
     btnCancel.addEventListener('click', handleCancel);
+    window.addEventListener('keydown', handleKeyDown, true);
   });
 }
 
