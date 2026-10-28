@@ -1111,87 +1111,6 @@ function initFormData(module, id) {
 // ==========================================
 // Hàm lấy danh sách sản phẩm đã được sắp xếp theo đúng ưu tiên cho Đơn bán hàng
 
-function getSortedMaterialsForOrder(customerName, orderDateStr) {
-  const materials = JSON.parse(JSON.stringify(db.materials || []));
-  const currentCust = (customerName || '').trim().toLowerCase();
-  const currentDate = orderDateStr || getTodayDateStr();
-
-  // Hàm bổ trợ so sánh mã SKU tăng dần
-  const sortBySkuAsc = (a, b) => (a.id || '').localeCompare(b.id || '', undefined, { numeric: true, sensitivity: 'base' });
-
-  // 1. Tìm Báo giá có trạng thái "Duyệt" và còn hiệu lực của Khách hàng
-  let activeQuotation = null;
-  if (currentCust) {
-    activeQuotation = (db.quotations || [])
-      .filter(q => {
-        if (!q || !q.customer) return false;
-        if (q.customer.trim().toLowerCase() !== currentCust) return false;
-
-        const status = (q.status || '').toLowerCase();
-        const isAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
-        if (!isAccepted) return false;
-
-        const vBegin = q.validbegin || q.validBegin || q.date || '';
-        const vUntil = q.validUntil || q.validuntil || '';
-
-        if (vBegin && vUntil) {
-          return currentDate >= vBegin && currentDate <= vUntil;
-        }
-        return true;
-      })
-      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
-  }
-
-  // 2. Trường hợp KHÔNG có báo giá hợp lệ -> Trả về danh sách sản phẩm gốc
-  if (!activeQuotation || !Array.isArray(activeQuotation.lineItems) || activeQuotation.lineItems.length === 0) {
-    return materials.sort(sortBySkuAsc);
-  }
-
-  // 3. Trường hợp CÓ báo giá hợp lệ: Map đơn giá từ Báo Giá vào Sản phẩm
-  const quoteItemMap = {};
-  activeQuotation.lineItems.forEach(item => {
-    const sku = (item.sku || '').trim().toLowerCase();
-    const name = (item.name || '').trim().toLowerCase();
-    const price = (item.unitPrice !== undefined && item.unitPrice !== null) ? Number(item.unitPrice) : 0;
-
-    if (sku) quoteItemMap[`sku:${sku}`] = price;
-    if (name) quoteItemMap[`name:${name}`] = price;
-  });
-
-  const inQuotationList = [];
-  const outQuotationList = [];
-
-  materials.forEach(m => {
-    const matSku = (m.id || '').trim().toLowerCase();
-    const matName = (m.name || '').trim().toLowerCase();
-
-    const hasInQuote = (matSku && quoteItemMap[`sku:${matSku}`] !== undefined) ||
-                       (matName && quoteItemMap[`name:${matName}`] !== undefined);
-
-    if (hasInQuote) {
-      // LẤY ĐƠN GIÁ ĐANG KHAI BÁO TRONG BÁO GIÁ ĐỂ GHI ĐÈ GIÁ DANH MỤC
-      const quotedPrice = (matSku && quoteItemMap[`sku:${matSku}`] !== undefined) 
-        ? quoteItemMap[`sku:${matSku}`] 
-        : quoteItemMap[`name:${matName}`];
-
-      m.price = quotedPrice;
-      m.cost = quotedPrice; // Đảm bảo Datalist lấy đúng giá Báo giá (VD: 34.000 đ)
-      m.isQuoted = true;    // Đánh dấu thẻ "★ Báo giá"
-
-      inQuotationList.push(m);
-    } else {
-      outQuotationList.push(m);
-    }
-  });
-
-  // Sắp xếp từng nhóm theo SKU tăng dần
-  inQuotationList.sort(sortBySkuAsc);
-  outQuotationList.sort(sortBySkuAsc);
-
-  // Ghép nhóm trong Báo giá (mang giá Báo giá) lên trước, các mặt hàng khác phía sau
-  return [...inQuotationList, ...outQuotationList];
-}
-
 function updateGlobalMaterialDatalist() {
   let dl = document.getElementById('global-materials-list');
   if (!dl) {
@@ -1448,6 +1367,140 @@ async function handleCustomerSelectInOrder(customerName) {
   }
 
   render();
+}
+
+function getSalesAnalyticsData() {
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+
+  const monthLabels = [];
+  const monthlyMap = {};
+
+  for (let i = 8; i >= 0; i--) {
+    let d = new Date(currentYear, currentMonth - 1 - i, 1);
+    let y = d.getFullYear();
+    let m = d.getMonth() + 1;
+    let key = `${y}-${String(m).padStart(2, '0')}`;
+    let label = `Tháng ${m}`;
+    monthLabels.push({ key, label, year: y, month: m });
+    monthlyMap[key] = { month: label, revenue: 0, orders: 0, returns: 0 };
+  }
+
+  let currentMonthRevenue = 0;
+  let currentMonthOrders = 0;
+
+  (db.orders || []).forEach(o => {
+    const status = (o.status || '').toLowerCase();
+    if (['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
+      const dateStr = o.date || '';
+      const key = dateStr.substring(0, 7);
+      const total = Number(o.total || 0);
+
+      if (monthlyMap[key]) {
+        monthlyMap[key].revenue += total;
+        monthlyMap[key].orders += 1;
+      }
+
+      const currentKey = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+      if (key === currentKey) {
+        currentMonthRevenue += total;
+        currentMonthOrders += 1;
+      }
+    }
+  });
+
+  (db.returns || []).forEach(r => {
+    const status = (r.status || '').toLowerCase();
+    if (['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
+      const dateStr = r.date || '';
+      const key = dateStr.substring(0, 7);
+      if (monthlyMap[key]) {
+        monthlyMap[key].returns += 1;
+      }
+    }
+  });
+
+  const salesDataReal = monthLabels.map(m => monthlyMap[m.key]);
+
+  let ytdRevenue = 0;
+  let ytdOrders = 0;
+  (db.orders || []).forEach(o => {
+    const status = (o.status || '').toLowerCase();
+    if (['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
+      if (o.date && o.date.startsWith(String(currentYear))) {
+        ytdRevenue += Number(o.total || 0);
+        ytdOrders += 1;
+      }
+    }
+  });
+
+  const customerMap = {};
+  (db.orders || []).forEach(o => {
+    const status = (o.status || '').toLowerCase();
+    if (['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status)) {
+      const cName = o.customer || 'Khách lẻ';
+      if (!customerMap[cName]) customerMap[cName] = { name: cName, revenue: 0, orders: 0 };
+      customerMap[cName].revenue += Number(o.total || 0);
+      customerMap[cName].orders += 1;
+    }
+  });
+
+  const topCustomersReal = Object.values(customerMap).sort((a, b) => b.revenue - a.revenue);
+
+  const notifList = db.notifications || [];
+  const recentActivityReal = notifList.slice(0, 6).map(n => {
+    const formattedDate = fmtDateStr(n.date || n.created_at);
+    const timeStr = n.time ? n.time.substring(0, 5) : '';
+    const fullDateTime = `${formattedDate} ${timeStr}`.trim();
+
+    return {
+      time: fullDateTime || '—',
+      event: n.title || 'Thông báo',
+      detail: n.detail || '',
+      actor: n.actor || n.user_fullname || ''
+    };
+  });
+
+  return {
+    salesDataReal,
+    currentMonthRevenue,
+    currentMonthOrders,
+    ytdRevenue,
+    ytdOrders,
+    topCustomersReal,
+    recentActivityReal
+  };
+}
+
+// Hàm hỗ trợ bật/tắt hiển thị mật khẩu
+function togglePasswordVisibility() {
+  const pwdInput = document.getElementById('login-password');
+  const eyeIcon = document.getElementById('eye-icon');
+
+  if (!pwdInput) return;
+
+  if (pwdInput.type === 'password') {
+    pwdInput.type = 'text';
+    eyeIcon.innerHTML = `
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+      <line x1="1" y1="1" x2="23" y2="23"></line>
+    `;
+  } else {
+    pwdInput.type = 'password';
+    eyeIcon.innerHTML = `
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+      <circle cx="12" cy="12" r="3"></circle>
+    `;
+  }
+}
+
+// Hàm chuẩn hóa chuỗi tìm kiếm (chống lỗi Unicode tổ hợp & khoảng trắng)
+function normalizeSearchText(str) {
+  if (!str) return '';
+  return String(str)
+    .normalize('NFC')
+    .toLowerCase()
+    .trim();
 }
 
 // ==========================================
@@ -2279,52 +2332,6 @@ function exportSalesOrderToExcel() {
   XLSX.utils.book_append_sheet(wb, ws, "DonHang");
 
   downloadOrShareXLSX(wb, `DonHang_${d.id || 'Export'}`);
-}
-
-// ==========================================
-// HÀM BỔ TRỢ: TẢI FILE EXCEL HOẶC CHIA SẺ QUA ZALO
-// ==========================================
-async function downloadOrShareXLSX(workbook, fileName) {
-  if (typeof XLSX === 'undefined') {
-    showAlert('Thư viện XLSX chưa được tải, vui lòng kiểm tra lại kết nối!', 'Lỗi');
-    return;
-  }
-
-  const fullFileName = `${fileName}.xlsx`;
-
-  try {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    // 1. DÀNH CHO MOBILE: MỞ BẢNG CHIA SẺ (ZALO / MESSENGER)
-    if (isMobile && navigator.canShare) {
-      const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const file = new File([blob], fullFileName, { type: blob.type });
-
-      if (navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: fullFileName,
-            text: `Gửi file Excel ${fullFileName}`
-          });
-          return;
-        } catch (shareErr) {
-          if (shareErr.name !== 'AbortError') {
-            console.warn('Lỗi chia sẻ file Excel:', shareErr);
-          }
-          return;
-        }
-      }
-    }
-
-    // 2. DÀNH CHO PC: TẢI TRỰC TIẾP FILE EXCEL VỀ MÁY
-    XLSX.writeFile(workbook, fullFileName);
-
-  } catch (err) {
-    console.error('Lỗi khi xuất file Excel:', err);
-    showAlert('Có lỗi xảy ra trong quá trình tạo file Excel!', 'Lỗi');
-  }
 }
 
 // Kiểm tra xem form giao dịch hiện tại có dữ liệu chưa lưu hay không
