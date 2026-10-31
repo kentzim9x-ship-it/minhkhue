@@ -1080,10 +1080,6 @@ div[style*="overflow: auto"],
 /* RESPONSIVE MOBILE (< 768px) */
 @media (max-width: 768px) {
 
-  .pc-only-print-btn {
-    display: none !important;
-  }
-
   .top-customers-card {
     width: 100% !important;
     box-sizing: border-box;
@@ -1849,5 +1845,13 @@ div[style*="overflow: auto"],
   to {
     transform: translateX(100%);
     opacity: 0;
+  }
+}
+
+@media screen and (max-width: 768px) {
+
+  button.pc-only-print-btn,
+  .pc-only-print-btn {
+    display: none !important;
   }
 }
