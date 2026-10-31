@@ -208,7 +208,7 @@ document.addEventListener('keydown', function (e) {
     if (modalOverlay && modalOverlay.style.display === 'flex') {
       return;
     }
-    
+
     const dropdown = document.getElementById('notif-dropdown');
     if (dropdown && dropdown.classList.contains('open')) {
       dropdown.classList.remove('open');
@@ -217,6 +217,12 @@ document.addEventListener('keydown', function (e) {
     if (typeof closeNotificationHistory === 'function') {
       closeNotificationHistory();
     }
+
+    // Đóng Drawer In tem nếu đang mở
+    if (typeof closePrintLabelDrawer === 'function') {
+      closePrintLabelDrawer();
+    }
+
     return;
   }
 
@@ -234,7 +240,7 @@ document.addEventListener('keydown', function (e) {
 // 3. Khởi tạo ứng dụng khi DOM sẵn sàng
 document.addEventListener('DOMContentLoaded', async () => {
   sessionStorage.clear();
-  
+
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => navigate(btn.getAttribute('data-view')));
   });

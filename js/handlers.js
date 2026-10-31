@@ -2518,3 +2518,397 @@ if (typeof BroadcastChannel !== 'undefined') {
     }
   };
 }
+
+// ==========================================
+// CHỨC NĂNG IN TEM SẢN PHẨM (PRINT LABELS DRAWER)
+// ==========================================
+
+function initPrintLabelDrawerUI() {
+  if (document.getElementById('print-label-drawer')) return;
+
+  // Tải thư viện qrcodejs nếu chưa có
+  if (typeof QRCode === 'undefined' && !document.getElementById('qrcode-script-tag')) {
+    const script = document.createElement('script');
+    script.id = 'qrcode-script-tag';
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    document.head.appendChild(script);
+  }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'print-label-overlay';
+  overlay.style.cssText = `
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 9998;
+    transition: opacity 0.3s ease;
+  `;
+  overlay.onclick = closePrintLabelDrawer;
+
+  const drawer = document.createElement('div');
+  drawer.id = 'print-label-drawer';
+  drawer.style.cssText = `
+    position: fixed;
+    top: 0; right: -33.33vw;
+    width: 33.33vw; height: 100vh;
+    background: var(--card, #141821);
+    border-left: 1px solid var(--border, rgba(255,255,255,0.1));
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: var(--font-jost, sans-serif);
+    box-sizing: border-box;
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(drawer);
+}
+
+function openPrintLabelDrawer() {
+  initPrintLabelDrawerUI();
+
+  const drawer = document.getElementById('print-label-drawer');
+  const overlay = document.getElementById('print-label-overlay');
+
+  window.printLabelState = {
+    search: '',
+    selectedSkus: new Set()
+  };
+
+  renderPrintLabelDrawerContent();
+
+  overlay.style.display = 'block';
+  setTimeout(() => {
+    drawer.style.right = '0';
+  }, 10);
+}
+
+function closePrintLabelDrawer() {
+  const drawer = document.getElementById('print-label-drawer');
+  const overlay = document.getElementById('print-label-overlay');
+  if (drawer) drawer.style.right = '-33.33vw';
+  if (overlay) {
+    setTimeout(() => {
+      overlay.style.display = 'none';
+    }, 300);
+  }
+}
+
+function renderPrintLabelDrawerContent() {
+  const drawer = document.getElementById('print-label-drawer');
+  if (!drawer) return;
+
+  const searchKey = normalizeSearchText(window.printLabelState.search || '');
+
+  // Sắp xếp mã SKU từ cao xuống thấp
+  const sortedMaterials = [...(db.materials || [])].sort((a, b) => {
+    return String(b.id || '').localeCompare(String(a.id || ''), undefined, { numeric: true, sensitivity: 'base' });
+  });
+
+  const filteredMaterials = sortedMaterials.filter(m => {
+    if (!searchKey) return true;
+    return normalizeSearchText(m.id).includes(searchKey) || normalizeSearchText(m.name).includes(searchKey);
+  });
+
+  const selectedSet = window.printLabelState.selectedSkus;
+  const isAllSelected = filteredMaterials.length > 0 && filteredMaterials.every(m => selectedSet.has(m.id));
+  const selectedCount = selectedSet.size;
+
+  const rowsHtml = filteredMaterials.map(m => {
+    const isChecked = selectedSet.has(m.id);
+    return `
+      <div 
+        style="
+          display: grid; 
+          grid-template-columns: 32px 90px 1fr 90px; 
+          gap: 8px; 
+          align-items: center; 
+          padding: 10px 16px; 
+          border-bottom: 1px solid var(--border, rgba(255,255,255,0.08)); 
+          cursor: pointer; 
+          transition: background 0.15s;
+          background: ${isChecked ? 'rgba(240, 160, 48, 0.08)' : 'transparent'};
+        "
+        onclick="toggleSelectPrintLabel('${m.id}')"
+        onmouseover="this.style.background='var(--secondary, #1a1e26)'"
+        onmouseout="this.style.background='${isChecked ? 'rgba(240, 160, 48, 0.08)' : 'transparent'}'"
+      >
+        <input 
+          type="checkbox" 
+          ${isChecked ? 'checked' : ''} 
+          onclick="event.stopPropagation(); toggleSelectPrintLabel('${m.id}')"
+          style="accent-color: #f0a030; cursor: pointer; width: 16px; height: 16px;"
+        >
+        <span style="font-family: var(--font-dm-mono, monospace); font-size: 12px; color: var(--primary, #f0a030); font-weight: 500;">${m.id}</span>
+        <span style="font-size: 13px; color: var(--foreground, #ffffff); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${m.name}">${m.name}</span>
+        <span style="font-family: var(--font-dm-mono, monospace); font-size: 12px; text-align: right; color: var(--muted-foreground, #a0aec0);">${fmtUSD(m.cost || 0)}</span>
+      </div>
+    `;
+  }).join('');
+
+  drawer.innerHTML = `
+    <!-- HEADER DRAWER -->
+    <div style="padding: 16px; border-bottom: 1px solid var(--border); background: var(--secondary, #1a1e26); display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: var(--font-dm-mono); font-size: 13px; text-transform: uppercase; font-weight: 600; color: var(--foreground); letter-spacing: 0.05em;">IN TEM SẢN PHẨM</span>
+        <button onclick="closePrintLabelDrawer()" style="background: none; border: none; color: var(--muted-foreground); cursor: pointer; padding: 4px; display: flex; align-items: center;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--muted-foreground)'">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- SEARCH BOX -->
+      <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; height: 36px; border-radius: 2px;">
+        <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
+        <input 
+          type="text" 
+          id="print-label-search-input"
+          placeholder="Tìm theo mã SKU, tên sản phẩm..." 
+          value="${window.printLabelState.search || ''}" 
+          oninput="window.printLabelState.search = this.value; renderPrintLabelDrawerContent();" 
+          style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%;"
+        >
+      </div>
+    </div>
+
+    <!-- BODY HEADER BAR (SELECT ALL & COLUMNS) -->
+    <div style="display: grid; grid-template-columns: 32px 90px 1fr 90px; gap: 8px; align-items: center; padding: 8px 16px; background: var(--card); border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">
+      <input 
+        type="checkbox" 
+        ${isAllSelected ? 'checked' : ''} 
+        onclick="toggleSelectAllPrintLabels(this.checked)"
+        style="accent-color: #f0a030; cursor: pointer; width: 16px; height: 16px;"
+        title="Chọn tất cả"
+      >
+      <span>MÃ SKU</span>
+      <span>TÊN SẢN PHẨM</span>
+      <span style="text-align: right;">GIÁ VỐN</span>
+    </div>
+
+    <!-- BODY LIST -->
+    <div style="flex: 1; overflow-y: auto;">
+      ${filteredMaterials.length > 0 ? rowsHtml : '<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-size: 12px; font-family: var(--font-dm-mono);">Không tìm thấy sản phẩm phù hợp</div>'}
+    </div>
+
+    <!-- FOOTER DRAWER -->
+    <div style="padding: 16px; border-top: 1px solid var(--border); background: var(--secondary, #1a1e26); display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-family: var(--font-dm-mono); font-size: 12px; color: var(--muted-foreground);">
+        Đã chọn: <strong style="color: #f0a030;">${selectedCount}</strong> sản phẩm
+      </span>
+      <button 
+        id="btn-execute-print-labels"
+        onclick="executePrintLabels()"
+        ${selectedCount === 0 ? 'disabled style="padding: 10px 20px; background: rgba(255,255,255,0.1); border: none; border-radius: 2px; color: rgba(255,255,255,0.4); font-family: var(--font-jost); font-size: 13px; font-weight: 600; cursor: not-allowed; display: inline-flex; align-items: center; gap: 6px;"' : 'style="padding: 10px 20px; background: #f0a030; border: none; border-radius: 2px; color: #000000; font-family: var(--font-jost); font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(240, 160, 48, 0.3); transition: all 0.2s;"'}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        In tem sản phẩm (${selectedCount})
+      </button>
+    </div>
+  `;
+
+  // Focus ô tìm kiếm
+  const inputEl = document.getElementById('print-label-search-input');
+  if (inputEl && document.activeElement !== inputEl) {
+    inputEl.focus();
+    inputEl.setSelectionRange(inputEl.value.length, inputEl.value.length);
+  }
+}
+
+function toggleSelectPrintLabel(sku) {
+  const selectedSet = window.printLabelState.selectedSkus;
+  if (selectedSet.has(sku)) {
+    selectedSet.delete(sku);
+  } else {
+    selectedSet.add(sku);
+  }
+  renderPrintLabelDrawerContent();
+}
+
+function toggleSelectAllPrintLabels(isChecked) {
+  const searchKey = normalizeSearchText(window.printLabelState.search || '');
+  const sortedMaterials = [...(db.materials || [])].sort((a, b) => {
+    return String(b.id || '').localeCompare(String(a.id || ''), undefined, { numeric: true, sensitivity: 'base' });
+  });
+
+  const filteredMaterials = sortedMaterials.filter(m => {
+    if (!searchKey) return true;
+    return normalizeSearchText(m.id).includes(searchKey) || normalizeSearchText(m.name).includes(searchKey);
+  });
+
+  const selectedSet = window.printLabelState.selectedSkus;
+  filteredMaterials.forEach(m => {
+    if (isChecked) {
+      selectedSet.add(m.id);
+    } else {
+      selectedSet.delete(m.id);
+    }
+  });
+
+  renderPrintLabelDrawerContent();
+}
+
+// Lệnh sinh HTML In tem 4x5 trên A4 và thực hiện In
+async function executePrintLabels() {
+  const selectedSet = window.printLabelState.selectedSkus;
+  if (selectedSet.size === 0) return;
+
+  const selectedMaterials = (db.materials || []).filter(m => selectedSet.has(m.id));
+
+  // Tạo iframe ẩn để thực hiện in
+  let printFrame = document.getElementById('print-label-frame');
+  if (printFrame) printFrame.remove();
+
+  printFrame = document.createElement('iframe');
+  printFrame.id = 'print-label-frame';
+  printFrame.style.position = 'fixed';
+  printFrame.style.right = '0';
+  printFrame.style.bottom = '0';
+  printFrame.style.width = '0';
+  printFrame.style.height = '0';
+  printFrame.style.border = 'none';
+  document.body.appendChild(printFrame);
+
+  const frameDoc = printFrame.contentWindow.document;
+
+  const labelsHtml = selectedMaterials.map((m, index) => {
+    // Dữ liệu mã QR mã hóa dạng JSON
+    const qrData = JSON.stringify({
+      id: m.id || '',
+      name: m.name || '',
+      unit: m.unit || '',
+      cost: m.cost || 0
+    });
+
+    return `
+      <div class="label-item">
+        <div class="qr-container" id="qr-${index}"></div>
+        <div class="label-info">
+          <div class="sku-code">${m.id || ''}</div>
+          <div class="product-name">${m.name || ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  frameDoc.open();
+  frameDoc.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>In Tem Sản Phẩm</title>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+      <style>
+        @page {
+          size: A4 portrait;
+          margin: 8mm 6mm;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: Arial, sans-serif;
+          background: #ffffff;
+        }
+        .sheet {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          grid-template-rows: repeat(5, 52mm);
+          gap: 3mm 4mm;
+          width: 198mm;
+          box-sizing: border-box;
+          page-break-after: always;
+        }
+        .label-item {
+          border: 1px dashed #bbb;
+          border-radius: 4px;
+          padding: 4mm 3mm;
+          box-sizing: border-box;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          overflow: hidden;
+          background: #fff;
+        }
+        .qr-container {
+          width: 26mm;
+          height: 26mm;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 2mm;
+        }
+        .qr-container img {
+          width: 26mm !important;
+          height: 26mm !important;
+        }
+        .label-info {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1mm;
+        }
+        .sku-code {
+          font-family: monospace;
+          font-size: 11pt;
+          font-weight: bold;
+          color: #000;
+          letter-spacing: 0.5px;
+        }
+        .product-name {
+          font-size: 9pt;
+          color: #222;
+          line-height: 1.2;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          word-break: break-word;
+          max-height: 22pt;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="sheet">
+        ${labelsHtml}
+      </div>
+    </body>
+    </html>
+  `);
+  frameDoc.close();
+
+  // Khởi tạo mã QR cho từng tem sau khi iframe render xong DOM
+  setTimeout(() => {
+    selectedMaterials.forEach((m, index) => {
+      const qrBox = frameDoc.getElementById(`qr-${index}`);
+      if (qrBox) {
+        const qrData = JSON.stringify({
+          id: m.id || '',
+          name: m.name || '',
+          unit: m.unit || '',
+          cost: m.cost || 0
+        });
+
+        new printFrame.contentWindow.QRCode(qrBox, {
+          text: qrData,
+          width: 100,
+          height: 100,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: printFrame.contentWindow.QRCode.CorrectLevel.M
+        });
+      }
+    });
+
+    // Gọi cửa sổ in
+    setTimeout(() => {
+      printFrame.contentWindow.focus();
+      printFrame.contentWindow.print();
+    }, 300);
+  }, 200);
+}

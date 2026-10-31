@@ -452,14 +452,27 @@ function renderMaterialsList(c) {
       </div>
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
         ${getFilterBar([['all', 'TẤT CẢ'], ['ok', 'ĐỦ HÀNG'], ['low', 'SẮP HẾT'], ['out', 'HẾT HÀNG']])}
-        <div class="mobile-search-action-group" style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
+        <div class="mobile-search-action-group" style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 550px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
             <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
             <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('materials', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
+          <!-- Nút In tem sản phẩm: Ẩn trên Mobile, chỉ hiển thị PC ngay bên phải nút Thêm mới -->
+          <button class="btn-action pc-only-print-btn" onclick="openPrintLabelDrawer()" style="height: 38px; padding: 0 14px; background: var(--card); border: 1px solid var(--border); color: var(--foreground); font-family: var(--font-jost); font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            In Tem Sản Phẩm
+          </button>
         </div>
       </div>     
+
+      <style>
+        @media (max-width: 768px) {
+          .pc-only-print-btn {
+            display: none !important;
+          }
+        }
+      </style>
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
         <table style="width: 100%; border-collapse: collapse;">
