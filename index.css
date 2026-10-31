@@ -1073,6 +1073,10 @@ div[style*="overflow: auto"],
   align-items: center;
 }
 
+.pc-only-print-btn {
+  display: inline-flex !important;
+}
+
 /* RESPONSIVE MOBILE (< 768px) */
 @media (max-width: 768px) {
 
