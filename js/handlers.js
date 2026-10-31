@@ -2773,25 +2773,15 @@ async function executePrintLabels() {
 
   const frameDoc = printFrame.contentWindow.document;
 
-  const labelsHtml = selectedMaterials.map((m, index) => {
-    // Dữ liệu mã QR mã hóa dạng JSON
-    const qrData = JSON.stringify({
-      id: m.id || '',
-      name: m.name || '',
-      unit: m.unit || '',
-      cost: m.cost || 0
-    });
-
-    return `
-      <div class="label-item">
-        <div class="qr-container" id="qr-${index}"></div>
-        <div class="label-info">
-          <div class="sku-code">${m.id || ''}</div>
-          <div class="product-name">${m.name || ''}</div>
-        </div>
+  const labelsHtml = selectedMaterials.map((m, index) => `
+    <div class="label-item">
+      <div class="qr-container" id="qr-${index}"></div>
+      <div class="label-info">
+        <div class="sku-code">${m.id || ''}</div>
+        <div class="product-name">${m.name || ''}</div>
       </div>
-    `;
-  }).join('');
+    </div>
+  `).join('');
 
   frameDoc.open();
   frameDoc.write(`
@@ -2799,7 +2789,7 @@ async function executePrintLabels() {
     <html>
     <head>
       <title>In Tem Sản Phẩm</title>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+      <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
       <style>
         @page {
           size: A4 portrait;
@@ -2823,7 +2813,7 @@ async function executePrintLabels() {
         .label-item {
           border: 1px dashed #bbb;
           border-radius: 4px;
-          padding: 4mm 3mm;
+          padding: 3mm 2mm;
           box-sizing: border-box;
           display: flex;
           flex-direction: column;
@@ -2834,33 +2824,33 @@ async function executePrintLabels() {
           background: #fff;
         }
         .qr-container {
-          width: 26mm;
-          height: 26mm;
+          width: 30mm;
+          height: 30mm;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-bottom: 2mm;
+          margin-bottom: 1.5mm;
         }
-        .qr-container img {
-          width: 26mm !important;
-          height: 26mm !important;
+        .qr-container canvas, .qr-container svg {
+          width: 30mm !important;
+          height: 30mm !important;
         }
         .label-info {
           width: 100%;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 1mm;
+          gap: 0.5mm;
         }
         .sku-code {
           font-family: monospace;
-          font-size: 11pt;
+          font-size: 10pt;
           font-weight: bold;
           color: #000;
           letter-spacing: 0.5px;
         }
         .product-name {
-          font-size: 9pt;
+          font-size: 8.5pt;
           color: #222;
           line-height: 1.2;
           display: -webkit-box;
@@ -2869,7 +2859,7 @@ async function executePrintLabels() {
           overflow: hidden;
           text-overflow: ellipsis;
           word-break: break-word;
-          max-height: 22pt;
+          max-height: 21pt;
         }
       </style>
     </head>
@@ -2882,11 +2872,16 @@ async function executePrintLabels() {
   `);
   frameDoc.close();
 
-  // Khởi tạo mã QR cho từng tem sau khi iframe render xong DOM
-  setTimeout(() => {
-    selectedMaterials.forEach((m, index) => {
+  // Khởi tạo mã QR cho từng sản phẩm
+  setTimeout(async () => {
+    const QRCodeStyling = printFrame.contentWindow.QRCodeStyling;
+
+    for (let index = 0; index < selectedMaterials.length; index++) {
+      const m = selectedMaterials[index];
       const qrBox = frameDoc.getElementById(`qr-${index}`);
-      if (qrBox) {
+
+      if (qrBox && QRCodeStyling) {
+        // Tạo chuỗi dữ liệu JSON đầy đủ
         const qrData = JSON.stringify({
           id: m.id || '',
           name: m.name || '',
@@ -2894,21 +2889,35 @@ async function executePrintLabels() {
           cost: m.cost || 0
         });
 
-        new printFrame.contentWindow.QRCode(qrBox, {
-          text: qrData,
-          width: 100,
-          height: 100,
-          colorDark: "#000000",
-          colorLight: "#ffffff",
-          correctLevel: printFrame.contentWindow.QRCode.CorrectLevel.M
+        const qrCode = new QRCodeStyling({
+          width: 240,
+          height: 240,
+          type: "svg",
+          data: qrData,
+          qrOptions: {
+            errorCorrectionLevel: "M"
+          },
+          dotsOptions: {
+            color: "#000000",
+            type: "square"
+          },
+          backgroundOptions: {
+            color: "#ffffff"
+          },
+          cornersSquareOptions: {
+            color: "#000000",
+            type: "square"
+          }
         });
-      }
-    });
 
-    // Gọi cửa sổ in
+        qrCode.append(qrBox);
+      }
+    }
+
+    // Đợi render xong SVG/Canvas rồi mở hộp thoại in
     setTimeout(() => {
       printFrame.contentWindow.focus();
       printFrame.contentWindow.print();
-    }, 300);
-  }, 200);
+    }, 400);
+  }, 300);
 }

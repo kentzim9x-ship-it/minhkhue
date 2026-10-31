@@ -1076,16 +1076,22 @@ div[style*="overflow: auto"],
 /* RESPONSIVE MOBILE (< 768px) */
 @media (max-width: 768px) {
 
- .top-customers-card {
+  .pc-only-print-btn {
+    display: none !important;
+  }
+
+  .top-customers-card {
     width: 100% !important;
     box-sizing: border-box;
-    overflow-x: hidden !important; /* Ngắt thanh cuộn ngang */
+    overflow-x: hidden !important;
+    /* Ngắt thanh cuộn ngang */
   }
 
   .top-customers-card table {
     min-width: 100% !important;
     width: 100% !important;
-    table-layout: fixed !important; /* Cố định tỷ lệ các cột */
+    table-layout: fixed !important;
+    /* Cố định tỷ lệ các cột */
   }
 
   .top-customers-card tr {
@@ -1130,9 +1136,10 @@ div[style*="overflow: auto"],
     padding-right: 8px !important;
     white-space: nowrap !important;
   }
-  
+
   .sales-chart-box {
-    display: none !important; /* Chỉ ẩn khung biểu đồ trên Mobile */
+    display: none !important;
+    /* Chỉ ẩn khung biểu đồ trên Mobile */
   }
 
   .report-filter-wrapper {
