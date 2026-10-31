@@ -2598,7 +2598,6 @@ function renderReportInventory(c) {
     { title: 'Vị Trí', width: '50px', align: 'center' },
     { title: 'Tồn Đầu Kỳ', width: '20px', align: 'center' },
     { title: 'Tồn Thực Tế', width: '20px', align: 'center' },
-    { title: 'Có Thể Bán', width: '20px', align: 'center' },
     { title: 'Mức Cảnh Báo', width: '20px', align: 'center' },
     { title: 'Giá Vốn', width: '20px', align: 'center' },
     { title: 'Trạng Thái', width: '50px', align: 'center' }
@@ -2614,8 +2613,6 @@ function renderReportInventory(c) {
     return list.map(m => {
       const tonThucTe = getActualStock(m);
       const tonDauKy = m.stock ?? 0;
-      const tamGiu = m.reserved ?? 0;
-      const coTheBan = tonThucTe - tamGiu < 0 ? 0 : tonThucTe - tamGiu;
 
       return `
         <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('materials', '${hasPermission ? 'edit' : 'view'}', '${m.id}')" onclick="navigate('materials', 'view', '${m.id}')">
@@ -2626,7 +2623,6 @@ function renderReportInventory(c) {
           <td data-label="Vị Trí" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${m.location || '—'}</td>
           <td data-label="Tồn Đầu Kỳ" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${tonDauKy}</td>
           <td data-label="Tồn Thực Tế" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; font-weight: 600; color: var(--primary);">${tonThucTe}</td>
-          <td data-label="Có Thể Bán" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${coTheBan}</td>
           <td data-label="Mức Cảnh Báo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--muted-foreground);">${m.reorder ?? 0}</td>
           <td data-label="Giá Vốn" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right;">${fmtUSD(m.cost || 0)}</td>
           <td data-label="Trạng Thái" style="padding: 11px 16px; text-align: center;"><span class="badge ${getBadgeClass(m.status)}">${getStatusLabel(m.status)}</span></td>
