@@ -2757,7 +2757,14 @@ async function executePrintLabels() {
 
   const selectedMaterials = (db.materials || []).filter(m => selectedSet.has(m.id));
 
-  // Tạo iframe ẩn để thực hiện in
+  // Chia danh sách sản phẩm thành các nhóm 20 sản phẩm/trang A4
+  const pageSize = 20;
+  const pages = [];
+  for (let i = 0; i < selectedMaterials.length; i += pageSize) {
+    pages.push(selectedMaterials.slice(i, i + pageSize));
+  }
+
+  // Tạo iframe ẩn thực hiện lệnh in
   let printFrame = document.getElementById('print-label-frame');
   if (printFrame) printFrame.remove();
 
@@ -2773,15 +2780,20 @@ async function executePrintLabels() {
 
   const frameDoc = printFrame.contentWindow.document;
 
-  const labelsHtml = selectedMaterials.map((m, index) => `
-    <div class="label-item">
-      <div class="qr-container" id="qr-${index}"></div>
-      <div class="label-info">
-        <div class="sku-code">${m.id || ''}</div>
-        <div class="product-name">${m.name || ''}</div>
+  // Render HTML cho từng trang A4
+  const pagesHtml = pages.map((pageItems, pageIdx) => {
+    const itemsHtml = pageItems.map((m, itemIdx) => `
+      <div class="label-item">
+        <div class="qr-container" id="qr-${pageIdx}-${itemIdx}"></div>
+        <div class="label-info">
+          <div class="sku-code">${m.id || ''}</div>
+          <div class="product-name" title="${m.name || ''}">${m.name || ''}</div>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `).join('');
+
+    return `<div class="page-a4">${itemsHtml}</div>`;
+  }).join('');
 
   frameDoc.open();
   frameDoc.write(`
@@ -2789,132 +2801,122 @@ async function executePrintLabels() {
     <html>
     <head>
       <title>In Tem Sản Phẩm</title>
-      <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
       <style>
         @page {
           size: A4 portrait;
-          margin: 8mm 6mm;
+          margin: 0;
+        }
+        * {
+          box-sizing: border-box;
         }
         body {
           margin: 0;
           padding: 0;
-          font-family: Arial, sans-serif;
           background: #ffffff;
+          font-family: Arial, sans-serif;
+          -webkit-print-color-adjust: exact;
         }
-        .sheet {
+        .page-a4 {
+          width: 210mm;
+          height: 297mm;
+          padding: 8mm 6mm;
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          grid-template-rows: repeat(5, 52mm);
-          gap: 3mm 4mm;
-          width: 198mm;
-          box-sizing: border-box;
+          grid-template-rows: repeat(5, 54mm);
+          gap: 2mm 3mm;
           page-break-after: always;
+          page-break-inside: avoid;
+          overflow: hidden;
+        }
+        .page-a4:last-child {
+          page-break-after: auto;
         }
         .label-item {
-          border: 1px dashed #bbb;
+          border: 1px dashed #cccccc;
           border-radius: 4px;
           padding: 3mm 2mm;
-          box-sizing: border-box;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           text-align: center;
+          background: #ffffff;
           overflow: hidden;
-          background: #fff;
         }
         .qr-container {
-          width: 30mm;
-          height: 30mm;
+          width: 28mm;
+          height: 28mm;
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-bottom: 1.5mm;
+          background: #ffffff;
+          padding: 1mm;
         }
-        .qr-container canvas, .qr-container svg {
-          width: 30mm !important;
-          height: 30mm !important;
+        .qr-container img, .qr-container canvas {
+          width: 26mm !important;
+          height: 26mm !important;
+          object-fit: contain;
+          display: block;
         }
         .label-info {
           width: 100%;
+          margin-top: 1mm;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 0.5mm;
         }
         .sku-code {
           font-family: monospace;
           font-size: 10pt;
           font-weight: bold;
-          color: #000;
-          letter-spacing: 0.5px;
+          color: #000000;
+          line-height: 1.2;
         }
         .product-name {
           font-size: 8.5pt;
-          color: #222;
-          line-height: 1.2;
+          color: #222222;
+          line-height: 1.15;
+          margin-top: 0.5mm;
           display: -webkit-box;
           -webkit-line-clamp: 2;
           -webkit-box-orient: vertical;
           overflow: hidden;
           text-overflow: ellipsis;
           word-break: break-word;
-          max-height: 21pt;
+          max-height: 20pt;
         }
       </style>
     </head>
     <body>
-      <div class="sheet">
-        ${labelsHtml}
-      </div>
+      ${pagesHtml}
     </body>
     </html>
   `);
   frameDoc.close();
 
-  // Khởi tạo mã QR cho từng sản phẩm
-  setTimeout(async () => {
-    const QRCodeStyling = printFrame.contentWindow.QRCodeStyling;
+  // Khởi tạo mã QR vuông chuẩn quét bằng camera điện thoại
+  setTimeout(() => {
+    pages.forEach((pageItems, pageIdx) => {
+      pageItems.forEach((m, itemIdx) => {
+        const qrBox = frameDoc.getElementById(`qr-${pageIdx}-${itemIdx}`);
+        if (qrBox) {
+          // Mã hóa chuỗi Mã SKU (hoặc JSON rút gọn)
+          const qrData = String(m.id || '');
 
-    for (let index = 0; index < selectedMaterials.length; index++) {
-      const m = selectedMaterials[index];
-      const qrBox = frameDoc.getElementById(`qr-${index}`);
+          new printFrame.contentWindow.QRCode(qrBox, {
+            text: qrData,
+            width: 128,
+            height: 128,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: printFrame.contentWindow.QRCode.CorrectLevel.M
+          });
+        }
+      });
+    });
 
-      if (qrBox && QRCodeStyling) {
-        // Tạo chuỗi dữ liệu JSON đầy đủ
-        const qrData = JSON.stringify({
-          id: m.id || '',
-          name: m.name || '',
-          unit: m.unit || '',
-          cost: m.cost || 0
-        });
-
-        const qrCode = new QRCodeStyling({
-          width: 240,
-          height: 240,
-          type: "svg",
-          data: qrData,
-          qrOptions: {
-            errorCorrectionLevel: "M"
-          },
-          dotsOptions: {
-            color: "#000000",
-            type: "square"
-          },
-          backgroundOptions: {
-            color: "#ffffff"
-          },
-          cornersSquareOptions: {
-            color: "#000000",
-            type: "square"
-          }
-        });
-
-        qrCode.append(qrBox);
-      }
-    }
-
-    // Đợi render xong SVG/Canvas rồi mở hộp thoại in
+    // Mở giao diện in
     setTimeout(() => {
       printFrame.contentWindow.focus();
       printFrame.contentWindow.print();
