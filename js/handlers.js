@@ -72,6 +72,8 @@ async function navigate(view, mode = 'list', itemId = null, extraState = null) {
     if (extraState.search !== undefined) state.search = extraState.search;
     if (extraState.filter !== undefined) state.filter = extraState.filter;
     if (extraState.page !== undefined) state.page = extraState.page;
+    if (extraState.ordersFromDate !== undefined) state.ordersFromDate = extraState.ordersFromDate;
+    if (extraState.ordersToDate !== undefined) state.ordersToDate = extraState.ordersToDate;
   }
 
   state.view = view;
@@ -1370,6 +1372,7 @@ async function handleCustomerSelectInOrder(customerName) {
   const activeQuotation = (db.quotations || [])
     .filter(q => {
       if (!q || q.customer !== safeCustomer) return false;
+      if (!q.apply_yn) return false;
       if ((q.status || '').toLowerCase() !== 'accepted') return false;
 
       const vBegin = q.validbegin || q.validBegin || q.date || '';

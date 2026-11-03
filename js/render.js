@@ -1889,8 +1889,6 @@ function renderSalesOrderForm(c) {
     activeQuotation = (db.quotations || [])
       .filter(q => {
         if (!q || !q.customer) return false;
-        const isApplied = Boolean(q.apply_yn);
-        if (!isApplied) return false;
         if (q.customer.trim().toLowerCase() !== currentCustomer.toLowerCase()) return false;
 
         const status = (q.status || '').toLowerCase();
