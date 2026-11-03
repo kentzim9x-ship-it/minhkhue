@@ -2993,7 +2993,9 @@ function renderReportSales(c) {
         let dayRows = [];
 
         dayRows.push(`
-          <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'list', null, { search: '${selectedCustomer}', ordersFromDate: '${selectedFromDate}', ordersToDate: '${selectedToDate}', page: 1 });" title="Click để xem danh sách Đơn hàng bán của ${selectedCustomer}">
+          <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" 
+              onclick="navigate('sales-orders', 'list', null, { search: '${selectedCustomer.replace(/'/g, "\\'")}', ordersFromDate: '${selectedFromDate}', ordersToDate: '${selectedToDate}', page: 1 });" 
+              title="Click để xem các Đơn hàng bán của ${selectedCustomer}">
             <td style="padding: 8px 16px;"></td>
             <td style="padding: 8px 16px;"></td>
             <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030; font-family: var(--font-dm-mono); text-align: center;">${formattedDate}</td>
@@ -3042,7 +3044,9 @@ function renderReportSales(c) {
           });
 
           dayRows[orderHeaderIndex] = `
-            <tr style="border-bottom: 1px solid var(--border); background: var(--secondary); font-weight: 600;" class="hover-row" onclick="navigate('sales-orders', 'list', null, { search: '${selectedCustomer}', ordersFromDate: '${selectedFromDate}', ordersToDate: '${selectedToDate}', page: 1 });" ondblclick="navigate('sales-orders', 'view', '${o.id}')">
+            <tr style="border-bottom: 1px solid var(--border); background: var(--secondary); font-weight: 600;" class="hover-row" 
+                onclick="navigate('sales-orders', 'list', null, { search: '${selectedCustomer.replace(/'/g, "\\'")}', ordersFromDate: '${selectedFromDate}', ordersToDate: '${selectedToDate}', page: 1 });" 
+                ondblclick="navigate('sales-orders', 'view', '${o.id}')">
               <td data-label="Đơn Hàng Bán" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); font-weight: 600;">${o.id || '—'}</td>
               <td data-label="Ghi Chú" style="padding: 9px 16px; font-size: 12px; color: var(--muted-foreground); font-weight: 600;">${o.notes || '—'}</td>
               <td style="padding: 9px 16px; font-size: 12px; color: var(--muted-foreground); font-weight: 600; text-align: center;">—</td>
@@ -3085,11 +3089,13 @@ function renderReportSales(c) {
   }
 
   const customersHtml = topCustomersReal.slice(0, 5).map((cus, i) => `
-    <tr style="border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'list', null, { search: '${cus.name.replace(/'/g, "\\'")}', page: 1 });" title="Click để xem danh sách đơn hàng của ${cus.name}">
-      <td data-label="" style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); width: 28px;">${String(i + 1)}.</td>
-      <td data-label="" style="padding: 9px 14px; font-size: 13px; font-weight: 500; color: var(--foreground);">${cus.name}</td>
-      <td data-label="" style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--primary);">${fmtUSD(cus.revenue)}</td>
-      <td data-label="" style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; text-align: right; color: var(--muted-foreground);">${cus.orders} đơn</td>
+    <tr style="border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" 
+        onclick="navigate('sales-orders', 'list', null, { search: '${cus.name.replace(/'/g, "\\'")}', ordersFromDate: '${selectedFromDate}', ordersToDate: '${selectedToDate}', page: 1 });" 
+        title="Click để xem danh sách đơn hàng của ${cus.name}">
+      <td style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); width: 28px;">${String(i + 1)}.</td>
+      <td style="padding: 9px 14px; font-size: 13px; font-weight: 500; color: var(--foreground);">${cus.name}</td>
+      <td style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 12px; text-align: right; color: var(--primary);">${fmtUSD(cus.revenue)}</td>
+      <td style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; text-align: right; color: var(--muted-foreground);">${cus.orders} đơn</td>
     </tr>
   `).join('');
 
