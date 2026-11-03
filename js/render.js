@@ -811,14 +811,19 @@ function renderQuotationsList(c) {
           <div class="date-filter-group">
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsFromDate}" onchange="state.quotationsFromDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
+                value="${state.quotationsFromDate}" 
+                onkeydown="if(event.key === 'Enter') { state.quotationsFromDate=this.value; state.page=1; render(); this.blur(); }"
+                onblur="if(state.quotationsFromDate !== this.value) { state.quotationsFromDate=this.value; state.page=1; render(); }">
             </div>
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.quotationsToDate}" onchange="state.quotationsToDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
+                value="${state.quotationsToDate}" 
+                onkeydown="if(event.key === 'Enter') { state.quotationsToDate=this.value; state.page=1; render(); this.blur(); }"
+                onblur="if(state.quotationsToDate !== this.value) { state.quotationsToDate=this.value; state.page=1; render(); }">
             </div>
           </div>
-        </div>
       </div>
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
@@ -973,14 +978,19 @@ function renderOrdersList(c) {
           <div class="date-filter-group">
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersFromDate}" onchange="state.ordersFromDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
+                value="${state.ordersFromDate}" 
+                onkeydown="if(event.key === 'Enter') { state.ordersFromDate=this.value; state.page=1; render(); this.blur(); }"
+                onblur="if(state.ordersFromDate !== this.value) { state.ordersFromDate=this.value; state.page=1; render(); }">
             </div>
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.ordersToDate}" onchange="state.ordersToDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
+                value="${state.ordersToDate}" 
+                onkeydown="if(event.key === 'Enter') { state.ordersToDate=this.value; state.page=1; render(); this.blur(); }"
+                onblur="if(state.ordersToDate !== this.value) { state.ordersToDate=this.value; state.page=1; render(); }">
             </div>
           </div>
-        </div>
       </div>
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
@@ -1140,14 +1150,19 @@ function renderReturnsList(c) {
           <div class="date-filter-group">
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsFromDate}" onchange="state.returnsFromDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
+                value="${state.returnsFromDate}" 
+                onkeydown="if(event.key === 'Enter') { state.returnsFromDate=this.value; state.page=1; render(); this.blur(); }"
+                onblur="if(state.returnsFromDate !== this.value) { state.returnsFromDate=this.value; state.page=1; render(); }">
             </div>
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.returnsToDate}" onchange="state.returnsToDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
+                value="${state.returnsToDate}" 
+                onkeydown="if(event.key === 'Enter') { state.returnsToDate=this.value; state.page=1; render(); this.blur(); }"
+                onblur="if(state.returnsToDate !== this.value) { state.returnsToDate=this.value; state.page=1; render(); }">
             </div>
           </div>
-        </div>
       </div>
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
@@ -1305,14 +1320,19 @@ function renderGRNList(c) {
           <div class="date-filter-group">
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnFromDate}" onchange="state.grnFromDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
+                value="${state.grnFromDate}" 
+                onkeydown="if(event.key === 'Enter') { state.grnFromDate=this.value; state.page=1; render(); this.blur(); }"
+                onblur="if(state.grnFromDate !== this.value) { state.grnFromDate=this.value; state.page=1; render(); }">
             </div>
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
-              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${state.grnToDate}" onchange="state.grnToDate=this.value; state.page=1; render();">
+              <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
+                value="${state.grnToDate}" 
+                onkeydown="if(event.key === 'Enter') { state.grnToDate=this.value; state.page=1; render(); this.blur(); }"
+                onblur="if(state.grnToDate !== this.value) { state.grnToDate=this.value; state.page=1; render(); }">
             </div>
           </div>
-        </div>
       </div>
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
@@ -1748,6 +1768,20 @@ function renderQuotationForm(c) {
                 </select>
               </div>
 
+              <!-- Nút tích chọn Áp dụng lấy theo báo giá -->
+              <div class="form-group" style="grid-column: span 3; margin-top: 4px;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--foreground); cursor: pointer; user-select: none;">
+                  <input 
+                    type="checkbox" 
+                    id="quotation-apply-yn" 
+                    ${d.apply_yn ? 'checked' : ''} 
+                    ${isView ? 'disabled style="cursor: not-allowed;"' : 'onchange="updateField(\'apply_yn\', this.checked)"'}
+                    style="cursor: pointer; accent-color: #f0a030; width: 16px; height: 16px;"
+                  >
+                  Áp dụng lấy theo báo giá
+                </label>
+              </div>
+
               <div class="form-group" style="grid-column: span 3; margin-top: 6px;">
                 <label class="form-label">Ghi chú</label>
                 <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập thông tin ghi chú (tùy chọn)...">${d.notes || ''}</textarea>
@@ -1855,6 +1889,8 @@ function renderSalesOrderForm(c) {
     activeQuotation = (db.quotations || [])
       .filter(q => {
         if (!q || !q.customer) return false;
+        const isApplied = Boolean(q.apply_yn);
+        if (!isApplied) return false;
         if (q.customer.trim().toLowerCase() !== currentCustomer.toLowerCase()) return false;
 
         const status = (q.status || '').toLowerCase();
@@ -2957,7 +2993,7 @@ function renderReportSales(c) {
         let dayRows = [];
 
         dayRows.push(`
-          <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'list', null, { search: '${dateStr}', page: 1 });" title="Click để xem các Đơn hàng bán ngày ${formattedDate}">
+          <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'list', null, { search: '${selectedCustomer}', ordersFromDate: '${selectedFromDate}', ordersToDate: '${selectedToDate}', page: 1 });" title="Click để xem danh sách Đơn hàng bán của ${selectedCustomer}">
             <td style="padding: 8px 16px;"></td>
             <td style="padding: 8px 16px;"></td>
             <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030; font-family: var(--font-dm-mono); text-align: center;">${formattedDate}</td>
@@ -2994,7 +3030,7 @@ function renderReportSales(c) {
             renderedItemCount++;
 
             dayRows.push(`
-              <tr style="border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'view', '${o.id}')" ondblclick="navigate('sales-orders', 'edit', '${o.id}')">
+              <tr style="border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'list', null, { search: '${selectedCustomer}', ordersFromDate: '${selectedFromDate}', ordersToDate: '${selectedToDate}', page: 1 });" ondblclick="navigate('sales-orders', 'view', '${o.id}')">
                 <td data-label="Đơn Hàng Bán" style="padding: 9px 16px;"></td>
                 <td data-label="Tên Hàng" style="padding: 9px 16px; font-size: 13px;">${name}</td>
                 <td data-label="Đơn Vị" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${unit}</td>
@@ -3006,7 +3042,7 @@ function renderReportSales(c) {
           });
 
           dayRows[orderHeaderIndex] = `
-            <tr style="border-bottom: 1px solid var(--border); background: var(--secondary); font-weight: 600;" class="hover-row" onclick="navigate('sales-orders', 'view', '${o.id}')" ondblclick="navigate('sales-orders', 'edit', '${o.id}')">
+            <tr style="border-bottom: 1px solid var(--border); background: var(--secondary); font-weight: 600;" class="hover-row" onclick="navigate('sales-orders', 'list', null, { search: '${selectedCustomer}', ordersFromDate: '${selectedFromDate}', ordersToDate: '${selectedToDate}', page: 1 });" ondblclick="navigate('sales-orders', 'view', '${o.id}')">
               <td data-label="Đơn Hàng Bán" style="padding: 9px 16px; font-family: var(--font-dm-mono); font-size: 12px; color: var(--primary); font-weight: 600;">${o.id || '—'}</td>
               <td data-label="Ghi Chú" style="padding: 9px 16px; font-size: 12px; color: var(--muted-foreground); font-weight: 600;">${o.notes || '—'}</td>
               <td style="padding: 9px 16px; font-size: 12px; color: var(--muted-foreground); font-weight: 600; text-align: center;">—</td>
@@ -3109,12 +3145,18 @@ function renderReportSales(c) {
             <div class="report-filter-row">
               <div class="report-filter-item" style="display: flex; align-items: center; gap: 6px;">
                 <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">TỪ NGÀY:</label>
-                <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${selectedFromDate}" onchange="state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render();">
+                <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
+                  value="${selectedFromDate}" 
+                  onkeydown="if(event.key === 'Enter') { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); this.blur(); }"
+                  onblur="if(state.reportSalesFromDate !== this.value) { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }">
               </div>
 
               <div class="report-filter-item" style="display: flex; align-items: center; gap: 6px;">
                 <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">ĐẾN NGÀY:</label>
-                <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" value="${selectedToDate}" onchange="state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render();">
+                <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
+                  value="${selectedToDate}" 
+                  onkeydown="if(event.key === 'Enter') { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); this.blur(); }"
+                  onblur="if(state.reportSalesToDate !== this.value) { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }">
               </div>
             </div>
 

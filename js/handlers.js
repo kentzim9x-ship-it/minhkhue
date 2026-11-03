@@ -386,10 +386,10 @@ function handleLineItemKeyDown(e, module, lineIndex, fieldName) {
 
     // Ánh xạ tên trường Số lượng & Đơn giá cho từng module
     const fieldMapping = {
-      'quotations':   { name: 'name', qty: 'qty', price: 'unitPrice' },
+      'quotations': { name: 'name', qty: 'qty', price: 'unitPrice' },
       'sales-orders': { name: 'name', qty: 'qty', price: 'unitPrice' },
-      'returns':      { name: 'name', qty: 'qtyReturned', price: 'unitPrice' },
-      'grn':          { name: 'name', qty: 'receivedQty', price: 'unitCost' }
+      'returns': { name: 'name', qty: 'qtyReturned', price: 'unitPrice' },
+      'grn': { name: 'name', qty: 'receivedQty', price: 'unitCost' }
     };
 
     const currentMap = fieldMapping[module] || { name: 'name', qty: 'qty', price: 'unitPrice' };
@@ -399,7 +399,7 @@ function handleLineItemKeyDown(e, module, lineIndex, fieldName) {
       // ==========================================
       // XỬ LÝ KHI ĐANG Ở DÒNG CUỐI CÙNG
       // ==========================================
-      
+
       // 1. Nếu đang ở cột Tên sản phẩm -> Nhảy lên cột Số lượng của HÀNG ĐẦU TIÊN
       if (fieldName === currentMap.name) {
         setTimeout(() => {
@@ -1293,7 +1293,7 @@ function handleMaterialSelectInLine(lineId, selectedName) {
   render();
 }
 
-async function handleCustomerSelectInQuotation(customerName) { 
+async function handleCustomerSelectInQuotation(customerName) {
   if (!state.formData || state.mode === 'view') return;
   const safeCustomer = String(customerName || '').trim();
   state.formData.customer = safeCustomer;
@@ -1370,6 +1370,7 @@ async function handleCustomerSelectInOrder(customerName) {
   const activeQuotation = (db.quotations || [])
     .filter(q => {
       if (!q || q.customer !== safeCustomer) return false;
+      if (!q.apply_yn) return false;
       if ((q.status || '').toLowerCase() !== 'accepted') return false;
 
       const vBegin = q.validbegin || q.validBegin || q.date || '';
@@ -1493,7 +1494,7 @@ function getSalesAnalyticsData() {
   // ==========================================
   // XỬ LÝ DỮ LIỆU HOẠT ĐỘNG MỚI NHẤT & TRA CỨU HỌ TÊN USER
   // ==========================================
-  
+
   // Hàm trợ giúp tra cứu Họ tên từ danh sách userinfo theo ID
   const getActorFullName = (userId) => {
     if (!userId) return '';
@@ -1535,7 +1536,7 @@ function getSalesAnalyticsData() {
     const formattedDate = typeof fmtDateStr === 'function' ? fmtDateStr(n.date || n.created_at) : (n.date || n.created_at);
     const timeStr = n.time ? n.time.substring(0, 5) : '';
     const fullDateTime = `${formattedDate} ${timeStr}`.trim();
-    
+
     const fullStr = `${n.date || n.created_at} ${n.time || ''}`.trim();
     const pDate = new Date(fullStr);
     let ts = pDate.getTime();
@@ -2123,7 +2124,7 @@ async function exportSalesReportToPDF() {
 
       dayOrders.forEach(o => {
         const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
-        
+
         let orderTotalQty = 0;
         let orderTotalAmount = 0;
         let orderItemsHtml = '';
