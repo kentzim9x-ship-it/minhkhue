@@ -2991,7 +2991,7 @@ function renderReportSales(c) {
         let dayRows = [];
 
         dayRows.push(`
-          <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'list', null, { search: '${selectedCustomer.replace(/'/g, "\\'")}', ordersFromDate: '${selectedFromDate}', ordersToDate: '${selectedToDate}', page: 1 });" title="Click để chuyển sang danh sách Đơn hàng bán của ${selectedCustomer}">
+          <tr style="background: var(--secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" onclick="navigate('sales-orders', 'list', null, { search: '${selectedCustomer.replace(/'/g, "\\'")}', ordersFromDate: '${dateStr}', ordersToDate: '${dateStr}', page: 1 });" title="Click để xem danh sách Đơn hàng bán ngày ${formattedDate}">
             <td style="padding: 8px 16px;"></td>
             <td style="padding: 8px 16px;"></td>
             <td style="padding: 8px 16px; font-size: 13px; font-weight: 700; color: #f0a030; font-family: var(--font-dm-mono); text-align: center;">${formattedDate}</td>
