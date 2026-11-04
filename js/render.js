@@ -3206,8 +3206,10 @@ function renderReportSales(c) {
               >
                 Xuất PDF
               </button>
+            </div>
 
             <!-- NÚT XUẤT EXCEL (ĐẶT BÊN TAY PHẢI NÚT PDF) -->
+            <div class="report-excel-btn-container">
               <button 
                 type="button" 
                 class="btn-primary" 
