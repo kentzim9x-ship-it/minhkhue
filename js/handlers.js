@@ -2257,6 +2257,10 @@ async function exportSalesReportToPDF() {
       CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
     </div>
 
+    <div style="font-size: 12pt; text-align: center; margin-bottom: 10px; text-transform: uppercase;">
+      ${reportType === 'detail' ? 'MẪU CHI TIẾT' : 'MẪU TỔNG HỢP'}
+    </div>
+
     <!-- KHU VỰC THÔNG TIN KHÁCH HÀNG & THÁNG BÁO CÁO -->
     <table style="width: 100%; font-size: 10.5pt; margin-bottom: 8px; border-collapse: collapse; line-height: 1.5;">
       <tr>
