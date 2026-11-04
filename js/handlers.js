@@ -2509,7 +2509,7 @@ function exportSalesReportToExcel() {
   XLSX.utils.book_append_sheet(wb, ws, isDetail ? "ChiTietBanHang" : "TongHopBanHang");
 
   const custTitle = selectedCustomer ? selectedCustomer.replace(/\s+/g, '_') : 'Tat_Ca';
-  const filePrefix = isDetail ? `Bao_cao_ban_hang_chi_tiet_${custTitle}` : `Bao_cao_tong_hop_${custTitle}`;
+  const filePrefix = isDetail ? `Bao_cao_chi_tiet_${custTitle}_${fmtDateStr(fromDateInput)}_${fmtDateStr(toDateInput)}` : `Bao_cao_tong_hop_${custTitle}_${fmtDateStr(fromDateInput)}_${fmtDateStr(toDateInput)}`;
 
   downloadOrShareXLSX(wb, filePrefix);
 }
