@@ -3202,7 +3202,7 @@ function renderReportSales(c) {
                 type="button" 
                 class="btn-primary" 
                 onclick="exportSalesReportToPDF()" 
-                ${(reportType === 'detail' && !selectedCustomer && !hasData) ? 'disabled style="height: 38px; box-sizing: border-box; background: #e11d48; color: #ffffff; padding: 0 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"' : 'style="height: 38px; box-sizing: border-box; background: #e11d48; color: #ffffff; padding: 0 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"'}
+                ${(!selectedCustomer && !hasData) ? 'disabled style="height: 38px; box-sizing: border-box; background: #e11d48; color: #ffffff; padding: 0 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"' : 'style="height: 38px; box-sizing: border-box; background: #e11d48; color: #ffffff; padding: 0 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"'}
               >
                 Xuất PDF
               </button>
@@ -3212,7 +3212,7 @@ function renderReportSales(c) {
                 type="button" 
                 class="btn-primary" 
                 onclick="exportSalesReportToExcel()" 
-                ${(reportType === 'detail' && !selectedCustomer && !hasData) ? 'disabled style="height: 38px; box-sizing: border-box; background: #107c41; color: #ffffff; padding: 0 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"' : 'style="height: 38px; box-sizing: border-box; background: #107c41; color: #ffffff; padding: 0 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"'}
+                ${(!selectedCustomer && !hasData) ? 'disabled style="height: 38px; box-sizing: border-box; background: #107c41; color: #ffffff; padding: 0 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"' : 'style="height: 38px; box-sizing: border-box; background: #107c41; color: #ffffff; padding: 0 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"'}
               >
                 Xuất Excel
               </button>

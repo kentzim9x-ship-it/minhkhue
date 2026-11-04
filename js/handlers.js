@@ -2041,11 +2041,6 @@ async function exportSalesReportToPDF() {
     return;
   }
 
-  if (filteredOrders.length === 0) {
-    alert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`);
-    return;
-  }
-
   let rowsHtml = '';
   let totalQty = 0;
   let totalAmount = 0;

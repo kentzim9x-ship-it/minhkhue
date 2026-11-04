@@ -1069,6 +1069,7 @@ div[style*="overflow: auto"],
 
 .report-pdf-btn-container {
   display: flex;
+  gap: 4px;
   justify-content: flex-start;
   align-items: center;
   margin-left: 4px;
@@ -1165,7 +1166,8 @@ div[style*="overflow: auto"],
   .report-pdf-btn-container {
     width: 100% !important;
     margin-top: 4px;
-    margin-left: 4px;
+    display: flex;
+    gap: 4px;
   }
 
   .report-filter-item input,
