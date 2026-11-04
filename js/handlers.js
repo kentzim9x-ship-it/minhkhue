@@ -2257,15 +2257,11 @@ async function exportSalesReportToPDF() {
       CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ
     </div>
 
-    <div style="font-size: 12pt; text-align: center; margin-bottom: 10px; text-transform: uppercase;">
-      ${reportType === 'detail' ? 'MẪU CHI TIẾT' : 'MẪU TỔNG HỢP'}
-    </div>
-
     <!-- KHU VỰC THÔNG TIN KHÁCH HÀNG & THÁNG BÁO CÁO -->
     <table style="width: 100%; font-size: 10.5pt; margin-bottom: 8px; border-collapse: collapse; line-height: 1.5;">
       <tr>
         <td style="width: 50%; padding: 1px 0; vertical-align: top;">Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</td>
-        <td style="width: 50%; padding: 1px 0; text-align: left; vertical-align: top;">Báo cáo: từ ngày ${fmtDateStr(fromDateInput)} đến ngày ${fmtDateStr(toDateInput)}</td>
+        <td style="width: 50%; padding: 1px 0; text-align: left; vertical-align: top;">${reportType === 'detail' ? 'Báo cáo chi tiết:' : 'Báo cáo tổng hợp:'} từ ngày ${fmtDateStr(fromDateInput)} đến ngày ${fmtDateStr(toDateInput)}</td>
       </tr>
       <tr>
         <td colspan="2" style="padding: 1px 0;">Địa chỉ: ${custAddress}</td>
@@ -2335,7 +2331,7 @@ function exportSalesReportToExcel() {
     ["Xã Sơn Đồng – TP Hà Nội", "", "", "", "Địa chỉ nhận hóa đơn: nhambc@gmail.com", ""],
     ["ĐT: 0936.35.31.37", "", "", "", "MST: 0110640531", ""],
     ["CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ", "", "", "", "", ""],
-    [`Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}`, "", "", "", `Báo cáo: từ ngày ${fmtDateStr(fromDateInput)} đến ngày ${fmtDateStr(toDateInput)}`, ""],
+    [`Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}`, "", "", "", `${reportType === 'detail' ? 'Báo cáo chi tiết:' : 'Báo cáo tổng hợp:'} từ ngày ${fmtDateStr(fromDateInput)} đến ngày ${fmtDateStr(toDateInput)}`, ""],
     [`Địa chỉ: ${custAddress}`, "", "", "", "", ""],
     [""] // Dòng trống
   ];
