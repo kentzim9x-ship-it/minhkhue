@@ -2823,7 +2823,8 @@ function renderReportSales(c) {
   const selectedFromDate = state.reportSalesFromDate;
   const selectedToDate = state.reportSalesToDate;
   const selectedCustomer = state.reportSalesCustomer;
-  const reportType = state.reportType;
+  const reportType = state.reportType || 'summary';
+  const isDetail = reportType === 'detail';
 
   // Tra cứu Đơn Vị từ danh mục Vật tư / Sản phẩm theo SKU hoặc Tên
   const getMaterialUnit = (sku, name) => {
@@ -2840,6 +2841,22 @@ function renderReportSales(c) {
 
     return o.date >= selectedFromDate && o.date <= selectedToDate;
   });
+
+  let hasData = false;
+
+  if (!isDetail) {
+    // Với báo cáo tổng hợp: Có ít nhất 1 đơn bán hàng phù hợp
+    hasData = filteredOrders.some(o => 
+      !selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())
+    );
+  } else {
+    // Với báo cáo chi tiết: Phải chọn Khách hàng và có ít nhất 1 đơn bán hàng của khách đó
+    if (selectedCustomer) {
+      hasData = filteredOrders.some(o => 
+        o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
+      );
+    }
+  }
 
   // Top khách hàng trong khoảng thời gian đã chọn
   const customerMap = {};
@@ -3185,9 +3202,21 @@ function renderReportSales(c) {
                 type="button" 
                 class="btn-primary" 
                 onclick="exportSalesReportToPDF()" 
-                ${(reportType === 'detail' && !selectedCustomer) ? 'disabled style="height: 38px; box-sizing: border-box; background: #e11d48; color: #ffffff; padding: 0 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"' : 'style="height: 38px; box-sizing: border-box; background: #e11d48; color: #ffffff; padding: 0 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"'}
+                ${(reportType === 'detail' && !selectedCustomer && !hasData) ? 'disabled style="height: 38px; box-sizing: border-box; background: #e11d48; color: #ffffff; padding: 0 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"' : 'style="height: 38px; box-sizing: border-box; background: #e11d48; color: #ffffff; padding: 0 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"'}
               >
                 Xuất PDF
+              </button>
+            </div>
+
+            <!-- NÚT XUẤT EXCEL (ĐẶT BÊN TAY PHẢI NÚT PDF) -->
+              <button 
+                type="button" 
+                class="btn-primary" 
+                onclick="exportSalesReportToExcel()" 
+                ${(reportType === 'detail' && !selectedCustomer && !hasData) ? 'disabled style="height: 38px; box-sizing: border-box; background: #e11d48; color: #ffffff; padding: 0 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"' : 'style="height: 38px; box-sizing: border-box; background: #107c41; color: #ffffff; padding: 0 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"'}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="17"></line><line x1="16" y1="13" x2="8" y2="17"></line></svg>
+                Xuất Excel
               </button>
             </div>
 

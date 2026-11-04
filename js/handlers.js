@@ -388,10 +388,10 @@ function handleLineItemKeyDown(e, module, lineIndex, fieldName) {
 
     // Ánh xạ tên trường Số lượng & Đơn giá cho từng module
     const fieldMapping = {
-      'quotations':   { name: 'name', qty: 'qty', price: 'unitPrice' },
+      'quotations': { name: 'name', qty: 'qty', price: 'unitPrice' },
       'sales-orders': { name: 'name', qty: 'qty', price: 'unitPrice' },
-      'returns':      { name: 'name', qty: 'qtyReturned', price: 'unitPrice' },
-      'grn':          { name: 'name', qty: 'receivedQty', price: 'unitCost' }
+      'returns': { name: 'name', qty: 'qtyReturned', price: 'unitPrice' },
+      'grn': { name: 'name', qty: 'receivedQty', price: 'unitCost' }
     };
 
     const currentMap = fieldMapping[module] || { name: 'name', qty: 'qty', price: 'unitPrice' };
@@ -401,7 +401,7 @@ function handleLineItemKeyDown(e, module, lineIndex, fieldName) {
       // ==========================================
       // XỬ LÝ KHI ĐANG Ở DÒNG CUỐI CÙNG
       // ==========================================
-      
+
       // 1. Nếu đang ở cột Tên sản phẩm -> Nhảy lên cột Số lượng của HÀNG ĐẦU TIÊN
       if (fieldName === currentMap.name) {
         setTimeout(() => {
@@ -1295,7 +1295,7 @@ function handleMaterialSelectInLine(lineId, selectedName) {
   render();
 }
 
-async function handleCustomerSelectInQuotation(customerName) { 
+async function handleCustomerSelectInQuotation(customerName) {
   if (!state.formData || state.mode === 'view') return;
   const safeCustomer = String(customerName || '').trim();
   state.formData.customer = safeCustomer;
@@ -1496,7 +1496,7 @@ function getSalesAnalyticsData() {
   // ==========================================
   // XỬ LÝ DỮ LIỆU HOẠT ĐỘNG MỚI NHẤT & TRA CỨU HỌ TÊN USER
   // ==========================================
-  
+
   // Hàm trợ giúp tra cứu Họ tên từ danh sách userinfo theo ID
   const getActorFullName = (userId) => {
     if (!userId) return '';
@@ -1538,7 +1538,7 @@ function getSalesAnalyticsData() {
     const formattedDate = typeof fmtDateStr === 'function' ? fmtDateStr(n.date || n.created_at) : (n.date || n.created_at);
     const timeStr = n.time ? n.time.substring(0, 5) : '';
     const fullDateTime = `${formattedDate} ${timeStr}`.trim();
-    
+
     const fullStr = `${n.date || n.created_at} ${n.time || ''}`.trim();
     const pDate = new Date(fullStr);
     let ts = pDate.getTime();
@@ -2029,13 +2029,21 @@ async function exportSalesReportToPDF() {
   };
 
   // Lọc danh sách đơn hàng đã duyệt / hoàn thành trong tháng
-  const filteredOrders = (db.orders || []).filter(o => {
-    const status = (o.status || '').toLowerCase();
-    const isValidStatus = ['completed', 'hoàn thành', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
-    if (!isValidStatus || !o.date) return false;
-    const parts = o.date.split('-');
-    return parts.length >= 2 && parseInt(parts[0], 10) === currentYear && parseInt(parts[1], 10) == selectedMonth;
+  const filteredOrders = (db.orders || []).filter(order => {
+    if (!order.date) return false;
+
+    // So sánh chuỗi ngày dạng YYYY-MM-DD
+    const orderDate = order.date;
+    const isAfterFrom = !fromDateInput || orderDate >= fromDateInput;
+    const isBeforeTo = !toDateInput || orderDate <= toDateInput;
+
+    return isAfterFrom && isBeforeTo;
   });
+
+  if (filteredOrders.length === 0) {
+    alert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`);
+    return;
+  }
 
   let rowsHtml = '';
   let totalQty = 0;
@@ -2126,7 +2134,7 @@ async function exportSalesReportToPDF() {
 
       dayOrders.forEach(o => {
         const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
-        
+
         let orderTotalQty = 0;
         let orderTotalAmount = 0;
         let orderItemsHtml = '';
@@ -2258,7 +2266,7 @@ async function exportSalesReportToPDF() {
     <table style="width: 100%; font-size: 10.5pt; margin-bottom: 8px; border-collapse: collapse; line-height: 1.5;">
       <tr>
         <td style="width: 50%; padding: 1px 0; vertical-align: top;">Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}</td>
-        <td style="width: 50%; padding: 1px 0; text-align: left; vertical-align: top;">Báo cáo: tháng ${selectedMonth} năm ${currentYear}</td>
+        <td style="width: 50%; padding: 1px 0; text-align: left; vertical-align: top;">Báo cáo: từ ngày ${fmtDateStr(fromDateInput)} đến ngày ${fmtDateStr(toDateInput)}</td>
       </tr>
       <tr>
         <td colspan="2" style="padding: 1px 0;">Địa chỉ: ${custAddress}</td>
@@ -2289,6 +2297,226 @@ async function exportSalesReportToPDF() {
   const custTitle = selectedCustomer ? selectedCustomer.replace(/\s+/g, '_') : 'Tat_Ca';
   const filePrefix = isDetail ? `Bao_cao_ban_hang_chi_tiet_${custTitle}` : `Bao_cao_tong_hop_${custTitle}`;
   await generateAndSharePDF(container, filePrefix, `Báo cáo bán hàng ${isDetail ? 'Chi tiết' : 'Tổng hợp'}`);
+}
+
+// ==========================================
+// XUẤT EXCEL BÁO CÁO BÁN HÀNG (TỔNG HỢP & CHI TIẾT)
+// ==========================================
+function exportSalesReportToExcel() {
+  const selectedCustomer = state.reportSalesCustomer || '';
+  const fromDateInput = document.getElementById('filter-from-date')?.value || state.reportSalesFromDate || getFirstDayOfMonthStr();
+  const toDateInput = document.getElementById('filter-to-date')?.value || state.reportSalesToDate || getTodayDateStr();
+  const reportType = state.reportType || 'summary';
+  const isDetail = reportType === 'detail';
+
+  const custAddress = selectedCustomer ? getCustomerAddress(selectedCustomer) : 'Tất cả địa chỉ';
+  const { dayStr, monthStr, yearStr } = parseDateParts(getTodayDateStr());
+
+  const resolveUnit = (sku, name, itemUnit) => {
+    if (itemUnit && itemUnit !== '—') return itemUnit;
+    const mat = (db.materials || []).find(m => (sku && m.id === sku) || (name && m.name === name));
+    return (mat && mat.unit) ? mat.unit : '—';
+  };
+
+  const filteredOrders = (db.orders || []).filter(order => {
+    if (!order.date) return false;
+    const orderDate = order.date;
+    const isAfterFrom = !fromDateInput || orderDate >= fromDateInput;
+    const isBeforeTo = !toDateInput || orderDate <= toDateInput;
+    return isAfterFrom && isBeforeTo;
+  });
+
+  if (filteredOrders.length === 0) {
+    showAlert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`, 'Thông báo');
+    return;
+  }
+
+  const sheetData = [
+    ["ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1", "", "", "", "Giấy phép ĐKKD số: 01U8005300", ""],
+    ["Xã Sơn Đồng – TP Hà Nội", "", "", "", "Địa chỉ nhận hóa đơn: nhambc@gmail.com", ""],
+    ["ĐT: 0936.35.31.37", "", "", "", "MST: 0110640531", ""],
+    ["CÔNG TY TNHH THƯƠNG MẠI HOA QUẢ MINH KHUÊ", "", "", "", "", ""],
+    [`Khách hàng: ${selectedCustomer || 'Tất cả khách hàng'}`, "", "", "", `Báo cáo: từ ngày ${fmtDateStr(fromDateInput)} đến ngày ${fmtDateStr(toDateInput)}`, ""],
+    [`Địa chỉ: ${custAddress}`, "", "", "", "", ""],
+    [""] // Dòng trống
+  ];
+
+  let totalQty = 0;
+  let totalAmount = 0;
+
+  if (!isDetail) {
+    // === 1. EXCEL TỔNG HỢP ===
+    sheetData.push(["STT", "Mã Hàng (SKU)", "Tên Hàng", "ĐVT", "Tổng Số Lượng", "Tổng Số Tiền"]);
+
+    const itemSummaryMap = {};
+    filteredOrders.forEach(o => {
+      if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
+        const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
+        items.forEach(item => {
+          const sku = item.sku || '—';
+          const name = item.name || '—';
+          const qty = Number(item.qty || 0);
+          const price = Number(item.unitPrice || 0);
+          const disc = Number(item.discount || 0);
+          const tax = Number(item.tax || 0);
+          const lineSub = qty * price * (1 - disc / 100);
+          const lineTotal = lineSub * (1 + tax / 100);
+          const unit = resolveUnit(sku, name, item.unit);
+
+          if (!itemSummaryMap[sku]) {
+            itemSummaryMap[sku] = { sku, name, unit, qty: 0, totalAmount: 0 };
+          }
+          itemSummaryMap[sku].qty += qty;
+          itemSummaryMap[sku].totalAmount += lineTotal;
+        });
+      }
+    });
+
+    const itemList = Object.values(itemSummaryMap).sort((a, b) => b.totalAmount - a.totalAmount);
+
+    itemList.forEach((it, idx) => {
+      totalQty += it.qty;
+      totalAmount += it.totalAmount;
+      sheetData.push([
+        idx + 1,
+        it.sku,
+        it.name,
+        it.unit,
+        it.qty,
+        Math.round(it.totalAmount)
+      ]);
+    });
+
+    sheetData.push(["Tổng Cộng", "", "", "", totalQty, Math.round(totalAmount)]);
+
+  } else {
+    // === 2. EXCEL CHI TIẾT ===
+    sheetData.push(["Đơn Hàng Bán", "Tên Hàng", "ĐVT", "Số Lượng", "Đơn Giá", "Thành Tiền"]);
+
+    const customerOrders = filteredOrders.filter(o =>
+      o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
+    );
+
+    const dailyMap = {};
+    customerOrders.forEach(o => {
+      const orderDateStr = o.date;
+      if (!dailyMap[orderDateStr]) dailyMap[orderDateStr] = [];
+      dailyMap[orderDateStr].push(o);
+    });
+
+    const sortedDates = Object.keys(dailyMap).sort((a, b) => new Date(a) - new Date(b));
+
+    sortedDates.forEach(dateStr => {
+      const dateParts = dateStr.split('-');
+      const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+      const dayOrders = dailyMap[dateStr];
+      dayOrders.sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')));
+
+      let dayTotalQty = 0;
+      let dayTotalAmount = 0;
+      const dayRows = [];
+
+      dayOrders.forEach(o => {
+        const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
+        let orderTotalQty = 0;
+        let orderTotalAmount = 0;
+        const orderItemRows = [];
+
+        items.forEach(item => {
+          const qty = Number(item.qty || 0);
+          const price = Number(item.unitPrice || 0);
+          const disc = Number(item.discount || 0);
+          const tax = Number(item.tax || 0);
+          const lineSub = qty * price * (1 - disc / 100);
+          const lineTotal = lineSub * (1 + tax / 100);
+          const sku = item.sku || '—';
+          const name = item.name || '—';
+          const unit = resolveUnit(sku, name, item.unit);
+
+          orderTotalQty += qty;
+          orderTotalAmount += lineTotal;
+
+          orderItemRows.push([
+            "",
+            name,
+            unit,
+            qty,
+            Math.round(price),
+            Math.round(lineTotal)
+          ]);
+        });
+
+        dayTotalQty += orderTotalQty;
+        dayTotalAmount += orderTotalAmount;
+
+        // Dòng Mã phiếu
+        dayRows.push([
+          o.id || '—',
+          o.notes || '—',
+          "",
+          orderTotalQty,
+          "",
+          Math.round(orderTotalAmount)
+        ]);
+
+        orderItemRows.forEach(row => dayRows.push(row));
+      });
+
+      totalQty += dayTotalQty;
+      totalAmount += dayTotalAmount;
+
+      // Dòng Ngày
+      sheetData.push([
+        "",
+        formattedDate,
+        "",
+        dayTotalQty,
+        "",
+        Math.round(dayTotalAmount)
+      ]);
+
+      dayRows.forEach(row => sheetData.push(row));
+    });
+
+    sheetData.push(["Tổng Cộng", "", "", totalQty, "", Math.round(totalAmount)]);
+  }
+
+  // Dòng Ngày tháng và Chữ ký
+  sheetData.push(
+    [""],
+    ["", "", "", "", `Hà Nội, ngày ${dayStr} tháng ${monthStr} năm ${yearStr}`, ""],
+    ["", "", "", "", "Đại diện nhà cung cấp", ""],
+    [""],
+    [""],
+    ["", "", "", "", "BÙI CAO NHÂM", ""]
+  );
+
+  const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+  // Thiết lập độ rộng cột chuẩn
+  ws['!cols'] = !isDetail ? [
+    { wch: 6 },  // STT
+    { wch: 18 }, // Mã SKU
+    { wch: 38 }, // Tên Hàng
+    { wch: 10 }, // ĐVT
+    { wch: 14 }, // Số Lượng
+    { wch: 18 }  // Số Tiền
+  ] : [
+    { wch: 18 }, // Mã Đơn
+    { wch: 38 }, // Tên Hàng
+    { wch: 10 }, // ĐVT
+    { wch: 14 }, // Số Lượng
+    { wch: 14 }, // Đơn Giá
+    { wch: 18 }  // Thành Tiền
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, isDetail ? "ChiTietBanHang" : "TongHopBanHang");
+
+  const custTitle = selectedCustomer ? selectedCustomer.replace(/\s+/g, '_') : 'Tat_Ca';
+  const filePrefix = isDetail ? `Bao_cao_ban_hang_chi_tiet_${custTitle}` : `Bao_cao_tong_hop_${custTitle}`;
+
+  downloadOrShareXLSX(wb, filePrefix);
 }
 
 // ==========================================
