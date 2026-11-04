@@ -2013,15 +2013,14 @@ async function exportSalesOrderToPDF() {
 // ==========================================
 async function exportSalesReportToPDF() {
   const selectedCustomer = state.reportSalesCustomer || '';
-  const fromDateInput = document.getElementById('filter-from-date')?.value || state.fromDate || getFirstDayOfMonthStr();
-  const toDateInput = document.getElementById('filter-to-date')?.value || state.toDate || getTodayDateStr();
+  const fromDateInput = document.getElementById('filter-from-date')?.value || state.reportSalesFromDate || getFirstDayOfMonthStr();
+  const toDateInput = document.getElementById('filter-to-date')?.value || state.reportSalesToDate || getTodayDateStr();
   const reportType = state.reportType || 'summary';
   const isDetail = reportType === 'detail';
 
   const custAddress = selectedCustomer ? getCustomerAddress(selectedCustomer) : 'Tất cả địa chỉ';
   const { dayStr, monthStr, yearStr } = parseDateParts(getTodayDateStr());
 
-  // Hàm bổ trợ lấy ĐVT chuẩn
   const resolveUnit = (sku, name, itemUnit) => {
     if (itemUnit && itemUnit !== '—') return itemUnit;
     const mat = (db.materials || []).find(m => (sku && m.id === sku) || (name && m.name === name));
