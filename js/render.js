@@ -2812,7 +2812,7 @@ function renderReportSales(c) {
     state.reportSalesCustomer = '';
   }
   if (!state.reportType) {
-    state.reportType = 'summary'; // Mặc định là 'summary' (Báo cáo tổng hợp)
+    state.reportType = 'detail'; // Mặc định là 'detail' (Báo cáo chi tiết)
   }
   // Khởi tạo limit cho Lazy Loading (áp dụng riêng cho Báo cáo chi tiết)
   if (!state.reportSalesLimit) {
