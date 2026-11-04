@@ -1673,14 +1673,45 @@ async function generateAndSharePDF(htmlElement, fileName, shareTitle) {
   }
 
   const fullFileName = `${fileName}.pdf`;
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const wrapper = document.createElement('div');
+
+  wrapper.style.position = 'absolute';
+  wrapper.style.left = '-9999px';
+  wrapper.style.top = '0';
+  wrapper.style.width = '210mm'; // Kích thước chuẩn A4
+  wrapper.style.background = '#ffffff';
+  wrapper.appendChild(htmlElement);
+  document.body.appendChild(wrapper);
+
+  const images = wrapper.getElementsByTagName('img');
+  const imgPromises = Array.from(images).map(img => {
+    if (img.complete) return Promise.resolve();
+    return new Promise(resolve => {
+      img.onload = resolve;
+      img.onerror = resolve;
+    });
+  });
+  await Promise.all(imgPromises);
+
+  // Trễ thêm 150ms để CSS & font chữ render ổn định trên Mobile
+  await new Promise(resolve => setTimeout(resolve, 150));
+
   const opt = {
-    margin: [6, 8, 6, 8], // Lề trên, trái, dưới, phải (mm)
+    margin: [6, 8, 6, 8],
     filename: fullFileName,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false },
+    html2canvas: {
+      scale: isMobile ? 1.5 : 2, // Trên điện thoại dùng scale 1.5 để tránh quá tải RAM làm hỏng file
+      useCORS: true,
+      logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 800 // Cố định chiều rộng viewport khi render canvas
+    },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak: {
-      mode: ['css', 'legacy'], // Chỉ ngắt trang theo dòng tr, không chặn toàn bộ bảng
+      mode: ['css', 'legacy'],
       avoid: ['tr', '.signature-block']
     }
   };
@@ -1689,10 +1720,7 @@ async function generateAndSharePDF(htmlElement, fileName, shareTitle) {
     const worker = html2pdf().set(opt).from(htmlElement);
     const pdfBlob = await worker.output('blob');
 
-    // Kiểm tra xem thiết bị có phải di động (Android / iOS) hay không
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-    // 1. DÀNH CHO MOBILE: MỞ BẢNG CHIA SẺ QUA ZALO
+    // 4. CHIA SẺ BẢNG ZALO HOẶC TẢI VỀ
     if (isMobile && navigator.canShare) {
       const file = new File([pdfBlob], fullFileName, { type: 'application/pdf' });
       if (navigator.canShare({ files: [file] })) {
@@ -1700,7 +1728,7 @@ async function generateAndSharePDF(htmlElement, fileName, shareTitle) {
           await navigator.share({
             files: [file],
             title: shareTitle,
-            text: `Gửi ${shareTitle} qua Zalo`
+            text: `Gửi ${shareTitle}`
           });
           return;
         } catch (shareErr) {
@@ -1725,6 +1753,11 @@ async function generateAndSharePDF(htmlElement, fileName, shareTitle) {
   } catch (err) {
     console.error('Lỗi khi xuất PDF:', err);
     showAlert('Có lỗi xảy ra trong quá trình tạo file PDF!', 'Lỗi');
+  } finally {
+    // 5. DỌN DẸP THẺ TẠM KHỎI BODY
+    if (document.body.contains(wrapper)) {
+      document.body.removeChild(wrapper);
+    }
   }
 }
 
