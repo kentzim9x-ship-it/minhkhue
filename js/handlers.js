@@ -2013,8 +2013,8 @@ async function exportSalesOrderToPDF() {
 // ==========================================
 async function exportSalesReportToPDF() {
   const selectedCustomer = state.reportSalesCustomer || '';
-  const selectedMonth = state.reportSalesMonth || (new Date().getMonth() + 1);
-  const currentYear = new Date().getFullYear();
+  const fromDateInput = document.getElementById('filter-from-date')?.value || state.fromDate || getFirstDayOfMonthStr();
+  const toDateInput = document.getElementById('filter-to-date')?.value || state.toDate || getTodayDateStr();
   const reportType = state.reportType || 'summary';
   const isDetail = reportType === 'detail';
 

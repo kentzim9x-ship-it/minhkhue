@@ -3206,16 +3206,14 @@ function renderReportSales(c) {
               >
                 Xuất PDF
               </button>
-            </div>
 
             <!-- NÚT XUẤT EXCEL (ĐẶT BÊN TAY PHẢI NÚT PDF) -->
               <button 
                 type="button" 
                 class="btn-primary" 
                 onclick="exportSalesReportToExcel()" 
-                ${(reportType === 'detail' && !selectedCustomer && !hasData) ? 'disabled style="height: 38px; box-sizing: border-box; background: #e11d48; color: #ffffff; padding: 0 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"' : 'style="height: 38px; box-sizing: border-box; background: #107c41; color: #ffffff; padding: 0 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"'}
+                ${(reportType === 'detail' && !selectedCustomer && !hasData) ? 'disabled style="height: 38px; box-sizing: border-box; background: #107c41; color: #ffffff; padding: 0 12px; font-size: 12px; opacity: 0.5; cursor: not-allowed; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"' : 'style="height: 38px; box-sizing: border-box; background: #107c41; color: #ffffff; padding: 0 12px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 2px; white-space: nowrap;"'}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="17"></line><line x1="16" y1="13" x2="8" y2="17"></line></svg>
                 Xuất Excel
               </button>
             </div>
