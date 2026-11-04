@@ -2028,17 +2028,18 @@ async function exportSalesReportToPDF() {
     return (mat && mat.unit) ? mat.unit : '—';
   };
 
-  // Lọc danh sách đơn hàng đã duyệt / hoàn thành trong tháng
   const filteredOrders = (db.orders || []).filter(order => {
     if (!order.date) return false;
-
-    // So sánh chuỗi ngày dạng YYYY-MM-DD
     const orderDate = order.date;
     const isAfterFrom = !fromDateInput || orderDate >= fromDateInput;
     const isBeforeTo = !toDateInput || orderDate <= toDateInput;
-
     return isAfterFrom && isBeforeTo;
   });
+
+  if (filteredOrders.length === 0) {
+    showAlert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`, 'Thông báo');
+    return;
+  }
 
   if (filteredOrders.length === 0) {
     alert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`);

@@ -1071,13 +1071,7 @@ div[style*="overflow: auto"],
   display: flex;
   justify-content: flex-start;
   align-items: center;
-}
-
-.report-excel-btn-container {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  margin-left: 8px;
+  margin-left: 4px;
 }
 
 .pc-only-print-btn {
@@ -1171,12 +1165,7 @@ div[style*="overflow: auto"],
   .report-pdf-btn-container {
     width: 100% !important;
     margin-top: 4px;
-  }
-
-  .report-excel-btn-container {
-    width: 100% !important;
-    margin-top: 4px;
-    margin-left: 8px;
+    margin-left: 4px;
   }
 
   .report-filter-item input,
