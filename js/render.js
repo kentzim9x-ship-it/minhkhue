@@ -2846,13 +2846,13 @@ function renderReportSales(c) {
 
   if (!isDetail) {
     // Với báo cáo tổng hợp: Có ít nhất 1 đơn bán hàng phù hợp
-    hasData = filteredOrders.some(o => 
+    hasData = filteredOrdersForDateRange.some(o => 
       !selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())
     );
   } else {
     // Với báo cáo chi tiết: Phải chọn Khách hàng và có ít nhất 1 đơn bán hàng của khách đó
     if (selectedCustomer) {
-      hasData = filteredOrders.some(o => 
+      hasData = filteredOrdersForDateRange.some(o => 
         o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
       );
     }
