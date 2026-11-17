@@ -405,10 +405,17 @@ function subscribeRealtimeNotifications() {
       if (payload.new) {
         const newNotif = payload.new;
         if (!Array.isArray(db.notifications)) db.notifications = [];
-        db.notifications.unshift(newNotif);
+
+        // Kiểm tra nếu ID đã tồn tại thì cập nhật, chưa có mới unshift
+        const existIdx = db.notifications.findIndex(n => String(n.id) === String(newNotif.id));
+        if (existIdx !== -1) {
+          db.notifications[existIdx] = { ...db.notifications[existIdx], ...newNotif };
+        } else {
+          db.notifications.unshift(newNotif);
+        }
+
         updateNotificationUI();
 
-        // Sửa: Dùng currentUser thay vì user
         const currentUser = getAuthSession()?.currentUser;
         if (!newNotif.user_id || newNotif.user_id === currentUser?.id) {
           triggerIOSBannerNotification(newNotif);
@@ -740,7 +747,6 @@ function subscribeAppRealtimeChanges() {
     'orders': 'orders',
     'returns': 'returns',
     'grns': 'grns',
-    'notifications': 'notifications',
     'userinfo': 'userinfo'
   };
 
