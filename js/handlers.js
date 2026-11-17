@@ -225,6 +225,24 @@ async function handleRouteChange() {
   }
 }
 
+function resolveCustomerInput(inputVal) {
+  const val = (inputVal || '').trim();
+  if (!val) return { customer_id: null, customer_name: '' };
+
+  // Tìm khớp theo định dạng "MÃ - TÊN" hoặc khớp chính xác tên/mã
+  const matched = state.customers.find(c =>
+    `${c.code} - ${c.name}`.toLowerCase() === val.toLowerCase() ||
+    c.name.toLowerCase() === val.toLowerCase() ||
+    c.code.toLowerCase() === val.toLowerCase()
+  );
+
+  if (matched) {
+    return { customer_id: matched.id, customer_name: matched.name };
+  }
+  // Trường hợp khách nhập tay hoàn toàn chưa có trong danh mục
+  return { customer_id: null, customer_name: val };
+}
+
 // BẬT / TẮT HIỆU ỨNG KHỐI NỀN VÀ LOADING
 function triggerLoginTilesHover(active) {
   const screen = document.querySelector('.trim-login-screen');
