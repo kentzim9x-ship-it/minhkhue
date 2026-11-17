@@ -850,26 +850,36 @@ function parseQuotationWebNote(noteStr) {
   };
   if (!noteStr) return result;
 
-  const text = String(noteStr).trim();
+  // Tách các trường thông tin bằng ký tự '|'
+  const segments = String(noteStr)
+    .split('|')
+    .map(s => s.trim())
+    .filter(Boolean);
 
-  // Bóc tách theo từ khóa nhãn (linh hoạt cả dấu phẩy hoặc xuống dòng)
-  const nameMatch = text.match(/(?:Khách hàng|Họ tên|Tên)\s*:\s*([^,\n]+)/i);
-  const phoneMatch = text.match(/(?:SĐT\/Zalo|SĐT|Zalo|Điện thoại)\s*:\s*([^,\n]+)/i);
-  const modelMatch = text.match(/(?:Mô hình|Mô hình kinh doanh)\s*:\s*([^,\n]+)/i);
-  const itemsMatch = text.match(/(?:Mặt hàng|Sản phẩm|Cần báo giá)\s*:\s*(.+)$/i);
+  segments.forEach(seg => {
+    const colonIdx = seg.indexOf(':');
+    if (colonIdx !== -1) {
+      const label = seg.slice(0, colonIdx).trim().toLowerCase();
+      const val = seg.slice(colonIdx + 1).trim();
 
-  if (nameMatch) result.fullName = nameMatch[1].trim();
-  if (phoneMatch) result.phone = phoneMatch[1].trim();
-  if (modelMatch) result.businessModel = modelMatch[1].trim();
-  if (itemsMatch) result.items = itemsMatch[1].trim();
+      if (label.includes('tên') || label.includes('khách') || label.includes('liên hệ')) {
+        result.fullName = val;
+      } else if (label.includes('sđt') || label.includes('điện thoại') || label.includes('zalo') || label.includes('phone')) {
+        result.phone = val;
+      } else if (label.includes('mô hình')) {
+        result.businessModel = val;
+      } else if (label.includes('mặt hàng') || label.includes('sản phẩm') || label.includes('báo giá')) {
+        result.items = val;
+      }
+    }
+  });
 
-  // Fallback nếu chuỗi note ngăn cách bằng dấu gạch ngang " - " (VD: "Việt - 0989643294 - Siêu thị - Bưởi, Táo")
-  if (!result.fullName && !result.phone && text.includes(' - ')) {
-    const parts = text.split(' - ').map(s => s.trim());
-    result.fullName = parts[0] || '';
-    result.phone = parts[1] || '';
-    result.businessModel = parts[2] || '';
-    result.items = parts.slice(3).join(', ') || '';
+  // Fallback theo thứ tự nếu các đoạn ngăn cách bằng '|' không ghi nhãn phía trước
+  if (!result.fullName && !result.phone && segments.length >= 2) {
+    result.fullName = segments[0] || '';
+    result.phone = segments[1] || '';
+    result.businessModel = segments[2] || '';
+    result.items = segments.slice(3).join(', ') || '';
   }
 
   return result;
@@ -924,7 +934,6 @@ function openWebQuotationRequestDrawer(notifObj) {
   const formattedDate = typeof fmtDateStr === 'function' ? fmtDateStr(notifObj.date || notifObj.created_at) : (notifObj.date || '');
   const timeStr = notifObj.time ? notifObj.time.substring(0, 5) : '';
 
-  // Lưu tạm dữ liệu đang mở để nút Submit sử dụng
   window.currentWebQuotationRequest = {
     notifId: notifObj.id,
     ...parsed
@@ -970,11 +979,8 @@ function openWebQuotationRequestDrawer(notifObj) {
         </div>
       </div>
 
-      <!-- FOOTER SUBMIT -->
-      <div style="padding: 16px 20px; border-top: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--secondary, #1a1e26); display: flex; justify-content: flex-end; gap: 10px;">
-        <button type="button" class="btn-cancel" onclick="closeWebQuotationRequestDrawer()" style="padding: 9px 16px; font-size: 13px;">
-          Đóng
-        </button>
+      <!-- FOOTER SUBMIT (Đã ẩn nút Đóng) -->
+      <div style="padding: 16px 20px; border-top: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--secondary, #1a1e26); display: flex; justify-content: flex-end;">
         <button type="submit" class="btn-primary" style="padding: 9px 18px; font-size: 13px; font-weight: 600;">
           ${Icons.plus} Tạo bảng báo giá
         </button>
@@ -1003,16 +1009,16 @@ async function submitWebQuotationRequest(e) {
   // Ghép ghi chú dạng: "Việt - 0989643294"
   const noteStr = [fullName, phone].filter(Boolean).join(' - ');
 
-  // Tìm tên khách hàng mặc định CUS-0008 trong db.customers (fallback về 'Khách Lẻ' nếu chưa tải)
+  // Tìm tên khách hàng mặc định CUS-0008 trong db.customers
   const retailCust = (db.customers || []).find(c => String(c.id).trim().toUpperCase() === 'CUS-0008');
   const defaultCustomerName = retailCust ? retailCust.name : 'Khách Lẻ';
 
   closeWebQuotationRequestDrawer();
 
-  // Điều hướng sang form thêm mới bảng báo giá (giữ nguyên mặc định ngày lập, ngày bắt đầu, ngày kết thúc, trạng thái)
+  // Điều hướng sang form thêm mới bảng báo giá
   await navigate('quotations', 'add');
 
-  // Gán khách hàng mặc định và ghi chú sau khi initFormData đã khởi tạo form mới
+  // Gán khách hàng mặc định và ghi chú sau khi form đã khởi tạo xong
   if (state.view === 'quotations' && state.mode === 'add' && state.formData) {
     state.formData.customer = defaultCustomerName;
     state.formData.notes = noteStr;
