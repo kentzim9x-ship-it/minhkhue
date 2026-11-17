@@ -2033,17 +2033,18 @@ function renderQuotationForm(c) {
             </div>
             <div class="section-body grid-3">
               <div class="form-group">
-                    <label class="form-label">Khách hàng *</label>
-                    <input type="text" id="q-customer-input" list="q-customer-list" class="form-input" 
-                          placeholder="-- Chọn hoặc gõ tên/mã khách hàng --" 
-                          value="${(() => {
-                              const c = (db.customers || []).find(x => x.id === data.customer_id || x.name === data.customer);
-                              return c ? `${c.id} - ${c.name}` : (data.customer || data.customer_name || '');
-                          })()}" required>
-                    <datalist id="q-customer-list">
-                        ${(db.customers || []).map(c => `<option value="${c.id} - ${c.name}" data-id="${c.id}"></option>`).join('')}
-                    </datalist>
-                </div>
+                  <label class="form-label">Khách hàng *</label>
+                  <input type="text" id="q-customer-input" list="q-customer-list" class="form-input" 
+                        placeholder="-- Chọn hoặc gõ tên/mã khách hàng --" 
+                        value="${(() => {
+      const formObj = state.formData || {};
+      const c = (db.customers || []).find(x => x.id === formObj.customer_id || x.name === formObj.customer);
+      return c ? `${c.id} - ${c.name}` : (formObj.customer || formObj.customer_name || '');
+    })()}" required>
+                  <datalist id="q-customer-list">
+                      ${(db.customers || []).map(c => `<option value="${c.id} - ${c.name}" data-id="${c.id}"></option>`).join('')}
+                  </datalist>
+              </div>
               <div class="form-group">
                 <label class="form-label">Ngày lập phiếu *</label>
                 <input type="date" class="form-input" value="${d.date || getTodayDateStr()}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'date\', this.value)"'} required>
@@ -2358,17 +2359,18 @@ function renderSalesOrderForm(c) {
             </div>
             <div class="section-body grid-3">
               <div class="form-group">
-                  <label class="form-label">Khách hàng *</label>
-                  <input type="text" id="so-customer-input" list="so-customer-list" class="form-input" 
-                        placeholder="-- Chọn hoặc gõ tên/mã khách hàng --" 
-                        value="${(() => {
-                            const c = state.customers.find(x => x.id === data.customer_id);
-                            return c ? `${c.code} - ${c.name}` : (data.customer_name || '');
-                        })()}" required>
-                  <datalist id="so-customer-list">
-                      ${(db.customers || []).map(c => `<option value="${c.id} - ${c.name}" data-id="${c.id}"></option>`).join('')}
-                  </datalist>
-              </div>
+                    <label class="form-label">Khách hàng *</label>
+                    <input type="text" id="so-customer-input" list="so-customer-list" class="form-input" 
+                          placeholder="-- Chọn hoặc gõ tên/mã khách hàng --" 
+                          value="${(() => {
+      const formObj = state.formData || {};
+      const c = (db.customers || []).find(x => x.id === formObj.customer_id || x.name === formObj.customer);
+      return c ? `${c.id} - ${c.name}` : (formObj.customer || formObj.customer_name || '');
+    })()}" required>
+                    <datalist id="so-customer-list">
+                        ${(db.customers || []).map(c => `<option value="${c.id} - ${c.name}" data-id="${c.id}"></option>`).join('')}
+                    </datalist>
+                </div>
               <div class="form-group">
                 <label class="form-label">Mã kho (Xuất kho) *</label>
                 <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
@@ -2579,9 +2581,10 @@ function renderReturnForm(c) {
                 <input type="text" id="ret-customer-input" list="ret-customer-list" class="form-input" 
                       placeholder="-- Chọn hoặc gõ tên/mã khách hàng --" 
                       value="${(() => {
-                          const c = state.customers.find(x => x.id === data.customer_id);
-                          return c ? `${c.code} - ${c.name}` : (data.customer_name || '');
-                      })()}" required>
+      const formObj = state.formData || {};
+      const c = (db.customers || []).find(x => x.id === formObj.customer_id || x.name === formObj.customer);
+      return c ? `${c.id} - ${c.name}` : (formObj.customer || formObj.customer_name || '');
+    })()}" required>
                 <datalist id="ret-customer-list">
                     ${(db.customers || []).map(c => `<option value="${c.id} - ${c.name}" data-id="${c.id}"></option>`).join('')}
                 </datalist>
