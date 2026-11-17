@@ -47,6 +47,8 @@ function forceClearAllOverlays() {
     if (
       !el.classList.contains('app-container') &&
       id !== 'login-container' &&
+      id !== 'notif-dropdown' &&
+      id !== 'toast-container' &&
       tag !== 'script' &&
       tag !== 'style'
     ) {
