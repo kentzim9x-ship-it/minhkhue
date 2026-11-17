@@ -2887,6 +2887,7 @@ function initPrintLabelDrawerUI() {
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(2px);
     z-index: 9998;
+    opacity: 0;
     transition: opacity 0.3s ease;
   `;
   overlay.onclick = closePrintLabelDrawer;
@@ -2895,15 +2896,16 @@ function initPrintLabelDrawerUI() {
   drawer.id = 'print-label-drawer';
   drawer.style.cssText = `
     position: fixed;
-    top: 0; right: -33.33vw;
+    top: 0; right: 0;
     width: 33.33vw; height: 100vh;
     background: var(--card, #141821);
     border-left: 1px solid var(--border, rgba(255,255,255,0.1));
     box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
     z-index: 9999;
-    display: flex;
+    display: none;
     flex-direction: column;
-    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     font-family: var(--font-jost, sans-serif);
     box-sizing: border-box;
   `;
@@ -2926,20 +2928,25 @@ function openPrintLabelDrawer() {
   renderPrintLabelDrawerContent();
 
   overlay.style.display = 'block';
-  setTimeout(() => {
-    drawer.style.right = '0';
-  }, 10);
+  drawer.style.display = 'flex';
+
+  requestAnimationFrame(() => {
+    overlay.style.opacity = '1';
+    drawer.style.transform = 'translateX(0)';
+  });
 }
 
 function closePrintLabelDrawer() {
   const drawer = document.getElementById('print-label-drawer');
   const overlay = document.getElementById('print-label-overlay');
-  if (drawer) drawer.style.right = '-33.33vw';
-  if (overlay) {
-    setTimeout(() => {
-      overlay.style.display = 'none';
-    }, 300);
-  }
+
+  if (drawer) drawer.style.transform = 'translateX(100%)';
+  if (overlay) overlay.style.opacity = '0';
+
+  setTimeout(() => {
+    if (drawer) drawer.style.display = 'none';
+    if (overlay) overlay.style.display = 'none';
+  }, 300);
 }
 
 function renderPrintLabelDrawerContent() {
