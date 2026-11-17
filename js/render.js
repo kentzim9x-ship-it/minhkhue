@@ -111,11 +111,29 @@ function renderLoginForm(container) {
 
       @media (min-width: 768px) {
         .trim-login-screen {
-          padding: 32px 48px;
-        }
+        position: relative;
+        height: 100%;
+        min-height: 100dvh;
+        width: 100%;
+        background-color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        padding: calc(env(safe-area-inset-top, 20px) + 16px) 28px calc(env(safe-area-inset-bottom, 20px) + 24px) 28px;
+        box-sizing: border-box;
+        overflow: hidden;
+        font-family: var(--font-jost, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      }
         .trim-login-body {
-          max-width: 380px;
-        }
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        max-width: 360px;
+        margin: 0 auto;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
         /* Kéo 3 khối vuông nền vào gần tâm hơn trên màn hình PC */
         .tile-1 {
           width: 180px;

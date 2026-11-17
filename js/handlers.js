@@ -813,43 +813,43 @@ async function saveForm(module) {
       );
     }
 
-    try {
-      const actorName = currentUserFullname;
-      const actionText = state.mode === 'add' ? 'Tạo mới' : 'Cập nhật';
+    // try {
+    //   const actorName = currentUserFullname;
+    //   const actionText = state.mode === 'add' ? 'Tạo mới' : 'Cập nhật';
 
-      const notifTitle = `Báo Giá (${actionText})`;
-      const notifDetail = `${actorName} đã ${actionText.toLowerCase()} báo giá ${rawData.id} cho khách hàng ${rawData.customer || ''}`;
+    //   const notifTitle = `Báo Giá (${actionText})`;
+    //   const notifDetail = `${actorName} đã ${actionText.toLowerCase()} báo giá ${rawData.id} cho khách hàng ${rawData.customer || ''}`;
 
-      const now = new Date();
-      const dateStr = getTodayDateStr();
-      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    //   const now = new Date();
+    //   const dateStr = getTodayDateStr();
+    //   const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
-      const notifPayload = {
-        id: 'NOTIF-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-        type: 'quotations',
-        title: notifTitle,
-        detail: notifDetail,
-        targetview: 'quotations',
-        itemid: String(rawData.id || ''),
-        time: timeStr,
-        date: dateStr,
-        created_at: now.toISOString(),
-        actor: actorName
-      };
+    //   const notifPayload = {
+    //     id: 'NOTIF-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+    //     type: 'quotations',
+    //     title: notifTitle,
+    //     detail: notifDetail,
+    //     targetview: 'quotations',
+    //     itemid: String(rawData.id || ''),
+    //     time: timeStr,
+    //     date: dateStr,
+    //     created_at: now.toISOString(),
+    //     actor: actorName
+    //   };
 
-      asyncBackgroundTasks.push(
-        (async () => {
-          try {
-            const { error: notifErr } = await supabaseClient.from('notifications').insert([notifPayload]);
-            if (notifErr) console.error('Lỗi Supabase khi chèn notifications:', notifErr);
-          } catch (err) {
-            console.error('Lỗi tạo thông báo:', err);
-          }
-        })()
-      );
-    } catch (err) {
-      console.error('Lỗi chuẩn bị thông báo:', err);
-    }
+    //   asyncBackgroundTasks.push(
+    //     (async () => {
+    //       try {
+    //         const { error: notifErr } = await supabaseClient.from('notifications').insert([notifPayload]);
+    //         if (notifErr) console.error('Lỗi Supabase khi chèn notifications:', notifErr);
+    //       } catch (err) {
+    //         console.error('Lỗi tạo thông báo:', err);
+    //       }
+    //     })()
+    //   );
+    // } catch (err) {
+    //   console.error('Lỗi chuẩn bị thông báo:', err);
+    // }
 
     // CHUẨN HÓA CÁC TRƯỜNG NGÀY & HÀNG HÓA CHO QUOTATIONS
     const validUntilVal = rawData.validUntil || rawData.validuntil || '';
