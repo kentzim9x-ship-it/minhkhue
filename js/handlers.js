@@ -225,22 +225,73 @@ async function handleRouteChange() {
   }
 }
 
-function resolveCustomerInput(inputVal) {
-  const val = (inputVal || '').trim();
-  if (!val) return { customer_id: null, customer_name: '' };
+function resolveCustomerNameFromInput(val) {
+  const raw = (val || '').trim();
+  if (!raw) return '';
+  const customers = db.customers || [];
+  // Tìm khớp theo định dạng "CUS-0008 - Khách Lẻ", mã "CUS-0008", hoặc tên "Khách Lẻ"
+  const matched = customers.find(c =>
+    `${c.id} - ${c.name}`.toLowerCase() === raw.toLowerCase() ||
+    (c.id || '').trim().toLowerCase() === raw.toLowerCase() ||
+    (c.name || '').trim().toLowerCase() === raw.toLowerCase()
+  );
+  return matched ? matched.name : raw;
+}
 
-  // Tìm khớp theo định dạng "MÃ - TÊN" hoặc khớp chính xác tên/mã
-  const matched = (db.customers || []).find(c =>
-    `${c.code} - ${c.name}`.toLowerCase() === val.toLowerCase() ||
-    c.name.toLowerCase() === val.toLowerCase() ||
-    c.code.toLowerCase() === val.toLowerCase()
+function handleCustomerInputChange(inputEl, moduleName) {
+  const raw = (inputEl.value || '').trim();
+
+  // 1. Trường hợp người dùng xóa trống ô khách hàng
+  if (!raw) {
+    if (moduleName === 'quotations') {
+      handleCustomerSelectInQuotation('');
+    } else if (moduleName === 'sales-orders') {
+      handleCustomerSelectInOrder('');
+    } else if (moduleName === 'returns') {
+      updateField('customer', '');
+      render();
+    }
+    return;
+  }
+
+  // 2. Tìm khách hàng khớp trong danh mục db.customers
+  const customers = db.customers || [];
+  const matched = customers.find(c =>
+    `${c.id} - ${c.name}`.toLowerCase() === raw.toLowerCase() ||
+    (c.id || '').trim().toLowerCase() === raw.toLowerCase() ||
+    (c.name || '').trim().toLowerCase() === raw.toLowerCase()
   );
 
-  if (matched) {
-    return { customer_id: matched.id, customer_name: matched.name };
+  // 3. Nếu KHÔNG khớp danh mục -> Báo lỗi, xóa trắng và reset form
+  if (!matched) {
+    alert(`Khách hàng "${raw}" không tồn tại trong danh mục! Vui lòng chọn từ danh sách gợi ý.`);
+    inputEl.value = '';
+    if (moduleName === 'quotations') {
+      handleCustomerSelectInQuotation('');
+    } else if (moduleName === 'sales-orders') {
+      handleCustomerSelectInOrder('');
+    } else if (moduleName === 'returns') {
+      updateField('customer', '');
+      render();
+    }
+    setTimeout(() => {
+      const el = document.getElementById(inputEl.id);
+      if (el) el.focus();
+    }, 50);
+    return;
   }
-  // Trường hợp khách nhập tay hoàn toàn chưa có trong danh mục
-  return { customer_id: null, customer_name: val };
+
+  // 4. Nếu hợp lệ -> Chuẩn hóa hiển thị "Mã - Tên" và gọi hàm xử lý gốc (truyền matched.name)
+  inputEl.value = `${matched.id} - ${matched.name}`;
+
+  if (moduleName === 'quotations') {
+    handleCustomerSelectInQuotation(matched.name);
+  } else if (moduleName === 'sales-orders') {
+    handleCustomerSelectInOrder(matched.name);
+  } else if (moduleName === 'returns') {
+    updateField('customer', matched.name);
+    render();
+  }
 }
 
 // BẬT / TẮT HIỆU ỨNG KHỐI NỀN VÀ LOADING

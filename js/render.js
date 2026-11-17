@@ -1967,9 +1967,14 @@ function renderQuotationForm(c) {
     `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(m.cost || 0)})</option>`
   ).join('');
 
-  const customerOptions = (db.customers || []).map(cust =>
-    `<option value="${cust.name}" ${d.customer === cust.name ? 'selected' : ''}>${cust.name}</option>`
+  const customerDatalistOptions = (db.customers || []).map(cust =>
+    `<option value="${cust.id} - ${cust.name}">${cust.name}</option>`
   ).join('');
+
+  const matchedQuotationCust = (db.customers || []).find(cust => cust.name === d.customer);
+  const quotationCustomerDisplay = matchedQuotationCust
+    ? `${matchedQuotationCust.id} - ${matchedQuotationCust.name}`
+    : (d.customer || '');
 
   const gridLayout = isView
     ? "10px 100px minmax(180px, 1.5fr) 55px 70px 100px 70px 70px 120px"
@@ -2032,18 +2037,25 @@ function renderQuotationForm(c) {
               <span class="section-title">Thông tin báo giá</span>
             </div>
             <div class="section-body grid-3">
-              <div class="form-group">
-                  <label class="form-label">Khách hàng *</label>
-                  <input type="text" id="q-customer-input" list="q-customer-list" class="form-input" 
-                        placeholder="-- Chọn hoặc gõ tên/mã khách hàng --" 
-                        value="${(() => {
-      const formObj = state.formData || {};
-      const c = (db.customers || []).find(x => x.id === formObj.customer_id || x.name === formObj.customer);
-      return c ? `${c.id} - ${c.name}` : (formObj.customer || formObj.customer_name || '');
-    })()}" required>
-                  <datalist id="q-customer-list">
-                      ${(db.customers || []).map(c => `<option value="${c.id} - ${c.name}" data-id="${c.id}"></option>`).join('')}
-                  </datalist>
+              <div class="form-group" style="grid-column: span 2;">
+                <label class="form-label">Khách hàng *</label>
+                <input 
+                  type="text" 
+                  id="q-customer-input"
+                  autocomplete="off"
+                  ${(isView || isEdit) ? '' : 'list="q-customer-list"'} 
+                  class="form-input" 
+                  value="${quotationCustomerDisplay}" 
+                  ${(isView || isEdit)
+                    ? 'readonly style="background: var(--muted); cursor: not-allowed;"'
+                    : 'onchange="handleCustomerInputChange(this, \'quotations\')"'
+                  } 
+                  placeholder="-- Chọn hoặc gõ mã / tên khách hàng --" 
+                  required
+                >
+                <datalist id="q-customer-list">
+                  ${customerDatalistOptions}
+                </datalist>
               </div>
               <div class="form-group">
                 <label class="form-label">Ngày lập phiếu *</label>
@@ -2282,9 +2294,14 @@ function renderSalesOrderForm(c) {
     }).join('');
   }
 
-  const customerOptions = (db.customers || []).map(cust =>
-    `<option value="${cust.name || ''}" ${d.customer === cust.name ? 'selected' : ''}>${cust.name || ''}</option>`
+  const customerDatalistOptions = (db.customers || []).map(cust =>
+    `<option value="${cust.id} - ${cust.name}">${cust.name}</option>`
   ).join('');
+
+  const matchedOrderCust = (db.customers || []).find(cust => cust.name === d.customer);
+  const orderCustomerDisplay = matchedOrderCust
+    ? `${matchedOrderCust.id} - ${matchedOrderCust.name}`
+    : (d.customer || '');
 
   const warehouseOptions = (db.warehouses || []).map(w => {
     const wCode = w.code || w.id;
@@ -2358,19 +2375,27 @@ function renderSalesOrderForm(c) {
               <span class="section-title">Thông tin đơn bán hàng</span>
             </div>
             <div class="section-body grid-3">
-              <div class="form-group">
-                    <label class="form-label">Khách hàng *</label>
-                    <input type="text" id="so-customer-input" list="so-customer-list" class="form-input" 
-                          placeholder="-- Chọn hoặc gõ tên/mã khách hàng --" 
-                          value="${(() => {
-      const formObj = state.formData || {};
-      const c = (db.customers || []).find(x => x.id === formObj.customer_id || x.name === formObj.customer);
-      return c ? `${c.id} - ${c.name}` : (formObj.customer || formObj.customer_name || '');
-    })()}" required>
-                    <datalist id="so-customer-list">
-                        ${(db.customers || []).map(c => `<option value="${c.id} - ${c.name}" data-id="${c.id}"></option>`).join('')}
-                    </datalist>
-                </div>
+              <div class="form-group" style="grid-column: span 2;">
+                <label class="form-label">Khách hàng *</label>
+                <input 
+                  type="text" 
+                  id="so-customer-input"
+                  autocomplete="off"
+                  ${(isView || isEdit) ? '' : 'list="so-customer-list"'} 
+                  class="form-input" 
+                  value="${orderCustomerDisplay}" 
+                  ${(isView || isEdit)
+                    ? 'readonly style="background: var(--muted); cursor: not-allowed;"'
+                    : 'onchange="handleCustomerInputChange(this, \'sales-orders\')"'
+                  } 
+                  placeholder="-- Chọn hoặc gõ mã / tên khách hàng --" 
+                  required
+                >
+                <datalist id="so-customer-list">
+                  ${customerDatalistOptions}
+                </datalist>
+                ${d.quotationId ? `<div style="font-size: 11px; color: var(--primary); font-family: var(--font-dm-mono); margin-top: 4px;">✔ Đã tự động áp dụng Báo giá: ${d.quotationId}</div>` : ''}
+              </div>
               <div class="form-group">
                 <label class="form-label">Mã kho (Xuất kho) *</label>
                 <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'warehouseCode\', this.value)"'} required>
@@ -2502,9 +2527,14 @@ function renderReturnForm(c) {
     return `<option value="${wCode}" ${d.warehouseCode === wCode ? 'selected' : ''}>${wCode} - ${w.name}</option>`;
   }).join('');
 
-  const customerOptions = (db.customers || []).map(cust =>
-    `<option value="${cust.name || ''}" ${d.customer === cust.name ? 'selected' : ''}>${cust.name || ''}</option>`
+  const customerDatalistOptions = (db.customers || []).map(cust =>
+    `<option value="${cust.id} - ${cust.name}">${cust.name}</option>`
   ).join('');
+
+  const matchedReturnCust = (db.customers || []).find(cust => cust.name === d.customer);
+  const returnCustomerDisplay = matchedReturnCust
+    ? `${matchedReturnCust.id} - ${matchedReturnCust.name}`
+    : (d.customer || '');
 
   // Lọc danh sách Đơn Hàng Bán: Nếu đã chọn Khách Hàng -> Chỉ lấy các đơn của KH đó
   const filteredOrders = (db.orders || []).filter(o => {
@@ -2577,17 +2607,24 @@ function renderReturnForm(c) {
               </select>
             </div>
             <div class="form-group">
-                <label class="form-label">Khách hàng *</label>
-                <input type="text" id="ret-customer-input" list="ret-customer-list" class="form-input" 
-                      placeholder="-- Chọn hoặc gõ tên/mã khách hàng --" 
-                      value="${(() => {
-      const formObj = state.formData || {};
-      const c = (db.customers || []).find(x => x.id === formObj.customer_id || x.name === formObj.customer);
-      return c ? `${c.id} - ${c.name}` : (formObj.customer || formObj.customer_name || '');
-    })()}" required>
-                <datalist id="ret-customer-list">
-                    ${(db.customers || []).map(c => `<option value="${c.id} - ${c.name}" data-id="${c.id}"></option>`).join('')}
-                </datalist>
+              <label class="form-label">Tên khách hàng *</label>
+              <input 
+                type="text" 
+                id="ret-customer-input"
+                autocomplete="off"
+                ${(isView || isEdit || hasOrder) ? '' : 'list="ret-customer-list"'} 
+                class="form-input" 
+                value="${returnCustomerDisplay}" 
+                ${(isView || isEdit || hasOrder)
+                  ? 'readonly style="background: var(--muted); cursor: not-allowed;"'
+                  : 'onchange="handleCustomerInputChange(this, \'returns\')"'
+                } 
+                placeholder="-- Chọn hoặc gõ mã / tên khách hàng --" 
+                required
+              >
+              <datalist id="ret-customer-list">
+                ${customerDatalistOptions}
+              </datalist>
             </div>
             <div class="form-group">
               <label class="form-label">Mã kho *</label>
