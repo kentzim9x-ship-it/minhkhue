@@ -353,6 +353,9 @@ async function handleLogin(e) {
 
       document.querySelector('.app-container').style.display = 'flex';
       updateUserInfoUI();
+      if (typeof initIOSLocalNotifications === 'function') {
+        initIOSLocalNotifications(); // Hiện popup xin quyền thông báo trên iPhone
+      }
 
       await Promise.resolve(navigate('dashboard', 'list'));
 

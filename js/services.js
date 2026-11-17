@@ -408,7 +408,8 @@ function subscribeRealtimeNotifications() {
         db.notifications.unshift(newNotif);
         updateNotificationUI();
 
-        const currentUser = getAuthSession()?.user;
+        // Sửa: Dùng currentUser thay vì user
+        const currentUser = getAuthSession()?.currentUser;
         if (!newNotif.user_id || newNotif.user_id === currentUser?.id) {
           triggerIOSBannerNotification(newNotif);
         }
@@ -1033,28 +1034,28 @@ async function submitWebQuotationRequest(e) {
 }
 
 async function initIOSLocalNotifications() {
-  // Chỉ chạy khi đang mở trên App iOS/Android qua Capacitor
   if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
 
-  const { LocalNotifications } = window.Capacitor.Plugins;
+  const LocalNotifications = window.Capacitor.Plugins?.LocalNotifications;
   if (!LocalNotifications) return;
 
   try {
     const permStatus = await LocalNotifications.checkPermissions();
+
+    // Lưu ý: permStatus là object { display: 'prompt' | 'granted' | 'denied' }
     if (permStatus.display !== 'granted') {
-      await LocalNotifications.requestPermissions();
+      const reqResult = await LocalNotifications.requestPermissions();
+      console.log('Kết quả xin quyền thông báo:', reqResult);
     }
 
-    // Lắng nghe sự kiện khi người dùng bấm vào banner thông báo trên màn hình khóa/Notification Center
     LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
       const extra = notification.notification?.extra || {};
-      // Điều hướng thẳng tới chứng từ tương ứng (nếu có)
       if (extra.targetView && extra.itemId && typeof navigate === 'function') {
         navigate(extra.targetView, 'view', extra.itemId);
       }
     });
   } catch (err) {
-    console.warn('Lỗi khởi tạo thông báo iOS:', err);
+    console.error('Lỗi xin quyền thông báo iOS:', err);
   }
 }
 
@@ -1068,20 +1069,21 @@ async function triggerIOSBannerNotification(notifRecord) {
     const permStatus = await LocalNotifications.checkPermissions();
     if (permStatus.display !== 'granted') return;
 
-    // Tạo ID số nguyên dương (iOS yêu cầu id là số nguyên 32-bit)
     const notifId = Math.floor(Date.now() % 2147483647);
 
     await LocalNotifications.schedule({
       notifications: [
         {
           id: notifId,
-          title: notifRecord.title || 'MINHKHUE - Thông báo mới',
-          body: notifRecord.message || notifRecord.content || 'Bạn có cập nhật mới trên hệ thống.',
-          schedule: { at: new Date(Date.now() + 200) }, // Hiển thị ngay lập tức sau 0.2s
+          title: notifRecord.title || 'Minh Khuê - Thông báo mới',
+          // Sửa: Ưu tiên lấy cột 'detail' của bảng notifications
+          body: notifRecord.detail || notifRecord.message || 'Bạn có cập nhật mới trên hệ thống.',
+          schedule: { at: new Date(Date.now() + 200) },
           sound: 'default',
           extra: {
-            targetView: notifRecord.target_view || notifRecord.module || '',
-            itemId: notifRecord.item_id || notifRecord.record_id || ''
+            // Sửa: Lấy đúng tên cột chữ thường trong Supabase
+            targetView: notifRecord.targetview || notifRecord.type || '',
+            itemId: notifRecord.itemid || ''
           }
         }
       ]
