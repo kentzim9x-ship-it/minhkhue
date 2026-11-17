@@ -230,7 +230,7 @@ function resolveCustomerInput(inputVal) {
   if (!val) return { customer_id: null, customer_name: '' };
 
   // Tìm khớp theo định dạng "MÃ - TÊN" hoặc khớp chính xác tên/mã
-  const matched = state.customers.find(c =>
+  const matched = (db.customers || []).find(c =>
     `${c.code} - ${c.name}`.toLowerCase() === val.toLowerCase() ||
     c.name.toLowerCase() === val.toLowerCase() ||
     c.code.toLowerCase() === val.toLowerCase()
