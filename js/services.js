@@ -645,19 +645,6 @@ function renderNotificationHistoryContent() {
   `;
 }
 
-function handleNotificationClick(notifId, targetView, itemId) {
-  markNotifIdAsRead(notifId);
-
-  const dropdown = document.getElementById('notif-dropdown');
-  if (dropdown) dropdown.classList.remove('open');
-
-  closeNotificationHistory();
-
-  if (targetView && itemId && targetView !== 'null' && itemId !== 'null') {
-    navigate(targetView, 'view', itemId);
-  }
-}
-
 function markAllNotificationsAsRead() {
   const list = db.notifications || [];
   list.forEach(n => markNotifIdAsRead(n.id));
@@ -848,4 +835,187 @@ function subscribeAppRealtimeChanges() {
         }
       });
   });
+}
+
+// ==========================================
+// DRAWER XEM YÊU CẦU BÁO GIÁ TỪ WEB
+// ==========================================
+
+function parseQuotationWebNote(noteStr) {
+  const result = {
+    fullName: '',
+    phone: '',
+    businessModel: '',
+    items: ''
+  };
+  if (!noteStr) return result;
+
+  const text = String(noteStr).trim();
+
+  // Bóc tách theo từ khóa nhãn (linh hoạt cả dấu phẩy hoặc xuống dòng)
+  const nameMatch = text.match(/(?:Khách hàng|Họ tên|Tên)\s*:\s*([^,\n]+)/i);
+  const phoneMatch = text.match(/(?:SĐT\/Zalo|SĐT|Zalo|Điện thoại)\s*:\s*([^,\n]+)/i);
+  const modelMatch = text.match(/(?:Mô hình|Mô hình kinh doanh)\s*:\s*([^,\n]+)/i);
+  const itemsMatch = text.match(/(?:Mặt hàng|Sản phẩm|Cần báo giá)\s*:\s*(.+)$/i);
+
+  if (nameMatch) result.fullName = nameMatch[1].trim();
+  if (phoneMatch) result.phone = phoneMatch[1].trim();
+  if (modelMatch) result.businessModel = modelMatch[1].trim();
+  if (itemsMatch) result.items = itemsMatch[1].trim();
+
+  // Fallback nếu chuỗi note ngăn cách bằng dấu gạch ngang " - " (VD: "Việt - 0989643294 - Siêu thị - Bưởi, Táo")
+  if (!result.fullName && !result.phone && text.includes(' - ')) {
+    const parts = text.split(' - ').map(s => s.trim());
+    result.fullName = parts[0] || '';
+    result.phone = parts[1] || '';
+    result.businessModel = parts[2] || '';
+    result.items = parts.slice(3).join(', ') || '';
+  }
+
+  return result;
+}
+
+function initWebQuotationRequestDrawer() {
+  if (document.getElementById('web-quote-req-drawer')) return;
+
+  // Tái sử dụng CSS class của notif-history-drawer & notif-history-overlay để đồng bộ 100% kích thước PC & Mobile
+  const overlay = document.createElement('div');
+  overlay.id = 'web-quote-req-overlay';
+  overlay.className = 'notif-history-overlay';
+  overlay.onclick = closeWebQuotationRequestDrawer;
+
+  const drawer = document.createElement('div');
+  drawer.id = 'web-quote-req-drawer';
+  drawer.className = 'notif-history-drawer';
+
+  // Hỗ trợ vuốt ngang sang phải để đóng trên Mobile (tương tự thông báo)
+  let touchStartX = 0, touchStartY = 0;
+  drawer.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  drawer.addEventListener('touchend', (e) => {
+    const diffX = e.changedTouches[0].clientX - touchStartX;
+    const diffY = e.changedTouches[0].clientY - touchStartY;
+    if (diffX > 60 && Math.abs(diffX) > Math.abs(diffY)) {
+      closeWebQuotationRequestDrawer();
+    }
+  }, { passive: true });
+
+  // Hỗ trợ phím ESC trên PC để đóng
+  window.addEventListener('keydown', (e) => {
+    if ((e.key === 'Escape' || e.key === 'Esc') && drawer.classList.contains('open')) {
+      closeWebQuotationRequestDrawer();
+    }
+  });
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(drawer);
+}
+
+function openWebQuotationRequestDrawer(notifObj) {
+  initWebQuotationRequestDrawer();
+
+  const drawer = document.getElementById('web-quote-req-drawer');
+  const overlay = document.getElementById('web-quote-req-overlay');
+
+  const parsed = parseQuotationWebNote(notifObj.note || notifObj.detail || '');
+  const formattedDate = typeof fmtDateStr === 'function' ? fmtDateStr(notifObj.date || notifObj.created_at) : (notifObj.date || '');
+  const timeStr = notifObj.time ? notifObj.time.substring(0, 5) : '';
+
+  // Lưu tạm dữ liệu đang mở để nút Submit sử dụng
+  window.currentWebQuotationRequest = {
+    notifId: notifObj.id,
+    ...parsed
+  };
+
+  drawer.innerHTML = `
+    <!-- HEADER -->
+    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <span style="font-family: var(--font-dm-mono); font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">
+          YÊU CẦU NHẬN BẢNG BÁO GIÁ
+        </span>
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+          Gửi lúc: ${formattedDate} ${timeStr}
+        </span>
+      </div>
+      <button type="button" onclick="closeWebQuotationRequestDrawer()" style="background: none; border: none; color: var(--muted-foreground); cursor: pointer; padding: 4px; display: flex; align-items: center;" onmouseover="this.style.color='#ffffff'" onmouseout="this.style.color='var(--muted-foreground)'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- BODY FORM -->
+    <form onsubmit="submitWebQuotationRequest(event)" style="flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
+      <div style="padding: 20px; display: flex; flex-direction: column; gap: 16px; flex: 1;">
+        <div class="form-group">
+          <label class="form-label">Họ và tên người liên hệ</label>
+          <input type="text" id="web-req-fullname" class="form-input" value="${parsed.fullName}" readonly style="background: var(--muted); cursor: default; font-weight: 500;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Số điện thoại (Zalo)</label>
+          <input type="text" id="web-req-phone" class="form-input" value="${parsed.phone}" readonly style="background: var(--muted); cursor: default; font-family: var(--font-dm-mono); color: var(--primary); font-weight: 500;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mô hình kinh doanh</label>
+          <input type="text" id="web-req-model" class="form-input" value="${parsed.businessModel}" readonly style="background: var(--muted); cursor: default;">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Mặt hàng cần báo giá</label>
+          <textarea id="web-req-items" class="form-textarea" rows="4" readonly style="background: var(--muted); cursor: default; resize: none; line-height: 1.5;">${parsed.items}</textarea>
+        </div>
+      </div>
+
+      <!-- FOOTER SUBMIT -->
+      <div style="padding: 16px 20px; border-top: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--secondary, #1a1e26); display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="btn-cancel" onclick="closeWebQuotationRequestDrawer()" style="padding: 9px 16px; font-size: 13px;">
+          Đóng
+        </button>
+        <button type="submit" class="btn-primary" style="padding: 9px 18px; font-size: 13px; font-weight: 600;">
+          ${Icons.plus} Tạo bảng báo giá
+        </button>
+      </div>
+    </form>
+  `;
+
+  overlay.classList.add('active');
+  drawer.classList.add('open');
+}
+
+function closeWebQuotationRequestDrawer() {
+  const drawer = document.getElementById('web-quote-req-drawer');
+  const overlay = document.getElementById('web-quote-req-overlay');
+  if (drawer) drawer.classList.remove('open');
+  if (overlay) overlay.classList.remove('active');
+}
+
+async function submitWebQuotationRequest(e) {
+  e.preventDefault();
+
+  const reqData = window.currentWebQuotationRequest || {};
+  const fullName = (document.getElementById('web-req-fullname')?.value || reqData.fullName || '').trim();
+  const phone = (document.getElementById('web-req-phone')?.value || reqData.phone || '').trim();
+
+  // Ghép ghi chú dạng: "Việt - 0989643294"
+  const noteStr = [fullName, phone].filter(Boolean).join(' - ');
+
+  // Tìm tên khách hàng mặc định CUS-0008 trong db.customers (fallback về 'Khách Lẻ' nếu chưa tải)
+  const retailCust = (db.customers || []).find(c => String(c.id).trim().toUpperCase() === 'CUS-0008');
+  const defaultCustomerName = retailCust ? retailCust.name : 'Khách Lẻ';
+
+  closeWebQuotationRequestDrawer();
+
+  // Điều hướng sang form thêm mới bảng báo giá (giữ nguyên mặc định ngày lập, ngày bắt đầu, ngày kết thúc, trạng thái)
+  await navigate('quotations', 'add');
+
+  // Gán khách hàng mặc định và ghi chú sau khi initFormData đã khởi tạo form mới
+  if (state.view === 'quotations' && state.mode === 'add' && state.formData) {
+    state.formData.customer = defaultCustomerName;
+    state.formData.notes = noteStr;
+    render();
+  }
 }

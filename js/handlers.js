@@ -1533,6 +1533,29 @@ async function handleCustomerSelectInOrder(customerName) {
   render();
 }
 
+function handleNotificationClick(notifId, targetView, itemId) {
+  markNotifIdAsRead(notifId);
+
+  const dropdown = document.getElementById('notif-dropdown');
+  if (dropdown) dropdown.classList.remove('open');
+
+  closeNotificationHistory();
+
+  // Tìm bản ghi thông báo đầy đủ trong db.notifications
+  const notifObj = (db.notifications || []).find(n => String(n.id) === String(notifId));
+
+  // Nếu là yêu cầu nhận bảng báo giá từ web -> Mở Drawer form yêu cầu
+  if (notifObj && notifObj.type === 'quotations_web_require') {
+    openWebQuotationRequestDrawer(notifObj);
+    return;
+  }
+
+  // Các loại thông báo khác giữ nguyên luồng cũ
+  if (targetView && itemId && targetView !== 'null' && itemId !== 'null') {
+    navigate(targetView, 'view', itemId);
+  }
+}
+
 function getSalesAnalyticsData() {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
