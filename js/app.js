@@ -199,6 +199,39 @@ window.addEventListener('beforeunload', function (e) {
   }
 });
 
+let isStatusBarOverlayConfigured = false;
+
+async function syncAppThemeWithMobile(theme) {
+  const isLight = theme === 'light';
+  const bgColor = isLight ? '#f4f5f7' : '#0c0e11';
+
+  // 1. Chỉ cập nhật attribute nếu chưa khớp để tránh kích hoạt lặp MutationObserver
+  if (document.documentElement.getAttribute('data-theme') !== theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+  
+  document.documentElement.style.backgroundColor = bgColor;
+  if (document.body) {
+    document.body.style.backgroundColor = bgColor;
+  }
+
+  // 2. Gọi Capacitor StatusBar Native
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
+    const { StatusBar } = window.Capacitor.Plugins;
+    try {
+      if (!isStatusBarOverlayConfigured) {
+        await StatusBar.setOverlaysWebView({ overlay: true });
+        isStatusBarOverlayConfigured = true;
+      }
+      await StatusBar.setStyle({
+        style: isLight ? 'LIGHT' : 'DARK'
+      });
+    } catch (err) {
+      console.error('StatusBar error:', err);
+    }
+  }
+}
+
 // 2. Lắng nghe phím tắt bàn phím
 document.addEventListener('keydown', function (e) {
   // Thao tác bấm ESC để đóng Form Thông báo / Form Lịch sử
@@ -283,6 +316,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }, { passive: true });
   }
+
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  setTimeout(() => syncAppThemeWithMobile(currentTheme), 50);
+
+  // Tự động lắng nghe mỗi khi bấm nút mặt trăng làm thay đổi thuộc tính data-theme trên <html>
+  const themeWatcher = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.attributeName === 'data-theme') {
+        const updatedTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        syncAppThemeWithMobile(updatedTheme);
+      }
+    }
+  });
+
+  themeWatcher.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme']
+  });
 
   await fetchDataFromSupabase();
   subscribeAppRealtimeChanges();

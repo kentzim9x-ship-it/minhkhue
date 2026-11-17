@@ -38,57 +38,40 @@ function checkModulePermission(module) {
   return false;
 }
 
-async function handleLogin(e) {
-  e.preventDefault();
-  const un = document.getElementById('login-username').value.trim().toLowerCase();
-  const pw = document.getElementById('login-password').value;
-  const remember = document.getElementById('login-remember').checked;
-  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('userinfo')
-      .select('*')
-      .eq('username', un)
-      .eq('password', pw);
-
-    if (error) throw error;
-
-    if (data && data.length > 0) {
-      const foundUser = data[0];
-      const session = { isLoggedIn: true, currentUser: foundUser, remember };
-      localStorage.setItem('app_session', JSON.stringify(session));
-
-      // XỬ LÝ GHI NHỚ ĐĂNG NHẬP & THEME:
-      if (remember) {
-        localStorage.setItem('remembered_user', JSON.stringify({
-          username: un,
-          password: pw,
-          remember: true,
-          theme: currentTheme
-        }));
-      } else {
-        localStorage.removeItem('remembered_user');
-        sessionStorage.setItem('app_session_theme', currentTheme);
-      }
-
-      document.querySelector('.app-container').style.display = 'flex';
-      updateUserInfoUI();
-      navigate('dashboard', 'list');
-    } else {
-      document.getElementById('login-error').style.display = 'block';
+// HÀM QUÉT VÀ DỌN SẠCH MỌI LỚP PHỦ MỜ (BLUR / MODAL / OVERLAY)
+function forceClearAllOverlays() {
+  // 1. Ẩn tất cả các phần tử trực tiếp trong body ngoại trừ app-container và login-container
+  Array.from(document.body.children).forEach(el => {
+    const id = el.id || '';
+    const tag = el.tagName.toLowerCase();
+    if (
+      !el.classList.contains('app-container') &&
+      id !== 'login-container' &&
+      tag !== 'script' &&
+      tag !== 'style'
+    ) {
+      el.style.display = 'none';
+      el.classList.remove('active', 'show', 'open', 'visible');
     }
-  } catch (err) {
-    console.error('Lỗi truy vấn đăng nhập:', err);
-    showAlert('Không thể kết nối đến máy chủ xác thực.', 'Lỗi kết nối');
-  }
-}
+  });
 
-function handleLogout() {
-  localStorage.removeItem('app_session');
-  // Chuyển URL trình duyệt thành /minhkhue/login và reload lại trang
-  window.history.pushState({}, '', `${BASE_PATH}/login`);
-  location.reload();
+  // 2. Quét mọi phần tử bên trong app-container có class overlay/backdrop/modal đang mở
+  document.querySelectorAll(
+    '.overlay, .backdrop, .sidebar-overlay, .mobile-overlay, [class*="overlay"], [class*="backdrop"], [id*="modal"]'
+  ).forEach(el => {
+    if (el.id !== 'login-container') {
+      el.style.display = 'none';
+      el.classList.remove('active', 'show', 'open', 'visible');
+    }
+  });
+
+  // 3. Đặt lại trạng thái trên body và html
+  document.body.className = document.body.className
+    .replace(/\b(modal-open|mobile-menu-open|sidebar-open|menu-open|overflow-hidden|blurred)\b/g, '')
+    .trim();
+  document.body.style.overflow = '';
+  document.body.style.filter = 'none';
+  document.documentElement.style.filter = 'none';
 }
 
 function updateUserInfoUI() {
@@ -200,6 +183,9 @@ function initTheme() {
 
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeButtonUI(savedTheme);
+
+  // Gọi đồng bộ header điện thoại ngay khi khởi tạo theme
+  if (typeof syncAppThemeWithMobile === 'function') syncAppThemeWithMobile(savedTheme);
 }
 
 function toggleTheme() {
@@ -219,6 +205,9 @@ function toggleTheme() {
   }
 
   updateThemeButtonUI(newTheme);
+
+  // Gọi đồng bộ header điện thoại ngay khi khởi tạo theme
+  if (typeof syncAppThemeWithMobile === 'function') syncAppThemeWithMobile(savedTheme);
 }
 
 function updateThemeButtonUI(theme) {

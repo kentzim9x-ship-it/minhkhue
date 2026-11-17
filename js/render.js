@@ -2,182 +2,425 @@
 // 9. RENDER GIAO DIỆN & CÁC TRANG (VIEWS)
 // ==========================================
 
-// GIAO DIỆN ĐĂNG NHẬP SANG TRỌNG
 function renderLoginForm(container) {
   const savedCredsRaw = localStorage.getItem('remembered_user');
   const savedCreds = savedCredsRaw ? JSON.parse(savedCredsRaw) : { username: '', password: '', remember: false };
-  const bannerImg = 'https://res.cloudinary.com/puyb3jyd/image/upload/v1792599496/BeautyPlus-OBJECT-REMOVER-1792599386313.jpg';
 
   container.innerHTML = `
     <style>
-      input:-webkit-autofill,
-      input:-webkit-autofill:hover, 
-      input:-webkit-autofill:focus, 
-      input:-webkit-autofill:active {
-          -webkit-text-fill-color: #ffffff !important;
-          -webkit-box-shadow: 0 0 0px 1000px rgba(0, 0, 0, 0.3) inset !important;
-          transition: background-color 5000s ease-in-out 0s !important;
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600&display=swap');
+
+      #login-container {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background-color: #ffffff;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .trim-login-screen {
+        position: relative;
+        min-height: 100dvh;
+        width: 100%;
+        background-color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: calc(env(safe-area-inset-top, 20px) + 16px) 28px calc(env(safe-area-inset-bottom, 20px) + 24px) 28px;
+        box-sizing: border-box;
+        overflow: hidden;
+        font-family: var(--font-jost, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      }
+
+      /* CÁC KHỐI VUÔNG BO GÓC TRÔI NỔI Ở NỀN */
+      /* CÁC KHỐI VUÔNG BO GÓC TRÔI NỔI Ở NỀN */
+      .bg-floating-tile {
+        position: absolute;
+        background-color: #f6f6f7;
+        border-radius: 28px;
+        pointer-events: none;
+        z-index: 0;
+        /* Thêm hiệu ứng chuyển động mượt (spring nhẹ) */
+        transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    background-color 0.4s ease,
+                    box-shadow 0.4s ease;
+      }
+      .tile-1 {
+        width: 150px;
+        height: 150px;
+        top: 22%;
+        right: -35px;
+        transform: rotate(16deg);
+      }
+      .tile-2 {
+        width: 140px;
+        height: 140px;
+        top: 40%;
+        left: -45px;
+        transform: rotate(-14deg);
+      }
+      .tile-3 {
+        width: 155px;
+        height: 155px;
+        bottom: 24%;
+        right: -30px;
+        transform: rotate(18deg);
+      }
+
+      /* HIỆU ỨNG HOVER / PHẢN HỒI KHI BẤM ĐĂNG NHẬP */
+      .trim-login-screen.is-animating .bg-floating-tile {
+        background-color: #ececef;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.04);
+      }
+      .trim-login-screen.is-animating .tile-1 {
+        transform: translate(-18px, -16px) rotate(28deg) scale(1.08);
+      }
+      .trim-login-screen.is-animating .tile-2 {
+        transform: translate(20px, -12px) rotate(-26deg) scale(1.08);
+      }
+      .trim-login-screen.is-animating .tile-3 {
+        transform: translate(-16px, 14px) rotate(30deg) scale(1.06);
+      }
+
+      .trim-brand-header {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+      }
+
+      .trim-brand-logo {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 24px;
+        font-weight: 600;
+        color: #111111;
+        letter-spacing: -0.02em;
+      }
+
+      .trim-login-body {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        max-width: 360px;
+        margin: auto auto 12px auto;
+        padding-top: 40px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .trim-hero-title {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 32px;
+        font-weight: 500;
+        line-height: 1.22;
+        color: #111111;
+        text-align: center;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.02em;
+      }
+
+      .trim-hero-subtitle {
+        font-size: 13.5px;
+        color: #71717a;
+        text-align: center;
+        margin: 0 0 32px 0;
+      }
+
+      .trim-input-group {
+        position: relative;
+        margin-bottom: 12px;
+      }
+
+      .trim-input {
+        width: 100% !important;
+        height: 50px !important;
+        padding: 0 46px 0 20px !important;
+        background-color: #ebebee !important;
+        border: 1px solid #e2e2e6 !important;
+        border-radius: 22px !important; /* Đổi số px theo độ bo bạn muốn */
+        -webkit-appearance: none;
+        appearance: none;
+        color: #111111 !important;
+        font-size: 14.5px !important;
+        outline: none;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+      }
+
+      .trim-submit-btn {
+        width: 100% !important;
+        height: 52px !important;
+        background-color: #1c1c1e !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 22px !important; /* Đổi số px tại đây (vd: 14px, 16px hoặc 999px) */
+        -webkit-appearance: none;
+        appearance: none;
+        font-size: 15px !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        transition: transform 0.15s ease, background-color 0.2s ease, opacity 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .trim-input::placeholder {
+        color: #71717a;
+      }
+
+      .trim-input:focus {
+        background-color: #ffffff;
+        border-color: #18181b;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+      }
+
+      .trim-input:-webkit-autofill,
+      .trim-input:-webkit-autofill:hover,
+      .trim-input:-webkit-autofill:focus {
+        -webkit-text-fill-color: #111111 !important;
+        -webkit-box-shadow: 0 0 0px 1000px #ebebee inset !important;
+        transition: background-color 5000s ease-in-out 0s;
+      }
+
+      .trim-eye-btn {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #71717a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        border-radius: 50%;
+        transition: color 0.2s;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .trim-eye-btn:hover {
+        color: #111111;
+      }
+
+      .trim-remember-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 4px 8px 22px 8px;
+      }
+
+      .trim-checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13.5px;
+        color: #52525b;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .trim-checkbox-label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #18181b;
+        cursor: pointer;
+        margin: 0;
+      }
+
+      .trim-submit-btn {
+        width: 100%;
+        height: 52px;
+        background-color: #1c1c1e;
+        color: #ffffff;
+        border: none;
+        border-radius: 18px; /* Đổi từ 999px sang 12px, 14px hoặc 16px */
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        transition: transform 0.15s ease, background-color 0.2s ease, opacity 0.2s ease;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .trim-submit-btn:hover:not(:disabled) {
+        background-color: #000000;
+      }
+
+      .trim-submit-btn:active:not(:disabled) {
+        transform: scale(0.985);
+      }
+
+      .trim-submit-btn:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+      }
+
+      .trim-footer-note {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        font-size: 11.5px;
+        color: #a1a1aa;
+        margin-top: 16px;
+      }
+
+      /* LỚP PHỦ LOADING 4 CUNG TRÒN CO GIÃN GIỐNG VIDEO MẪU */
+      .login-loading-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        background-color: rgba(255, 255, 255, 0.88);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        animation: fadeInLoader 0.18s ease-out;
+      }
+
+      @keyframes fadeInLoader {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      .arc-spinner-svg {
+        width: 92px;
+        height: 92px;
+        animation: arcSpinnerRotate 1.6s linear infinite;
+      }
+
+      .arc-spinner-segment {
+        fill: none;
+        stroke: #f25c05; /* Màu cam chuẩn theo video */
+        stroke-width: 4.5;
+        stroke-linecap: round;
+        /* Chu vi r=26 là ~163.36 => chia 4 phần mỗi phần ~40.84 */
+        stroke-dasharray: 31 132.36;
+        animation: arcSegmentMorph 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+      }
+
+      /* Xoay lệch góc 90 độ cho 4 cung tròn */
+      .arc-seg-1 { transform: rotate(-38deg); transform-origin: 32px 32px; }
+      .arc-seg-2 { transform: rotate(52deg);  transform-origin: 32px 32px; }
+      .arc-seg-3 { transform: rotate(142deg); transform-origin: 32px 32px; }
+      .arc-seg-4 { transform: rotate(232deg); transform-origin: 32px 32px; }
+
+      /* Xoay đều toàn bộ vòng tròn */
+      @keyframes arcSpinnerRotate {
+        0%   { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* Co 4 cung thành 4 chấm tròn nhỏ rồi giãn dài trở lại */
+      @keyframes arcSegmentMorph {
+        0%, 15% {
+          stroke-dasharray: 30 133.36;
+          stroke-dashoffset: 0;
+        }
+        50%, 60% {
+          stroke-dasharray: 0.1 163.26;
+          stroke-dashoffset: -15;
+        }
+        90%, 100% {
+          stroke-dasharray: 30 133.36;
+          stroke-dashoffset: 0;
+        }
       }
     </style>
 
-    <div style="
-      min-height: 100vh; 
-      width: 100%;
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-      padding: 20px; 
-      font-family: var(--font-jost, sans-serif);
-      position: relative;
-      overflow: hidden;
-      box-sizing: border-box;
-      background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('${bannerImg}') center/cover no-repeat;
-    ">
+    <div class="trim-login-screen">
+      <!-- Lớp phủ hiệu ứng Loading khi ấn Đăng nhập -->
+      <div id="login-loading-overlay" class="login-loading-overlay">
+        <svg class="arc-spinner-svg" viewBox="0 0 64 64">
+          <circle class="arc-spinner-segment arc-seg-1" cx="32" cy="32" r="26"></circle>
+          <circle class="arc-spinner-segment arc-seg-2" cx="32" cy="32" r="26"></circle>
+          <circle class="arc-spinner-segment arc-seg-3" cx="32" cy="32" r="26"></circle>
+          <circle class="arc-spinner-segment arc-seg-4" cx="32" cy="32" r="26"></circle>
+        </svg>
+      </div>
 
-      <!-- FORM ĐĂNG NHẬP CĂN GIỮA MÀN HÌNH -->
-      <div style="
-        width: 100%;
-        max-width: 380px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: relative;
-        z-index: 1;
-      ">
+      <!-- 3 khối vuông bo góc nghiêng nhẹ ở nền -->
+      <div class="bg-floating-tile tile-1"></div>
+      <div class="bg-floating-tile tile-2"></div>
+      <div class="bg-floating-tile tile-3"></div>
 
-        <form onsubmit="handleLogin(event)" style="width: 100%; display: flex; flex-direction: column; gap: 16px;">
-          
-          <!-- Username Input -->
-          <div style="position: relative;">
-            <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.7); display: flex;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-            </span>
+      <!-- Tên hệ thống góc trên trái -->
+      <div class="trim-brand-header">
+        <span class="trim-brand-logo">Minh Khuê</span>
+      </div>
+
+      <!-- Cụm tiêu đề & Form đăng nhập -->
+      <div class="trim-login-body">
+        <h1 class="trim-hero-title">Đăng Nhập</h1>
+        <p class="trim-hero-subtitle">Hệ thống quản lý bán hàng &amp; kho vận</p>
+
+        <form onsubmit="handleLogin(event)">
+          <!-- Username -->
+          <div class="trim-input-group">
             <input 
               type="text" 
               id="login-username" 
+              class="trim-input"
               required 
               value="${savedCreds.remember ? (savedCreds.username || '') : ''}"
-              placeholder="Nhập tên đăng nhập" 
-              style="
-                width: 100%; 
-                padding: 13px 16px 13px 48px; 
-                background: rgba(0, 0, 0, 0.3); 
-                border: 1px solid rgba(255, 255, 255, 0.25); 
-                border-radius: 25px; 
-                color: #ffffff; 
-                outline: none; 
-                font-size: 14px; 
-                backdrop-filter: blur(8px);
-                transition: all 0.2s ease;
-                box-sizing: border-box;
-              "
-              onfocus="this.style.borderColor='#f0a030'; this.style.background='rgba(0,0,0,0.45)';"
-              onblur="this.style.borderColor='rgba(255, 255, 255, 0.25)'; this.style.background='rgba(0,0,0,0.3)';"
+              placeholder="Tên đăng nhập"
+              autocomplete="username"
             >
           </div>
 
-          <!-- Password Input kèm Icon Mắt -->
-          <div style="position: relative;">
-            <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.7); display: flex;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-            </span>
+          <!-- Password + Icon Mắt -->
+          <div class="trim-input-group">
             <input 
               type="password" 
               id="login-password" 
+              class="trim-input"
               required 
               value="${savedCreds.remember ? (savedCreds.password || '') : ''}"
-              placeholder="Nhập mật khẩu" 
-              style="
-                width: 100%; 
-                padding: 13px 48px 13px 48px; 
-                background: rgba(0, 0, 0, 0.3); 
-                border: 1px solid rgba(255, 255, 255, 0.25); 
-                border-radius: 25px; 
-                color: #ffffff; 
-                outline: none; 
-                font-size: 14px; 
-                backdrop-filter: blur(8px);
-                transition: all 0.2s ease;
-                box-sizing: border-box;
-              "
-              onfocus="this.style.borderColor='#f0a030'; this.style.background='rgba(0,0,0,0.45)';"
-              onblur="this.style.borderColor='rgba(255, 255, 255, 0.25)'; this.style.background='rgba(0,0,0,0.3)';"
+              placeholder="Mật khẩu"
+              autocomplete="current-password"
             >
-            <!-- Toggle Password Icon Button -->
             <span 
               id="toggle-password-btn"
+              class="trim-eye-btn"
               onclick="togglePasswordVisibility()" 
-              style="
-                position: absolute; 
-                right: 18px; 
-                top: 50%; 
-                transform: translateY(-50%); 
-                cursor: pointer; 
-                color: rgba(255, 255, 255, 0.7); 
-                display: flex; 
-                align-items: center;
-                transition: color 0.2s;
-              "
-              onmouseover="this.style.color='#f0a030'"
-              onmouseout="this.style.color='rgba(255, 255, 255, 0.7)'"
               title="Ẩn/Hiện mật khẩu"
             >
-              <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
               </svg>
             </span>
           </div>
 
-          <!-- Nút tích Ghi nhớ đăng nhập -->
-          <div style="display: flex; align-items: center; justify-content: flex-start; padding: 0 4px; margin-left: 12px;">
-            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255, 255, 255, 0.85); cursor: pointer; user-select: none;">
+          <!-- Ghi nhớ đăng nhập -->
+          <div class="trim-remember-row">
+            <label class="trim-checkbox-label">
               <input 
                 type="checkbox" 
                 id="login-remember" 
-                ${savedCreds.remember ? 'checked' : ''} 
-                style="cursor: pointer; accent-color: #f0a030; width: 16px; height: 16px;"
+                ${savedCreds.remember ? 'checked' : ''}
               >
               Ghi nhớ đăng nhập
             </label>
           </div>
 
           <!-- Thông báo lỗi -->
-          <div id="login-error" style="color: #f87171; font-size: 12px; display: none; background: rgba(0,0,0,0.45); border: 1px solid rgba(248, 113, 113, 0.3); padding: 8px 12px; border-radius: 20px; text-align: center;">
+          <div id="login-error" style="color: #dc2626; font-size: 12.5px; display: none; background: #fef2f2; border: 1px solid #fecaca; padding: 10px 14px; border-radius: 16px; text-align: center; margin-bottom: 16px;">
             Tài khoản hoặc mật khẩu không chính xác!
           </div>
 
           <!-- Nút Đăng Nhập -->
-          <button 
-            type="submit" 
-            style="
-              width: 100%; 
-              padding: 13px; 
-              margin-top: 4px; 
-              background: #d9534f; 
-              border: none; 
-              border-radius: 25px !important;; 
-              color: #ffffff; 
-              font-family: var(--font-jost, sans-serif); 
-              font-size: 15px; 
-              font-weight: 600; 
-              cursor: pointer; 
-              transition: all 0.2s ease;
-              box-shadow: 0 4px 15px rgba(217, 83, 79, 0.4);
-            "
-            onmouseover="this.style.background='#c9302c'; this.style.transform='translateY(-1px)';"
-            onmouseout="this.style.background='#d9534f'; this.style.transform='none';"
-          >
+          <button type="submit" id="login-submit-btn" class="trim-submit-btn">
             Đăng Nhập
           </button>
         </form>
+      </div>
 
+      <div class="trim-footer-note">
+        Minh Khue Sales &amp; Inventory Management
       </div>
     </div>
   `;
@@ -188,9 +431,11 @@ function render() {
   const c = document.getElementById('app-content');
   const session = getAuthSession();
 
-  // CHƯA ĐĂNG NHẬP: Hiển thị Form Login & Đẩy URL về /minhkhue/login
+  // CHƯA ĐĂNG NHẬP: Ẩn App chính, dọn dẹp trạng thái Mobile Menu & Hiển thị Form Login
   if (!session.isLoggedIn) {
+    document.body.classList.remove('mobile-menu-open', 'sidebar-open');
     if (appContainer) appContainer.style.display = 'none';
+
     let loginBox = document.getElementById('login-container');
     if (!loginBox) {
       loginBox = document.createElement('div');
@@ -198,8 +443,8 @@ function render() {
       document.body.appendChild(loginBox);
     }
 
-    // Tự động thay đổi URL trên thanh địa chỉ về /minhkhue/login nếu đang ở URL khác
-    const targetLoginUrl = `${BASE_PATH}/login`;
+    const basePath = typeof BASE_PATH !== 'undefined' ? BASE_PATH : '';
+    const targetLoginUrl = `${basePath}/login`;
     if (window.location.pathname !== targetLoginUrl) {
       window.history.pushState({ view: 'login' }, '', targetLoginUrl);
     }
@@ -2846,13 +3091,13 @@ function renderReportSales(c) {
 
   if (!isDetail) {
     // Với báo cáo tổng hợp: Có ít nhất 1 đơn bán hàng phù hợp
-    hasData = filteredOrdersForDateRange.some(o => 
+    hasData = filteredOrdersForDateRange.some(o =>
       !selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())
     );
   } else {
     // Với báo cáo chi tiết: Phải chọn Khách hàng và có ít nhất 1 đơn bán hàng của khách đó
     if (selectedCustomer) {
-      hasData = filteredOrdersForDateRange.some(o => 
+      hasData = filteredOrdersForDateRange.some(o =>
         o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
       );
     }

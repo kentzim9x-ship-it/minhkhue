@@ -131,6 +131,12 @@ async function navigate(view, mode = 'list', itemId = null, extraState = null) {
 }
 
 async function handleRouteChange() {
+  const session = getAuthSession();
+  if (!session.isLoggedIn) {
+    render();
+    return;
+  }
+
   if (hasUnsavedFormData()) {
     const confirmLeave = await showConfirm(
       'Bạn đang nhập dữ liệu dở dang. Nếu quay lại, toàn bộ dữ liệu đang nhập sẽ bị mất!',
@@ -216,6 +222,118 @@ async function handleRouteChange() {
       const contentBox = document.getElementById('app-content');
       if (contentBox) contentBox.scrollTop = 0;
     }
+  }
+}
+
+// BẬT / TẮT HIỆU ỨNG KHỐI NỀN VÀ LOADING
+function triggerLoginTilesHover(active) {
+  const screen = document.querySelector('.trim-login-screen');
+  if (screen) {
+    screen.classList.toggle('is-animating', active);
+  }
+}
+
+function setLoginLoading(isLoading) {
+  const loader = document.getElementById('login-loading-overlay');
+  const submitBtn = document.getElementById('login-submit-btn');
+  if (loader) {
+    loader.style.display = isLoading ? 'flex' : 'none';
+  }
+  if (submitBtn) {
+    submitBtn.disabled = isLoading;
+  }
+  if (!isLoading) {
+    triggerLoginTilesHover(false);
+  }
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const errorEl = document.getElementById('login-error');
+  if (errorEl) errorEl.style.display = 'none';
+
+  const un = document.getElementById('login-username').value.trim().toLowerCase();
+  const pw = document.getElementById('login-password').value;
+  const remember = document.getElementById('login-remember').checked;
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+
+  const submitBtn = document.getElementById('login-submit-btn');
+  if (submitBtn) submitBtn.disabled = true;
+
+  // Bước 1: Kích hoạt hiệu ứng hover cho các khối hộp ở background trước
+  triggerLoginTilesHover(true);
+
+  // Chờ 450ms để hoàn tất nhịp chuyển động của các khối nền rồi mới hiện vòng tròn loading
+  await new Promise(resolve => setTimeout(resolve, 450));
+
+  // Bước 2: Hiển thị vòng tròn loading
+  setLoginLoading(true);
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('userinfo')
+      .select('*')
+      .eq('username', un)
+      .eq('password', pw);
+
+    if (error) throw error;
+
+    if (data && data.length > 0) {
+      const foundUser = data[0];
+      const session = { isLoggedIn: true, currentUser: foundUser, remember };
+      localStorage.setItem('app_session', JSON.stringify(session));
+
+      if (remember) {
+        localStorage.setItem('remembered_user', JSON.stringify({
+          username: un,
+          password: pw,
+          remember: true,
+          theme: currentTheme
+        }));
+      } else {
+        localStorage.removeItem('remembered_user');
+        sessionStorage.setItem('app_session_theme', currentTheme);
+      }
+
+      document.querySelector('.app-container').style.display = 'flex';
+      updateUserInfoUI();
+
+      await Promise.resolve(navigate('dashboard', 'list'));
+
+      const loginBox = document.getElementById('login-container');
+      if (loginBox) loginBox.remove();
+      forceClearAllOverlays();
+    } else {
+      setLoginLoading(false);
+      if (errorEl) errorEl.style.display = 'block';
+    }
+  } catch (err) {
+    setLoginLoading(false);
+    console.error('Lỗi truy vấn đăng nhập:', err);
+    showAlert('Không thể kết nối đến máy chủ xác thực.', 'Lỗi kết nối');
+  }
+}
+
+function handleLogout() {
+  forceClearAllOverlays();
+
+  localStorage.removeItem('app_session');
+  sessionStorage.clear();
+
+  if (typeof state !== 'undefined') {
+    state.view = 'dashboard';
+    state.mode = 'list';
+    state.formData = null;
+    state.search = '';
+    state.filter = 'all';
+    state.page = 1;
+  }
+
+  const basePath = typeof BASE_PATH !== 'undefined' ? BASE_PATH : '';
+  window.history.pushState({ view: 'login' }, '', `${basePath}/login`);
+
+  if (typeof render === 'function') {
+    render();
   }
 }
 
