@@ -403,9 +403,15 @@ function subscribeRealtimeNotifications() {
     .channel('public:notifications')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
       if (payload.new) {
+        const newNotif = payload.new;
         if (!Array.isArray(db.notifications)) db.notifications = [];
-        db.notifications.unshift(payload.new);
+        db.notifications.unshift(newNotif);
         updateNotificationUI();
+
+        const currentUser = getAuthSession()?.user;
+        if (!newNotif.user_id || newNotif.user_id === currentUser?.id) {
+          triggerIOSBannerNotification(newNotif);
+        }
       }
     })
     .subscribe();
@@ -1023,5 +1029,64 @@ async function submitWebQuotationRequest(e) {
     state.formData.customer = defaultCustomerName;
     state.formData.notes = noteStr;
     render();
+  }
+}
+
+async function initIOSLocalNotifications() {
+  // Chỉ chạy khi đang mở trên App iOS/Android qua Capacitor
+  if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
+
+  const { LocalNotifications } = window.Capacitor.Plugins;
+  if (!LocalNotifications) return;
+
+  try {
+    const permStatus = await LocalNotifications.checkPermissions();
+    if (permStatus.display !== 'granted') {
+      await LocalNotifications.requestPermissions();
+    }
+
+    // Lắng nghe sự kiện khi người dùng bấm vào banner thông báo trên màn hình khóa/Notification Center
+    LocalNotifications.addListener('localNotificationActionPerformed', (notification) => {
+      const extra = notification.notification?.extra || {};
+      // Điều hướng thẳng tới chứng từ tương ứng (nếu có)
+      if (extra.targetView && extra.itemId && typeof navigate === 'function') {
+        navigate(extra.targetView, 'view', extra.itemId);
+      }
+    });
+  } catch (err) {
+    console.warn('Lỗi khởi tạo thông báo iOS:', err);
+  }
+}
+
+async function triggerIOSBannerNotification(notifRecord) {
+  if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
+
+  const { LocalNotifications } = window.Capacitor.Plugins;
+  if (!LocalNotifications) return;
+
+  try {
+    const permStatus = await LocalNotifications.checkPermissions();
+    if (permStatus.display !== 'granted') return;
+
+    // Tạo ID số nguyên dương (iOS yêu cầu id là số nguyên 32-bit)
+    const notifId = Math.floor(Date.now() % 2147483647);
+
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          id: notifId,
+          title: notifRecord.title || 'MINHKHUE - Thông báo mới',
+          body: notifRecord.message || notifRecord.content || 'Bạn có cập nhật mới trên hệ thống.',
+          schedule: { at: new Date(Date.now() + 200) }, // Hiển thị ngay lập tức sau 0.2s
+          sound: 'default',
+          extra: {
+            targetView: notifRecord.target_view || notifRecord.module || '',
+            itemId: notifRecord.item_id || notifRecord.record_id || ''
+          }
+        }
+      ]
+    });
+  } catch (err) {
+    console.error('Không thể gửi thông báo iOS:', err);
   }
 }
