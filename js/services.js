@@ -954,7 +954,7 @@ function openWebQuotationRequestDrawer(notifObj) {
 
   drawer.innerHTML = `
     <!-- HEADER -->
-    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
+    <div style="flex-shrink: 0; padding: 16px 20px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.1)); display: flex; justify-content: space-between; align-items: center; background: var(--secondary, #1a1e26);">
       <div style="display: flex; flex-direction: column; gap: 2px;">
         <span style="font-family: var(--font-dm-mono); font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--foreground);">
           YÊU CẦU NHẬN BẢNG BÁO GIÁ
@@ -969,8 +969,8 @@ function openWebQuotationRequestDrawer(notifObj) {
     </div>
 
     <!-- BODY FORM -->
-    <form onsubmit="submitWebQuotationRequest(event)" style="flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
-      <div style="padding: 20px; display: flex; flex-direction: column; gap: 16px; flex: 1;">
+    <form onsubmit="submitWebQuotationRequest(event)" style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; margin: 0;">
+      <div style="padding: 20px; display: flex; flex-direction: column; gap: 16px; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;">
         <div class="form-group">
           <label class="form-label">Họ và tên người liên hệ</label>
           <input type="text" id="web-req-fullname" class="form-input" value="${parsed.fullName}" readonly style="background: var(--muted); cursor: default; font-weight: 500;">
@@ -992,10 +992,13 @@ function openWebQuotationRequestDrawer(notifObj) {
         </div>
       </div>
 
-      <!-- FOOTER SUBMIT (Đã ẩn nút Đóng) -->
-      <div style="padding: 16px 20px; border-top: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--secondary, #1a1e26); display: flex; justify-content: flex-end;">
-        <button type="submit" class="btn-primary" style="padding: 9px 18px; font-size: 13px; font-weight: 600;">
-          ${Icons.plus} Tạo bảng báo giá
+      <!-- FOOTER BUTTON (Đồng bộ 100% style nút Xem lịch sử thông báo & an toàn trên iOS) -->
+      <div style="flex-shrink: 0; padding: 10px 20px calc(10px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border, rgba(255,255,255,0.1)); background: var(--card, #141821); box-sizing: border-box; width: 100%;">
+        <button 
+          type="submit" 
+          style="width: 100%; padding: 8px; background: rgba(240, 160, 48, 0.12); border: 1px solid rgba(240, 160, 48, 0.3); border-radius: 2px; color: #f0a030; font-family: var(--font-dm-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(240, 160, 48, 0.25)'" onmouseout="this.style.background='rgba(240, 160, 48, 0.12)'"
+        >
+          <span>Tạo bảng báo giá +</span>
         </button>
       </div>
     </form>
