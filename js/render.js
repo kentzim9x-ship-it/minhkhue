@@ -1035,6 +1035,7 @@ function renderQuotationsList(c) {
     { title: 'Mã Báo Giá', width: '30px', align: 'center' },
     { title: 'Ngày Lập Phiếu', width: '30px', align: 'center' },
     { title: 'Khách Hàng', width: '50px', align: 'center' },
+    { title: 'Ghi Chú', width: '50px', align: 'center' },
     { title: 'Ngày Bắt Đầu', width: '30px', align: 'center' },
     { title: 'Ngày Kết Thúc', width: '30px', align: 'center' },
     { title: 'Số Dòng', width: '20px', align: 'center' },
@@ -1058,7 +1059,8 @@ function renderQuotationsList(c) {
     <tr style="border-bottom: 1px solid var(--border);" class="hover-row" ondblclick="navigate('quotations', '${hasPermission ? 'edit' : 'view'}', '${q.id}')" onclick="navigate('quotations', 'view', '${q.id}')">
       <td data-label="Mã Báo Giá" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: left; color: var(--primary);">${q.id}</td>
       <td data-label="Ngày Lập" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${q.date || '—'}</td>
-      <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${q.customer}</td>      
+      <td data-label="Khách Hàng" style="padding: 12px 16px; font-size: 13px; font-weight: 500;">${q.customer}</td>
+      <td data-label="Ghi Chú" style="padding: 12px 16px; font-size: 12px; text-align: left; color: var(--muted-foreground);">${q.notes || '—'}</td>
       <td data-label="Ngày Bắt Đầu" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${q.validbegin || q.validBegin || '—'}</td>
       <td data-label="Ngày Kết Thúc" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center; color: var(--muted-foreground);">${q.validUntil}</td>
       <td data-label="Số Dòng" style="padding: 12px 16px; font-family: var(--font-dm-mono); font-size: 12px; text-align: center;">${(q.lineItems || []).length}</td>
@@ -2030,12 +2032,17 @@ function renderQuotationForm(c) {
               <span class="section-title">Thông tin báo giá</span>
             </div>
             <div class="section-body grid-3">
-              <div class="form-group" style="grid-column: span 2;">
-                <label class="form-label">Khách hàng *</label>
-                <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleCustomerSelectInQuotation(this.value)"'} required>
-                  <option value="">-- Chọn khách hàng --</option>
-                  ${customerOptions}
-                </select>
+              <div class="form-group">
+                  <label class="form-label">Khách hàng *</label>
+                  <input type="text" id="q-customer-input" list="q-customer-list" class="form-input" 
+                        placeholder="-- Chọn hoặc gõ tên/mã khách hàng --" 
+                        value="${(() => {
+      const c = state.customers.find(x => x.id === data.customer_id);
+      return c ? `${c.code} - ${c.name}` : (data.customer_name || '');
+    })()}" required>
+                  <datalist id="q-customer-list">
+                      ${state.customers.map(c => `<option value="${c.code} - ${c.name}" data-id="${c.id}"></option>`).join('')}
+                  </datalist>
               </div>
               <div class="form-group">
                 <label class="form-label">Ngày lập phiếu *</label>
@@ -2350,13 +2357,17 @@ function renderSalesOrderForm(c) {
               <span class="section-title">Thông tin đơn bán hàng</span>
             </div>
             <div class="section-body grid-3">
-              <div class="form-group" style="grid-column: span 2;">
-                <label class="form-label">Khách hàng *</label>
-                <select class="form-select" ${(isView || isEdit) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="handleCustomerSelectInOrder(this.value)"'} required>
-                  <option value="">-- Chọn khách hàng --</option>
-                  ${customerOptions}
-                </select>
-                ${d.quotationId ? `<div style="font-size: 11px; color: var(--primary); font-family: var(--font-dm-mono); margin-top: 4px;">✔ Đã tự động áp dụng Báo giá: ${d.quotationId}</div>` : ''}
+              <div class="form-group">
+                  <label class="form-label">Khách hàng *</label>
+                  <input type="text" id="so-customer-input" list="so-customer-list" class="form-input" 
+                        placeholder="-- Chọn hoặc gõ tên/mã khách hàng --" 
+                        value="${(() => {
+                            const c = state.customers.find(x => x.id === data.customer_id);
+                            return c ? `${c.code} - ${c.name}` : (data.customer_name || '');
+                        })()}" required>
+                  <datalist id="so-customer-list">
+                      ${state.customers.map(c => `<option value="${c.code} - ${c.name}" data-id="${c.id}"></option>`).join('')}
+                  </datalist>
               </div>
               <div class="form-group">
                 <label class="form-label">Mã kho (Xuất kho) *</label>
@@ -2564,11 +2575,16 @@ function renderReturnForm(c) {
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Tên khách hàng *</label>
-              <select class="form-select" ${(isView || isEdit || hasOrder) ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'customer\', this.value); render();"'} required>
-                <option value="">-- Chọn khách hàng --</option>
-                ${customerOptions}
-              </select>
+                <label class="form-label">Khách hàng *</label>
+                <input type="text" id="ret-customer-input" list="ret-customer-list" class="form-input" 
+                      placeholder="-- Chọn hoặc gõ tên/mã khách hàng --" 
+                      value="${(() => {
+                          const c = state.customers.find(x => x.id === data.customer_id);
+                          return c ? `${c.code} - ${c.name}` : (data.customer_name || '');
+                      })()}" required>
+                <datalist id="ret-customer-list">
+                    ${state.customers.map(c => `<option value="${c.code} - ${c.name}" data-id="${c.id}"></option>`).join('')}
+                </datalist>
             </div>
             <div class="form-group">
               <label class="form-label">Mã kho *</label>

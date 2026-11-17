@@ -1882,6 +1882,20 @@ async function exportQuotationToPDF() {
   const toDateVN = formatDateVN(d.validUntil || d.validuntil);
   const items = (d.lineItems || d.lineitems || []);
 
+  // Kiểm tra nếu khách hàng là CUS-0008 - Khách Lẻ -> Lấy tên hiển thị theo Ghi chú
+  const rawCust = (d.customer || '').trim();
+  const matchedCust = (db.customers || []).find(c =>
+    String(c.id || '').trim().toUpperCase() === 'CUS-0008' &&
+    (rawCust.toLowerCase() === (c.name || '').trim().toLowerCase() || rawCust.toUpperCase().includes('CUS-0008'))
+  );
+  const isKhachLe = rawCust.toUpperCase().includes('CUS-0008') ||
+    rawCust.toLowerCase() === 'khách lẻ' ||
+    Boolean(matchedCust);
+
+  const displayCustomer = (isKhachLe && (d.notes || '').trim())
+    ? d.notes.trim()
+    : rawCust;
+
   let totalQty = 0;
   let totalAmount = 0;
 
@@ -1962,7 +1976,7 @@ async function exportQuotationToPDF() {
 
     <table style="width: 100%; font-size: 10.5pt; margin-bottom: 8px; border-collapse: collapse; line-height: 1.5;">
       <tr>
-        <td style="width: 50%; padding: 1px 0; vertical-align: top;">Khách hàng: ${d.customer || ''}</td>
+        <td style="width: 50%; padding: 1px 0; vertical-align: top;">Khách hàng: ${displayCustomer}</td>
         <td style="width: 50%; padding: 1px 0; text-align: left; vertical-align: top;">Bảng báo giá: ${d.id || ''}</td>
       </tr>
       <tr>
