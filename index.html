@@ -2,10 +2,20 @@
 <html lang="vi" data-theme="light">
 
 <head>
+  <script>
+    // Tự động nhận diện: nếu chạy trên GitHub Pages (/minhkhue) thì set base là /minhkhue/, còn lại (iOS Capacitor / localhost) thì set là /
+    (function () {
+      const isGitHubPages = window.location.hostname.includes('github.io') && window.location.pathname.startsWith('/minhkhue');
+      const base = document.createElement('base');
+      base.href = isGitHubPages ? '/minhkhue/' : '/';
+      document.head.appendChild(base);
+    })();
+  </script>
+
   <meta charset="UTF-8">
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <link rel="icon" type="image/png" href="/minhkhue/assets/icon_web.png" />
+  <link rel="icon" type="image/png" href="assets/icon_web.png" />
   <title>MINHKHUE - LMS</title>
 
   <!-- Google Fonts -->

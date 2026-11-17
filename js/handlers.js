@@ -225,19 +225,6 @@ async function handleRouteChange() {
   }
 }
 
-function resolveCustomerNameFromInput(val) {
-  const raw = (val || '').trim();
-  if (!raw) return '';
-  const customers = db.customers || [];
-  // Tìm khớp theo định dạng "CUS-0008 - Khách Lẻ", mã "CUS-0008", hoặc tên "Khách Lẻ"
-  const matched = customers.find(c =>
-    `${c.id} - ${c.name}`.toLowerCase() === raw.toLowerCase() ||
-    (c.id || '').trim().toLowerCase() === raw.toLowerCase() ||
-    (c.name || '').trim().toLowerCase() === raw.toLowerCase()
-  );
-  return matched ? matched.name : raw;
-}
-
 function handleCustomerInputChange(inputEl, moduleName) {
   const raw = (inputEl.value || '').trim();
 
