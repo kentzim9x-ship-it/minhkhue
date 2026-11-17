@@ -109,6 +109,34 @@ function renderLoginForm(container) {
         flex-direction: column;
       }
 
+      @media (min-width: 768px) {
+        .trim-login-screen {
+          padding: 32px 48px;
+        }
+        .trim-login-body {
+          max-width: 380px;
+        }
+        /* Kéo 3 khối vuông nền vào gần tâm hơn trên màn hình PC */
+        .tile-1 {
+          width: 180px;
+          height: 180px;
+          top: 18%;
+          right: 22%;
+        }
+        .tile-2 {
+          width: 170px;
+          height: 170px;
+          top: 42%;
+          left: 20%;
+        }
+        .tile-3 {
+          width: 185px;
+          height: 185px;
+          bottom: 16%;
+          right: 24%;
+        }
+      }
+
       .trim-hero-title {
         font-family: 'Playfair Display', Georgia, serif;
         font-size: 32px;
