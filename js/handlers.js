@@ -726,14 +726,10 @@ async function saveForm(module) {
         .single();
 
       if (!checkErr && latestRecord) {
-        // Ưu tiên lấy mốc thời gian lúc mới mở form (_initialEditStamp)
-        const localLastTime = rawData._initialEditStamp !== undefined
-          ? rawData._initialEditStamp
-          : `${rawData.date2 || ''} ${rawData.time2 || ''}`.trim();
-
+        const localLastTime = `${rawData.date2 || ''} ${rawData.time2 || ''}`.trim();
         const dbLastTime = `${latestRecord.date2 || ''} ${latestRecord.time2 || ''}`.trim();
 
-        if (dbLastTime && dbLastTime !== localLastTime && String(latestRecord.user_id2) !== String(currentUserId)) {
+        if (dbLastTime && localLastTime && dbLastTime !== localLastTime && String(latestRecord.user_id2) !== String(currentUserId)) {
 
           let editorName = latestRecord.user_id2 || 'Một người dùng khác';
           const userList = db.users || db.userinfo || db.user_info || [];
@@ -1008,7 +1004,6 @@ async function saveForm(module) {
     delete supabasePayload.validUntil;
     delete supabasePayload.validBegin;
     delete supabasePayload.lineItems;
-    delete supabasePayload._initialEditStamp;
   }
 
   if (module === 'returns') {
@@ -1029,7 +1024,6 @@ async function saveForm(module) {
     delete supabasePayload.warehouseCode;
     delete supabasePayload.orderId;
     delete supabasePayload.lineItems;
-    delete supabasePayload._initialEditStamp;
   }
 
   if (module === 'grn') {
@@ -1055,7 +1049,6 @@ async function saveForm(module) {
     delete supabasePayload.lineItems;
     delete supabasePayload.totalValue;
     delete supabasePayload.total_value;
-    delete supabasePayload._initialEditStamp;
   }
 
   if (module === 'sales-orders') {
@@ -1080,7 +1073,6 @@ async function saveForm(module) {
     delete supabasePayload.discounttotal;
     delete supabasePayload.subtotal;
     delete supabasePayload.lineItems;
-    delete supabasePayload._initialEditStamp;
   }
 
   // =========================================================================
@@ -1241,8 +1233,6 @@ function initFormData(module, id) {
     const foundData = collection.find(x => String(x.id) === String(id));
     if (foundData) {
       state.formData = JSON.parse(JSON.stringify(foundData));
-      // Lưu cứng mốc sửa đổi tại thời điểm mở form để đối chiếu xung đột
-      state.formData._initialEditStamp = `${foundData.date2 || ''} ${foundData.time2 || ''}`.trim();
 
       if (['quotations', 'sales-orders', 'returns', 'grn'].includes(module)) {
         const rawLines = state.formData.lineItems || state.formData.lineitems || [];
