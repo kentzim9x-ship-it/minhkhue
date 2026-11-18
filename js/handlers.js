@@ -1008,6 +1008,7 @@ async function saveForm(module) {
     delete supabasePayload.validUntil;
     delete supabasePayload.validBegin;
     delete supabasePayload.lineItems;
+    delete supabasePayload._initialEditStamp;
   }
 
   if (module === 'returns') {
@@ -1028,6 +1029,7 @@ async function saveForm(module) {
     delete supabasePayload.warehouseCode;
     delete supabasePayload.orderId;
     delete supabasePayload.lineItems;
+    delete supabasePayload._initialEditStamp;
   }
 
   if (module === 'grn') {
@@ -1053,6 +1055,7 @@ async function saveForm(module) {
     delete supabasePayload.lineItems;
     delete supabasePayload.totalValue;
     delete supabasePayload.total_value;
+    delete supabasePayload._initialEditStamp;
   }
 
   if (module === 'sales-orders') {
