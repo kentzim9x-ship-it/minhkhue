@@ -2047,9 +2047,9 @@ function renderQuotationForm(c) {
                   class="form-input" 
                   value="${quotationCustomerDisplay}" 
                   ${(isView || isEdit)
-                    ? 'readonly style="background: var(--muted); cursor: not-allowed;"'
-                    : 'onchange="handleCustomerInputChange(this, \'quotations\')"'
-                  } 
+      ? 'readonly style="background: var(--muted); cursor: not-allowed;"'
+      : 'onchange="handleCustomerInputChange(this, \'quotations\')"'
+    } 
                   placeholder="-- Chọn hoặc gõ mã / tên khách hàng --" 
                   required
                 >
@@ -2097,6 +2097,13 @@ function renderQuotationForm(c) {
                 <label class="form-label">Ghi chú</label>
                 <textarea class="form-textarea" rows="2" style="resize: vertical; ${isView ? 'background: var(--muted); cursor: not-allowed;' : ''}" ${isView ? 'readonly' : 'onchange="updateField(\'notes\', this.value)"'} placeholder="Nhập thông tin ghi chú (tùy chọn)...">${d.notes || ''}</textarea>
               </div>
+
+              <!-- DÒNG THÔNG TIN MẶT HÀNG CẦN BÁO GIÁ TỪ WEB -->
+              ${d.webRequestInfo ? `
+                <div style="grid-column: span 3; margin-top: 2px; font-family: var(--font-jost, sans-serif); font-size: 13px; color: #eab308; line-height: 1.4;">
+                  ❗ Mặt hàng cần báo giá: ${d.webRequestInfo}
+                </div>
+              ` : ''}
             </div>
           </div>
 
@@ -2385,9 +2392,9 @@ function renderSalesOrderForm(c) {
                   class="form-input" 
                   value="${orderCustomerDisplay}" 
                   ${(isView || isEdit)
-                    ? 'readonly style="background: var(--muted); cursor: not-allowed;"'
-                    : 'onchange="handleCustomerInputChange(this, \'sales-orders\')"'
-                  } 
+      ? 'readonly style="background: var(--muted); cursor: not-allowed;"'
+      : 'onchange="handleCustomerInputChange(this, \'sales-orders\')"'
+    } 
                   placeholder="-- Chọn hoặc gõ mã / tên khách hàng --" 
                   required
                 >
@@ -2616,9 +2623,9 @@ function renderReturnForm(c) {
                 class="form-input" 
                 value="${returnCustomerDisplay}" 
                 ${(isView || isEdit || hasOrder)
-                  ? 'readonly style="background: var(--muted); cursor: not-allowed;"'
-                  : 'onchange="handleCustomerInputChange(this, \'returns\')"'
-                } 
+      ? 'readonly style="background: var(--muted); cursor: not-allowed;"'
+      : 'onchange="handleCustomerInputChange(this, \'returns\')"'
+    } 
                 placeholder="-- Chọn hoặc gõ mã / tên khách hàng --" 
                 required
               >

@@ -1038,6 +1038,9 @@ async function submitWebQuotationRequest(e) {
   if (state.view === 'quotations' && state.mode === 'add' && state.formData) {
     state.formData.customer = defaultCustomerName;
     state.formData.notes = noteStr;
+    state.formData.notes = notifObj.notes || ''; // Nếu có ghi chú
+    // Lưu nội dung mặt hàng cần báo giá (lấy từ detail hoặc trường items của thông báo)
+    state.formData.webRequestInfo = notifObj.detail || notifObj.items_text || '';
     render();
   }
 }
