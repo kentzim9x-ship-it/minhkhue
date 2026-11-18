@@ -726,45 +726,41 @@ async function saveForm(module) {
         .single();
 
       if (!checkErr && latestRecord) {
-        // Chuẩn hóa chuỗi ngày & giờ (cắt 8 ký tự HH:MM:SS để khớp hoàn toàn với DB)
-        const normTime = (t) => (t ? String(t).trim().substring(0, 8) : '');
-        const normDate = (d) => (d ? String(d).trim().substring(0, 10) : '');
+        // Ưu tiên lấy mốc thời gian lúc mới mở form (_initialEditStamp)
+        const localLastTime = rawData._initialEditStamp !== undefined
+          ? rawData._initialEditStamp
+          : `${rawData.date2 || ''} ${rawData.time2 || ''}`.trim();
 
-        // Lấy mốc thời gian thay đổi cuối cùng (ưu tiên date2/time2, nếu chưa sửa lần nào thì lấy date0/time0)
-        const localLastStamp = `${normDate(rawData.date2 || rawData.date0)} ${normTime(rawData.time2 || rawData.time0)}`.trim();
-        const dbLastStamp = `${normDate(latestRecord.date2 || latestRecord.date0)} ${normTime(latestRecord.time2 || latestRecord.time0)}`.trim();
+        const dbLastTime = `${latestRecord.date2 || ''} ${latestRecord.time2 || ''}`.trim();
 
-        const dbLastUser = String(latestRecord.user_id2 || latestRecord.user_id0 || '');
-        const isDifferentTime = dbLastStamp && localLastStamp && (dbLastStamp !== localLastStamp);
-        const isDifferentUser = dbLastUser && (dbLastUser !== String(currentUserId));
+        if (dbLastTime && dbLastTime !== localLastTime && String(latestRecord.user_id2) !== String(currentUserId)) {
 
-        // Kiểm tra nếu thời gian trên DB đã thay đổi so với lúc mở form (và khác người dùng)
-        if (isDifferentTime && isDifferentUser) {
-          let editorName = dbLastUser || 'Một người dùng khác';
-          const userList = db.userinfo || db.users || db.user_info || [];
-          const matchedUser = userList.find(u => String(u.id) === dbLastUser);
+          let editorName = latestRecord.user_id2 || 'Một người dùng khác';
+          const userList = db.users || db.userinfo || db.user_info || [];
+          const matchedUser = userList.find(u => String(u.id) === String(latestRecord.user_id2));
           if (matchedUser) {
             editorName = matchedUser.fullname || matchedUser.full_name || matchedUser.username || editorName;
           }
 
-          const editTime = `${normTime(latestRecord.time2 || latestRecord.time0)} - ${fmtDateStr(latestRecord.date2 || latestRecord.date0)}`;
+          const editTime = `${latestRecord.time2 || ''} - ${latestRecord.date2 || ''}`;
 
           await showAlert(
             `Phiếu/Danh mục này vừa được chỉnh sửa bởi "${editorName}" vào lúc ${editTime}.\n\nHệ thống sẽ tự động cập nhật dữ liệu mới nhất và chuyển sang giao diện Xem chi tiết!`,
             'Cảnh báo xung đột dữ liệu'
           );
 
-          // Chuẩn hóa lại bản ghi mới nhất trước khi lưu vào db local
           const rawLines = latestRecord.lineItems || latestRecord.lineitems || [];
           const normalizedLines = Array.isArray(rawLines) ? rawLines.map(l => ({ ...l })) : [];
           latestRecord.lineItems = normalizedLines;
           latestRecord.lineitems = normalizedLines;
 
           if (module === 'quotations') {
-            latestRecord.validUntil = latestRecord.validUntil || latestRecord.validuntil || '';
-            latestRecord.validuntil = latestRecord.validUntil;
-            latestRecord.validBegin = latestRecord.validbegin || latestRecord.validBegin || latestRecord.date || '';
-            latestRecord.validbegin = latestRecord.validBegin;
+            const vUntil = latestRecord.validUntil || latestRecord.validuntil || '';
+            const vBegin = latestRecord.validbegin || latestRecord.validBegin || latestRecord.date || '';
+            latestRecord.validUntil = vUntil;
+            latestRecord.validuntil = vUntil;
+            latestRecord.validBegin = vBegin;
+            latestRecord.validbegin = vBegin;
           }
 
           if (module === 'returns' || module === 'sales-orders') {
@@ -780,10 +776,12 @@ async function saveForm(module) {
           }
 
           if (module === 'grn') {
-            latestRecord.warehouseCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
-            latestRecord.warehousecode = latestRecord.warehouseCode;
-            latestRecord.totalValue = latestRecord.totalValue ?? latestRecord.totalvalue ?? 0;
-            latestRecord.totalvalue = latestRecord.totalValue;
+            const whCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
+            const totalVal = latestRecord.totalValue ?? latestRecord.totalvalue ?? 0;
+            latestRecord.warehouseCode = whCode;
+            latestRecord.warehousecode = whCode;
+            latestRecord.totalValue = totalVal;
+            latestRecord.totalvalue = totalVal;
           }
 
           if (!db[targetKey]) db[targetKey] = [];
@@ -794,9 +792,7 @@ async function saveForm(module) {
             db[targetKey].unshift(latestRecord);
           }
 
-          // Chuyển thẳng sang chế độ view để tránh bị hasUnsavedFormData() hỏi lại
-          state.mode = 'view';
-          state.formData = JSON.parse(JSON.stringify(latestRecord));
+          state.formData = { ...latestRecord };
           navigate(module, 'view', rawData.id);
           return;
         }
@@ -1081,6 +1077,7 @@ async function saveForm(module) {
     delete supabasePayload.discounttotal;
     delete supabasePayload.subtotal;
     delete supabasePayload.lineItems;
+    delete supabasePayload._initialEditStamp;
   }
 
   // =========================================================================
@@ -1241,6 +1238,8 @@ function initFormData(module, id) {
     const foundData = collection.find(x => String(x.id) === String(id));
     if (foundData) {
       state.formData = JSON.parse(JSON.stringify(foundData));
+      // Lưu cứng mốc sửa đổi tại thời điểm mở form để đối chiếu xung đột
+      state.formData._initialEditStamp = `${foundData.date2 || ''} ${foundData.time2 || ''}`.trim();
 
       if (['quotations', 'sales-orders', 'returns', 'grn'].includes(module)) {
         const rawLines = state.formData.lineItems || state.formData.lineitems || [];
