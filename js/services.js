@@ -187,7 +187,7 @@ function initTheme() {
   updateThemeButtonUI(savedTheme);
 
   // Gọi đồng bộ header điện thoại ngay khi khởi tạo theme
-  if (typeof syncAppThemeWithMobile === 'function') syncAppThemeWithMobile(savedTheme);
+  if (typeof syncAppThemeWithMobile === 'function') syncAppThemeWithMobile(newTheme);
 }
 
 function toggleTheme() {
@@ -209,7 +209,7 @@ function toggleTheme() {
   updateThemeButtonUI(newTheme);
 
   // Gọi đồng bộ header điện thoại ngay khi khởi tạo theme
-  if (typeof syncAppThemeWithMobile === 'function') syncAppThemeWithMobile(savedTheme);
+  if (typeof syncAppThemeWithMobile === 'function') syncAppThemeWithMobile(newTheme);
 }
 
 function updateThemeButtonUI(theme) {
@@ -289,7 +289,7 @@ function showAlert(message, title = 'Thông báo hệ thống') {
     titleEl.innerText = title;
     msgEl.innerText = message;
     btnCancel.style.display = 'none';
-    btnConfirm.innerText = 'ĐÃ HỂU';
+    btnConfirm.innerText = 'ĐÃ HIỂU';
 
     overlay.style.display = 'flex';
 
