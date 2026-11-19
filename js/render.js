@@ -2100,7 +2100,7 @@ function renderQuotationForm(c) {
 
               <!-- DÒNG THÔNG TIN MẶT HÀNG CẦN BÁO GIÁ TỪ WEB -->
               ${d.webRequestInfo ? `
-                <div style="grid-column: span 3; margin-top: 4px; display: flex; align-items: flex-start; gap: 6px; font-family: var(--font-jost, sans-serif); font-size: 13px; color: #eab308; line-height: 1.6;">
+                <div style="grid-column: span 3; margin-top: 4px; display: flex; align-items: flex-start; gap: 6px; font-family: var(--font-jost, sans-serif); font-size: 13px; color: #eab308; line-height: 1.5;">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;">
                     <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
                     <path d="M12 9v4"/>
