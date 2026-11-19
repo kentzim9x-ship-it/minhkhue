@@ -1109,8 +1109,15 @@ function getAddLineButton(moduleName, isDetailsDisabled, position) {
   // Chỉ hiển thị ở vị trí header (ngang hàng mục 02)
   if (position !== 'header') return '';
 
+  const isMobile = window.innerWidth <= 768;
+
+  // Tăng padding, cỡ chữ và khoảng cách icon trên giao diện PC
+  const pcStyle = !isMobile
+    ? 'padding: 7px 14px; font-size: 12px; gap: 6px;'
+    : '';
+
   return `
-    <button type="button" class="btn-action" onclick="addLineItem('${moduleName}')" style="display: inline-flex; align-items: center; gap: 4px;">
+    <button type="button" class="btn-action" onclick="addLineItem('${moduleName}')" style="display: inline-flex; align-items: center; gap: 4px; ${pcStyle}">
       ${Icons.plus} Thêm dòng
     </button>
   `;
