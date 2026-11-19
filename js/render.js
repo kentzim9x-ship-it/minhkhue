@@ -1678,11 +1678,13 @@ function renderMaterialForm(c) {
               <label class="form-label">Tên sản phẩm *</label>
               <input 
                   type="text" 
+                  id="m-name" 
                   class="form-input" 
                   value="${d.name || ''}" 
                   ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
                     oninput="this.value = toTitleCase(this.value); updateField('name', this.value.trim());"
                     onchange="this.value = toTitleCase(this.value.trim()); updateField('name', this.value.trim());"
+                    onkeydown="handleSec1Enter(event, \'m-unit\')"
                   `} 
                   placeholder="Nhập tên sản phẩm..." 
                   required
@@ -1692,11 +1694,13 @@ function renderMaterialForm(c) {
               <label class="form-label">Đơn vị tính *</label>
               <input 
                 type="text" 
+                id="m-unit" 
                 class="form-input" 
                 value="${d.unit || ''}" 
                 ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
                   oninput="this.value = toUpperCaseStr(this.value); updateField('unit', this.value.trim());"
                   onchange="this.value = toUpperCaseStr(this.value.trim()); updateField('unit', this.value.trim());"
+                  onkeydown="handleSec1Enter(event, \'m-category\')"
                 `} 
                 placeholder="CÁI, HỘP, BỘ, KG..." 
                 required
@@ -1704,7 +1708,7 @@ function renderMaterialForm(c) {
             </div>
             <div class="form-group">
               <label class="form-label">Danh mục</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'category\', this.value)"'}>
+              <select id="m-category" class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'m-location\')" onchange="updateField(\'category\', this.value)"'}>
                 ${['Hoa quả', 'Rau củ', 'Khác'].map(cat => `<option value="${cat}" ${d.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
               </select>
             </div>
@@ -1719,25 +1723,26 @@ function renderMaterialForm(c) {
           <div class="section-body grid-4">
             <div class="form-group">
               <label class="form-label">Vị trí lưu kho</label>
-              <input type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'location\', this.value.trim())"'} placeholder="Ví dụ: A-12-03">
+              <input id="m-location" type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'m-stock\')" onchange="updateField(\'location\', this.value.trim())"'} placeholder="Ví dụ: A-12-03">
             </div>
             <div class="form-group">
               <label class="form-label">Tồn kho ban đầu</label>
               <input 
                 type="number" 
+                id="m-stock" 
                 step="any" 
                 inputmode="decimal" 
                 class="form-input" 
                 value="${d.stock ?? 0}" 
-                ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'stock\', this.value, \'number\')"'}>
+                ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'m-reorder\')" onchange="updateField(\'stock\', this.value, \'number\')"'}>
             </div>
             <div class="form-group">
               <label class="form-label">Mức định mức</label>
-              <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.reorder ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'reorder\', this.value, \'number\')"'} >
+              <input id="mreorder" type="number" step="any" inputmode="decimal" class="form-input" value="${d.reorder ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'m-cost\')" onchange="updateField(\'reorder\', this.value, \'number\')"'} >
             </div>
             <div class="form-group">
               <label class="form-label">Đơn giá (VNĐ)</label>
-              <input type="number" step="any" inputmode="numeric" class="form-input" value="${d.cost ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'cost\', this.value, \'number\')"'} >
+              <input id="m-cost" type="number" step="any" inputmode="numeric" class="form-input" value="${d.cost ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, null)" onchange="updateField(\'cost\', this.value, \'number\')"'} >
             </div>
           </div>
         </div>
@@ -1778,35 +1783,37 @@ function renderCustomerForm(c) {
           <div class="section-body grid-3">
             <div class="form-group" style="grid-column: span 2;">
               <label class="form-label">Tên công ty / Khách hàng *</label>
-              <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+              <input id="name" type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
                 oninput="this.value = toTitleCase(this.value); updateField('name', this.value.trim());"
                 onchange="this.value = toTitleCase(this.value.trim()); updateField('name', this.value.trim());"
+                onkeydown="handleSec1Enter(event, \'c-type\')"
               `} placeholder="Nhập tên công ty hoặc tên khách hàng..." required>
             </div>
             <div class="form-group">
               <label class="form-label">Loại khách hàng</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'type\', this.value)"'}>
+              <select id="c-type" class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'c-contact\')" onchange="updateField(\'type\', this.value)"'}>
                 ${['Khách vãng lai', 'Khách hàng tiềm năng', 'Khách hàng trung thành', 'Khách hàng cũ', 'Khách hàng tiêu cực'].map(t => `<option value="${t}" ${d.type === t ? 'selected' : ''}>${t}</option>`).join('')}
               </select>
             </div>
             <div class="form-group">
               <label class="form-label">Người liên hệ</label>
-              <input type="text" class="form-input" value="${d.contact || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
+              <input id="c-contact" type="text" class="form-input" value="${d.contact || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
                 oninput="this.value = toTitleCase(this.value); updateField('contact', this.value);"
                 onchange="this.value = toTitleCase(this.value.trim()); updateField('contact', this.value.trim());"
+                onkeydown="handleSec1Enter(event, \'c-email\')"
               `} placeholder="Tên người đại diện...">
             </div>
             <div class="form-group">
               <label class="form-label">Email</label>
-              <input type="email" class="form-input" value="${d.email || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'email\', this.value.trim())"'} placeholder="example@domain.com">
+              <input id="c-email" type="email" class="form-input" value="${d.email || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'c-phone\')" onchange="updateField(\'email\', this.value.trim())"'} placeholder="example@domain.com">
             </div>
             <div class="form-group">
               <label class="form-label">Số điện thoại</label>
-              <input type="tel" inputmode="tel" class="form-input" value="${d.phone || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'phone\', this.value.trim())"'} placeholder="090x xxx xxx">
+              <input id="c-phone" type="tel" inputmode="tel" class="form-input" value="${d.phone || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'c-address\')" onchange="updateField(\'phone\', this.value.trim())"'} placeholder="090x xxx xxx">
             </div>
             <div class="form-group" style="grid-column: span 3;">
               <label class="form-label">Địa chỉ</label>
-              <input type="text" class="form-input" value="${d.address || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'address\', this.value.trim())"'} placeholder="Nhập địa chỉ trụ sở/giao hàng...">
+              <input id="c-address" type="text" class="form-input" value="${d.address || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'c-creditLimit\')" onchange="updateField(\'address\', this.value.trim())"'} placeholder="Nhập địa chỉ trụ sở/giao hàng...">
             </div>
           </div>
         </div>
@@ -1819,17 +1826,17 @@ function renderCustomerForm(c) {
           <div class="section-body grid-3">
             <div class="form-group">
               <label class="form-label">Hạn mức tín dụng (VNĐ)</label>
-              <input type="number" step="any" inputmode="numeric" class="form-input" value="${d.creditLimit ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'creditLimit\', this.value, \'number\')"'} >
+              <input id="c-creditLimit" type="number" step="any" inputmode="numeric" class="form-input" value="${d.creditLimit ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'c-paymentTerms\')" onchange="updateField(\'creditLimit\', this.value, \'number\')"'} >
             </div>
             <div class="form-group">
               <label class="form-label">Điều khoản thanh toán</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'paymentTerms\', this.value)"'}>
+              <select id="c-paymentTerms" class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'c-status\')" onchange="updateField(\'paymentTerms\', this.value)"'}>
                 ${['Thanh toán ngay', 'Thanh toán gối đầu', 'Thanh toán cuối tháng', 'Net 30', 'Net 60'].map(t => `<option value="${t}" ${d.paymentTerms === t ? 'selected' : ''}>${t}</option>`).join('')}
               </select>
             </div>
             <div class="form-group">
               <label class="form-label">Trạng thái</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
+              <select id="c-status" class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, null)" onchange="updateField(\'status\', this.value)"'}>
                 <option value="active" ${d.status === 'active' ? 'selected' : ''}>Đang hoạt động</option>
                 <option value="inactive" ${d.status === 'inactive' ? 'selected' : ''}>Ngừng hoạt động</option>
                 <option value="suspended" ${d.status === 'suspended' ? 'selected' : ''}>Tạm khóa</option>
@@ -1878,11 +1885,11 @@ function renderWarehouseForm(c) {
             </div>
             <div class="form-group" style="grid-column: span 2;">
               <label class="form-label">Tên kho *</label>
-              <input type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="this.value = this.value.trim(); updateField(\'name\', this.value.trim())"'} placeholder="Nhập tên kho hàng..." required>
+              <input id="w-name" type="text" class="form-input" value="${d.name || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'w-location\')" onchange="this.value = this.value.trim(); updateField(\'name\', this.value.trim())"'} placeholder="Nhập tên kho hàng..." required>
             </div>
             <div class="form-group" style="grid-column: span 3;">
               <label class="form-label">Địa chỉ / Vị trí *</label>
-              <input type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="this.value = this.value.trim(); updateField(\'location\', this.value.trim())"'} placeholder="Nhập địa chỉ kho hàng..." required>
+              <input type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'w-capacity\')" onchange="this.value = this.value.trim(); updateField(\'location\', this.value.trim())"'} placeholder="Nhập địa chỉ kho hàng..." required>
             </div>
           </div>
         </div>
@@ -1895,19 +1902,19 @@ function renderWarehouseForm(c) {
           <div class="section-body grid-4">
             <div class="form-group">
               <label class="form-label">Sức chứa (Đơn vị)</label>
-              <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.capacity ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'capacity\', this.value, \'number\')"'} >
+              <input id="w-capacity" type="number" step="any" inputmode="decimal" class="form-input" value="${d.capacity ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'w-used\')" onchange="updateField(\'capacity\', this.value, \'number\')"'} >
             </div>
             <div class="form-group">
               <label class="form-label">Đã sử dụng</label>
-              <input type="number" step="any" inputmode="decimal" class="form-input" value="${d.used ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'used\', this.value, \'number\')"'} >
+              <input id="w-used" type="number" step="any" inputmode="decimal" class="form-input" value="${d.used ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'w-manager\')" onchange="updateField(\'used\', this.value, \'number\')"'} >
             </div>
             <div class="form-group">
               <label class="form-label">Quản lý kho</label>
-              <input type="text" class="form-input" value="${d.manager || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onchange="this.value = this.value.trim(); updateField(\'manager\', this.value.trim())"'} placeholder="Tên quản lý kho...">
+              <input id="w-manager" type="text" class="form-input" value="${d.manager || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'w-status\')" onchange="this.value = this.value.trim(); updateField(\'manager\', this.value.trim())"'} placeholder="Tên quản lý kho...">
             </div>
             <div class="form-group">
               <label class="form-label">Trạng thái</label>
-              <select class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onchange="updateField(\'status\', this.value)"'}>
+              <select id="w-status" class="form-select" ${isView ? 'disabled style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, null)" onchange="updateField(\'status\', this.value)"'}>
                 <option value="active" ${d.status === 'active' ? 'selected' : ''}>Đang hoạt động</option>
                 <option value="maintenance" ${d.status === 'maintenance' ? 'selected' : ''}>Bảo trì</option>
                 <option value="closed" ${d.status === 'closed' ? 'selected' : ''}>Đóng cửa</option>
