@@ -1738,7 +1738,7 @@ function renderMaterialForm(c) {
             </div>
             <div class="form-group">
               <label class="form-label">Mức định mức</label>
-              <input id="mreorder" type="number" step="any" inputmode="decimal" class="form-input" value="${d.reorder ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'m-cost\')" onchange="updateField(\'reorder\', this.value, \'number\')"'} >
+              <input id="m-reorder" type="number" step="any" inputmode="decimal" class="form-input" value="${d.reorder ?? 0}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'m-cost\')" onchange="updateField(\'reorder\', this.value, \'number\')"'} >
             </div>
             <div class="form-group">
               <label class="form-label">Đơn giá (VNĐ)</label>
@@ -1889,7 +1889,7 @@ function renderWarehouseForm(c) {
             </div>
             <div class="form-group" style="grid-column: span 3;">
               <label class="form-label">Địa chỉ / Vị trí *</label>
-              <input type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'w-capacity\')" onchange="this.value = this.value.trim(); updateField(\'location\', this.value.trim())"'} placeholder="Nhập địa chỉ kho hàng..." required>
+              <input id="w-location" type="text" class="form-input" value="${d.location || ''}" ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : 'onkeydown="handleSec1Enter(event, \'w-capacity\')" onchange="this.value = this.value.trim(); updateField(\'location\', this.value.trim())"'} placeholder="Nhập địa chỉ kho hàng..." required>
             </div>
           </div>
         </div>
