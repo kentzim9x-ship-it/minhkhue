@@ -2140,12 +2140,12 @@ function renderQuotationForm(c) {
               </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 26px 10px 26px; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; justify-content: flex-end; align-items: flex-start; padding: 10px 26px 10px 26px; flex-wrap: wrap; gap: 12px;">
               <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; height: 36px;"><span class="form-label" style="margin:0;">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
-                <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
-                <div style="display: flex; justify-content: space-between;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
-                <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--foreground); font-weight: 500;">${fmtUSD(d.total)}</span></div>
+                <div style="display: flex; justify-content: flex-end; align-items: center; height: 36px;"><span class="form-label" style="margin:0;">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
+                <div style="display: flex; justify-content: flex-end;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
+                <div style="display: flex; justify-content: flex-end;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
+                <div style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--foreground); font-weight: 500;">${fmtUSD(d.total)}</span></div>
               </div>
             </div>
           </div>
@@ -2460,12 +2460,12 @@ function renderSalesOrderForm(c) {
               </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 26px 10px 26px; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; justify-content: flex-end; align-items: flex-start; padding: 10px 26px 10px 26px; flex-wrap: wrap; gap: 12px;">
               <div style="display: flex; flex-direction: column; gap: 6px; min-width: 260px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; height: 36px;"><span class="form-label" style="margin:0;">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
-                <div style="display: flex; justify-content: space-between;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
-                <div style="display: flex; justify-content: space-between;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
-                <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.total)}</span></div>
+                <div style="display: flex; justify-content: flex-end; align-items: center; height: 36px;"><span class="form-label" style="margin:0;">Tạm tính</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.subtotal)}</span></div>
+                <div style="display: flex; justify-content: flex-end;"><span class="form-label">Chiết khấu</span><span style="font-family: var(--font-dm-mono);">-${fmtUSD(d.discountTotal)}</span></div>
+                <div style="display: flex; justify-content: flex-end;"><span class="form-label">Tổng Thuế</span><span style="font-family: var(--font-dm-mono);">${fmtUSD(d.tax)}</span></div>
+                <div style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px;"><span class="form-label" style="font-weight: 600;">Tổng cộng</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.total)}</span></div>
               </div>
             </div>
           </div>
@@ -2687,8 +2687,8 @@ function renderReturnForm(c) {
             </div>
           </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 26px 10px 26px; flex-wrap: wrap; gap: 12px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;"><span class="form-label" style="font-weight: 600; margin:0;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
+            <div style="display: flex; justify-content: flex-end; align-items: center; padding: 10px 26px 10px 26px; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; justify-content: flex-end; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;"><span class="form-label" style="font-weight: 600; margin:0;">Tổng hoàn tiền</span><span style="font-family: var(--font-dm-mono); font-size: 15px; color: #f87171; font-weight: 500;">${fmtUSD(d.total)}</span></div>
           </div>
         </div>
 
@@ -2809,7 +2809,6 @@ function renderGRNForm(c) {
                   value="${d.supplier || ''}" 
                   ${isView ? 'readonly style="background: var(--muted); cursor: not-allowed;"' : `
                     oninput="this.value = toTitleCase(this.value); updateField('supplier', this.value.trim());" 
-                    onblur="if(this.value.trim()) render();"
                     onchange="this.value = toTitleCase(this.value.trim()); updateField('supplier', this.value.trim()); render();"
                     onkeydown="handleSec1Enter(event, \'g-warehouse\')"
                   `} 
@@ -2868,7 +2867,7 @@ function renderGRNForm(c) {
             </div>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 26px 10px 26px; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; justify-content: flex-end; align-items: center; padding: 10px 26px 10px 26px; flex-wrap: wrap; gap: 12px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; min-width: 260px; height: 36px;">
               <span class="form-label" style="font-weight: 600; margin: 0;">Tổng giá trị</span>
               <span style="font-family: var(--font-dm-mono); font-size: 15px; color: var(--primary); font-weight: 500;">${fmtUSD(d.totalValue)}</span>
