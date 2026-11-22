@@ -3422,18 +3422,21 @@ function renderReportSales(c) {
                 <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">TỪ NGÀY:</label>
                 <input type="date" class="form-input" style="width: 130px; padding: 4px 8px; font-size: 12px; height: 36px; box-sizing: border-box;" 
                   value="${selectedFromDate}" 
-                  onchange="if(this.value && state.reportSalesFromDate !== this.value) { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }"
-                  onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); if(this.value && state.reportSalesFromDate !== this.value) { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); } this.blur(); }">
+                  data-typing="false"
+                  onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); this.dataset.typing='false'; if(this.value && state.reportSalesFromDate !== this.value) { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); } this.blur(); } else if(/^[0-9]$/.test(event.key)) { this.dataset.typing='true'; }"
+                  onchange="if(this.dataset.typing !== 'true' && this.value && state.reportSalesFromDate !== this.value) { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }"
+                  onblur="this.dataset.typing='false'; if(this.value && state.reportSalesFromDate !== this.value) { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }">
               </div>
 
               <div class="report-filter-item" style="display: flex; align-items: center; gap: 6px;">
                 <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">ĐẾN NGÀY:</label>
                 <input type="date" class="form-input" style="width: 130px; padding: 4px 8px; font-size: 12px; height: 36px; box-sizing: border-box;" 
                   value="${selectedToDate}" 
-                  onchange="if(this.value && state.reportSalesToDate !== this.value) { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }"
-                  onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); if(this.value && state.reportSalesToDate !== this.value) { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); } this.blur(); }">
+                  data-typing="false"
+                  onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); this.dataset.typing='false'; if(this.value && state.reportSalesToDate !== this.value) { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); } this.blur(); } else if(/^[0-9]$/.test(event.key)) { this.dataset.typing='true'; }"
+                  onchange="if(this.dataset.typing !== 'true' && this.value && state.reportSalesToDate !== this.value) { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }"
+                  onblur="this.dataset.typing='false'; if(this.value && state.reportSalesToDate !== this.value) { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }">
               </div>
-            </div>
 
             <!-- HÀNG 2 MOBILE: LOẠI BÁO CÁO & KHÁCH HÀNG -->
             <div class="report-filter-row">
