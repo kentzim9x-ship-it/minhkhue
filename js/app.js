@@ -450,7 +450,7 @@ async function loadTablePageREST(tableName, page = 1) {
 
   const selectColumnsMap = {
     orders: 'id,date,customer,items,lineitems,total,subtotal,tax,"discountTotal",status,warehouse_code,quotation_id,notes,user_id0,date0,time0,user_id2,date2,time2',
-    quotations: 'id,date,validbegin,validuntil,customer,lineitems,total,subtotal,tax,discounttotal,status,apply_yn,notes,user_id0,date0,time0,user_id2,date2,time2',
+    quotations: 'id,date,validbegin,validuntil,customer,lineitems,total,subtotal,tax,discounttotal,status,apply_yn,notes,webRequestInfo,user_id0,date0,time0,user_id2,date2,time2',
     grns: 'id,date,supplier,warehousecode,poreference,lineitems,totalvalue,status,notes,user_id0,date0,time0,user_id2,date2,time2',
     returns: 'id,date,customer,order_id,warehouse_code,reason,lineitems,total,status,notes,user_id0,date0,time0,user_id2,date2,time2'
   };
