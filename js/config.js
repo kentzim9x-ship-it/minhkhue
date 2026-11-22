@@ -93,72 +93,19 @@ let db = {
 
 async function fetchDataFromSupabase() {
   try {
-    const [custRes, matRes, whRes, invRes, quoRes, ordRes, retRes, grnRes, userRes] = await Promise.all([
+    const [custRes, matRes, whRes, invRes, userRes] = await Promise.all([
       supabaseClient.from('customers').select('*').order('id', { ascending: false }),
       supabaseClient.from('materials').select('*').order('id', { ascending: false }),
       supabaseClient.from('warehouses').select('*'),
       supabaseClient.from('inventory').select('*'),
-      supabaseClient.from('userinfo').select('*') // <--- Lấy bảng userinfo
+      supabaseClient.from('userinfo').select('*')
     ]);
 
-    db.customers = custRes.data || [];
-    db.materials = matRes.data || [];
-    db.warehouses = whRes.data || [];
-    db.inventory = invRes.data || [];
-    db.users = userRes.data || [];
-
-    db.quotations = (quoRes.data || []).map(q => ({
-      ...q,
-      date: q.date ? String(q.date).split('T')[0] : '',
-      validbegin: (q.validbegin || q.validBegin) ? String(q.validbegin || q.validBegin).split('T')[0] : '',
-      validUntil: (q.validUntil || q.validuntil) ? String(q.validUntil || q.validuntil).split('T')[0] : '',
-      lineItems: Array.isArray(q.lineItems || q.lineitems) ? (q.lineItems || q.lineitems) : []
-    })).sort(sortDescById);
-
-    db.orders = (ordRes.data || []).map(o => ({
-      ...o,
-      date: o.date ? String(o.date).split('T')[0] : '',
-      quotationId: o.quotation_id || o.quotationId || o.quotationid || null,
-      warehouseCode: o.warehouse_code || o.warehouseCode || o.warehouse || '',
-      lineItems: Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : []
-    })).sort(sortDescById);
-
-    db.returns = (retRes.data || []).map(r => ({
-      ...r,
-      date: r.date ? String(r.date).split('T')[0] : '',
-      warehouseCode: r.warehouse_code || r.warehouseCode || '',
-      orderId: r.order_id || r.orderId || '',
-      notes: r.notes || '',
-      lineItems: Array.isArray(r.lineItems || r.lineitems) ? (r.lineItems || r.lineitems) : []
-    })).sort(sortDescById);
-
-    db.grns = (grnRes.data || []).map(g => {
-      let parsedItems = [];
-      try {
-        if (Array.isArray(g.lineitems || g.lineItems)) {
-          parsedItems = g.lineitems || g.lineItems;
-        } else if (typeof (g.lineitems || g.lineItems) === 'string') {
-          parsedItems = JSON.parse(g.lineitems || g.lineItems);
-        }
-      } catch (e) {
-        parsedItems = [];
-      }
-
-      return {
-        ...g,
-        supplier: g.supplier || '',
-        warehouseCode: g.warehousecode || g.warehouseCode || '',
-        warehousecode: g.warehousecode || g.warehouseCode || '',
-        date: g.date ? String(g.date).split('T')[0] : '',
-        status: g.status || 'Đã nhận',
-        notes: g.notes || '',
-        totalValue: g.totalvalue ?? g.totalValue ?? 0,
-        totalvalue: g.totalvalue ?? g.totalValue ?? 0,
-        lineItems: parsedItems,
-        lineitems: parsedItems
-      };
-    }).sort(sortDescById);
-
+    db.customers = custRes?.data || [];
+    db.materials = matRes?.data || [];
+    db.warehouses = whRes?.data || [];
+    db.inventory = invRes?.data || [];
+    db.users = userRes?.data || [];
   } catch (err) {
     console.error('Lỗi khi tải dữ liệu từ Supabase:', err);
   }
