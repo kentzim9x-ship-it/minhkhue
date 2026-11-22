@@ -3047,7 +3047,7 @@ function renderReportSales(c) {
   const reportType = state.reportType || 'summary';
   const isDetail = reportType === 'detail';
 
-  const currentFilterKey = `${selectedFromDate}_${selectedToDate}`;
+  const currentFilterKey = `${selectedFromDate}_${selectedToDate}_${reportType}_${selectedCustomer}`;
   if (state.salesReportLoadedKey !== currentFilterKey && !state.isLoadingSalesReport) {
     fetchSalesReportDataREST();
   }
@@ -3088,29 +3088,13 @@ function renderReportSales(c) {
 
   let hasData = false;
 
-  if (!isDetail) {
-    // Với báo cáo tổng hợp: Có ít nhất 1 đơn bán hàng phù hợp
+  // Với báo cáo chi tiết: Phải chọn Khách hàng và có ít nhất 1 đơn bán hàng của khách đó
+  if (selectedCustomer) {
     hasData = filteredOrdersForDateRange.some(o =>
-      !selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())
+      o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
     );
-  } else {
-    // Với báo cáo chi tiết: Phải chọn Khách hàng và có ít nhất 1 đơn bán hàng của khách đó
-    if (selectedCustomer) {
-      hasData = filteredOrdersForDateRange.some(o =>
-        o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
-      );
-    }
   }
-
-  // Top khách hàng trong khoảng thời gian đã chọn
-  const customerMap = {};
-  filteredOrdersForDateRange.forEach(o => {
-    const cName = o.customer || 'Khách lẻ';
-    if (!customerMap[cName]) customerMap[cName] = { name: cName, revenue: 0, orders: 0 };
-    customerMap[cName].revenue += Number(o.total || 0);
-    customerMap[cName].orders += 1;
-  });
-  const topCustomersReal = Object.values(customerMap).sort((a, b) => b.revenue - a.revenue);
+  const topCustomersReal = state.salesReportTopCustomers || [];
 
   // 2. Xử lý Dữ liệu hiển thị Bảng (Tổng hợp vs Chi tiết)
   let detailRowsHtml = '';
@@ -3127,38 +3111,26 @@ function renderReportSales(c) {
 
   if (reportType === 'summary') {
     // === BÁO CÁO TỔNG HỢP ===
-    const itemSummaryMap = {};
+    const rawRows = state.salesReportSummaryRows || [];
     let grandTotalQty = 0;
     let grandTotalAmount = 0;
 
-    filteredOrdersForDateRange.forEach(o => {
-      if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
-        const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
-        items.forEach(item => {
-          const sku = item.sku || '—';
-          const name = item.name || '—';
-          const qty = Number(item.qty || 0);
-          const price = Number(item.unitPrice || 0);
-          const disc = Number(item.discount || 0);
-          const tax = Number(item.tax || 0);
-          const lineSub = qty * price * (1 - disc / 100);
-          const lineTotal = lineSub * (1 + tax / 100);
-          const unit = item.unit || getMaterialUnit(sku, name);
-
-          if (!itemSummaryMap[sku]) {
-            itemSummaryMap[sku] = { sku, name, unit, qty: 0, totalAmount: 0 };
-          }
-          itemSummaryMap[sku].qty += qty;
-          itemSummaryMap[sku].totalAmount += lineTotal;
-
-          grandTotalQty += qty;
-          grandTotalAmount += lineTotal;
-        });
-      }
+    const detailItemsList = rawRows.map(r => {
+      const qty = Number(r.total_qty || 0);
+      const totalAmount = Number(r.total_amount || 0);
+      grandTotalQty += qty;
+      grandTotalAmount += totalAmount;
+      return {
+        sku: r.sku || '—',
+        name: r.name || '—',
+        unit: r.unit || getMaterialUnit(r.sku, r.name),
+        qty,
+        totalAmount
+      };
     });
 
-    const detailItemsList = Object.values(itemSummaryMap).sort((a, b) => b.totalAmount - a.totalAmount);
     totalDisplayItemsCount = detailItemsList.length;
+    hasData = totalDisplayItemsCount > 0;
 
     // Phân trang
     const totalPages = Math.ceil(totalDisplayItemsCount / state.pageSize) || 1;

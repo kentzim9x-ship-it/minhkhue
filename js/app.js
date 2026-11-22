@@ -596,40 +596,62 @@ async function fetchSalesReportDataREST() {
   const fromDate = state.reportSalesFromDate || getFirstDayOfMonthStr();
   const toDate = state.reportSalesToDate || getLastDayOfMonthStr();
   const customer = (state.reportSalesCustomer || '').trim();
+  const reportType = state.reportType || 'detail';
 
   state.isLoadingSalesReport = true;
   try {
-    const filters = [
-      `date=gte.${fromDate}`,
-      `date=lte.${toDate}`,
-      `status=not.in.(Cancelled,"Đã hủy",Draft,"Nháp")`
-    ];
+    // 1. Luôn lấy Top 5 khách hàng trong kỳ bằng RPC (siêu nhẹ)
+    const topCustPromise = RestAPI.rpc('get_top_customers_period', {
+      p_from: fromDate,
+      p_to: toDate,
+      p_limit: 5
+    }).catch(() => []);
 
-    const [rpcRes, ordersRes] = await Promise.all([
-      RestAPI.rpc('get_sales_report', {
+    if (reportType === 'summary') {
+      // 2A. Chế độ TỔNG HỢP: Tính thẳng trên DB qua RPC, không tải raw orders/lineitems
+      const summaryRows = await RestAPI.rpc('get_sales_report_summary', {
         p_from: fromDate,
         p_to: toDate,
         p_customer: customer
-      }).catch(e => {
-        console.warn('Bỏ qua lỗi RPC get_sales_report:', e);
-        return [];
-      }),
-      RestAPI.fetchPaginated('orders', {
-        select: 'id,date,customer,notes,total,"discountTotal",status,lineitems',
-        filters,
-        order: 'date.asc,id.asc',
-        page: 1,
-        pageSize: 2000
-      })
-    ]);
+      });
 
-    state.salesReportRpcSummary = rpcRes?.[0] || { total_orders: 0, total_revenue: 0, total_discount: 0 };
-    state.salesReportOrders = ordersRes.data || [];
+      state.salesReportTopCustomers = await topCustPromise;
+      state.salesReportSummaryRows = summaryRows || [];
+      state.salesReportOrders = [];
+    } else {
+      // 2B. Chế độ CHI TIẾT: Chỉ tải đơn của đúng khách hàng đã chọn
+      if (!customer) {
+        state.salesReportTopCustomers = await topCustPromise;
+        state.salesReportOrders = [];
+      } else {
+        const filters = [
+          `date=gte.${fromDate}`,
+          `date=lte.${toDate}`,
+          `customer=ilike.${customer}`,
+          `status=not.in.(Cancelled,"Đã hủy",Draft,"Nháp")`
+        ];
+
+        const [topCustRes, ordersRes] = await Promise.all([
+          topCustPromise,
+          RestAPI.fetchPaginated('orders', {
+            select: 'id,date,customer,notes,total,"discountTotal",status,lineitems',
+            filters,
+            order: 'date.asc,id.asc',
+            page: 1,
+            pageSize: 500
+          })
+        ]);
+
+        state.salesReportTopCustomers = topCustRes || [];
+        state.salesReportOrders = ordersRes.data || [];
+      }
+    }
   } catch (err) {
     console.error('Lỗi tải báo cáo doanh thu:', err);
     state.salesReportOrders = [];
+    state.salesReportSummaryRows = [];
   } finally {
-    state.salesReportLoadedKey = `${fromDate}_${toDate}`;
+    state.salesReportLoadedKey = `${fromDate}_${toDate}_${reportType}_${customer}`;
     state.isLoadingSalesReport = false;
     render();
   }
