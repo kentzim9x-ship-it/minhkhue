@@ -396,6 +396,25 @@ function handleLogout() {
   }
 }
 
+function handleSec1Enter(e, nextId) {
+  if (e.key === 'Enter') {
+    // Riêng ô Ghi chú (textarea): cho phép bấm Shift + Enter để xuống dòng bình thường
+    if (e.target.tagName === 'TEXTAREA' && e.shiftKey) return;
+
+    e.preventDefault(); // Chặn hành vi submit form mặc định khi ấn Enter
+
+    if (nextId) {
+      const nextEl = document.getElementById(nextId);
+      if (nextEl) {
+        nextEl.focus();
+      }
+    } else {
+      // Nếu là ô cuối cùng (Ghi chú) -> Mất focus
+      e.target.blur();
+    }
+  }
+}
+
 function restoreScrollPosition(view) {
   const savedScroll = sessionStorage.getItem(`scroll_pos_${view}`);
   if (savedScroll === null) {
@@ -1326,6 +1345,24 @@ function initFormData(module, id) {
       };
     }
   }
+}
+
+let _searchDebounceTimer = null;
+function onServerSearchInput(tableName, value) {
+  state.search = value;
+  clearTimeout(_searchDebounceTimer);
+  _searchDebounceTimer = setTimeout(() => {
+    loadTablePageREST(tableName, 1); // Quay về trang 1 và lọc trên Server
+  }, 350);
+}
+
+async function openEditOrderModal(orderId) {
+  // Gọi REST lấy chi tiết đầy đủ (có lineitems) của đúng 1 phiếu này
+  const fullOrder = await RestAPI.fetchById('orders', orderId);
+  if (!fullOrder) return showToast('Không tìm thấy chứng từ', 'error');
+
+  initFormData('orders', fullOrder);
+  render();
 }
 
 // ==========================================

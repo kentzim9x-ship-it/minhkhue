@@ -290,9 +290,35 @@ function calculateRealtimeStock(sku, warehouseCode, currentDocId = null) {
   return realtimeStock;
 }
 
+function getStockFromView(sku, warehouseCode = 'WH-01') {
+  const found = (db.realtimeStock || []).find(
+    r => r.sku === sku && r.warehouse_code === warehouseCode
+  );
+  return found ? Number(found.current_stock || 0) : 0;
+}
+
 // ==========================================
 // 4. TIỆN ÍCH (HELPERS) & FORMATTER
 // ==========================================
+
+// Hàm trung gian lấy đầy đủ chi tiết chứng từ trước khi mở form hoặc in
+async function fetchFullRecordBeforeAction(tableName, id, callback) {
+  try {
+    const fullRecord = await RestAPI.fetchById(tableName, id);
+    if (!fullRecord) {
+      alert('Không tìm thấy dữ liệu chứng từ!');
+      return;
+    }
+    // Cập nhật lại bản ghi đầy đủ vào mảng db hiện tại để các hàm cũ đọc được lineitems
+    const idx = (db[tableName] || []).findIndex(item => item.id === id);
+    if (idx > -1) db[tableName][idx] = fullRecord;
+
+    if (typeof callback === 'function') callback(fullRecord);
+  } catch (err) {
+    console.error('Lỗi tải chi tiết phiếu:', err);
+    alert('Không thể tải chi tiết chứng từ. Vui lòng thử lại!');
+  }
+}
 
 function sortDescById(a, b) {
   return String(b.id || '').localeCompare(String(a.id || ''), undefined, { numeric: true, sensitivity: 'base' });

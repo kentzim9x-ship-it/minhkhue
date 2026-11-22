@@ -209,7 +209,7 @@ async function syncAppThemeWithMobile(theme) {
   if (document.documentElement.getAttribute('data-theme') !== theme) {
     document.documentElement.setAttribute('data-theme', theme);
   }
-  
+
   document.documentElement.style.backgroundColor = bgColor;
   if (document.body) {
     document.body.style.backgroundColor = bgColor;
@@ -343,3 +343,175 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNotificationUI();
   initTheme();
 });
+
+async function fetchDashboardSummaryREST(forceRefresh = false) {
+  // Nếu đã có cache và không ép tải lại thì bỏ qua để mở trang tức thì
+  if (state.dashboardData && !forceRefresh) return;
+  if (state.isLoadingDashboard) return;
+
+  state.isLoadingDashboard = true;
+  try {
+    const { data, error } = await supabaseClient.rpc('get_dashboard_summary');
+    if (!error && data) {
+      state.dashboardData = data;
+      // Chỉ render lại nếu người dùng vẫn đang đứng ở trang dashboard
+      if (state.view === 'dashboard' && state.mode === 'list') {
+        renderDashboard(document.getElementById('app-content'));
+      }
+    }
+  } catch (err) {
+    console.error('Lỗi tải Dashboard RPC:', err);
+  } finally {
+    state.isLoadingDashboard = false;
+  }
+}
+
+// ============================================================
+// CẤU HÌNH PHÂN TRANG & TẢI DỮ LIỆU REST API (SERVER-SIDE)
+// ============================================================
+
+// 1. Khởi tạo state phân trang mặc định (nếu chưa có)
+if (!state.pagination) {
+  state.pagination = {
+    orders: { page: 1, pageSize: 25, total: 0 },
+    quotations: { page: 1, pageSize: 25, total: 0 },
+    grns: { page: 1, pageSize: 25, total: 0 },
+    returns: { page: 1, pageSize: 25, total: 0 }
+  };
+}
+
+// 2. Chỉ tải các danh mục nhẹ & View tồn kho lúc khởi động app
+async function loadMasterDataREST() {
+  try {
+    const [matRes, custRes, whRes, stockRes] = await Promise.all([
+      RestAPI.fetchPaginated('materials', { select: '*', order: 'id.asc', page: 1, pageSize: 1000 }),
+      RestAPI.fetchPaginated('customers', { select: '*', order: 'name.asc', page: 1, pageSize: 1000 }),
+      RestAPI.fetchPaginated('warehouses', { select: '*', order: 'code.asc', page: 1, pageSize: 100 }),
+      RestAPI.fetchPaginated('v_inventory_realtime', { select: '*', order: 'sku.asc', page: 1, pageSize: 2000 })
+    ]);
+
+    db.materials = matRes.data;
+    db.customers = custRes.data;
+    db.warehouses = whRes.data;
+    db.realtimeStock = stockRes.data; // Lưu tồn kho tính sẵn từ SQL View
+  } catch (err) {
+    console.error('Lỗi tải danh mục REST:', err);
+  }
+}
+
+// 3. Hàm tải danh sách chứng từ theo trang (KHÔNG lấy lineitems để giảm 85% dung lượng)
+async function loadTablePageREST(tableName, page = 1) {
+  const pg = state.pagination[tableName] || { page: 1, pageSize: 25, total: 0 };
+  pg.page = page;
+  state.pagination[tableName] = pg;
+  state.isLoadingList = true;
+  render();
+
+  // Chỉ lấy các cột hiển thị trên bảng danh sách (loại bỏ lineitems nặng)
+  const selectColumnsMap = {
+    orders: 'id,date,customer,items,total,subtotal,tax,"discountTotal",status,warehouse_code,quotation_id,notes,user_id0,date0',
+    quotations: 'id,date,validuntil,customer,total,subtotal,tax,discounttotal,status,apply_yn,notes,user_id0,date0',
+    grns: 'id,date,supplier,warehousecode,poreference,totalvalue,status,notes,user_id0,date0',
+    returns: 'id,date,customer,order_id,warehouse_code,reason,total,status,notes,user_id0,date0'
+  };
+
+  // Xây dựng bộ lọc tìm kiếm gửi lên Supabase Server
+  const filters = [];
+  const kw = (state.search || '').trim();
+  if (kw) {
+    if (tableName === 'grns') {
+      filters.push(`or=(id.ilike.*${kw}*,supplier.ilike.*${kw}*,poreference.ilike.*${kw}*)`);
+    } else {
+      filters.push(`or=(id.ilike.*${kw}*,customer.ilike.*${kw}*)`);
+    }
+  }
+  if (state.statusFilter && state.statusFilter !== 'ALL') {
+    filters.push(`status=eq.${state.statusFilter}`);
+  }
+
+  try {
+    const res = await RestAPI.fetchPaginated(tableName, {
+      select: selectColumnsMap[tableName] || '*',
+      filters,
+      order: 'date.desc,id.desc',
+      page: pg.page,
+      pageSize: pg.pageSize
+    });
+
+    db[tableName] = res.data;
+    pg.total = res.totalCount;
+  } catch (err) {
+    console.error(`Lỗi tải trang ${tableName}:`, err);
+  } finally {
+    state.isLoadingList = false;
+    render();
+  }
+}
+
+async function fetchNotificationsFromSupabase() {
+  // 1. Bật trạng thái loading trên giao diện
+  const container = document.getElementById('main-content') || document.getElementById('app');
+  if (container && state.mode === 'list') {
+    container.innerHTML = renderTableSkeleton(8, state.pageSize || 10);
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (!error && data) {
+      db.notifications = data;
+      updateNotificationUI();
+    }
+  } catch (err) {
+    console.error('Lỗi lấy thông báo:', err);
+  } finally {
+    // 2. Render lại giao diện sau khi tải xong
+    render();
+  }
+}
+
+async function fetchSalesReportDataREST() {
+  const fromDate = state.reportSalesFromDate || getFirstDayOfMonthStr();
+  const toDate = state.reportSalesToDate || getLastDayOfMonthStr();
+  const customer = (state.reportSalesCustomer || '').trim();
+
+  try {
+    // 1. Gọi RPC tính nhanh con số tổng hợp trên PostgreSQL
+    const rpcPromise = RestAPI.rpc('get_sales_report', {
+      p_from: fromDate,
+      p_to: toDate,
+      p_customer: customer
+    });
+
+    // 2. Chỉ tải các đơn hàng hợp lệ trong đúng khoảng ngày đang chọn (có lineitems để lập bảng chi tiết/tổng hợp)
+    const filters = [
+      `date=gte.${fromDate}`,
+      `date=lte.${toDate}`,
+      `status=not.in.(Cancelled,"Đã hủy",Draft,"Nháp")`
+    ];
+    if (customer) {
+      filters.push(`customer=ilike.*${customer}*`);
+    }
+
+    const ordersPromise = RestAPI.fetchPaginated('orders', {
+      select: 'id,date,customer,notes,total,"discountTotal",status,lineitems',
+      filters,
+      order: 'date.asc,id.asc',
+      page: 1,
+      pageSize: 1000
+    });
+
+    const [rpcRes, ordersRes] = await Promise.all([rpcPromise, ordersPromise]);
+
+    state.salesReportRpcSummary = rpcRes?.[0] || { total_orders: 0, total_revenue: 0, total_discount: 0 };
+    state.salesReportOrders = ordersRes.data || [];
+    state.salesReportLoadedKey = `${fromDate}_${toDate}_${customer}`;
+    render();
+  } catch (err) {
+    console.error('Lỗi tải báo cáo doanh thu RPC:', err);
+  }
+}

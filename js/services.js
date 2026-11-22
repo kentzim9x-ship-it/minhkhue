@@ -347,32 +347,6 @@ function markNotifIdAsRead(notifId) {
   updateNotificationUI();
 }
 
-async function fetchNotificationsFromSupabase() {
-  // 1. Bật trạng thái loading trên giao diện
-  const container = document.getElementById('main-content') || document.getElementById('app');
-  if (container && state.mode === 'list') {
-    container.innerHTML = renderTableSkeleton(8, state.pageSize || 10);
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('notifications')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(20);
-
-    if (!error && data) {
-      db.notifications = data;
-      updateNotificationUI();
-    }
-  } catch (err) {
-    console.error('Lỗi lấy thông báo:', err);
-  } finally {
-    // 2. Render lại giao diện sau khi tải xong
-    render();
-  }
-}
-
 async function addNotification(type, title, detail, targetView, itemId, actorName = '') {
   if (!actorName) {
     const session = getAuthSession();

@@ -557,24 +557,48 @@ function render() {
   }
 }
 
+let dashboardRevChart = null; // Lưu instance biểu đồ để dọn dẹp khi render lại
+
 function renderDashboard(c) {
+  if (!c) return;
+
+  // Kích hoạt tải dữ liệu tổng hợp từ Server nếu chưa có
+  if (!state.dashboardData && !state.isLoadingDashboard) {
+    fetchDashboardSummaryREST();
+  }
+
+  // Ưu tiên dữ liệu RPC từ Server; nếu đang tải lần đầu thì fallback tạm về dữ liệu local (hoặc 0) để vẽ UI ngay lập tức
+  const dash = state.dashboardData || {
+    currentMonthRevenue: 0,
+    currentMonthOrders: 0,
+    openQuotationsCount: 0,
+    totalOrdersCount: 0,
+    completedOrdersCount: 0,
+    salesDataReal: Array.from({ length: 12 }, (_, i) => ({ month: `T${i + 1}`, revenue: 0 })),
+    recentActivityReal: []
+  };
+
   const {
     salesDataReal,
     currentMonthRevenue,
     currentMonthOrders,
+    openQuotationsCount,
+    totalOrdersCount,
+    completedOrdersCount,
     recentActivityReal
-  } = getSalesAnalyticsData();
+  } = dash;
 
-  const openQuotationsCount = (db.quotations || []).filter(q => ['pending', 'chờ duyệt'].includes((q.status || '').toLowerCase())).length;
+  const completionRate = totalOrdersCount > 0
+    ? ((completedOrdersCount / totalOrdersCount) * 100).toFixed(1)
+    : '100.0';
 
-  const totalOrdersCount = (db.orders || []).length;
-  const completedOrdersCount = (db.orders || []).filter(o => ['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes((o.status || '').toLowerCase())).length;
-  const completionRate = totalOrdersCount > 0 ? ((completedOrdersCount / totalOrdersCount) * 100).toFixed(1) : '100.0';
+  const isLoading = !state.dashboardData && state.isLoadingDashboard;
 
-  const activityHtml = recentActivityReal.map(a => {
+  const activityHtml = (recentActivityReal || []).map(a => {
     const hasTarget = Boolean(a.targetView && a.itemId);
     const clickAttr = hasTarget ? `onclick="navigate('${a.targetView}', 'view', '${a.itemId}')"` : '';
     const cursorStyle = hasTarget ? 'cursor: pointer;' : '';
+    const actorName = a.actor ? getUserFullName(a.actor) : '';
 
     return `
       <div 
@@ -588,9 +612,9 @@ function renderDashboard(c) {
         <div style="font-size: 13px; font-weight: 500; flex: 1;">
           <div style="color: var(--foreground); font-weight: 600;">${a.event}</div>
           <div style="font-size: 12px; color: var(--muted-foreground); margin-top: 2px;">${a.detail}</div>
-          ${a.actor ? `<div style="font-size: 11px; color: #f0a030; font-family: var(--font-dm-mono); margin-top: 4px;">Thực hiện: ${a.actor}</div>` : ''}
+          ${actorName && actorName !== '—' ? `<div style="font-size: 11px; color: #f0a030; font-family: var(--font-dm-mono); margin-top: 4px;">Thực hiện: ${actorName}</div>` : ''}
         </div>
-        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); white-space: nowrap; margin-left: 12px;">${a.time}</span>
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); white-space: nowrap; margin-left: 12px;">${a.time || ''}</span>
       </div>
     `;
   }).join('');
@@ -600,11 +624,28 @@ function renderDashboard(c) {
   c.innerHTML = `
     <div style="display: flex; flex-direction: column; gap: 24px;">
       <div class="kpi-grid">
-        <div class="kpi-card"><span class="kpi-label">Doanh thu tháng này</span><div class="kpi-value-row"><span class="kpi-value">${fmtUSD(currentMonthRevenue)}</span></div><span class="kpi-sub">${currentMonthStr}</span></div>
-        <div class="kpi-card"><span class="kpi-label">Đơn hàng tháng này</span><div class="kpi-value-row"><span class="kpi-value">${fmt(currentMonthOrders)}</span></div><span class="kpi-sub">${currentMonthStr}</span></div>
-        <div class="kpi-card"><span class="kpi-label">Báo giá chưa khóa</span><div class="kpi-value-row"><span class="kpi-value">${openQuotationsCount}</span></div><span class="kpi-sub">chờ duyệt</span></div>
-        <div class="kpi-card"><span class="kpi-label">Tỷ lệ hoàn thành</span><div class="kpi-value-row"><span class="kpi-value">${completionRate}%</span></div><span class="kpi-sub">giao đúng hạn</span></div>
+        <div class="kpi-card">
+          <span class="kpi-label">Doanh thu tháng này</span>
+          <div class="kpi-value-row"><span class="kpi-value">${isLoading ? '...' : fmtUSD(currentMonthRevenue)}</span></div>
+          <span class="kpi-sub">${currentMonthStr}</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Đơn hàng tháng này</span>
+          <div class="kpi-value-row"><span class="kpi-value">${isLoading ? '...' : fmt(currentMonthOrders)}</span></div>
+          <span class="kpi-sub">${currentMonthStr}</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Báo giá chưa khóa</span>
+          <div class="kpi-value-row"><span class="kpi-value">${isLoading ? '...' : openQuotationsCount}</span></div>
+          <span class="kpi-sub">chờ duyệt</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">Tỷ lệ hoàn thành</span>
+          <div class="kpi-value-row"><span class="kpi-value">${isLoading ? '...' : completionRate + '%'}</span></div>
+          <span class="kpi-sub">giao đúng hạn</span>
+        </div>
       </div>
+
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;" class="grid-2">
         <div style="border: 1px solid var(--border); background: var(--card); padding: 20px;">
           <div style="font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 16px;">Doanh Thu Hàng Tháng</div>
@@ -613,57 +654,55 @@ function renderDashboard(c) {
         <div style="border: 1px solid var(--border); background: var(--card);">
           <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">HOẠT ĐỘNG MỚI NHẤT</div>
           <div>
-            ${activityHtml || '<div style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có hoạt động gần đây</div>'}
+            ${isLoading
+      ? '<div style="padding: 24px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Đang tải dữ liệu...</div>'
+      : (activityHtml || '<div style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có hoạt động gần đây</div>')
+    }
           </div>
         </div>
       </div>
     </div>
   `;
 
-  const ctx = document.getElementById('chart-rev').getContext('2d');
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: salesDataReal.map(d => d.month),
-      datasets: [{
-        label: 'Doanh thu',
-        data: salesDataReal.map(d => d.revenue),
-        borderColor: '#f0a030',
-        backgroundColor: 'rgba(240,160,48,0.15)',
-        fill: true,
-        tension: 0.3
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: '#252a33' }, ticks: { color: '#6b7585' } },
-        y: { grid: { color: '#252a33' }, ticks: { color: '#6b7585' } }
+  // Hủy biểu đồ cũ trước khi vẽ mới để tránh rò rỉ bộ nhớ & giật lag
+  if (dashboardRevChart) {
+    dashboardRevChart.destroy();
+    dashboardRevChart = null;
+  }
+
+  const canvasEl = document.getElementById('chart-rev');
+  if (canvasEl && typeof Chart !== 'undefined') {
+    const ctx = canvasEl.getContext('2d');
+    dashboardRevChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: salesDataReal.map(d => d.month),
+        datasets: [{
+          label: 'Doanh thu',
+          data: salesDataReal.map(d => d.revenue),
+          borderColor: '#f0a030',
+          backgroundColor: 'rgba(240,160,48,0.15)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 200 },
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: '#252a33' }, ticks: { color: '#6b7585' } },
+          y: { grid: { color: '#252a33' }, ticks: { color: '#6b7585' } }
+        }
       }
-    }
-  });
+    });
+  }
 }
 
 function renderMaterialsList(c) {
   const hasPermission = checkModulePermission('materials');
-
-  const filtered = db.materials.filter(m => {
-    if (state.filter !== 'all' && m.status !== state.filter) return false;
-    const searchKey = normalizeSearchText(state.search);
-    if (searchKey && !normalizeSearchText(m.name).includes(searchKey) && !normalizeSearchText(m.id).includes(searchKey)) return false;
-    return true;
-  });
-
-  // TÍNH TOÁN PHÂN TRANG
-  const totalItems = filtered.length;
-  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
-  if (state.page > totalPages) state.page = totalPages;
-  if (state.page < 1) state.page = 1;
-
-  const startIndex = (state.page - 1) * state.pageSize;
-  const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
+  const paginatedItems = db.materials || [];
 
   const totalSku = db.materials.length;
   const totalStock = db.materials.reduce((a, i) => a + (Number(i.stock) || 0), 0);
@@ -721,7 +760,7 @@ function renderMaterialsList(c) {
       
       <td data-label="Người Tạo" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id0)}</td>
       <td data-label="Ngày Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(m.date0)}</td>
-      <td data-label="Giờ Táo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
+      <td data-label="Giờ Tạo" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(m.time0)}</td>
       <td data-label="Người Sửa" style="padding: 11px 16px; font-size: 12px;">${getUserFullName(m.user_id2)}</td>
       <td data-label="Ngày Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtDateStr(m.date2)}</td>
       <td data-label="Giờ Sửa" style="padding: 11px 16px; font-family: var(--font-dm-mono); font-size: 11px; text-align: center; color: var(--muted-foreground);">${fmtTimeStr(m.time2)}</td>
@@ -746,7 +785,7 @@ function renderMaterialsList(c) {
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 550px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
             <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="onServerSearchInput('materials', this.value)" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('materials', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           <button class="btn-action pc-only-print-btn" onclick="openPrintLabelDrawer()" style="height: 38px; padding: 0 14px; background: var(--card); border: 1px solid var(--border); color: var(--foreground); font-family: var(--font-jost); font-size: 13px; font-weight: 500; cursor: pointer; align-items: center; gap: 6px; white-space: nowrap;">
@@ -767,45 +806,17 @@ function renderMaterialsList(c) {
             ${rowsHtml}
           </tbody>
         </table>
-        ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
+        ${paginatedItems.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
       </div>
 
-      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
-        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
-          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
-        </span>
-        <div style="display: flex; gap: 6px; align-items: center;">
-          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
-          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
-          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
-        </div>
-      </div>
+      ${renderPaginationBar('materials')}
     </div>
   `;
 }
 
 function renderCustomersList(c) {
   const hasPermission = checkModulePermission('customers');
-
-  const filtered = db.customers.filter(c => {
-    const matchStatus = (state.filter === 'all' || c.status === state.filter);
-    const searchKey = normalizeSearchText(state.search);
-    const matchSearch = !searchKey ||
-      normalizeSearchText(c.name).includes(searchKey) ||
-      normalizeSearchText(c.id).includes(searchKey) ||
-      normalizeSearchText(c.contact).includes(searchKey) ||
-      normalizeSearchText(c.address || c.diachi).includes(searchKey);
-    return matchStatus && matchSearch;
-  });
-
-  const totalItems = filtered.length;
-  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
-  if (state.page > totalPages) state.page = totalPages;
-  if (state.page < 1) state.page = 1;
-
-  const startIndex = (state.page - 1) * state.pageSize;
-  const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
+  const paginatedItems = db.customers || [];
 
   const totalCount = db.customers.length;
   const activeCount = db.customers.filter(c => c.status === 'active').length;
@@ -885,7 +896,7 @@ function renderCustomersList(c) {
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
             <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="onServerSearchInput('customers', this.value)" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('customers', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
@@ -902,19 +913,10 @@ function renderCustomersList(c) {
             ${rowsHtml}
           </tbody>
         </table>
-        ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
+        ${paginatedItems.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
-        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
-          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
-        </span>
-        <div style="display: flex; gap: 6px; align-items: center;">
-          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
-          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
-          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
-        </div>
-      </div>
+      ${renderPaginationBar('customers')}
     </div>
   `;
 }
@@ -974,37 +976,7 @@ function renderQuotationsList(c) {
   if (!state.quotationsFromDate) state.quotationsFromDate = getFirstDayOfMonthStr();
   if (!state.quotationsToDate) state.quotationsToDate = getLastDayOfMonthStr();
 
-  const filtered = db.quotations.filter(q => {
-    const matchStatus = (state.filter === 'all' || q.status === state.filter);
-
-    // Lọc theo khoảng ngày lập phiếu (date)
-    const dateStr = q.date || '';
-    const matchDate = dateStr >= state.quotationsFromDate && dateStr <= state.quotationsToDate;
-
-    const searchKey = normalizeSearchText(state.search);
-    const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
-    const statusLabel = getStatusLabel(q.status);
-
-    const matchSearch = !searchKey ||
-      normalizeSearchText(q.customer).includes(searchKey) ||
-      normalizeSearchText(q.customerId || q.customerid).includes(searchKey) ||
-      normalizeSearchText(q.id).includes(searchKey) ||
-      normalizeSearchText(dateStr).includes(searchKey) ||
-      normalizeSearchText(dateFormatted).includes(searchKey) ||
-      normalizeSearchText(q.status).includes(searchKey) ||
-      normalizeSearchText(statusLabel).includes(searchKey);
-
-    return matchStatus && matchDate && matchSearch;
-  });
-
-  // TÍNH TOÁN PHÂN TRANG
-  const totalItems = filtered.length;
-  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
-  if (state.page > totalPages) state.page = totalPages;
-  if (state.page < 1) state.page = 1;
-
-  const startIndex = (state.page - 1) * state.pageSize;
-  const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
+  const paginatedItems = db.quotations || [];
 
   const kpiHtml = [
     ['all', 'Tổng Báo Giá'],
@@ -1095,7 +1067,7 @@ function renderQuotationsList(c) {
           <div class="mobile-search-action-group">
             <div class="search-box-input">
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();">
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="onServerSearchInput('quotations', this.value)">
             </div>
             ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
@@ -1106,17 +1078,18 @@ function renderQuotationsList(c) {
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
               <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
                 value="${state.quotationsFromDate}" 
-                onkeydown="if(event.key === 'Enter') { state.quotationsFromDate=this.value; state.page=1; render(); this.blur(); }"
-                onblur="if(state.quotationsFromDate !== this.value) { state.quotationsFromDate=this.value; state.page=1; render(); }">
+                onkeydown="if(event.key === 'Enter') { state.quotationsFromDate=this.value; loadTablePageREST('quotations', 1); this.blur(); }"
+                onblur="if(state.quotationsFromDate !== this.value) { state.quotationsFromDate=this.value; loadTablePageREST('quotations', 1); }">
             </div>
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
               <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
                 value="${state.quotationsToDate}" 
-                onkeydown="if(event.key === 'Enter') { state.quotationsToDate=this.value; state.page=1; render(); this.blur(); }"
-                onblur="if(state.quotationsToDate !== this.value) { state.quotationsToDate=this.value; state.page=1; render(); }">
+                onkeydown="if(event.key === 'Enter') { state.quotationsToDate=this.value; loadTablePageREST('quotations', 1); this.blur(); }"
+                onblur="if(state.quotationsToDate !== this.value) { state.quotationsToDate=this.value; loadTablePageREST('quotations', 1); }">
             </div>
           </div>
+        </div>
       </div>
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
@@ -1130,20 +1103,10 @@ function renderQuotationsList(c) {
             ${rowsHtml}
           </tbody>
         </table>
-        ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu phù hợp</div>` : ''}
+        ${paginatedItems.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu phù hợp</div>` : ''}
       </div>
 
-      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
-        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
-          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
-        </span>
-        <div style="display: flex; gap: 6px; align-items: center;">
-          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
-          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
-          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
-        </div>
-      </div>
+      ${renderPaginationBar('quotations')}
     </div>
   `;
 }
@@ -1155,36 +1118,7 @@ function renderOrdersList(c) {
   if (!state.ordersFromDate) state.ordersFromDate = getFirstDayOfMonthStr();
   if (!state.ordersToDate) state.ordersToDate = getLastDayOfMonthStr();
 
-  const filtered = db.orders.filter(o => {
-    const matchStatus = (state.filter === 'all' || o.status === state.filter);
-
-    // Lọc theo khoảng ngày lập phiếu (date)
-    const dateStr = o.date || '';
-    const matchDate = dateStr >= state.ordersFromDate && dateStr <= state.ordersToDate;
-
-    const searchKey = normalizeSearchText(state.search);
-    const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
-    const statusLabel = getStatusLabel(o.status);
-
-    const matchSearch = !searchKey ||
-      normalizeSearchText(o.customer).includes(searchKey) ||
-      normalizeSearchText(o.customerId || o.customerid).includes(searchKey) ||
-      normalizeSearchText(o.id).includes(searchKey) ||
-      normalizeSearchText(dateStr).includes(searchKey) ||
-      normalizeSearchText(dateFormatted).includes(searchKey) ||
-      normalizeSearchText(o.status).includes(searchKey) ||
-      normalizeSearchText(statusLabel).includes(searchKey);
-
-    return matchStatus && matchDate && matchSearch;
-  });
-
-  const totalItems = filtered.length;
-  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
-  if (state.page > totalPages) state.page = totalPages;
-  if (state.page < 1) state.page = 1;
-
-  const startIndex = (state.page - 1) * state.pageSize;
-  const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
+  const paginatedItems = db.orders || [];
 
   // ĐỒNG BỘ KPI ĐỜN BÁN HÀNG
   const kpiHtml = [
@@ -1255,14 +1189,14 @@ function renderOrdersList(c) {
       </div>
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
+        ${getFilterBar([['all', 'Tất cả'], ['completed', 'Hoàn thành'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['cancelled', 'Đã hủy']])}
         
         <div class="filter-controls-wrapper">
           <!-- Cụm Tìm kiếm + Thêm mới (Nằm trên ở Mobile) -->
           <div class="mobile-search-action-group">
             <div class="search-box-input">
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();">
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="onServerSearchInput('sales-orders', this.value)">
             </div>
             ${hasPermission ? `<button class="btn-primary" onclick="navigate('sales-orders', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
@@ -1273,17 +1207,18 @@ function renderOrdersList(c) {
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
               <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
                 value="${state.ordersFromDate}" 
-                onkeydown="if(event.key === 'Enter') { state.ordersFromDate=this.value; state.page=1; render(); this.blur(); }"
-                onblur="if(state.ordersFromDate !== this.value) { state.ordersFromDate=this.value; state.page=1; render(); }">
+                onkeydown="if(event.key === 'Enter') { state.ordersFromDate=this.value; loadTablePageREST('sales-orders', 1); this.blur(); }"
+                onblur="if(state.ordersFromDate !== this.value) { state.ordersFromDate=this.value; loadTablePageREST('sales-orders', 1); }">
             </div>
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
               <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
                 value="${state.ordersToDate}" 
-                onkeydown="if(event.key === 'Enter') { state.ordersToDate=this.value; state.page=1; render(); this.blur(); }"
-                onblur="if(state.ordersToDate !== this.value) { state.ordersToDate=this.value; state.page=1; render(); }">
+                onkeydown="if(event.key === 'Enter') { state.ordersToDate=this.value; loadTablePageREST('sales-orders', 1); this.blur(); }"
+                onblur="if(state.ordersToDate !== this.value) { state.ordersToDate=this.value; loadTablePageREST('sales-orders', 1); }">
             </div>
           </div>
+        </div>
       </div>
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
@@ -1297,19 +1232,10 @@ function renderOrdersList(c) {
             ${rowsHtml}
           </tbody>
         </table>
-        ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu phù hợp</div>` : ''}
+        ${paginatedItems.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu phù hợp</div>` : ''}
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
-        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
-          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
-        </span>
-        <div style="display: flex; gap: 6px; align-items: center;">
-          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
-          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
-          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
-        </div>
-      </div>
+      ${renderPaginationBar('sales-orders')}
     </div>
   `;
 }
@@ -1321,37 +1247,7 @@ function renderReturnsList(c) {
   if (!state.returnsFromDate) state.returnsFromDate = getFirstDayOfMonthStr();
   if (!state.returnsToDate) state.returnsToDate = getLastDayOfMonthStr();
 
-  const filtered = db.returns.filter(r => {
-    const matchStatus = (state.filter === 'all' || r.status === state.filter);
-
-    // Lọc theo khoảng ngày đổi trả (date)
-    const dateStr = r.date || '';
-    const matchDate = dateStr >= state.returnsFromDate && dateStr <= state.returnsToDate;
-
-    const searchKey = normalizeSearchText(state.search);
-    const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
-    const statusLabel = getStatusLabel(r.status);
-
-    const matchSearch = !searchKey ||
-      normalizeSearchText(r.id).includes(searchKey) ||
-      normalizeSearchText(r.orderId).includes(searchKey) ||
-      normalizeSearchText(r.customer).includes(searchKey) ||
-      normalizeSearchText(r.reason).includes(searchKey) ||
-      normalizeSearchText(dateStr).includes(searchKey) ||
-      normalizeSearchText(dateFormatted).includes(searchKey) ||
-      normalizeSearchText(r.status).includes(searchKey) ||
-      normalizeSearchText(statusLabel).includes(searchKey);
-
-    return matchStatus && matchDate && matchSearch;
-  });
-
-  const totalItems = filtered.length;
-  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
-  if (state.page > totalPages) state.page = totalPages;
-  if (state.page < 1) state.page = 1;
-
-  const startIndex = (state.page - 1) * state.pageSize;
-  const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
+  const paginatedItems = db.returns || [];
 
   // ĐỒNG BỘ ĐỔI TRẢ HÀNG BÁN: ĐÃ XỬ LÝ -> HOÀN THÀNH
   const kpiHtml = [
@@ -1427,14 +1323,14 @@ function renderReturnsList(c) {
       </div>
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
+        ${getFilterBar([['all', 'Tất cả'], ['completed', 'Hoàn thành'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối']])}
         
         <div class="filter-controls-wrapper">
           <!-- Cụm Tìm kiếm + Thêm mới (Nằm trên ở Mobile) -->
           <div class="mobile-search-action-group">
             <div class="search-box-input">
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();">
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="onServerSearchInput('returns', this.value)">
             </div>
             ${hasPermission ? `<button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
@@ -1445,17 +1341,18 @@ function renderReturnsList(c) {
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
               <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
                 value="${state.returnsFromDate}" 
-                onkeydown="if(event.key === 'Enter') { state.returnsFromDate=this.value; state.page=1; render(); this.blur(); }"
-                onblur="if(state.returnsFromDate !== this.value) { state.returnsFromDate=this.value; state.page=1; render(); }">
+                onkeydown="if(event.key === 'Enter') { state.returnsFromDate=this.value; loadTablePageREST('returns', 1); this.blur(); }"
+                onblur="if(state.returnsFromDate !== this.value) { state.returnsFromDate=this.value; loadTablePageREST('returns', 1); }">
             </div>
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
               <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
                 value="${state.returnsToDate}" 
-                onkeydown="if(event.key === 'Enter') { state.returnsToDate=this.value; state.page=1; render(); this.blur(); }"
-                onblur="if(state.returnsToDate !== this.value) { state.returnsToDate=this.value; state.page=1; render(); }">
+                onkeydown="if(event.key === 'Enter') { state.returnsToDate=this.value; loadTablePageREST('returns', 1); this.blur(); }"
+                onblur="if(state.returnsToDate !== this.value) { state.returnsToDate=this.value; loadTablePageREST('returns', 1); }">
             </div>
           </div>
+        </div>
       </div>
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
@@ -1469,19 +1366,10 @@ function renderReturnsList(c) {
             ${rowsHtml}
           </tbody>
         </table>
-        ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
+        ${paginatedItems.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu phù hợp</div>` : ''}
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
-        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
-          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
-        </span>
-        <div style="display: flex; gap: 6px; align-items: center;">
-          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
-          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
-          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
-        </div>
-      </div>
+      ${renderPaginationBar('returns')}
     </div>
   `;
 }
@@ -1493,37 +1381,7 @@ function renderGRNList(c) {
   if (!state.grnFromDate) state.grnFromDate = getFirstDayOfMonthStr();
   if (!state.grnToDate) state.grnToDate = getLastDayOfMonthStr();
 
-  const filtered = db.grns.filter(g => {
-    const matchStatus = (state.filter === 'all' || g.status === state.filter);
-
-    // Lọc theo khoảng ngày nhập kho (date)
-    const dateStr = g.date || '';
-    const matchDate = dateStr >= state.grnFromDate && dateStr <= state.grnToDate;
-
-    const searchKey = normalizeSearchText(state.search);
-    const dateFormatted = dateStr.includes('-') ? dateStr.split('-').reverse().join('/') : dateStr;
-    const statusLabel = getStatusLabel(g.status);
-
-    const matchSearch = !searchKey ||
-      normalizeSearchText(g.id).includes(searchKey) ||
-      normalizeSearchText(g.supplier).includes(searchKey) ||
-      normalizeSearchText(g.warehouseCode || g.warehouse_code).includes(searchKey) ||
-      normalizeSearchText(dateStr).includes(searchKey) ||
-      normalizeSearchText(dateFormatted).includes(searchKey) ||
-      normalizeSearchText(g.status).includes(searchKey) ||
-      normalizeSearchText(statusLabel).includes(searchKey);
-
-    return matchStatus && matchDate && matchSearch;
-  });
-
-  // TÍNH TOÁN PHÂN TRANG
-  const totalItems = filtered.length;
-  const totalPages = Math.ceil(totalItems / state.pageSize) || 1;
-  if (state.page > totalPages) state.page = totalPages;
-  if (state.page < 1) state.page = 1;
-
-  const startIndex = (state.page - 1) * state.pageSize;
-  const paginatedItems = filtered.slice(startIndex, startIndex + state.pageSize);
+  const paginatedItems = db.grns || [];
 
   // ĐỒNG BỘ 4 THẺ KPI ĐÚNG THỨ TỰ VÀ MÀU SẮC CHUẨN (Tổng số -> Đã nhận -> Bản nháp -> Đã xác minh)
   const kpiHtml = [
@@ -1597,14 +1455,14 @@ function renderGRNList(c) {
       </div>
 
       <div class="filter-search-container" style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-        ${getFilterBar([['all', 'Tất cả'], ['accepted', 'Duyệt'], ['pending', 'Chờ duyệt'], ['rejected', 'Từ chối'], ['expired', 'Hết hạn']])}
+        ${getFilterBar([['all', 'Tất cả'], ['Đã nhận', 'Đã nhận'], ['Bản nháp', 'Bản nháp'], ['Đã xác minh', 'Đã xác minh']])}
         
         <div class="filter-controls-wrapper">
           <!-- Cụm Tìm kiếm + Thêm mới (Nằm trên ở Mobile) -->
           <div class="mobile-search-action-group">
             <div class="search-box-input">
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="state.search=this.value; state.page=1; render();">
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="onServerSearchInput('grn', this.value)">
             </div>
             ${hasPermission ? `<button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
@@ -1615,17 +1473,18 @@ function renderGRNList(c) {
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Từ ngày:</label>
               <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
                 value="${state.grnFromDate}" 
-                onkeydown="if(event.key === 'Enter') { state.grnFromDate=this.value; state.page=1; render(); this.blur(); }"
-                onblur="if(state.grnFromDate !== this.value) { state.grnFromDate=this.value; state.page=1; render(); }">
+                onkeydown="if(event.key === 'Enter') { state.grnFromDate=this.value; loadTablePageREST('grn', 1); this.blur(); }"
+                onblur="if(state.grnFromDate !== this.value) { state.grnFromDate=this.value; loadTablePageREST('grn', 1); }">
             </div>
             <div class="date-input-item">
               <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase;">Đến ngày:</label>
               <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
                 value="${state.grnToDate}" 
-                onkeydown="if(event.key === 'Enter') { state.grnToDate=this.value; state.page=1; render(); this.blur(); }"
-                onblur="if(state.grnToDate !== this.value) { state.grnToDate=this.value; state.page=1; render(); }">
+                onkeydown="if(event.key === 'Enter') { state.grnToDate=this.value; loadTablePageREST('grn', 1); this.blur(); }"
+                onblur="if(state.grnToDate !== this.value) { state.grnToDate=this.value; loadTablePageREST('grn', 1); }">
             </div>
           </div>
+        </div>
       </div>
 
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
@@ -1639,20 +1498,10 @@ function renderGRNList(c) {
             ${rowsHtml}
           </tbody>
         </table>
-        ${filtered.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
+        ${paginatedItems.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu phù hợp</div>` : ''}
       </div>
 
-      <!-- THANH ĐIỀU HƯỚNG PHÂN TRANG -->
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
-        <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
-          Hiển thị ${totalItems === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + state.pageSize, totalItems)} / Tổng ${totalItems} mục
-        </span>
-        <div style="display: flex; gap: 6px; align-items: center;">
-          <button ${state.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page--; render();">❮ Trước</button>
-          <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${state.page} / ${totalPages}</span>
-          <button ${state.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="state.page++; render();">Sau ❯</button>
-        </div>
-      </div>
+      ${renderPaginationBar('grn')}
     </div>
   `;
 }
@@ -2158,7 +2007,7 @@ function renderQuotationForm(c) {
           </div>
 
           <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-            <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="state.mode === 'edit' ? navigate('quotations', 'view', '${d.id}') : navigate('quotations')">
+            <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('quotations', 'view', '${d.id}') : navigate('quotations')">
               ${isView ? 'Quay Lại' : 'Hủy'}
             </button>
             <div style="display: flex; gap: 8px;">                          
@@ -2333,7 +2182,7 @@ function renderSalesOrderForm(c) {
 
     const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
     const unitName = mat ? (mat.unit || '—') : '—';
-    const stockQty = calculateRealtimeStock(l.sku, d.warehouseCode, d.id);
+    const stockQty = getStockFromView(l.sku, d.warehouseCode);
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px 10px 10px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
@@ -2478,7 +2327,7 @@ function renderSalesOrderForm(c) {
           </div>
 
           <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-            <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="state.mode === 'edit' ? navigate('sales-orders', 'view', '${d.id}') : navigate('sales-orders')">
+            <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('sales-orders', 'view', '${d.id}') : navigate('sales-orders')">
               ${isView ? 'Quay Lại' : 'Hủy'}
             </button>
             <div style="display: flex; gap: 8px;">              
@@ -2562,7 +2411,7 @@ function renderReturnForm(c) {
   const linesHtml = d.lineItems.map((l, idx) => {
     const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
     const unitName = mat ? (mat.unit || '—') : '—';
-    const stockQty = calculateRealtimeStock(l.sku, d.warehouseCode, d.id);
+    const stockQty = getStockFromView(l.sku, d.warehouseCode);
 
     return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px 10px 10px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
@@ -2700,7 +2549,7 @@ function renderReturnForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="state.mode === 'edit' ? navigate('returns', 'view', '${d.id}') : navigate('returns')">
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('returns', 'view', '${d.id}') : navigate('returns')">
             ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
@@ -2759,7 +2608,7 @@ function renderGRNForm(c) {
   const linesHtml = d.lineItems.map((l, idx) => {
     const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
     const unitName = mat ? (mat.unit || '—') : '—';
-    const stockQty = calculateRealtimeStock(l.sku, d.warehouseCode, d.id);
+    const stockQty = getStockFromView(l.sku, d.warehouseCode);
     const qtyVal = l.receivedQty ?? l.qtyImport ?? 1;
 
     return `
@@ -2883,7 +2732,7 @@ function renderGRNForm(c) {
         </div>
 
         <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center;">
-          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="state.mode === 'edit' ? navigate('grn', 'view', '${d.id}') : navigate('grn')">
+          <button type="button" class="btn-cancel" style="padding: 8px 16px; font-size: 13px;" onclick="state.mode === 'edit' ? navigate('grn', 'view', '${d.id}') : navigate('grn')">
             ${isView ? 'Quay Lại' : 'Hủy'}
           </button>
           <div style="display: flex; gap: 8px;">
@@ -2906,11 +2755,12 @@ function renderReportInventory(c) {
   if (state.reportInvSearch === undefined) state.reportInvSearch = '';
 
   const getActualStock = (m) => {
-    const invList = (db.inventory || []).filter(i => i.sku === m.id || i.material_id === m.id);
-    if (invList.length > 0) {
-      return invList.reduce((sum, inv) => sum + Number(inv.ton_thuc_te ?? inv.stock ?? 0), 0);
+    // Đọc trực tiếp từ SQL View v_inventory_realtime đã nạp vào db.realtimeStock
+    const rows = (db.realtimeStock || []).filter(r => r.sku === m.id);
+    if (rows.length > 0) {
+      return rows.reduce((sum, r) => sum + Number(r.current_stock || 0), 0);
     }
-    return m.stock ?? 0;
+    return Number(m.stock ?? 0);
   };
 
   const getFilteredList = () => {
@@ -3131,39 +2981,36 @@ function renderReportInventory(c) {
   // Xử lý ô Tìm kiếm
   const searchInput = document.getElementById('report-inv-search-input');
   if (searchInput) {
+    let invSearchTimer = null;
     searchInput.addEventListener('input', (e) => {
       state.reportInvSearch = e.target.value;
-      state.page = 1;
-      render();
+      clearTimeout(invSearchTimer);
+      invSearchTimer = setTimeout(() => {
+        state.page = 1;
+        render();
+      }, 300);
     });
   }
 }
 
-function renderReportSales(c) {
-  const {
-    salesDataReal,
-    ytdRevenue,
-    ytdOrders
-  } = getSalesAnalyticsData();
+let salesReportChart = null;
 
-  const totalReturnsCount = (db.returns || []).filter(r => ['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes((r.status || '').toLowerCase())).length;
-  const returnRatePercent = ytdOrders > 0 ? ((totalReturnsCount / ytdOrders) * 100).toFixed(1) : '0.0';
-  const avgOrderValue = ytdOrders > 0 ? (ytdRevenue / ytdOrders) : 0;
+function renderReportSales(c) {
+  if (!c) return;
 
   // 1. Khởi tạo State cho Ngày Từ - Đến, Khách hàng & Loại Báo Cáo
   if (!state.reportSalesFromDate) {
-    state.reportSalesFromDate = getFirstDayOfMonthStr(); // Mặc định ngày đầu tiên của tháng
+    state.reportSalesFromDate = getFirstDayOfMonthStr();
   }
   if (!state.reportSalesToDate) {
-    state.reportSalesToDate = getLastDayOfMonthStr();   // Mặc định ngày cuối cùng của tháng
+    state.reportSalesToDate = getLastDayOfMonthStr();
   }
   if (state.reportSalesCustomer === undefined) {
     state.reportSalesCustomer = '';
   }
   if (!state.reportType) {
-    state.reportType = 'detail'; // Mặc định là 'detail' (Báo cáo chi tiết)
+    state.reportType = 'detail';
   }
-  // Khởi tạo limit cho Lazy Loading (áp dụng riêng cho Báo cáo chi tiết)
   if (!state.reportSalesLimit) {
     state.reportSalesLimit = 40;
   }
@@ -3175,21 +3022,58 @@ function renderReportSales(c) {
   const reportType = state.reportType || 'summary';
   const isDetail = reportType === 'detail';
 
+  const currentFilterKey = `${selectedFromDate}_${selectedToDate}_${selectedCustomer}`;
+  if (state.salesReportLoadedKey !== currentFilterKey && !state.isLoadingSalesReport) {
+    state.isLoadingSalesReport = true;
+    fetchSalesReportDataREST()
+      .then(() => {
+        state.salesReportLoadedKey = currentFilterKey;
+      })
+      .finally(() => {
+        state.isLoadingSalesReport = false;
+        if (state.view === 'report-sales') render();
+      });
+  }
+
+  // Kích hoạt tải dữ liệu tổng hợp năm (nếu người dùng vào thẳng Báo cáo mà chưa qua Dashboard)
+  if (!state.dashboardData && !state.isLoadingDashboard) {
+    fetchDashboardSummaryREST();
+  }
+
+  // Lấy dữ liệu biểu đồ & lũy kế năm từ Server RPC (fallback về local nếu chưa có)
+  const fallbackAnalytics = typeof getSalesAnalyticsData === 'function'
+    ? getSalesAnalyticsData()
+    : { salesDataReal: [], ytdRevenue: 0, ytdOrders: 0 };
+
+  const dash = state.dashboardData || {};
+  const salesDataReal = (dash.salesDataReal && dash.salesDataReal.length > 0)
+    ? dash.salesDataReal
+    : fallbackAnalytics.salesDataReal;
+
+  const ytdRevenue = dash.ytdRevenue ?? (salesDataReal.reduce((s, m) => s + Number(m.revenue || 0), 0) || fallbackAnalytics.ytdRevenue);
+  const ytdOrders = dash.totalOrdersCount ?? fallbackAnalytics.ytdOrders;
+
+  const totalReturnsCount = dash.totalReturnsCount ?? (db.returns || []).filter(r =>
+    ['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes((r.status || '').toLowerCase())
+  ).length;
+
+  const returnRatePercent = ytdOrders > 0 ? ((totalReturnsCount / ytdOrders) * 100).toFixed(1) : '0.0';
+  const avgOrderValue = ytdOrders > 0 ? (ytdRevenue / ytdOrders) : 0;
+
   // Tra cứu Đơn Vị từ danh mục Vật tư / Sản phẩm theo SKU hoặc Tên
   const getMaterialUnit = (sku, name) => {
     const mat = (db.materials || []).find(m => (sku && m.id === sku) || (name && m.name === name));
     return mat ? (mat.unit || '—') : '—';
   };
 
-  // Lọc dữ liệu đơn hàng: Trạng thái Duyệt / Hoàn Thành và Ngày lập (Date) nằm trong khoảng Từ Ngày - Đến Ngày
-  const filteredOrdersForDateRange = (db.orders || []).filter(o => {
-    const status = (o.status || '').toLowerCase();
-    const isValidStatus = ['completed', 'hoàn thành', 'đã xử lý', 'accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
-    if (!isValidStatus) return false;
-    if (!o.date) return false;
+  // Thay thế đoạn lọc cũ trên db.orders bằng dữ liệu đã lọc từ server:
+  const filteredOrdersForDateRange = state.salesReportOrders || [];
 
-    return o.date >= selectedFromDate && o.date <= selectedToDate;
-  });
+  const rpcSummary = state.salesReportRpcSummary || { total_orders: 0, total_revenue: 0, total_discount: 0 };
+  // Bạn có thể dùng trực tiếp:
+  // rpcSummary.total_orders   -> Tổng số đơn trong kỳ lọc
+  // rpcSummary.total_revenue  -> Tổng doanh thu trong kỳ lọc
+  // rpcSummary.total_discount -> Tổng chiết khấu trong kỳ lọc
 
   let hasData = false;
 
@@ -3627,43 +3511,68 @@ function renderReportSales(c) {
     }, 100);
   }
 
-  new Chart(document.getElementById('chart-sales').getContext('2d'), {
-    type: 'line',
-    data: {
-      labels: salesDataReal.map(d => d.month),
-      datasets: [
-        { yAxisID: 'yRev', label: 'Doanh thu', data: salesDataReal.map(d => d.revenue), borderColor: '#f0a030', tension: 0.3 },
-        { yAxisID: 'yOrd', label: 'Đơn hàng', data: salesDataReal.map(d => d.orders), borderColor: '#60a5fa', tension: 0.3 }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        yRev: { position: 'left', grid: { color: '#252a33' } },
-        yOrd: { position: 'right', grid: { drawOnChartArea: false } },
-        x: { grid: { color: '#252a33' } }
+  // Hủy instance biểu đồ cũ trước khi vẽ mới để tránh giật lag & rò rỉ bộ nhớ
+  if (salesReportChart) {
+    salesReportChart.destroy();
+    salesReportChart = null;
+  }
+
+  const salesCanvasEl = document.getElementById('chart-sales');
+  if (salesCanvasEl && typeof Chart !== 'undefined') {
+    const ctx = salesCanvasEl.getContext('2d');
+    salesReportChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: salesDataReal.map(d => d.month),
+        datasets: [
+          {
+            yAxisID: 'yRev',
+            label: 'Doanh thu',
+            data: salesDataReal.map(d => d.revenue),
+            borderColor: '#f0a030',
+            backgroundColor: 'rgba(240,160,48,0.12)',
+            fill: true,
+            tension: 0.3
+          },
+          {
+            yAxisID: 'yOrd',
+            label: 'Đơn hàng',
+            data: salesDataReal.map(d => d.orders || 0),
+            borderColor: '#60a5fa',
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 200 },
+        plugins: { legend: { display: false } },
+        scales: {
+          yRev: { position: 'left', grid: { color: '#252a33' }, ticks: { color: '#6b7585' } },
+          yOrd: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#6b7585' } },
+          x: { grid: { color: '#252a33' }, ticks: { color: '#6b7585' } }
+        }
       }
-    }
-  });
+    });
+  }
 }
 
-function handleSec1Enter(e, nextId) {
-  if (e.key === 'Enter') {
-    // Riêng ô Ghi chú (textarea): cho phép bấm Shift + Enter để xuống dòng bình thường
-    if (e.target.tagName === 'TEXTAREA' && e.shiftKey) return;
+function renderPaginationBar(tableName) {
+  const pg = state.pagination?.[tableName] || { page: 1, pageSize: 25, total: 0 };
+  const totalPages = Math.max(1, Math.ceil(pg.total / pg.pageSize));
+  const startIndex = (pg.page - 1) * pg.pageSize;
 
-    e.preventDefault(); // Chặn hành vi submit form mặc định khi ấn Enter
-
-    if (nextId) {
-      const nextEl = document.getElementById(nextId);
-      if (nextEl) {
-        nextEl.focus();
-      }
-    } else {
-      // Nếu là ô cuối cùng (Ghi chú) -> Mất focus
-      e.target.blur();
-    }
-  }
+  return `
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
+      <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
+        Hiển thị ${pg.total === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + pg.pageSize, pg.total)} / Tổng ${pg.total} mục
+      </span>
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <button ${pg.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="loadTablePageREST('${tableName}', ${pg.page - 1})">❮ Trước</button>
+        <span style="font-family: var(--font-dm-mono); font-size: 11px; padding: 0 8px; color: var(--foreground);">Trang ${pg.page} / ${totalPages}</span>
+        <button ${pg.page >= totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="loadTablePageREST('${tableName}', ${pg.page + 1})">Sau ❯</button>
+      </div>
+    </div>
+  `;
 }
