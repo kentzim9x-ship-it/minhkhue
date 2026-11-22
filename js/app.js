@@ -296,16 +296,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.addEventListener('click', () => navigate(btn.getAttribute('data-view')));
   });
 
+  let resizePageTimer = null;
   window.addEventListener('resize', () => {
-    const newSize = getResponsivePageSize();
-    if (state.pageSize !== newSize) {
-      state.pageSize = newSize;
-      state.page = 1;
-      if (typeof currentRenderedView !== 'undefined') {
-        currentRenderedView = null;
+    clearTimeout(resizePageTimer);
+    resizePageTimer = setTimeout(() => {
+      const newSize = getDevicePageSize();
+      if (state.pageSize !== newSize) {
+        state.pageSize = newSize;
+        state.page = 1;
+
+        // Nếu đang ở 1 trong 4 màn hình chứng từ thì gọi lại API trang 1 với pageSize mới
+        const serverViews = ['quotations', 'sales-orders', 'returns', 'grn'];
+        if (state.mode === 'list' && serverViews.includes(state.view)) {
+          loadTablePageREST(state.view, 1);
+        } else {
+          if (typeof currentRenderedView !== 'undefined') {
+            currentRenderedView = null;
+          }
+          render();
+        }
       }
-      render(true);
-    }
+    }, 250);
   });
 
   // VUỐT SANG TRÁI ĐỂ ĐÓNG MENU (MOBILE SIDEBAR)
@@ -395,11 +406,12 @@ async function fetchDashboardSummaryREST(forceRefresh = false) {
 // ============================================================
 
 if (!state.pagination) {
+  const initialSize = getDevicePageSize();
   state.pagination = {
-    orders: { page: 1, pageSize: 25, total: 0 },
-    quotations: { page: 1, pageSize: 25, total: 0 },
-    grns: { page: 1, pageSize: 25, total: 0 },
-    returns: { page: 1, pageSize: 25, total: 0 }
+    orders: { page: 1, pageSize: initialSize, total: 0 },
+    quotations: { page: 1, pageSize: initialSize, total: 0 },
+    grns: { page: 1, pageSize: initialSize, total: 0 },
+    returns: { page: 1, pageSize: initialSize, total: 0 }
   };
 }
 
@@ -421,7 +433,14 @@ async function loadMasterDataREST() {
   }
 }
 
+function getDevicePageSize() {
+  return window.innerWidth <= 768 ? 8 : 20;
+}
+
 async function loadTablePageREST(tableName, page = 1) {
+  const pageSize = getDevicePageSize();
+  const offset = (page - 1) * pageSize;
+
   const keyMap = {
     'sales-orders': 'orders',
     'orders': 'orders',
@@ -434,10 +453,11 @@ async function loadTablePageREST(tableName, page = 1) {
 
   if (!state.pagination) state.pagination = {};
   if (!state.pagination[stateKey]) {
-    state.pagination[stateKey] = { page: 1, pageSize: 25, total: 0 };
+    state.pagination[stateKey] = { page: 1, pageSize: pageSize, total: 0 };
   }
 
   const pg = state.pagination[stateKey];
+  pg.pageSize = pageSize; // <-- Thêm dòng này để cập nhật đúng 8 hoặc 20
   pg.page = Math.max(1, page);
 
   const dbTableMap = {
@@ -450,7 +470,7 @@ async function loadTablePageREST(tableName, page = 1) {
 
   const selectColumnsMap = {
     orders: 'id,date,customer,items,lineitems,total,subtotal,tax,"discountTotal",status,warehouse_code,quotation_id,notes,user_id0,date0,time0,user_id2,date2,time2',
-    quotations: 'id,date,validbegin,validuntil,customer,lineitems,total,subtotal,tax,discounttotal,status,apply_yn,notes,webRequestInfo,user_id0,date0,time0,user_id2,date2,time2',
+    quotations: 'id,customer,date,validuntil,status,notes,lineitems,tax,total,discountTotal,user_id0,date0,time0,user_id2,date2,time2,validbegin,apply_yn,webRequestInfo',
     grns: 'id,date,supplier,warehousecode,poreference,lineitems,totalvalue,status,notes,user_id0,date0,time0,user_id2,date2,time2',
     returns: 'id,date,customer,order_id,warehouse_code,reason,lineitems,total,status,notes,user_id0,date0,time0,user_id2,date2,time2'
   };
