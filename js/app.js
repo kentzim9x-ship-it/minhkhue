@@ -305,8 +305,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         state.pageSize = newSize;
         state.page = 1;
 
-        // Nếu đang ở 1 trong 4 màn hình chứng từ thì gọi lại API trang 1 với pageSize mới
-        const serverViews = ['quotations', 'sales-orders', 'returns', 'grn'];
+        // Nếu đang ở 1 trong 6 màn hình danh mục/chứng từ thì gọi lại API trang 1 với pageSize mới
+        const serverViews = ['materials', 'customers', 'quotations', 'sales-orders', 'returns', 'grn'];
         if (state.mode === 'list' && serverViews.includes(state.view)) {
           loadTablePageREST(state.view, 1);
         } else {
@@ -365,8 +365,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await fetchDataFromSupabase();
 
-  // Tải lại 4 bảng chứng từ theo đúng điều kiện Từ ngày - Đến ngày & phân trang ngay lần đầu truy cập
+  // Tải lại 6 bảng danh mục & chứng từ theo đúng điều kiện lọc & phân trang ngay lần đầu truy cập
   await Promise.all([
+    loadTablePageREST('materials', 1),
+    loadTablePageREST('customers', 1),
     loadTablePageREST('quotations', 1),
     loadTablePageREST('sales-orders', 1),
     loadTablePageREST('returns', 1),
@@ -408,6 +410,8 @@ async function fetchDashboardSummaryREST(forceRefresh = false) {
 if (!state.pagination) {
   const initialSize = getDevicePageSize();
   state.pagination = {
+    materials: { page: 1, pageSize: initialSize, total: 0 },
+    customers: { page: 1, pageSize: initialSize, total: 0 },
     orders: { page: 1, pageSize: initialSize, total: 0 },
     quotations: { page: 1, pageSize: initialSize, total: 0 },
     grns: { page: 1, pageSize: initialSize, total: 0 },
@@ -439,9 +443,10 @@ function getDevicePageSize() {
 
 async function loadTablePageREST(tableName, page = 1) {
   const pageSize = getDevicePageSize();
-  const offset = (page - 1) * pageSize;
 
   const keyMap = {
+    'materials': 'materials',
+    'customers': 'customers',
     'sales-orders': 'orders',
     'orders': 'orders',
     'grn': 'grns',
@@ -457,10 +462,12 @@ async function loadTablePageREST(tableName, page = 1) {
   }
 
   const pg = state.pagination[stateKey];
-  pg.pageSize = pageSize; // <-- Thêm dòng này để cập nhật đúng 8 hoặc 20
+  pg.pageSize = pageSize;
   pg.page = Math.max(1, page);
 
   const dbTableMap = {
+    'materials': 'materials',
+    'customers': 'customers',
     'orders': 'orders',
     'grns': 'grns',
     'quotations': 'quotations',
@@ -469,10 +476,21 @@ async function loadTablePageREST(tableName, page = 1) {
   const supabaseTable = dbTableMap[stateKey] || stateKey;
 
   const selectColumnsMap = {
+    materials: '*',
+    customers: '*',
     orders: 'id,date,customer,items,lineitems,total,subtotal,tax,"discountTotal",status,warehouse_code,quotation_id,notes,user_id0,date0,time0,user_id2,date2,time2',
     quotations: 'id,customer,date,validuntil,status,notes,lineitems,tax,total,discountTotal,user_id0,date0,time0,user_id2,date2,time2,validbegin,apply_yn,webRequestInfo',
     grns: 'id,date,supplier,warehousecode,poreference,lineitems,totalvalue,status,notes,user_id0,date0,time0,user_id2,date2,time2',
     returns: 'id,date,customer,order_id,warehouse_code,reason,lineitems,total,status,notes,user_id0,date0,time0,user_id2,date2,time2'
+  };
+
+  const orderMap = {
+    materials: 'id.asc',
+    customers: 'id.asc',
+    orders: 'date.desc,id.desc',
+    quotations: 'date.desc,id.desc',
+    grns: 'date.desc,id.desc',
+    returns: 'date.desc,id.desc'
   };
 
   const dateStateMap = {
@@ -487,7 +505,11 @@ async function loadTablePageREST(tableName, page = 1) {
   // 1. Lọc theo từ khóa tìm kiếm
   const kw = (state.search || '').trim();
   if (kw) {
-    if (stateKey === 'grns') {
+    if (stateKey === 'materials') {
+      baseFilters.push(`or=(id.ilike.*${kw}*,name.ilike.*${kw}*,category.ilike.*${kw}*,location.ilike.*${kw}*)`);
+    } else if (stateKey === 'customers') {
+      baseFilters.push(`or=(id.ilike.*${kw}*,name.ilike.*${kw}*,contact.ilike.*${kw}*,phone.ilike.*${kw}*,email.ilike.*${kw}*)`);
+    } else if (stateKey === 'grns') {
       baseFilters.push(`or=(id.ilike.*${kw}*,supplier.ilike.*${kw}*,poreference.ilike.*${kw}*)`);
     } else {
       baseFilters.push(`or=(id.ilike.*${kw}*,customer.ilike.*${kw}*)`);
@@ -503,18 +525,18 @@ async function loadTablePageREST(tableName, page = 1) {
 
   // Bộ lọc cho bảng dữ liệu (có thêm trạng thái)
   const filters = [...baseFilters];
-  if (state.statusFilter && state.statusFilter !== 'ALL' && state.statusFilter !== 'all') {
-    filters.push(`status=eq.${state.statusFilter}`);
+  const activeStatus = state.statusFilter || state.filter;
+  if (activeStatus && activeStatus !== 'ALL' && activeStatus !== 'all') {
+    filters.push(`status=eq.${activeStatus}`);
   }
 
   state.isLoadingList = true;
   try {
-    // Chạy song song: tải trang hiện tại + tải cột status để đếm tổng KPI toàn bộ kỳ lọc
     const [res, kpiRes] = await Promise.all([
       RestAPI.fetchPaginated(supabaseTable, {
         select: selectColumnsMap[stateKey] || '*',
         filters,
-        order: 'date.desc,id.desc',
+        order: orderMap[stateKey] || 'id.asc',
         page: pg.page,
         pageSize: pg.pageSize
       }),
@@ -526,10 +548,17 @@ async function loadTablePageREST(tableName, page = 1) {
       })
     ]);
 
-    db[stateKey] = res.data || [];
+    // Với materials & customers: lưu vào mảng riêng cho bảng để không làm mất cache dropdown đầy đủ
+    if (stateKey === 'materials') {
+      db.materialsPage = res.data || [];
+    } else if (stateKey === 'customers') {
+      db.customersPage = res.data || [];
+    } else {
+      db[stateKey] = res.data || [];
+    }
+
     pg.total = res.totalCount ?? res.total ?? 0;
 
-    // Lưu tổng số theo từng trạng thái vào state.kpiCounts
     if (!state.kpiCounts) state.kpiCounts = {};
     const allStatuses = (kpiRes.data || []).map(row => (row.status || '').toLowerCase());
     state.kpiCounts[stateKey] = {

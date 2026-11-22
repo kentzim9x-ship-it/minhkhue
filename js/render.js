@@ -702,7 +702,7 @@ function renderDashboard(c) {
 
 function renderMaterialsList(c) {
   const hasPermission = checkModulePermission('materials');
-  const paginatedItems = db.materials || [];
+  const paginatedItems = db.materialsPage || (db.materials || []).slice(0, getDevicePageSize());
 
   const totalSku = db.materials.length;
   const totalStock = db.materials.reduce((a, i) => a + (Number(i.stock) || 0), 0);
@@ -785,7 +785,10 @@ function renderMaterialsList(c) {
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 550px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
             <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="onServerSearchInput('materials', this.value)" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" 
+              oninput="onServerSearchInput('materials', this.value)" 
+              onkeydown="if(event.key === 'Enter') { event.preventDefault(); clearTimeout(window.serverSearchTimer); state.search = this.value; loadTablePageREST('materials', 1); }"
+              style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('materials', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           <button class="btn-action pc-only-print-btn" onclick="openPrintLabelDrawer()" style="height: 38px; padding: 0 14px; background: var(--card); border: 1px solid var(--border); color: var(--foreground); font-family: var(--font-jost); font-size: 13px; font-weight: 500; cursor: pointer; align-items: center; gap: 6px; white-space: nowrap;">
@@ -808,13 +811,14 @@ function renderMaterialsList(c) {
         </table>
         ${paginatedItems.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
       </div>
+      ${renderPaginationBar('materials')}
     </div>
   `;
 }
 
 function renderCustomersList(c) {
   const hasPermission = checkModulePermission('customers');
-  const paginatedItems = db.customers || [];
+  const paginatedItems = db.customersPage || (db.customers || []).slice(0, getDevicePageSize());
 
   const totalCount = db.customers.length;
   const activeCount = db.customers.filter(c => c.status === 'active').length;
@@ -894,7 +898,10 @@ function renderCustomersList(c) {
         <div class="mobile-search-action-group" style="display: flex; gap: 8px; flex-wrap: wrap; width: 100%; max-width: 450px;">
           <div style="display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--card); padding: 0 12px; flex: 1; min-width: 200px; height: 38px; box-sizing: border-box;">
             <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="onServerSearchInput('customers', this.value)" style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
+            <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" 
+              oninput="onServerSearchInput('customers', this.value)" 
+              onkeydown="if(event.key === 'Enter') { event.preventDefault(); clearTimeout(window.serverSearchTimer); state.search = this.value; loadTablePageREST('customers', 1); }"
+              style="background: transparent; border: none; outline: none; color: var(--foreground); font-family: var(--font-jost); font-size: 13px; width: 100%; height: 100%; padding: 0;">
           </div>
           ${hasPermission ? `<button class="btn-primary" onclick="navigate('customers', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
         </div>
@@ -913,6 +920,7 @@ function renderCustomersList(c) {
         </table>
         ${paginatedItems.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
       </div>
+      ${renderPaginationBar('customers')}
     </div>
   `;
 }
