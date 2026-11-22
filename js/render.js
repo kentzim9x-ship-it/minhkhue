@@ -3039,9 +3039,9 @@ function renderReportSales(c) {
   const reportType = state.reportType || 'summary';
   const isDetail = reportType === 'detail';
 
-  const currentFilterKey = `${selectedFromDate}_${selectedToDate}_${selectedCustomer}`;
+  const currentFilterKey = `${selectedFromDate}_${selectedToDate}`;
   if (state.salesReportLoadedKey !== currentFilterKey && !state.isLoadingSalesReport) {
-    fetchSalesReportDataREST(); // Bỏ .finally(() => render()) để tránh vẽ lại biểu đồ 2 lần
+    fetchSalesReportDataREST();
   }
 
   // Kích hoạt tải dữ liệu tổng hợp năm (nếu người dùng vào thẳng Báo cáo mà chưa qua Dashboard)

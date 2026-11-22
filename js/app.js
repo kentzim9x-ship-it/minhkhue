@@ -550,35 +550,37 @@ async function fetchSalesReportDataREST() {
 
   state.isLoadingSalesReport = true;
   try {
-    const rpcPromise = RestAPI.rpc('get_sales_report', {
-      p_from: fromDate,
-      p_to: toDate,
-      p_customer: customer
-    });
-
-    // Tải toàn bộ đơn hàng hợp lệ trong khoảng Từ ngày - Đến ngày để Top Khách Hàng luôn tính đủ
     const filters = [
       `date=gte.${fromDate}`,
       `date=lte.${toDate}`,
       `status=not.in.(Cancelled,"Đã hủy",Draft,"Nháp")`
     ];
 
-    const ordersPromise = RestAPI.fetchPaginated('orders', {
-      select: 'id,date,customer,notes,total,"discountTotal",status,lineitems',
-      filters,
-      order: 'date.asc,id.asc',
-      page: 1,
-      pageSize: 2000
-    });
-
-    const [rpcRes, ordersRes] = await Promise.all([rpcPromise, ordersPromise]);
+    const [rpcRes, ordersRes] = await Promise.all([
+      RestAPI.rpc('get_sales_report', {
+        p_from: fromDate,
+        p_to: toDate,
+        p_customer: customer
+      }).catch(e => {
+        console.warn('Bỏ qua lỗi RPC get_sales_report:', e);
+        return [];
+      }),
+      RestAPI.fetchPaginated('orders', {
+        select: 'id,date,customer,notes,total,"discountTotal",status,lineitems',
+        filters,
+        order: 'date.asc,id.asc',
+        page: 1,
+        pageSize: 2000
+      })
+    ]);
 
     state.salesReportRpcSummary = rpcRes?.[0] || { total_orders: 0, total_revenue: 0, total_discount: 0 };
     state.salesReportOrders = ordersRes.data || [];
-    state.salesReportLoadedKey = `${fromDate}_${toDate}`;
   } catch (err) {
-    console.error('Lỗi tải báo cáo doanh thu RPC:', err);
+    console.error('Lỗi tải báo cáo doanh thu:', err);
+    state.salesReportOrders = [];
   } finally {
+    state.salesReportLoadedKey = `${fromDate}_${toDate}`;
     state.isLoadingSalesReport = false;
     render();
   }
