@@ -3411,6 +3411,7 @@ function renderReportSales(c) {
                   onchange="if(this.dataset.typing !== 'true' && this.value && state.reportSalesToDate !== this.value) { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }"
                   onblur="this.dataset.typing='false'; if(this.value && state.reportSalesToDate !== this.value) { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }">
               </div>
+            </div>
 
             <!-- HÀNG 2 MOBILE: LOẠI BÁO CÁO & KHÁCH HÀNG -->
             <div class="report-filter-row">

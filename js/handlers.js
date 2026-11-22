@@ -2270,7 +2270,7 @@ async function exportSalesOrderToPDF() {
 // 3. XUẤT PDF BÁO CÁO BÁN HÀNG (TỔNG HỢP & CHI TIẾT)
 // ==========================================
 async function exportSalesReportToPDF() {
-  const selectedCustomer = state.reportSalesCustomer || '';
+  const selectedCustomer = (state.reportSalesCustomer || '').trim();
   const fromDateInput = document.getElementById('filter-from-date')?.value || state.reportSalesFromDate || getFirstDayOfMonthStr();
   const toDateInput = document.getElementById('filter-to-date')?.value || state.reportSalesToDate || getTodayDateStr();
   const reportType = state.reportType || 'summary';
@@ -2285,51 +2285,34 @@ async function exportSalesReportToPDF() {
     return (mat && mat.unit) ? mat.unit : '—';
   };
 
-  const fullOrders = await getFullSalesReportDataForExport();
-  const filteredOrders = (fullOrders || []).filter(order => {
-    if (!order.date) return false;
-    const orderDate = order.date;
-    const isAfterFrom = !fromDateInput || orderDate >= fromDateInput;
-    const isBeforeTo = !toDateInput || orderDate <= toDateInput;
-    return isAfterFrom && isBeforeTo;
-  });
-
-  if (filteredOrders.length === 0) {
-    showAlert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`, 'Thông báo');
-    return;
-  }
-
   let rowsHtml = '';
   let totalQty = 0;
   let totalAmount = 0;
 
   if (!isDetail) {
-    // === 1. TẠO BÁO CÁO TỔNG HỢP (CÓ CỘT STT) ===
-    const itemSummaryMap = {};
-    filteredOrders.forEach(o => {
-      if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
-        const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
-        items.forEach(item => {
-          const sku = item.sku || '—';
-          const name = item.name || '—';
-          const qty = Number(item.qty || 0);
-          const price = Number(item.unitPrice || 0);
-          const disc = Number(item.discount || 0);
-          const tax = Number(item.tax || 0);
-          const lineSub = qty * price * (1 - disc / 100);
-          const lineTotal = lineSub * (1 + tax / 100);
-          const unit = resolveUnit(sku, name, item.unit);
-
-          if (!itemSummaryMap[sku]) {
-            itemSummaryMap[sku] = { sku, name, unit, qty: 0, totalAmount: 0 };
-          }
-          itemSummaryMap[sku].qty += qty;
-          itemSummaryMap[sku].totalAmount += lineTotal;
+    // === 1. TẠO BÁO CÁO TỔNG HỢP (LẤY TRỰC TIẾP TỪ RPC CACHE HOẶC GỌI LẠI RPC) ===
+    const currentKey = `${fromDateInput}_${toDateInput}_summary_${selectedCustomer}`;
+    let summaryRows = (state.salesReportLoadedKey === currentKey && Array.isArray(state.salesReportSummaryRows))
+      ? state.salesReportSummaryRows
+      : await RestAPI.rpc('get_sales_report_summary', {
+          p_from: fromDateInput,
+          p_to: toDateInput,
+          p_customer: selectedCustomer
         });
-      }
-    });
 
-    const itemList = Object.values(itemSummaryMap).sort((a, b) => b.totalAmount - a.totalAmount);
+    if (!summaryRows || summaryRows.length === 0) {
+      showAlert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`, 'Thông báo');
+      return;
+    }
+
+    const itemList = summaryRows.map(r => ({
+      sku: r.sku || '—',
+      name: r.name || '—',
+      unit: resolveUnit(r.sku, r.name, r.unit),
+      qty: Number(r.total_qty || 0),
+      totalAmount: Number(r.total_amount || 0)
+    }));
+
     const maxRows = Math.max(itemList.length, 12);
 
     for (let i = 0; i < maxRows; i++) {
@@ -2362,10 +2345,24 @@ async function exportSalesReportToPDF() {
     }
 
   } else {
-    // === 2. TẠO BÁO CÁO CHI TIẾT (ĐÃ ĐIỀU CHỈNH ĐÚNG YÊU CẦU DÒNG MÃ ĐƠN HÀNG) ===
-    const customerOrders = filteredOrders.filter(o =>
-      o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
+    // === 2. TẠO BÁO CÁO CHI TIẾT ===
+    if (!selectedCustomer) {
+      showAlert('Vui lòng chọn Khách hàng trước khi xuất Báo cáo chi tiết!', 'Thông báo');
+      return;
+    }
+
+    const fullOrders = await getFullSalesReportDataForExport();
+    const customerOrders = (fullOrders || []).filter(o =>
+      o.date &&
+      (!fromDateInput || o.date >= fromDateInput) &&
+      (!toDateInput || o.date <= toDateInput) &&
+      o.customer && o.customer.trim().toLowerCase() === selectedCustomer.toLowerCase()
     );
+
+    if (customerOrders.length === 0) {
+      showAlert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`, 'Thông báo');
+      return;
+    }
 
     const dailyMap = {};
     customerOrders.forEach(o => {
@@ -2393,7 +2390,6 @@ async function exportSalesReportToPDF() {
         let orderTotalAmount = 0;
         let orderItemsHtml = '';
 
-        // Tính toán các mặt hàng trong phiếu và tổng của phiếu
         items.forEach(item => {
           const qty = Number(item.qty || 0);
           const price = Number(item.unitPrice || 0);
@@ -2425,7 +2421,6 @@ async function exportSalesReportToPDF() {
         totalQty += orderTotalQty;
         totalAmount += orderTotalAmount;
 
-        // Dòng tiêu đề Đơn hàng (Cột Tên = Ghi chú, ĐVT/Đơn giá = Trống, SL = Tổng SL phiếu, Thành tiền = Tổng tiền phiếu)
         const orderHeaderHtml = `
           <tr style="height: 22px; background-color: #8db5e251; font-weight: bold; page-break-inside: avoid; break-inside: avoid;">
             <td style="border: 1px solid #000; text-align: left; font-size: 10pt; padding: 2px 5px; color: #d97706;">${o.id || '—'}</td>
@@ -2557,7 +2552,7 @@ async function exportSalesReportToPDF() {
 // XUẤT EXCEL BÁO CÁO BÁN HÀNG (TỔNG HỢP & CHI TIẾT)
 // ==========================================
 async function exportSalesReportToExcel() {
-  const selectedCustomer = state.reportSalesCustomer || '';
+  const selectedCustomer = (state.reportSalesCustomer || '').trim();
   const fromDateInput = document.getElementById('filter-from-date')?.value || state.reportSalesFromDate || getFirstDayOfMonthStr();
   const toDateInput = document.getElementById('filter-to-date')?.value || state.reportSalesToDate || getTodayDateStr();
   const reportType = state.reportType || 'summary';
@@ -2571,20 +2566,6 @@ async function exportSalesReportToExcel() {
     const mat = (db.materials || []).find(m => (sku && m.id === sku) || (name && m.name === name));
     return (mat && mat.unit) ? mat.unit : '—';
   };
-
-  const fullOrders = await getFullSalesReportDataForExport();
-  const filteredOrders = (fullOrders || []).filter(order => {
-    if (!order.date) return false;
-    const orderDate = order.date;
-    const isAfterFrom = !fromDateInput || orderDate >= fromDateInput;
-    const isBeforeTo = !toDateInput || orderDate <= toDateInput;
-    return isAfterFrom && isBeforeTo;
-  });
-
-  if (filteredOrders.length === 0) {
-    showAlert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`, 'Thông báo');
-    return;
-  }
 
   const sheetData = [
     ["ĐC: Số 9 - Ngách 35A/2 - đường Tiền Thái 1", "", "", "", "Giấy phép ĐKKD số: 01U8005300", ""],
@@ -2601,44 +2582,36 @@ async function exportSalesReportToExcel() {
 
   if (!isDetail) {
     // === 1. EXCEL TỔNG HỢP ===
+    const currentKey = `${fromDateInput}_${toDateInput}_summary_${selectedCustomer}`;
+    let summaryRows = (state.salesReportLoadedKey === currentKey && Array.isArray(state.salesReportSummaryRows))
+      ? state.salesReportSummaryRows
+      : await RestAPI.rpc('get_sales_report_summary', {
+          p_from: fromDateInput,
+          p_to: toDateInput,
+          p_customer: selectedCustomer
+        });
+
+    if (!summaryRows || summaryRows.length === 0) {
+      showAlert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`, 'Thông báo');
+      return;
+    }
+
     sheetData.push(["STT", "Mã Hàng (SKU)", "Tên Hàng", "ĐVT", "Tổng Số Lượng", "Tổng Số Tiền"]);
 
-    const itemSummaryMap = {};
-    filteredOrders.forEach(o => {
-      if (!selectedCustomer || (o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase())) {
-        const items = Array.isArray(o.lineItems || o.lineitems) ? (o.lineItems || o.lineitems) : [];
-        items.forEach(item => {
-          const sku = item.sku || '—';
-          const name = item.name || '—';
-          const qty = Number(item.qty || 0);
-          const price = Number(item.unitPrice || 0);
-          const disc = Number(item.discount || 0);
-          const tax = Number(item.tax || 0);
-          const lineSub = qty * price * (1 - disc / 100);
-          const lineTotal = lineSub * (1 + tax / 100);
-          const unit = resolveUnit(sku, name, item.unit);
+    summaryRows.forEach((r, idx) => {
+      const qty = Number(r.total_qty || 0);
+      const amt = Number(r.total_amount || 0);
+      const unit = resolveUnit(r.sku, r.name, r.unit);
+      totalQty += qty;
+      totalAmount += amt;
 
-          if (!itemSummaryMap[sku]) {
-            itemSummaryMap[sku] = { sku, name, unit, qty: 0, totalAmount: 0 };
-          }
-          itemSummaryMap[sku].qty += qty;
-          itemSummaryMap[sku].totalAmount += lineTotal;
-        });
-      }
-    });
-
-    const itemList = Object.values(itemSummaryMap).sort((a, b) => b.totalAmount - a.totalAmount);
-
-    itemList.forEach((it, idx) => {
-      totalQty += it.qty;
-      totalAmount += it.totalAmount;
       sheetData.push([
         idx + 1,
-        it.sku,
-        it.name,
-        it.unit,
-        it.qty,
-        Math.round(it.totalAmount)
+        r.sku || '—',
+        r.name || '—',
+        unit,
+        qty,
+        Math.round(amt)
       ]);
     });
 
@@ -2646,11 +2619,25 @@ async function exportSalesReportToExcel() {
 
   } else {
     // === 2. EXCEL CHI TIẾT ===
-    sheetData.push(["Đơn Hàng Bán", "Tên Hàng", "ĐVT", "Số Lượng", "Đơn Giá", "Thành Tiền"]);
+    if (!selectedCustomer) {
+      showAlert('Vui lòng chọn Khách hàng trước khi xuất Báo cáo chi tiết!', 'Thông báo');
+      return;
+    }
 
-    const customerOrders = filteredOrders.filter(o =>
-      o.customer && o.customer.trim().toLowerCase() === selectedCustomer.trim().toLowerCase()
+    const fullOrders = await getFullSalesReportDataForExport();
+    const customerOrders = (fullOrders || []).filter(o =>
+      o.date &&
+      (!fromDateInput || o.date >= fromDateInput) &&
+      (!toDateInput || o.date <= toDateInput) &&
+      o.customer && o.customer.trim().toLowerCase() === selectedCustomer.toLowerCase()
     );
+
+    if (customerOrders.length === 0) {
+      showAlert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`, 'Thông báo');
+      return;
+    }
+
+    sheetData.push(["Đơn Hàng Bán", "Tên Hàng", "ĐVT", "Số Lượng", "Đơn Giá", "Thành Tiền"]);
 
     const dailyMap = {};
     customerOrders.forEach(o => {
@@ -2748,7 +2735,6 @@ async function exportSalesReportToExcel() {
 
   const ws = XLSX.utils.aoa_to_sheet(sheetData);
 
-  // Thiết lập độ rộng cột chuẩn
   ws['!cols'] = !isDetail ? [
     { wch: 6 },  // STT
     { wch: 18 }, // Mã SKU
@@ -2982,24 +2968,24 @@ function exportSalesOrderToExcel() {
  * Đảm bảo không bị thiếu dữ liệu do phân trang hoặc giới hạn hiển thị UI
  */
 async function getFullSalesReportDataForExport() {
-  const fromDate = state.reportSalesFromDate || getFirstDayOfMonthStr();
-  const toDate = state.reportSalesToDate || getLastDayOfMonthStr();
+  const fromDate = document.getElementById('filter-from-date')?.value || state.reportSalesFromDate || getFirstDayOfMonthStr();
+  const toDate = document.getElementById('filter-to-date')?.value || state.reportSalesToDate || getTodayDateStr();
   const customer = (state.reportSalesCustomer || '').trim();
-  const currentKey = `${fromDate}_${toDate}`;
+  const reportType = state.reportType || 'summary';
+  const currentKey = `${fromDate}_${toDate}_${reportType}_${customer}`;
 
-  // Nếu state.salesReportOrders đã tải đúng khoảng ngày và số lượng < 2000 (chưa bị cắt bớt)
+  // 1. Tận dụng ngay cache nếu đang ở chế độ Chi tiết và đã tải đúng khách hàng + khoảng ngày
   if (
+    reportType === 'detail' &&
     state.salesReportLoadedKey === currentKey &&
     Array.isArray(state.salesReportOrders) &&
-    state.salesReportOrders.length < 2000
+    state.salesReportOrders.length > 0 &&
+    state.salesReportOrders.length < 500
   ) {
-    if (!customer) return state.salesReportOrders;
-    return state.salesReportOrders.filter(
-      o => o.customer && o.customer.trim().toLowerCase() === customer.toLowerCase()
-    );
+    return state.salesReportOrders;
   }
 
-  // Trường hợp chưa tải hoặc dữ liệu lớn: Gọi REST API lấy toàn bộ theo đúng bộ lọc
+  // 2. Gọi REST API lấy đơn hàng đúng khoảng ngày & khách hàng (không encodeURIComponent thủ công)
   const filters = [
     `date=gte.${fromDate}`,
     `date=lte.${toDate}`,
@@ -3007,7 +2993,7 @@ async function getFullSalesReportDataForExport() {
   ];
 
   if (customer) {
-    filters.push(`customer=eq.${encodeURIComponent(customer)}`);
+    filters.push(`customer=ilike.${customer}`);
   }
 
   let allOrders = [];
