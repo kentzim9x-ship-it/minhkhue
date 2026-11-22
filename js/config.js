@@ -98,10 +98,6 @@ async function fetchDataFromSupabase() {
       supabaseClient.from('materials').select('*').order('id', { ascending: false }),
       supabaseClient.from('warehouses').select('*'),
       supabaseClient.from('inventory').select('*'),
-      supabaseClient.from('quotations').select('*'),
-      supabaseClient.from('orders').select('*'),
-      supabaseClient.from('returns').select('*'),
-      supabaseClient.from('grns').select('*'),
       supabaseClient.from('userinfo').select('*') // <--- Lấy bảng userinfo
     ]);
 

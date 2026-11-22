@@ -274,6 +274,24 @@ document.addEventListener('keydown', function (e) {
 document.addEventListener('DOMContentLoaded', async () => {
   sessionStorage.clear();
 
+  // Khởi tạo sẵn khoảng ngày lọc mặc định (đầu tháng - cuối tháng) ngay khi mở app
+  const defaultFrom = typeof getFirstDayOfMonthStr === 'function' ? getFirstDayOfMonthStr() : '';
+  const defaultTo = typeof getLastDayOfMonthStr === 'function' ? getLastDayOfMonthStr() : '';
+
+  if (defaultFrom && defaultTo) {
+    if (!state.quotationsFromDate) state.quotationsFromDate = defaultFrom;
+    if (!state.quotationsToDate) state.quotationsToDate = defaultTo;
+
+    if (!state.ordersFromDate) state.ordersFromDate = defaultFrom;
+    if (!state.ordersToDate) state.ordersToDate = defaultTo;
+
+    if (!state.returnsFromDate) state.returnsFromDate = defaultFrom;
+    if (!state.returnsToDate) state.returnsToDate = defaultTo;
+
+    if (!state.grnFromDate) state.grnFromDate = defaultFrom;
+    if (!state.grnToDate) state.grnToDate = defaultTo;
+  }
+
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => navigate(btn.getAttribute('data-view')));
   });
@@ -320,7 +338,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
   setTimeout(() => syncAppThemeWithMobile(currentTheme), 50);
 
-  // Tự động lắng nghe mỗi khi bấm nút mặt trăng làm thay đổi thuộc tính data-theme trên <html>
   const themeWatcher = new MutationObserver((mutations) => {
     for (const m of mutations) {
       if (m.attributeName === 'data-theme') {
@@ -336,6 +353,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   await fetchDataFromSupabase();
+
+  // Tải lại 4 bảng chứng từ theo đúng điều kiện Từ ngày - Đến ngày & phân trang ngay lần đầu truy cập
+  await Promise.all([
+    loadTablePageREST('quotations', 1),
+    loadTablePageREST('sales-orders', 1),
+    loadTablePageREST('returns', 1),
+    loadTablePageREST('grn', 1)
+  ]);
+
   subscribeAppRealtimeChanges();
   render();
   handleRouteChange();
@@ -345,7 +371,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function fetchDashboardSummaryREST(forceRefresh = false) {
-  // Nếu đã có cache và không ép tải lại thì bỏ qua để mở trang tức thì
   if (state.dashboardData && !forceRefresh) return;
   if (state.isLoadingDashboard) return;
 
@@ -354,7 +379,6 @@ async function fetchDashboardSummaryREST(forceRefresh = false) {
     const { data, error } = await supabaseClient.rpc('get_dashboard_summary');
     if (!error && data) {
       state.dashboardData = data;
-      // Chỉ render lại nếu người dùng vẫn đang đứng ở trang dashboard
       if (state.view === 'dashboard' && state.mode === 'list') {
         renderDashboard(document.getElementById('app-content'));
       }
@@ -370,7 +394,6 @@ async function fetchDashboardSummaryREST(forceRefresh = false) {
 // CẤU HÌNH PHÂN TRANG & TẢI DỮ LIỆU REST API (SERVER-SIDE)
 // ============================================================
 
-// 1. Khởi tạo state phân trang mặc định (nếu chưa có)
 if (!state.pagination) {
   state.pagination = {
     orders: { page: 1, pageSize: 25, total: 0 },
@@ -380,7 +403,6 @@ if (!state.pagination) {
   };
 }
 
-// 2. Chỉ tải các danh mục nhẹ & View tồn kho lúc khởi động app
 async function loadMasterDataREST() {
   try {
     const [matRes, custRes, whRes, stockRes] = await Promise.all([
@@ -393,13 +415,12 @@ async function loadMasterDataREST() {
     db.materials = matRes.data;
     db.customers = custRes.data;
     db.warehouses = whRes.data;
-    db.realtimeStock = stockRes.data; // Lưu tồn kho tính sẵn từ SQL View
+    db.realtimeStock = stockRes.data;
   } catch (err) {
     console.error('Lỗi tải danh mục REST:', err);
   }
 }
 
-// 3. Hàm tải danh sách chứng từ theo trang (KHÔNG lấy lineitems để giảm 85% dung lượng)
 async function loadTablePageREST(tableName, page = 1) {
   const keyMap = {
     'sales-orders': 'orders',
@@ -428,56 +449,73 @@ async function loadTablePageREST(tableName, page = 1) {
   const supabaseTable = dbTableMap[stateKey] || stateKey;
 
   const selectColumnsMap = {
-    orders: 'id,date,customer,items,total,subtotal,tax,"discountTotal",status,warehouse_code,quotation_id,notes,user_id0,date0',
-    quotations: 'id,date,validbegin,validuntil,customer,total,subtotal,tax,discounttotal,status,apply_yn,notes,user_id0,date0',
-    grns: 'id,date,supplier,warehousecode,poreference,totalvalue,status,notes,user_id0,date0',
-    returns: 'id,date,customer,order_id,warehouse_code,reason,total,status,notes,user_id0,date0'
+    orders: 'id,date,customer,items,lineitems,total,subtotal,tax,"discountTotal",status,warehouse_code,quotation_id,notes,user_id0,date0,time0,user_id2,date2,time2',
+    quotations: 'id,date,validbegin,validuntil,customer,lineitems,total,subtotal,tax,discounttotal,status,apply_yn,notes,user_id0,date0,time0,user_id2,date2,time2',
+    grns: 'id,date,supplier,warehousecode,poreference,lineitems,totalvalue,status,notes,user_id0,date0,time0,user_id2,date2,time2',
+    returns: 'id,date,customer,order_id,warehouse_code,reason,lineitems,total,status,notes,user_id0,date0,time0,user_id2,date2,time2'
   };
 
-  // Map tương ứng state ngày từ - đến của từng phân hệ
   const dateStateMap = {
     quotations: { from: state.quotationsFromDate, to: state.quotationsToDate },
-    orders:     { from: state.ordersFromDate,     to: state.ordersToDate },
-    returns:    { from: state.returnsFromDate,    to: state.returnsToDate },
-    grns:       { from: state.grnFromDate,        to: state.grnToDate }
+    orders: { from: state.ordersFromDate, to: state.ordersToDate },
+    returns: { from: state.returnsFromDate, to: state.returnsToDate },
+    grns: { from: state.grnFromDate, to: state.grnToDate }
   };
 
-  const filters = [];
+  const baseFilters = [];
 
   // 1. Lọc theo từ khóa tìm kiếm
   const kw = (state.search || '').trim();
   if (kw) {
     if (stateKey === 'grns') {
-      filters.push(`or=(id.ilike.*${kw}*,supplier.ilike.*${kw}*,poreference.ilike.*${kw}*)`);
+      baseFilters.push(`or=(id.ilike.*${kw}*,supplier.ilike.*${kw}*,poreference.ilike.*${kw}*)`);
     } else {
-      filters.push(`or=(id.ilike.*${kw}*,customer.ilike.*${kw}*)`);
+      baseFilters.push(`or=(id.ilike.*${kw}*,customer.ilike.*${kw}*)`);
     }
   }
 
-  // 2. Lọc theo trạng thái
+  // 2. Lọc theo khoảng ngày (Từ ngày - Đến ngày)
+  const dateRange = dateStateMap[stateKey];
+  if (dateRange) {
+    if (dateRange.from) baseFilters.push(`date=gte.${dateRange.from}`);
+    if (dateRange.to) baseFilters.push(`date=lte.${dateRange.to}`);
+  }
+
+  // Bộ lọc cho bảng dữ liệu (có thêm trạng thái)
+  const filters = [...baseFilters];
   if (state.statusFilter && state.statusFilter !== 'ALL' && state.statusFilter !== 'all') {
     filters.push(`status=eq.${state.statusFilter}`);
   }
 
-  // 3. Lọc theo khoảng ngày (Từ ngày - Đến ngày)
-  const dateRange = dateStateMap[stateKey];
-  if (dateRange) {
-    if (dateRange.from) filters.push(`date=gte.${dateRange.from}`);
-    if (dateRange.to)   filters.push(`date=lte.${dateRange.to}`);
-  }
-
   state.isLoadingList = true;
   try {
-    const res = await RestAPI.fetchPaginated(supabaseTable, {
-      select: selectColumnsMap[stateKey] || '*',
-      filters,
-      order: 'date.desc,id.desc',
-      page: pg.page,
-      pageSize: pg.pageSize
-    });
+    // Chạy song song: tải trang hiện tại + tải cột status để đếm tổng KPI toàn bộ kỳ lọc
+    const [res, kpiRes] = await Promise.all([
+      RestAPI.fetchPaginated(supabaseTable, {
+        select: selectColumnsMap[stateKey] || '*',
+        filters,
+        order: 'date.desc,id.desc',
+        page: pg.page,
+        pageSize: pg.pageSize
+      }),
+      RestAPI.fetchPaginated(supabaseTable, {
+        select: 'status',
+        filters: baseFilters,
+        page: 1,
+        pageSize: 5000
+      })
+    ]);
 
     db[stateKey] = res.data || [];
     pg.total = res.totalCount ?? res.total ?? 0;
+
+    // Lưu tổng số theo từng trạng thái vào state.kpiCounts
+    if (!state.kpiCounts) state.kpiCounts = {};
+    const allStatuses = (kpiRes.data || []).map(row => (row.status || '').toLowerCase());
+    state.kpiCounts[stateKey] = {
+      total: kpiRes.totalCount ?? kpiRes.total ?? allStatuses.length,
+      statuses: allStatuses
+    };
   } catch (err) {
     console.error(`Lỗi tải trang ${supabaseTable}:`, err);
   } finally {
@@ -501,7 +539,6 @@ async function fetchNotificationsFromSupabase() {
   } catch (err) {
     console.error('Lỗi lấy thông báo:', err);
   } finally {
-    // 2. Render lại giao diện sau khi tải xong
     render();
   }
 }
@@ -511,39 +548,38 @@ async function fetchSalesReportDataREST() {
   const toDate = state.reportSalesToDate || getLastDayOfMonthStr();
   const customer = (state.reportSalesCustomer || '').trim();
 
+  state.isLoadingSalesReport = true;
   try {
-    // 1. Gọi RPC tính nhanh con số tổng hợp trên PostgreSQL
     const rpcPromise = RestAPI.rpc('get_sales_report', {
       p_from: fromDate,
       p_to: toDate,
       p_customer: customer
     });
 
-    // 2. Chỉ tải các đơn hàng hợp lệ trong đúng khoảng ngày đang chọn (có lineitems để lập bảng chi tiết/tổng hợp)
+    // Tải toàn bộ đơn hàng hợp lệ trong khoảng Từ ngày - Đến ngày để Top Khách Hàng luôn tính đủ
     const filters = [
       `date=gte.${fromDate}`,
       `date=lte.${toDate}`,
       `status=not.in.(Cancelled,"Đã hủy",Draft,"Nháp")`
     ];
-    if (customer) {
-      filters.push(`customer=ilike.*${customer}*`);
-    }
 
     const ordersPromise = RestAPI.fetchPaginated('orders', {
       select: 'id,date,customer,notes,total,"discountTotal",status,lineitems',
       filters,
       order: 'date.asc,id.asc',
       page: 1,
-      pageSize: 1000
+      pageSize: 2000
     });
 
     const [rpcRes, ordersRes] = await Promise.all([rpcPromise, ordersPromise]);
 
     state.salesReportRpcSummary = rpcRes?.[0] || { total_orders: 0, total_revenue: 0, total_discount: 0 };
     state.salesReportOrders = ordersRes.data || [];
-    state.salesReportLoadedKey = `${fromDate}_${toDate}_${customer}`;
-    render();
+    state.salesReportLoadedKey = `${fromDate}_${toDate}`;
   } catch (err) {
     console.error('Lỗi tải báo cáo doanh thu RPC:', err);
+  } finally {
+    state.isLoadingSalesReport = false;
+    render();
   }
 }

@@ -974,6 +974,10 @@ function renderQuotationsList(c) {
 
   const paginatedItems = db.quotations || [];
 
+  const kpiData = state.kpiCounts?.quotations;
+  const statusList = kpiData ? kpiData.statuses : db.quotations.map(q => (q.status || '').toLowerCase());
+  const totalQuotationsKpi = kpiData ? kpiData.total : db.quotations.length;
+
   const kpiHtml = [
     ['all', 'Tổng Báo Giá'],
     ['accepted', 'Duyệt'],
@@ -982,8 +986,8 @@ function renderQuotationsList(c) {
     ['expired', 'Hết Hạn']
   ].map(([s, label]) => {
     const count = s === 'all'
-      ? db.quotations.length
-      : db.quotations.filter(q => q.status === s || (s === 'accepted' && q.status === 'approved') || (s === 'pending' && q.status === 'draft')).length;
+      ? totalQuotationsKpi
+      : statusList.filter(st => st === s || (s === 'accepted' && ['approved', 'duyệt', 'đã duyệt'].includes(st)) || (s === 'pending' && ['draft', 'chờ duyệt'].includes(st))).length;
 
     const color = s === 'all' ? 'var(--foreground)'
       : s === 'accepted' ? '#34d399'
@@ -1118,17 +1122,20 @@ function renderOrdersList(c) {
 
   const paginatedItems = db.orders || [];
 
-  // ĐỒNG BỘ KPI ĐỜN BÁN HÀNG
+  const kpiData = state.kpiCounts?.orders;
+  const statusList = kpiData ? kpiData.statuses : db.orders.map(o => (o.status || '').toLowerCase());
+  const totalOrdersKpi = kpiData ? kpiData.total : db.orders.length;
+
   const kpiHtml = [
-    { label: 'Tổng đơn hàng', val: db.orders.length, color: 'var(--foreground)' },
-    { label: 'Hoàn thành', val: db.orders.filter(o => ['completed', 'hoàn thành'].includes((o.status || '').toLowerCase())).length, color: '#60a5fa' },
-    { label: 'Duyệt', val: db.orders.filter(o => ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((o.status || '').toLowerCase())).length, color: '#34d399' },
-    { label: 'Chờ duyệt', val: db.orders.filter(o => ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes((o.status || '').toLowerCase())).length, color: '#fbbf24' },
-    { label: 'Đã Hủy', val: db.orders.filter(o => ['cancelled', 'đã hủy'].includes((o.status || '').toLowerCase())).length, color: '#f87171' },
+    { label: 'Tổng đơn hàng', val: totalOrdersKpi, color: 'var(--foreground)' },
+    { label: 'Hoàn thành', val: statusList.filter(st => ['completed', 'hoàn thành'].includes(st)).length, color: '#60a5fa' },
+    { label: 'Duyệt', val: statusList.filter(st => ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(st)).length, color: '#34d399' },
+    { label: 'Chờ duyệt', val: statusList.filter(st => ['pending', 'chờ duyệt', 'processing', 'đang xử lý'].includes(st)).length, color: '#fbbf24' },
+    { label: 'Đã Hủy', val: statusList.filter(st => ['cancelled', 'đã hủy'].includes(st)).length, color: '#f87171' },
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
-      <div style="font-family: var(--font-dm-mono); font-size: 24px; font-weight: 300; color: ${s.color};">${s.val}</div>
+      <div style="font-family: var(--font-dm-mono); font-size: 24px; font-weight: 300; color: ${s.color};">${fmt(s.val)}</div>
     </div>
   `).join('');
 
@@ -1249,13 +1256,16 @@ function renderReturnsList(c) {
 
   const paginatedItems = db.returns || [];
 
-  // ĐỒNG BỘ ĐỔI TRẢ HÀNG BÁN: ĐÃ XỬ LÝ -> HOÀN THÀNH
+  const kpiData = state.kpiCounts?.returns;
+  const statusList = kpiData ? kpiData.statuses : db.returns.map(r => (r.status || '').toLowerCase());
+  const totalReturnsKpi = kpiData ? kpiData.total : db.returns.length;
+
   const kpiHtml = [
-    { label: 'Tổng số lượt đổi trả', val: db.returns.length, color: 'var(--foreground)' },
-    { label: 'Hoàn thành', val: db.returns.filter(r => ['processed', 'hoàn thành', 'đã xử lý'].includes((r.status || '').toLowerCase())).length, color: '#60a5fa' },
-    { label: 'Duyệt', val: db.returns.filter(r => ['accepted', 'duyệt', 'đã duyệt'].includes((r.status || '').toLowerCase())).length, color: '#34d399' },
-    { label: 'Chờ duyệt', val: db.returns.filter(r => ['pending', 'chờ duyệt'].includes((r.status || '').toLowerCase())).length, color: 'var(--foreground)' },
-    { label: 'Từ chối', val: db.returns.filter(r => ['rejected', 'từ chối'].includes((r.status || '').toLowerCase())).length, color: '#818cf8' }
+    { label: 'Tổng số lượt đổi trả', val: totalReturnsKpi, color: 'var(--foreground)' },
+    { label: 'Hoàn thành', val: statusList.filter(st => ['processed', 'hoàn thành', 'đã xử lý'].includes(st)).length, color: '#60a5fa' },
+    { label: 'Duyệt', val: statusList.filter(st => ['accepted', 'duyệt', 'đã duyệt'].includes(st)).length, color: '#34d399' },
+    { label: 'Chờ duyệt', val: statusList.filter(st => ['pending', 'chờ duyệt'].includes(st)).length, color: 'var(--foreground)' },
+    { label: 'Từ chối', val: statusList.filter(st => ['rejected', 'từ chối'].includes(st)).length, color: '#818cf8' }
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
@@ -1385,12 +1395,15 @@ function renderGRNList(c) {
 
   const paginatedItems = db.grns || [];
 
-  // ĐỒNG BỘ 4 THẺ KPI ĐÚNG THỨ TỰ VÀ MÀU SẮC CHUẨN (Tổng số -> Đã nhận -> Bản nháp -> Đã xác minh)
+  const kpiData = state.kpiCounts?.grns;
+  const statusList = kpiData ? kpiData.statuses : db.grns.map(g => (g.status || '').toLowerCase());
+  const totalGrnsKpi = kpiData ? kpiData.total : db.grns.length;
+
   const kpiHtml = [
-    { label: 'Tổng số phiếu nhập', val: db.grns.length, color: 'var(--foreground)' },
-    { label: 'Đã nhận', val: db.grns.filter(g => ['Đã nhận', 'received'].includes(g.status)).length, color: '#fbbf24' },
-    { label: 'Bản nháp', val: db.grns.filter(g => ['Bản nháp', 'draft'].includes(g.status)).length, color: 'var(--muted-foreground)' },
-    { label: 'Đã xác minh', val: db.grns.filter(g => ['Đã xác minh', 'verified'].includes(g.status)).length, color: '#34d399' }
+    { label: 'Tổng số phiếu nhập', val: totalGrnsKpi, color: 'var(--foreground)' },
+    { label: 'Đã nhận', val: statusList.filter(st => ['đã nhận', 'received'].includes(st)).length, color: '#fbbf24' },
+    { label: 'Bản nháp', val: statusList.filter(st => ['bản nháp', 'draft'].includes(st)).length, color: 'var(--muted-foreground)' },
+    { label: 'Đã xác minh', val: statusList.filter(st => ['đã xác minh', 'verified'].includes(st)).length, color: '#34d399' }
   ].map(s => `
     <div style="background-color: var(--card); padding: 16px 20px;">
       <div style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">${s.label}</div>
@@ -3377,14 +3390,15 @@ function renderReportSales(c) {
       <!-- Bảng Top Khách Hàng (Tối ưu vừa màn hình Mobile) -->
         <div style="border: 1px solid var(--border); background: var(--card);" class="top-customers-card">
           <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng</div>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tbody>
-              ${state.isLoadingSalesReport
-                ? '<tr><td colspan="4" style="padding: 24px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Đang tải dữ liệu...</td></tr>'
-                : (customersHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có dữ liệu khách hàng</td></tr>')
-              }
-            </tbody>
-          </table>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tbody>
+                ${state.isLoadingSalesReport
+      ? '<tr><td colspan="4" style="padding: 24px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Đang tải dữ liệu...</td></tr>'
+      : (customersHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có dữ liệu khách hàng</td></tr>')
+    }
+              </tbody>
+            </table>
+          </div>
         </div>
 
       <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG -->
@@ -3406,18 +3420,16 @@ function renderReportSales(c) {
             <div class="report-filter-row">
               <div class="report-filter-item" style="display: flex; align-items: center; gap: 6px;">
                 <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">TỪ NGÀY:</label>
-                <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
+                <input type="date" class="form-input" style="width: 130px; padding: 4px 8px; font-size: 12px; height: 36px; box-sizing: border-box;" 
                   value="${selectedFromDate}" 
-                  onchange="if(this.value && state.reportSalesFromDate !== this.value) { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }"
-                  onkeydown="if(event.key === 'Enter') { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); this.blur(); }">
+                  onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); if(this.value) { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); } this.blur(); }">
               </div>
 
               <div class="report-filter-item" style="display: flex; align-items: center; gap: 6px;">
                 <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">ĐẾN NGÀY:</label>
-                <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
+                <input type="date" class="form-input" style="width: 130px; padding: 4px 8px; font-size: 12px; height: 36px; box-sizing: border-box;" 
                   value="${selectedToDate}" 
-                  onchange="if(this.value && state.reportSalesToDate !== this.value) { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }"
-                  onkeydown="if(event.key === 'Enter') { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); this.blur(); }">
+                  onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); if(this.value) { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); } this.blur(); }">
               </div>
             </div>
 
