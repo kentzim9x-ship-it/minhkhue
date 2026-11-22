@@ -3078,12 +3078,6 @@ function renderReportSales(c) {
   // Thay thế đoạn lọc cũ trên db.orders bằng dữ liệu đã lọc từ server:
   const filteredOrdersForDateRange = state.salesReportOrders || [];
 
-  const rpcSummary = state.salesReportRpcSummary || { total_orders: 0, total_revenue: 0, total_discount: 0 };
-  // Bạn có thể dùng trực tiếp:
-  // rpcSummary.total_orders   -> Tổng số đơn trong kỳ lọc
-  // rpcSummary.total_revenue  -> Tổng doanh thu trong kỳ lọc
-  // rpcSummary.total_discount -> Tổng chiết khấu trong kỳ lọc
-
   let hasData = false;
 
   if (!isDetail) {

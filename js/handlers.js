@@ -2285,7 +2285,8 @@ async function exportSalesReportToPDF() {
     return (mat && mat.unit) ? mat.unit : '—';
   };
 
-  const filteredOrders = (db.orders || []).filter(order => {
+  const fullOrders = await getFullSalesReportDataForExport();
+  const filteredOrders = (fullOrders || []).filter(order => {
     if (!order.date) return false;
     const orderDate = order.date;
     const isAfterFrom = !fromDateInput || orderDate >= fromDateInput;
@@ -2555,7 +2556,7 @@ async function exportSalesReportToPDF() {
 // ==========================================
 // XUẤT EXCEL BÁO CÁO BÁN HÀNG (TỔNG HỢP & CHI TIẾT)
 // ==========================================
-function exportSalesReportToExcel() {
+async function exportSalesReportToExcel() {
   const selectedCustomer = state.reportSalesCustomer || '';
   const fromDateInput = document.getElementById('filter-from-date')?.value || state.reportSalesFromDate || getFirstDayOfMonthStr();
   const toDateInput = document.getElementById('filter-to-date')?.value || state.reportSalesToDate || getTodayDateStr();
@@ -2571,7 +2572,8 @@ function exportSalesReportToExcel() {
     return (mat && mat.unit) ? mat.unit : '—';
   };
 
-  const filteredOrders = (db.orders || []).filter(order => {
+  const fullOrders = await getFullSalesReportDataForExport();
+  const filteredOrders = (fullOrders || []).filter(order => {
     if (!order.date) return false;
     const orderDate = order.date;
     const isAfterFrom = !fromDateInput || orderDate >= fromDateInput;
@@ -2973,6 +2975,66 @@ function exportSalesOrderToExcel() {
   XLSX.utils.book_append_sheet(wb, ws, "DonHang");
 
   downloadOrShareXLSX(wb, `DonHang_${d.id || 'Export'}`);
+}
+
+/**
+ * Lấy đầy đủ danh sách đơn hàng phục vụ Xuất PDF / Excel
+ * Đảm bảo không bị thiếu dữ liệu do phân trang hoặc giới hạn hiển thị UI
+ */
+async function getFullSalesReportDataForExport() {
+  const fromDate = state.reportSalesFromDate || getFirstDayOfMonthStr();
+  const toDate = state.reportSalesToDate || getLastDayOfMonthStr();
+  const customer = (state.reportSalesCustomer || '').trim();
+  const currentKey = `${fromDate}_${toDate}`;
+
+  // Nếu state.salesReportOrders đã tải đúng khoảng ngày và số lượng < 2000 (chưa bị cắt bớt)
+  if (
+    state.salesReportLoadedKey === currentKey &&
+    Array.isArray(state.salesReportOrders) &&
+    state.salesReportOrders.length < 2000
+  ) {
+    if (!customer) return state.salesReportOrders;
+    return state.salesReportOrders.filter(
+      o => o.customer && o.customer.trim().toLowerCase() === customer.toLowerCase()
+    );
+  }
+
+  // Trường hợp chưa tải hoặc dữ liệu lớn: Gọi REST API lấy toàn bộ theo đúng bộ lọc
+  const filters = [
+    `date=gte.${fromDate}`,
+    `date=lte.${toDate}`,
+    `status=not.in.(Cancelled,"Đã hủy",Draft,"Nháp")`
+  ];
+
+  if (customer) {
+    filters.push(`customer=eq.${encodeURIComponent(customer)}`);
+  }
+
+  let allOrders = [];
+  let page = 1;
+  const pageSize = 1000;
+  let hasMore = true;
+
+  while (hasMore) {
+    const res = await RestAPI.fetchPaginated('orders', {
+      select: 'id,date,customer,notes,total,"discountTotal",status,lineitems',
+      filters,
+      order: 'date.asc,id.asc',
+      page,
+      pageSize
+    });
+
+    const batch = res.data || [];
+    allOrders = allOrders.concat(batch);
+
+    if (batch.length < pageSize) {
+      hasMore = false;
+    } else {
+      page++;
+    }
+  }
+
+  return allOrders;
 }
 
 // Kiểm tra xem form giao dịch hiện tại có dữ liệu chưa lưu hay không
