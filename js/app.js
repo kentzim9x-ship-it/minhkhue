@@ -401,7 +401,6 @@ async function loadMasterDataREST() {
 
 // 3. Hàm tải danh sách chứng từ theo trang (KHÔNG lấy lineitems để giảm 85% dung lượng)
 async function loadTablePageREST(tableName, page = 1) {
-  // Chuẩn hóa tên key giữa UI (sales-orders, grn) và DB/State (orders, grns)
   const keyMap = {
     'sales-orders': 'orders',
     'orders': 'orders',
@@ -420,25 +419,32 @@ async function loadTablePageREST(tableName, page = 1) {
   const pg = state.pagination[stateKey];
   pg.page = Math.max(1, page);
 
-  // Map tên bảng thực tế trong Supabase
   const dbTableMap = {
     'orders': 'orders',
-    'grns': 'grns', // Đổi thành 'grn' nếu bảng trên Supabase của bạn tên là 'grn'
+    'grns': 'grns',
     'quotations': 'quotations',
     'returns': 'returns'
   };
   const supabaseTable = dbTableMap[stateKey] || stateKey;
 
-  // Chỉ lấy các cột hiển thị trên bảng danh sách (loại bỏ lineitems nặng)
   const selectColumnsMap = {
     orders: 'id,date,customer,items,total,subtotal,tax,"discountTotal",status,warehouse_code,quotation_id,notes,user_id0,date0',
-    quotations: 'id,date,validuntil,customer,total,subtotal,tax,discounttotal,status,apply_yn,notes,user_id0,date0',
+    quotations: 'id,date,validbegin,validuntil,customer,total,subtotal,tax,discounttotal,status,apply_yn,notes,user_id0,date0',
     grns: 'id,date,supplier,warehousecode,poreference,totalvalue,status,notes,user_id0,date0',
     returns: 'id,date,customer,order_id,warehouse_code,reason,total,status,notes,user_id0,date0'
   };
 
-  // Xây dựng bộ lọc tìm kiếm gửi lên Supabase Server
+  // Map tương ứng state ngày từ - đến của từng phân hệ
+  const dateStateMap = {
+    quotations: { from: state.quotationsFromDate, to: state.quotationsToDate },
+    orders:     { from: state.ordersFromDate,     to: state.ordersToDate },
+    returns:    { from: state.returnsFromDate,    to: state.returnsToDate },
+    grns:       { from: state.grnFromDate,        to: state.grnToDate }
+  };
+
   const filters = [];
+
+  // 1. Lọc theo từ khóa tìm kiếm
   const kw = (state.search || '').trim();
   if (kw) {
     if (stateKey === 'grns') {
@@ -447,8 +453,17 @@ async function loadTablePageREST(tableName, page = 1) {
       filters.push(`or=(id.ilike.*${kw}*,customer.ilike.*${kw}*)`);
     }
   }
-  if (state.statusFilter && state.statusFilter !== 'ALL') {
+
+  // 2. Lọc theo trạng thái
+  if (state.statusFilter && state.statusFilter !== 'ALL' && state.statusFilter !== 'all') {
     filters.push(`status=eq.${state.statusFilter}`);
+  }
+
+  // 3. Lọc theo khoảng ngày (Từ ngày - Đến ngày)
+  const dateRange = dateStateMap[stateKey];
+  if (dateRange) {
+    if (dateRange.from) filters.push(`date=gte.${dateRange.from}`);
+    if (dateRange.to)   filters.push(`date=lte.${dateRange.to}`);
   }
 
   state.isLoadingList = true;

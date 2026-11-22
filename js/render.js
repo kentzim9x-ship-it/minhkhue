@@ -1063,7 +1063,9 @@ function renderQuotationsList(c) {
           <div class="mobile-search-action-group">
             <div class="search-box-input">
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="onServerSearchInput('quotations', this.value)">
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}"
+                oninput="onServerSearchInput('quotations', this.value)"
+                onkeydown="if(event.key === 'Enter') { event.preventDefault(); clearTimeout(window.serverSearchTimer); state.search = this.value; loadTablePageREST('quotations', 1); }">
             </div>
             ${hasPermission ? `<button class="btn-primary" onclick="navigate('quotations', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
@@ -1192,7 +1194,9 @@ function renderOrdersList(c) {
           <div class="mobile-search-action-group">
             <div class="search-box-input">
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="onServerSearchInput('sales-orders', this.value)">
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}"
+                oninput="onServerSearchInput('sales-orders', this.value)"
+                onkeydown="if(event.key === 'Enter') { event.preventDefault(); clearTimeout(window.serverSearchTimer); state.search = this.value; loadTablePageREST('sales-orders', 1); }">
             </div>
             ${hasPermission ? `<button class="btn-primary" onclick="navigate('sales-orders', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
@@ -1326,7 +1330,9 @@ function renderReturnsList(c) {
           <div class="mobile-search-action-group">
             <div class="search-box-input">
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="onServerSearchInput('returns', this.value)">
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}"
+                oninput="onServerSearchInput('returns', this.value)"
+                onkeydown="if(event.key === 'Enter') { event.preventDefault(); clearTimeout(window.serverSearchTimer); state.search = this.value; loadTablePageREST('returns', 1); }">
             </div>
             ${hasPermission ? `<button class="btn-primary" onclick="navigate('returns', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
@@ -1458,7 +1464,9 @@ function renderGRNList(c) {
           <div class="mobile-search-action-group">
             <div class="search-box-input">
               <span style="color: var(--muted-foreground); display: flex; align-items: center;">${Icons.search}</span>
-              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}" oninput="onServerSearchInput('grn', this.value)">
+              <input type="text" id="global-search" placeholder="Tìm kiếm..." value="${state.search || ''}"
+                oninput="onServerSearchInput('grn', this.value)"
+                onkeydown="if(event.key === 'Enter') { event.preventDefault(); clearTimeout(window.serverSearchTimer); state.search = this.value; loadTablePageREST('grn', 1); }">
             </div>
             ${hasPermission ? `<button class="btn-primary" onclick="navigate('grn', 'add')">${Icons.plus} Thêm Mới</button>` : ''}
           </div>
@@ -3020,7 +3028,6 @@ function renderReportSales(c) {
 
   const currentFilterKey = `${selectedFromDate}_${selectedToDate}_${selectedCustomer}`;
   if (state.salesReportLoadedKey !== currentFilterKey && !state.isLoadingSalesReport) {
-    state.isLoadingSalesReport = true;
     fetchSalesReportDataREST(); // Bỏ .finally(() => render()) để tránh vẽ lại biểu đồ 2 lần
   }
 
@@ -3323,7 +3330,20 @@ function renderReportSales(c) {
 
   const customersHtml = topCustomersReal.slice(0, 5).map((cus, i) => `
     <tr style="border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" 
-        onclick="navigate('sales-orders', 'list', null, { search: '${cus.name.replace(/'/g, "\\'")}', ordersFromDate: '${selectedFromDate}', ordersToDate: '${selectedToDate}', page: 1 });" 
+        onclick="
+          state.search = '${cus.name.replace(/'/g, "\\'")}';
+          state.statusFilter = 'ALL';
+          state.ordersFromDate = '${selectedFromDate}';
+          state.ordersToDate = '${selectedToDate}';
+          navigate('sales-orders', 'list', null, {
+            search: '${cus.name.replace(/'/g, "\\'")}',
+            statusFilter: 'ALL',
+            ordersFromDate: '${selectedFromDate}',
+            ordersToDate: '${selectedToDate}',
+            page: 1
+          });
+          loadTablePageREST('sales-orders', 1);
+        " 
         title="Click để xem danh sách đơn hàng của ${cus.name}">
       <td style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); width: 28px;">${String(i + 1)}.</td>
       <td style="padding: 9px 14px; font-size: 13px; font-weight: 500; color: var(--foreground);">${cus.name}</td>
@@ -3359,11 +3379,13 @@ function renderReportSales(c) {
           <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--font-dm-mono); font-size: 11px; text-transform: uppercase; color: var(--muted-foreground);">Top Khách Hàng</div>
           <table style="width: 100%; border-collapse: collapse;">
             <tbody>
-              ${customersHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có dữ liệu khách hàng</td></tr>'}
+              ${state.isLoadingSalesReport
+                ? '<tr><td colspan="4" style="padding: 24px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Đang tải dữ liệu...</td></tr>'
+                : (customersHtml || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: var(--muted-foreground); font-size: 12px;">Chưa có dữ liệu khách hàng</td></tr>')
+              }
             </tbody>
           </table>
         </div>
-      </div>
 
       <!-- BẢNG THỐNG KÊ CHI TIẾT THEO KHÁCH HÀNG -->
       <div style="border: 1px solid var(--border); background: var(--card); overflow-x: auto;">
@@ -3386,16 +3408,16 @@ function renderReportSales(c) {
                 <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">TỪ NGÀY:</label>
                 <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
                   value="${selectedFromDate}" 
-                  onkeydown="if(event.key === 'Enter') { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); this.blur(); }"
-                  onblur="if(state.reportSalesFromDate !== this.value) { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }">
+                  onchange="if(this.value && state.reportSalesFromDate !== this.value) { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }"
+                  onkeydown="if(event.key === 'Enter') { state.reportSalesFromDate=this.value; state.reportSalesLimit=40; state.page=1; render(); this.blur(); }">
               </div>
 
               <div class="report-filter-item" style="display: flex; align-items: center; gap: 6px;">
                 <label style="font-family: var(--font-dm-mono); font-size: 10px; color: var(--muted-foreground); text-transform: uppercase; white-space: nowrap;">ĐẾN NGÀY:</label>
                 <input type="date" class="form-input" style="width: 125px; padding: 4px 6px; font-size: 12px; height: 38px; box-sizing: border-box;" 
                   value="${selectedToDate}" 
-                  onkeydown="if(event.key === 'Enter') { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); this.blur(); }"
-                  onblur="if(state.reportSalesToDate !== this.value) { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }">
+                  onchange="if(this.value && state.reportSalesToDate !== this.value) { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); }"
+                  onkeydown="if(event.key === 'Enter') { state.reportSalesToDate=this.value; state.reportSalesLimit=40; state.page=1; render(); this.blur(); }">
               </div>
             </div>
 
