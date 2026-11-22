@@ -401,11 +401,33 @@ async function loadMasterDataREST() {
 
 // 3. Hàm tải danh sách chứng từ theo trang (KHÔNG lấy lineitems để giảm 85% dung lượng)
 async function loadTablePageREST(tableName, page = 1) {
-  const pg = state.pagination[tableName] || { page: 1, pageSize: 25, total: 0 };
-  pg.page = page;
-  state.pagination[tableName] = pg;
-  state.isLoadingList = true;
-  render();
+  // Chuẩn hóa tên key giữa UI (sales-orders, grn) và DB/State (orders, grns)
+  const keyMap = {
+    'sales-orders': 'orders',
+    'orders': 'orders',
+    'grn': 'grns',
+    'grns': 'grns',
+    'quotations': 'quotations',
+    'returns': 'returns'
+  };
+  const stateKey = keyMap[tableName] || tableName;
+
+  if (!state.pagination) state.pagination = {};
+  if (!state.pagination[stateKey]) {
+    state.pagination[stateKey] = { page: 1, pageSize: 25, total: 0 };
+  }
+
+  const pg = state.pagination[stateKey];
+  pg.page = Math.max(1, page);
+
+  // Map tên bảng thực tế trong Supabase
+  const dbTableMap = {
+    'orders': 'orders',
+    'grns': 'grns', // Đổi thành 'grn' nếu bảng trên Supabase của bạn tên là 'grn'
+    'quotations': 'quotations',
+    'returns': 'returns'
+  };
+  const supabaseTable = dbTableMap[stateKey] || stateKey;
 
   // Chỉ lấy các cột hiển thị trên bảng danh sách (loại bỏ lineitems nặng)
   const selectColumnsMap = {
@@ -419,7 +441,7 @@ async function loadTablePageREST(tableName, page = 1) {
   const filters = [];
   const kw = (state.search || '').trim();
   if (kw) {
-    if (tableName === 'grns') {
+    if (stateKey === 'grns') {
       filters.push(`or=(id.ilike.*${kw}*,supplier.ilike.*${kw}*,poreference.ilike.*${kw}*)`);
     } else {
       filters.push(`or=(id.ilike.*${kw}*,customer.ilike.*${kw}*)`);
@@ -429,19 +451,20 @@ async function loadTablePageREST(tableName, page = 1) {
     filters.push(`status=eq.${state.statusFilter}`);
   }
 
+  state.isLoadingList = true;
   try {
-    const res = await RestAPI.fetchPaginated(tableName, {
-      select: selectColumnsMap[tableName] || '*',
+    const res = await RestAPI.fetchPaginated(supabaseTable, {
+      select: selectColumnsMap[stateKey] || '*',
       filters,
       order: 'date.desc,id.desc',
       page: pg.page,
       pageSize: pg.pageSize
     });
 
-    db[tableName] = res.data;
-    pg.total = res.totalCount;
+    db[stateKey] = res.data || [];
+    pg.total = res.totalCount ?? res.total ?? 0;
   } catch (err) {
-    console.error(`Lỗi tải trang ${tableName}:`, err);
+    console.error(`Lỗi tải trang ${supabaseTable}:`, err);
   } finally {
     state.isLoadingList = false;
     render();
@@ -449,12 +472,6 @@ async function loadTablePageREST(tableName, page = 1) {
 }
 
 async function fetchNotificationsFromSupabase() {
-  // 1. Bật trạng thái loading trên giao diện
-  const container = document.getElementById('main-content') || document.getElementById('app');
-  if (container && state.mode === 'list') {
-    container.innerHTML = renderTableSkeleton(8, state.pageSize || 10);
-  }
-
   try {
     const { data, error } = await supabaseClient
       .from('notifications')

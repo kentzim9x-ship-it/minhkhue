@@ -1357,11 +1357,18 @@ function onServerSearchInput(tableName, value) {
 }
 
 async function openEditOrderModal(orderId) {
-  // Gọi REST lấy chi tiết đầy đủ (có lineitems) của đúng 1 phiếu này
   const fullOrder = await RestAPI.fetchById('orders', orderId);
   if (!fullOrder) return showToast('Không tìm thấy chứng từ', 'error');
 
-  initFormData('orders', fullOrder);
+  // Cập nhật bản ghi đầy đủ vào db.orders để initFormData tìm thấy theo ID
+  const idx = db.orders.findIndex(o => String(o.id) === String(orderId));
+  if (idx > -1) {
+    db.orders[idx] = { ...db.orders[idx], ...fullOrder };
+  } else {
+    db.orders.unshift(fullOrder);
+  }
+
+  initFormData('orders', orderId);
   render();
 }
 

@@ -209,7 +209,9 @@ function toggleTheme() {
   updateThemeButtonUI(newTheme);
 
   // Gọi đồng bộ header điện thoại ngay khi khởi tạo theme
-  if (typeof syncAppThemeWithMobile === 'function') syncAppThemeWithMobile(savedTheme);
+  if (typeof syncAppThemeWithMobile === 'function') {
+    syncAppThemeWithMobile(newTheme);
+  }
 }
 
 function updateThemeButtonUI(theme) {

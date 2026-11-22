@@ -808,8 +808,6 @@ function renderMaterialsList(c) {
         </table>
         ${paginatedItems.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
       </div>
-
-      ${renderPaginationBar('materials')}
     </div>
   `;
 }
@@ -915,8 +913,6 @@ function renderCustomersList(c) {
         </table>
         ${paginatedItems.length === 0 ? `<div style="padding: 40px; text-align: center; color: var(--muted-foreground); font-family: var(--font-dm-mono); font-size: 12px;">Không tìm thấy dữ liệu</div>` : ''}
       </div>
-
-      ${renderPaginationBar('customers')}
     </div>
   `;
 }
@@ -2013,7 +2009,7 @@ function renderQuotationForm(c) {
             <div style="display: flex; gap: 8px;">                          
               ${isView ? `
                 ${hasPermission ? `
-                  <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="navigate('quotations', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                  <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('quotations', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
                   <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('quotations', '${d.id}')">${Icons.trash} Xóa</button>
                 ` : ''}
                 <button type="button" class="btn-primary" onclick="exportQuotationToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; font-size: 13px; cursor: pointer;">Xuất PDF</button>
@@ -2333,7 +2329,7 @@ function renderSalesOrderForm(c) {
             <div style="display: flex; gap: 8px;">              
               ${isView ? `
                 ${hasPermission ? `
-                  <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="navigate('sales-orders', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+                  <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('sales-orders', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
                   <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('sales-orders', '${d.id}')">${Icons.trash} Xóa</button>
                 ` : ''}
                 <button type="button" class="btn-primary" onclick="exportSalesOrderToPDF()" style="background: #e11d48; color: #ffffff; padding: 8px 16px; font-size: 13px; cursor: pointer;">Xuất PDF</button>
@@ -2554,7 +2550,7 @@ function renderReturnForm(c) {
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
-              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="navigate('returns', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('returns', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('returns', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
             ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu đổi trả' : 'Cập nhật'}</button>` : ''}
@@ -2737,7 +2733,7 @@ function renderGRNForm(c) {
           </button>
           <div style="display: flex; gap: 8px;">
             ${isView && hasPermission ? `
-              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" event.preventDefault(); onclick="navigate('grn', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
+              <button type="button" class="btn-action" style="padding: 8px 16px; font-size: 13px;" onclick="navigate('grn', 'edit', '${d.id}')">${Icons.edit} Sửa</button>
               <button type="button" class="btn-action btn-action-del" style="padding: 8px 16px; font-size: 13px;" onclick="deleteItem('grn', '${d.id}')">${Icons.trash} Xóa</button>
             ` : ''}
             ${!isView ? `<button type="submit" class="btn-submit" style="padding: 8px 16px; font-size: 13px;" ${isDetailsDisabled ? 'disabled style="opacity: 0.5; cursor: not-allowed; pointer-events: none;"' : ''}>${state.mode === 'add' ? 'Tạo phiếu nhập' : 'Cập nhật'}</button>` : ''}
@@ -3025,14 +3021,7 @@ function renderReportSales(c) {
   const currentFilterKey = `${selectedFromDate}_${selectedToDate}_${selectedCustomer}`;
   if (state.salesReportLoadedKey !== currentFilterKey && !state.isLoadingSalesReport) {
     state.isLoadingSalesReport = true;
-    fetchSalesReportDataREST()
-      .then(() => {
-        state.salesReportLoadedKey = currentFilterKey;
-      })
-      .finally(() => {
-        state.isLoadingSalesReport = false;
-        if (state.view === 'report-sales') render();
-      });
+    fetchSalesReportDataREST(); // Bỏ .finally(() => render()) để tránh vẽ lại biểu đồ 2 lần
   }
 
   // Kích hoạt tải dữ liệu tổng hợp năm (nếu người dùng vào thẳng Báo cáo mà chưa qua Dashboard)
@@ -3559,14 +3548,24 @@ function renderReportSales(c) {
 }
 
 function renderPaginationBar(tableName) {
-  const pg = state.pagination?.[tableName] || { page: 1, pageSize: 25, total: 0 };
+  const keyMap = {
+    'sales-orders': 'orders',
+    'grn': 'grns'
+  };
+  const stateKey = keyMap[tableName] || tableName;
+  const pg = state.pagination?.[stateKey];
+
+  // Nếu không có cấu hình phân trang hoặc tổng số bản ghi = 0 thì ẩn luôn thanh điều hướng
+  if (!pg || !pg.total || pg.total <= 0) return '';
+
   const totalPages = Math.max(1, Math.ceil(pg.total / pg.pageSize));
-  const startIndex = (pg.page - 1) * pg.pageSize;
+  const startItem = (pg.page - 1) * pg.pageSize + 1;
+  const endItem = Math.min(pg.page * pg.pageSize, pg.total);
 
   return `
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); flex-wrap: wrap; gap: 10px;">
       <span style="font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground);">
-        Hiển thị ${pg.total === 0 ? 0 : startIndex + 1} - ${Math.min(startIndex + pg.pageSize, pg.total)} / Tổng ${pg.total} mục
+        Hiển thị ${startItem} - ${endItem} / Tổng ${pg.total} mục
       </span>
       <div style="display: flex; gap: 6px; align-items: center;">
         <button ${pg.page <= 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''} class="btn-action" onclick="loadTablePageREST('${tableName}', ${pg.page - 1})">❮ Trước</button>
