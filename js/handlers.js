@@ -727,7 +727,11 @@ function removeLineItem(lineId) {
   render();
 }
 
+let _isSavingForm = false; // Cờ chống bấm đúp nút Lưu
+
 async function saveForm(module) {
+  if (_isSavingForm) return;
+
   const session = getAuthSession();
   const currentUserId = session.currentUser ? session.currentUser.id : 'Hệ Thống';
   const currentUserFullname = session.currentUser ? (session.currentUser.fullname || session.currentUser.username) : (session.fullName || session.username || 'Hệ Thống');
@@ -756,6 +760,8 @@ async function saveForm(module) {
     }
   }
 
+  _isSavingForm = true;
+
   const tableMap = {
     'materials': 'materials',
     'customers': 'customers',
@@ -768,394 +774,432 @@ async function saveForm(module) {
   const tableName = tableMap[module];
   const targetKey = module === 'sales-orders' ? 'orders' : (module === 'grn' ? 'grns' : module);
 
-  // Shallow copy dữ liệu form hiện tại
-  let rawData = { ...state.formData };
-  if (Array.isArray(state.formData.lineItems)) {
-    rawData.lineItems = state.formData.lineItems.map(item => ({ ...item }));
-  }
+  // Hàm bổ trợ: Truy vấn trực tiếp Supabase để lấy mã ID lớn nhất hiện có + 1 (tránh trùng tuyệt đối)
+  const fetchFreshNextId = async (tbl, currentId) => {
+    const prefixMatch = String(currentId || '').trim().match(/^([A-Za-z-]+)(\d+)$/);
+    if (!prefixMatch) return currentId;
 
-  const currentDate = getTodayDateStr();
-  const currentTime = getCurrentTimeStr();
+    const prefix = prefixMatch[1];
+    const padLen = prefixMatch[2].length;
 
-  // =========================================================================
-  // 1. KIỂM TRA XUNG ĐỘT KHI SỬA (NẠP ĐẦY ĐỦ DỮ LIỆU BẢN GHI MỚI NHẤT)
-  // =========================================================================
-  if (state.mode === 'edit') {
-    try {
-      const { data: latestRecord, error: checkErr } = await supabaseClient
-        .from(tableName)
-        .select('*')
-        .eq('id', rawData.id)
-        .single();
+    const { data: rows, error } = await supabaseClient
+      .from(tbl)
+      .select('id')
+      .ilike('id', `${prefix}%`)
+      .order('id', { ascending: false })
+      .limit(10);
 
-      if (!checkErr && latestRecord) {
-        const localLastTime = `${rawData.date2 || ''} ${rawData.time2 || ''}`.trim();
-        const dbLastTime = `${latestRecord.date2 || ''} ${latestRecord.time2 || ''}`.trim();
+    if (!error && Array.isArray(rows) && rows.length > 0) {
+      let maxNum = parseInt(prefixMatch[2], 10) - 1;
+      rows.forEach(r => {
+        const m = String(r.id || '').match(/^([A-Za-z-]+)(\d+)$/);
+        if (m && m[1].toUpperCase() === prefix.toUpperCase()) {
+          const num = parseInt(m[2], 10);
+          if (!isNaN(num) && num > maxNum) maxNum = num;
+        }
+      });
+      return `${prefix}${String(maxNum + 1).padStart(padLen, '0')}`;
+    }
+    return currentId;
+  };
 
-        if (dbLastTime && localLastTime && dbLastTime !== localLastTime && String(latestRecord.user_id2) !== String(currentUserId)) {
+  try {
+    // Shallow copy dữ liệu form hiện tại
+    let rawData = { ...state.formData };
+    if (Array.isArray(state.formData.lineItems)) {
+      rawData.lineItems = state.formData.lineItems.map(item => ({ ...item }));
+    }
 
-          let editorName = latestRecord.user_id2 || 'Một người dùng khác';
-          const userList = db.users || db.userinfo || db.user_info || [];
-          const matchedUser = userList.find(u => String(u.id) === String(latestRecord.user_id2));
-          if (matchedUser) {
-            editorName = matchedUser.fullname || matchedUser.full_name || matchedUser.username || editorName;
-          }
+    const currentDate = getTodayDateStr();
+    const currentTime = getCurrentTimeStr();
 
-          const editTime = `${latestRecord.time2 || ''} - ${latestRecord.date2 || ''}`;
+    // =========================================================================
+    // 1. KIỂM TRA XUNG ĐỘT KHI SỬA
+    // =========================================================================
+    if (state.mode === 'edit') {
+      try {
+        const { data: latestRecord, error: checkErr } = await supabaseClient
+          .from(tableName)
+          .select('*')
+          .eq('id', rawData.id)
+          .single();
 
-          await showAlert(
-            `Phiếu/Danh mục này vừa được chỉnh sửa bởi "${editorName}" vào lúc ${editTime}.\n\nHệ thống sẽ tự động cập nhật dữ liệu mới nhất và chuyển sang giao diện Xem chi tiết!`,
-            'Cảnh báo xung đột dữ liệu'
-          );
+        if (!checkErr && latestRecord) {
+          const localLastTime = `${rawData.date2 || ''} ${rawData.time2 || ''}`.trim();
+          const dbLastTime = `${latestRecord.date2 || ''} ${latestRecord.time2 || ''}`.trim();
 
-          const rawLines = latestRecord.lineItems || latestRecord.lineitems || [];
-          const normalizedLines = Array.isArray(rawLines) ? rawLines.map(l => ({ ...l })) : [];
-          latestRecord.lineItems = normalizedLines;
-          latestRecord.lineitems = normalizedLines;
-
-          if (module === 'quotations') {
-            const vUntil = latestRecord.validUntil || latestRecord.validuntil || '';
-            const vBegin = latestRecord.validbegin || latestRecord.validBegin || latestRecord.date || '';
-            latestRecord.validUntil = vUntil;
-            latestRecord.validuntil = vUntil;
-            latestRecord.validBegin = vBegin;
-            latestRecord.validbegin = vBegin;
-          }
-
-          if (module === 'returns' || module === 'sales-orders') {
-            latestRecord.warehouseCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
-            latestRecord.warehouse_code = latestRecord.warehouseCode;
-            if (module === 'returns') {
-              latestRecord.orderId = latestRecord.orderId || latestRecord.order_id || null;
-              latestRecord.order_id = latestRecord.orderId;
-            } else {
-              latestRecord.quotationId = latestRecord.quotationId || latestRecord.quotation_id || null;
-              latestRecord.quotation_id = latestRecord.quotationId;
+          if (dbLastTime && localLastTime && dbLastTime !== localLastTime && String(latestRecord.user_id2) !== String(currentUserId)) {
+            let editorName = latestRecord.user_id2 || 'Một người dùng khác';
+            const userList = db.users || db.userinfo || db.user_info || [];
+            const matchedUser = userList.find(u => String(u.id) === String(latestRecord.user_id2));
+            if (matchedUser) {
+              editorName = matchedUser.fullname || matchedUser.full_name || matchedUser.username || editorName;
             }
-          }
 
-          if (module === 'grn') {
-            const whCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
-            const totalVal = latestRecord.totalValue ?? latestRecord.totalvalue ?? 0;
-            latestRecord.warehouseCode = whCode;
-            latestRecord.warehousecode = whCode;
-            latestRecord.totalValue = totalVal;
-            latestRecord.totalvalue = totalVal;
-          }
+            const editTime = `${latestRecord.time2 || ''} - ${latestRecord.date2 || ''}`;
 
-          if (!db[targetKey]) db[targetKey] = [];
-          const idx = db[targetKey].findIndex(item => String(item.id) === String(rawData.id));
-          if (idx !== -1) {
-            db[targetKey][idx] = latestRecord;
-          } else {
-            db[targetKey].unshift(latestRecord);
-          }
+            await showAlert(
+              `Phiếu/Danh mục này vừa được chỉnh sửa bởi "${editorName}" vào lúc ${editTime}.\n\nHệ thống sẽ tự động cập nhật dữ liệu mới nhất và chuyển sang giao diện Xem chi tiết!`,
+              'Cảnh báo xung đột dữ liệu'
+            );
 
-          state.formData = { ...latestRecord };
-          navigate(module, 'view', rawData.id);
-          return;
+            const rawLines = latestRecord.lineItems || latestRecord.lineitems || [];
+            const normalizedLines = Array.isArray(rawLines) ? rawLines.map(l => ({ ...l })) : [];
+            latestRecord.lineItems = normalizedLines;
+            latestRecord.lineitems = normalizedLines;
+
+            if (module === 'quotations') {
+              const vUntil = latestRecord.validUntil || latestRecord.validuntil || '';
+              const vBegin = latestRecord.validbegin || latestRecord.validBegin || latestRecord.date || '';
+              latestRecord.validUntil = vUntil;
+              latestRecord.validuntil = vUntil;
+              latestRecord.validBegin = vBegin;
+              latestRecord.validbegin = vBegin;
+            }
+
+            if (module === 'returns' || module === 'sales-orders') {
+              latestRecord.warehouseCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
+              latestRecord.warehouse_code = latestRecord.warehouseCode;
+              if (module === 'returns') {
+                latestRecord.orderId = latestRecord.orderId || latestRecord.order_id || null;
+                latestRecord.order_id = latestRecord.orderId;
+              } else {
+                latestRecord.quotationId = latestRecord.quotationId || latestRecord.quotation_id || null;
+                latestRecord.quotation_id = latestRecord.quotationId;
+              }
+            }
+
+            if (module === 'grn') {
+              const whCode = latestRecord.warehouseCode || latestRecord.warehouse_code || latestRecord.warehousecode || '';
+              const totalVal = latestRecord.totalValue ?? latestRecord.totalvalue ?? 0;
+              latestRecord.warehouseCode = whCode;
+              latestRecord.warehousecode = whCode;
+              latestRecord.totalValue = totalVal;
+              latestRecord.totalvalue = totalVal;
+            }
+
+            if (!db[targetKey]) db[targetKey] = [];
+            const idx = db[targetKey].findIndex(item => String(item.id) === String(rawData.id));
+            if (idx !== -1) {
+              db[targetKey][idx] = latestRecord;
+            } else {
+              db[targetKey].unshift(latestRecord);
+            }
+
+            state.formData = { ...latestRecord };
+            navigate(module, 'view', rawData.id);
+            return;
+          }
+        }
+      } catch (checkEx) {
+        console.warn('Không thể kiểm tra xung đột dữ liệu:', checkEx);
+      }
+    }
+
+    // =========================================================================
+    // 1B. ĐỒNG BỘ MÃ ID MỚI NHẤT TỪ SERVER KHI THÊM MỚI (TRƯỚC KHI INSERT)
+    // =========================================================================
+    if (state.mode === 'add') {
+      const autoSuggestedId = generateAutoId(module);
+      // Nếu người dùng dùng mã tự động (không tự gõ mã tùy chỉnh), luôn đối chiếu với mã lớn nhất trên Server
+      if (String(rawData.id || '').trim() === String(autoSuggestedId || '').trim()) {
+        const freshId = await fetchFreshNextId(tableName, rawData.id);
+        rawData.id = freshId;
+        if (module === 'warehouses' && (!rawData.code || rawData.code === autoSuggestedId)) {
+          rawData.code = freshId;
+        }
+        if (state.formData) {
+          state.formData.id = freshId;
+          if (module === 'warehouses') state.formData.code = rawData.code;
         }
       }
-    } catch (checkEx) {
-      console.warn('Không thể kiểm tra xung đột dữ liệu:', checkEx);
     }
-  }
 
-  // Cập nhật thông tin Người tạo / Người sửa
-  if (state.mode === 'add') {
-    rawData.user_id0 = currentUserId;
-    rawData.date0 = currentDate;
-    rawData.time0 = currentTime;
-
-    rawData.user_id2 = currentUserId;
-    rawData.date2 = currentDate;
-    rawData.time2 = currentTime;
-  } else if (state.mode === 'edit') {
-    const existing = db[targetKey]?.find(item => String(item.id) === String(rawData.id));
-    if (existing) {
-      rawData.user_id0 = existing.user_id0 || currentUserId;
-      rawData.date0 = existing.date0 || currentDate;
-      rawData.time0 = existing.time0 || currentTime;
-    } else {
+    // Cập nhật thông tin Người tạo / Người sửa
+    if (state.mode === 'add') {
       rawData.user_id0 = currentUserId;
       rawData.date0 = currentDate;
       rawData.time0 = currentTime;
+
+      rawData.user_id2 = currentUserId;
+      rawData.date2 = currentDate;
+      rawData.time2 = currentTime;
+    } else if (state.mode === 'edit') {
+      const existing = db[targetKey]?.find(item => String(item.id) === String(rawData.id));
+      if (existing) {
+        rawData.user_id0 = existing.user_id0 || currentUserId;
+        rawData.date0 = existing.date0 || currentDate;
+        rawData.time0 = existing.time0 || currentTime;
+      } else {
+        rawData.user_id0 = currentUserId;
+        rawData.date0 = currentDate;
+        rawData.time0 = currentTime;
+      }
+
+      rawData.user_id2 = currentUserId;
+      rawData.date2 = currentDate;
+      rawData.time2 = currentTime;
     }
 
-    rawData.user_id2 = currentUserId;
-    rawData.date2 = currentDate;
-    rawData.time2 = currentTime;
-  }
+    if (module === 'customers') {
+      if (rawData.paymentTerms !== undefined) rawData.paymentterms = rawData.paymentTerms;
+      if (rawData.creditLimit !== undefined) rawData.creditlimit = rawData.creditLimit;
+    }
 
-  if (module === 'customers') {
-    if (rawData.paymentTerms !== undefined) rawData.paymentterms = rawData.paymentTerms;
-    if (rawData.creditLimit !== undefined) rawData.creditlimit = rawData.creditLimit;
-  }
+    const asyncBackgroundTasks = [];
 
-  // Mảng chứa các công việc chạy nền (Non-blocking async background tasks)
-  const asyncBackgroundTasks = [];
+    if (module === 'quotations') {
+      const isNewStatusAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((rawData.status || '').toLowerCase());
+      const targetCustomer = (rawData.customer || '').trim();
 
-  if (module === 'quotations') {
-    const isNewStatusAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((rawData.status || '').toLowerCase());
-    const targetCustomer = (rawData.customer || '').trim();
+      if (isNewStatusAccepted && targetCustomer) {
+        const currentCust = targetCustomer.toLowerCase();
 
-    if (isNewStatusAccepted && targetCustomer) {
-      const currentCust = targetCustomer.toLowerCase();
-
-      db.quotations.forEach(q => {
-        if (q && q.customer && q.customer.trim().toLowerCase() === currentCust && String(q.id) !== String(rawData.id)) {
-          const currentStatus = (q.status || '').toLowerCase();
-          const isCurrentAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(currentStatus);
-          if (isCurrentAccepted) {
-            q.status = 'expired';
-            const vUntil = q.validUntil || q.validuntil || '';
-            const vBegin = q.validbegin || q.validBegin || q.date || '';
-            q.validUntil = vUntil;
-            q.validuntil = vUntil;
-            q.validBegin = vBegin;
-            q.validbegin = vBegin;
+        (db.quotations || []).forEach(q => {
+          if (q && q.customer && q.customer.trim().toLowerCase() === currentCust && String(q.id) !== String(rawData.id)) {
+            const currentStatus = (q.status || '').toLowerCase();
+            const isCurrentAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(currentStatus);
+            if (isCurrentAccepted) {
+              q.status = 'expired';
+              const vUntil = q.validUntil || q.validuntil || '';
+              const vBegin = q.validbegin || q.validBegin || q.date || '';
+              q.validUntil = vUntil;
+              q.validuntil = vUntil;
+              q.validBegin = vBegin;
+              q.validbegin = vBegin;
+            }
           }
-        }
-      });
+        });
 
-      // Đưa query chuyển báo giá cũ sang Hết hạn vào chạy nền
-      asyncBackgroundTasks.push(
-        (async () => {
-          try {
-            await supabaseClient
-              .from('quotations')
-              .update({ status: 'expired' })
-              .eq('customer', targetCustomer)
-              .neq('id', rawData.id)
-              .in('status', ['accepted', 'approved', 'Duyệt', 'duyệt', 'Đã duyệt', 'đã duyệt']);
-          } catch (err) {
-            console.error('Lỗi tự động chuyển báo giá cũ sang Hết hạn:', err);
-          }
-        })()
-      );
+        asyncBackgroundTasks.push(
+          (async () => {
+            try {
+              await supabaseClient
+                .from('quotations')
+                .update({ status: 'expired' })
+                .eq('customer', targetCustomer)
+                .neq('id', rawData.id)
+                .in('status', ['accepted', 'approved', 'Duyệt', 'duyệt', 'Đã duyệt', 'đã duyệt']);
+            } catch (err) {
+              console.error('Lỗi tự động chuyển báo giá cũ sang Hết hạn:', err);
+            }
+          })()
+        );
+      }
+
+      const validUntilVal = rawData.validUntil || rawData.validuntil || '';
+      const validBeginVal = rawData.validbegin || rawData.validBegin || rawData.date || '';
+
+      rawData.validuntil = validUntilVal;
+      rawData.validUntil = validUntilVal;
+      rawData.validbegin = validBeginVal;
+      rawData.validBegin = validBeginVal;
+
+      if (Array.isArray(rawData.lineItems)) {
+        rawData.lineitems = rawData.lineItems;
+      }
+
+      delete rawData.discountTotal;
+      delete rawData.subtotal;
     }
 
-    // try {
-    //   const actorName = currentUserFullname;
-    //   const actionText = state.mode === 'add' ? 'Tạo mới' : 'Cập nhật';
+    let dbPayload = { ...rawData };
+    let supabasePayload = { ...rawData };
 
-    //   const notifTitle = `Báo Giá (${actionText})`;
-    //   const notifDetail = `${actorName} đã ${actionText.toLowerCase()} báo giá ${rawData.id} cho khách hàng ${rawData.customer || ''}`;
-
-    //   const now = new Date();
-    //   const dateStr = getTodayDateStr();
-    //   const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-
-    //   const notifPayload = {
-    //     id: 'NOTIF-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-    //     type: 'quotations',
-    //     title: notifTitle,
-    //     detail: notifDetail,
-    //     targetview: 'quotations',
-    //     itemid: String(rawData.id || ''),
-    //     time: timeStr,
-    //     date: dateStr,
-    //     created_at: now.toISOString(),
-    //     actor: actorName
-    //   };
-
-    //   asyncBackgroundTasks.push(
-    //     (async () => {
-    //       try {
-    //         const { error: notifErr } = await supabaseClient.from('notifications').insert([notifPayload]);
-    //         if (notifErr) console.error('Lỗi Supabase khi chèn notifications:', notifErr);
-    //       } catch (err) {
-    //         console.error('Lỗi tạo thông báo:', err);
-    //       }
-    //     })()
-    //   );
-    // } catch (err) {
-    //   console.error('Lỗi chuẩn bị thông báo:', err);
-    // }
-
-    // CHUẨN HÓA CÁC TRƯỜNG NGÀY & HÀNG HÓA CHO QUOTATIONS
-    const validUntilVal = rawData.validUntil || rawData.validuntil || '';
-    const validBeginVal = rawData.validbegin || rawData.validBegin || rawData.date || '';
-
-    rawData.validuntil = validUntilVal;
-    rawData.validUntil = validUntilVal;
-    rawData.validbegin = validBeginVal;
-    rawData.validBegin = validBeginVal;
-
-    // CHỈ GÁN LINEITEMS NẾU CÓ DỮ LIỆU LINEITEMS TRÁNH LỖI UNDEFINED CHO DANH MỤC
-    if (Array.isArray(rawData.lineItems)) {
-      rawData.lineitems = rawData.lineItems;
+    // =========================================================================
+    // 2. TẠO PAYLOAD CHUẨN CHO TỪNG MODULE
+    // =========================================================================
+    if (module === 'materials') {
+      supabasePayload = {
+        id: rawData.id,
+        name: rawData.name,
+        category: rawData.category || '',
+        location: rawData.location || '',
+        stock: Number(rawData.stock || 0),
+        reserved: Number(rawData.reserved || 0),
+        reorder: Number(rawData.reorder || 0),
+        cost: Number(rawData.cost || 0),
+        status: rawData.status || 'ok',
+        unit: rawData.unit || '',
+        user_id0: rawData.user_id0,
+        date0: rawData.date0,
+        time0: rawData.time0,
+        user_id2: rawData.user_id2,
+        date2: rawData.date2,
+        time2: rawData.time2
+      };
     }
 
-    delete rawData.discountTotal;
-    delete rawData.subtotal;
-  }
+    if (module === 'customers') {
+      const limit = Number(rawData.creditLimit || rawData.creditlimit || 0);
+      const terms = rawData.paymentTerms || rawData.paymentterms || '';
 
-  let dbPayload = { ...rawData };
-  let supabasePayload = { ...rawData };
+      supabasePayload = {
+        id: rawData.id,
+        name: rawData.name,
+        type: rawData.type || '',
+        contact: rawData.contact || '',
+        email: rawData.email || '',
+        phone: rawData.phone || '',
+        address: rawData.address || '',
+        creditlimit: limit,
+        creditLimit: limit,
+        paymentterms: terms,
+        paymentTerms: terms,
+        status: rawData.status || 'active',
+        user_id0: rawData.user_id0,
+        date0: rawData.date0,
+        time0: rawData.time0,
+        user_id2: rawData.user_id2,
+        date2: rawData.date2,
+        time2: rawData.time2
+      };
+    }
 
-  // =========================================================================
-  // 2. TẠO PAYLOAD CHUẨN CHO TỪNG MODULE (DANH MỤC & CHỨNG TỪ)
-  // =========================================================================
-  if (module === 'materials') {
-    supabasePayload = {
-      id: rawData.id,
-      name: rawData.name,
-      category: rawData.category || '',
-      location: rawData.location || '',
-      stock: Number(rawData.stock || 0),
-      reserved: Number(rawData.reserved || 0),
-      reorder: Number(rawData.reorder || 0),
-      cost: Number(rawData.cost || 0),
-      status: rawData.status || 'ok',
-      unit: rawData.unit || '',
-      user_id0: rawData.user_id0,
-      date0: rawData.date0,
-      time0: rawData.time0,
-      user_id2: rawData.user_id2,
-      date2: rawData.date2,
-      time2: rawData.time2
-    };
-  }
+    if (module === 'warehouses' || module === 'warehouse') {
+      supabasePayload = {
+        id: rawData.id,
+        code: rawData.code || '',
+        name: rawData.name,
+        location: rawData.location || '',
+        capacity: Number(rawData.capacity || 0),
+        used: Number(rawData.used || 0),
+        manager: rawData.manager || '',
+        status: rawData.status || 'active',
+        user_id0: rawData.user_id0,
+        date0: rawData.date0,
+        time0: rawData.time0,
+        user_id2: rawData.user_id2,
+        date2: rawData.date2,
+        time2: rawData.time2
+      };
+    }
 
-  if (module === 'customers') {
-    const limit = Number(rawData.creditLimit || rawData.creditlimit || 0);
-    const terms = rawData.paymentTerms || rawData.paymentterms || '';
+    if (module === 'quotations') {
+      delete supabasePayload.validUntil;
+      delete supabasePayload.validBegin;
+      delete supabasePayload.lineItems;
+    }
 
-    supabasePayload = {
-      id: rawData.id,
-      name: rawData.name,
-      type: rawData.type || '',
-      contact: rawData.contact || '',
-      email: rawData.email || '',
-      phone: rawData.phone || '',
-      address: rawData.address || '',
-      creditlimit: limit,
-      creditLimit: limit,
-      paymentterms: terms,
-      paymentTerms: terms,
-      status: rawData.status || 'active',
-      user_id0: rawData.user_id0,
-      date0: rawData.date0,
-      time0: rawData.time0,
-      user_id2: rawData.user_id2,
-      date2: rawData.date2,
-      time2: rawData.time2
-    };
-  }
+    if (module === 'returns') {
+      const warehouseCode = rawData.warehouseCode || (db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '');
+      const lineItems = Array.isArray(rawData.lineItems) ? rawData.lineItems : [];
 
-  if (module === 'warehouses' || module === 'warehouse') {
-    supabasePayload = {
-      id: rawData.id,
-      code: rawData.code || '',
-      name: rawData.name,
-      location: rawData.location || '',
-      capacity: Number(rawData.capacity || 0),
-      used: Number(rawData.used || 0),
-      manager: rawData.manager || '',
-      status: rawData.status || 'active',
-      user_id0: rawData.user_id0,
-      date0: rawData.date0,
-      time0: rawData.time0,
-      user_id2: rawData.user_id2,
-      date2: rawData.date2,
-      time2: rawData.time2
-    };
-  }
+      dbPayload.warehouseCode = warehouseCode;
+      dbPayload.warehouse_code = warehouseCode;
+      dbPayload.orderId = rawData.orderId || null;
+      dbPayload.order_id = rawData.orderId || null;
+      dbPayload.lineItems = lineItems;
+      dbPayload.lineitems = lineItems;
 
-  if (module === 'quotations') {
-    delete supabasePayload.validUntil;
-    delete supabasePayload.validBegin;
-    delete supabasePayload.lineItems;
-  }
+      supabasePayload.warehouse_code = warehouseCode;
+      supabasePayload.order_id = rawData.orderId || null;
+      supabasePayload.lineitems = lineItems;
 
-  if (module === 'returns') {
-    const warehouseCode = rawData.warehouseCode || (db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '');
-    const lineItems = Array.isArray(rawData.lineItems) ? rawData.lineItems : [];
+      delete supabasePayload.warehouseCode;
+      delete supabasePayload.orderId;
+      delete supabasePayload.lineItems;
+    }
 
-    dbPayload.warehouseCode = warehouseCode;
-    dbPayload.warehouse_code = warehouseCode;
-    dbPayload.orderId = rawData.orderId || null;
-    dbPayload.order_id = rawData.orderId || null;
-    dbPayload.lineItems = lineItems;
-    dbPayload.lineitems = lineItems;
+    if (module === 'grn') {
+      const warehouseCode = rawData.warehouseCode || rawData.warehousecode || (db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '');
+      const lineItems = Array.isArray(rawData.lineItems) ? rawData.lineItems : (Array.isArray(rawData.lineitems) ? rawData.lineitems : []);
+      const totalValue = rawData.totalValue ?? rawData.totalvalue ?? 0;
 
-    supabasePayload.warehouse_code = warehouseCode;
-    supabasePayload.order_id = rawData.orderId || null;
-    supabasePayload.lineitems = lineItems;
+      if (!Array.isArray(db.grns)) db.grns = [];
 
-    delete supabasePayload.warehouseCode;
-    delete supabasePayload.orderId;
-    delete supabasePayload.lineItems;
-  }
+      dbPayload.warehouseCode = warehouseCode;
+      dbPayload.warehousecode = warehouseCode;
+      dbPayload.lineItems = lineItems;
+      dbPayload.lineitems = lineItems;
+      dbPayload.totalValue = totalValue;
+      dbPayload.totalvalue = totalValue;
 
-  if (module === 'grn') {
-    const warehouseCode = rawData.warehouseCode || rawData.warehousecode || (db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '');
-    const lineItems = Array.isArray(rawData.lineItems) ? rawData.lineItems : (Array.isArray(rawData.lineitems) ? rawData.lineitems : []);
-    const totalValue = rawData.totalValue ?? rawData.totalvalue ?? 0;
+      supabasePayload.warehousecode = warehouseCode;
+      supabasePayload.lineitems = lineItems;
+      supabasePayload.totalvalue = totalValue;
 
-    if (!Array.isArray(db.grns)) db.grns = [];
+      delete supabasePayload.warehouseCode;
+      delete supabasePayload.warehouse_code;
+      delete supabasePayload.lineItems;
+      delete supabasePayload.totalValue;
+      delete supabasePayload.total_value;
+    }
 
-    dbPayload.warehouseCode = warehouseCode;
-    dbPayload.warehousecode = warehouseCode;
-    dbPayload.lineItems = lineItems;
-    dbPayload.lineitems = lineItems;
-    dbPayload.totalValue = totalValue;
-    dbPayload.totalvalue = totalValue;
+    if (module === 'sales-orders') {
+      const warehouseCode = rawData.warehouseCode || (db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '');
+      const lineItems = Array.isArray(rawData.lineItems) ? rawData.lineItems : [];
 
-    supabasePayload.warehousecode = warehouseCode;
-    supabasePayload.lineitems = lineItems;
-    supabasePayload.totalvalue = totalValue;
+      dbPayload.warehouseCode = warehouseCode;
+      dbPayload.warehouse_code = warehouseCode;
+      dbPayload.lineItems = lineItems;
+      dbPayload.lineitems = lineItems;
+      dbPayload.quotationId = rawData.quotationId || null;
+      dbPayload.quotation_id = rawData.quotationId || null;
 
-    delete supabasePayload.warehouseCode;
-    delete supabasePayload.warehouse_code;
-    delete supabasePayload.lineItems;
-    delete supabasePayload.totalValue;
-    delete supabasePayload.total_value;
-  }
+      supabasePayload.warehouse_code = warehouseCode;
+      supabasePayload.quotation_id = rawData.quotationId || null;
+      supabasePayload.lineitems = lineItems;
 
-  if (module === 'sales-orders') {
-    const warehouseCode = rawData.warehouseCode || (db.warehouses[0] ? (db.warehouses[0].code || db.warehouses[0].id) : '');
-    const lineItems = Array.isArray(rawData.lineItems) ? rawData.lineItems : [];
+      delete supabasePayload.warehouseCode;
+      delete supabasePayload.quotationId;
+      delete supabasePayload.quotationid;
+      delete supabasePayload.discountTotal;
+      delete supabasePayload.discounttotal;
+      delete supabasePayload.subtotal;
+      delete supabasePayload.lineItems;
+    }
 
-    dbPayload.warehouseCode = warehouseCode;
-    dbPayload.warehouse_code = warehouseCode;
-    dbPayload.lineItems = lineItems;
-    dbPayload.lineitems = lineItems;
-    dbPayload.quotationId = rawData.quotationId || null;
-    dbPayload.quotation_id = rawData.quotationId || null;
+    // =========================================================================
+    // 3. THỰC THI THÊM / CẬP NHẬT CSDL (CÓ TỰ ĐỘNG THỬ LẠI NẾU TRÙNG KEY 23505)
+    // =========================================================================
+    const currentMode = state.mode;
 
-    supabasePayload.warehouse_code = warehouseCode;
-    supabasePayload.quotation_id = rawData.quotationId || null;
-    supabasePayload.lineitems = lineItems;
-
-    delete supabasePayload.warehouseCode;
-    delete supabasePayload.quotationId;
-    delete supabasePayload.quotationid;
-    delete supabasePayload.discountTotal;
-    delete supabasePayload.discounttotal;
-    delete supabasePayload.subtotal;
-    delete supabasePayload.lineItems;
-  }
-
-  // =========================================================================
-  // 3. THỰC THI THÊM / CẬP NHẬT CSDL & RENDER LẠI GIAO DIỆN
-  // =========================================================================
-  const currentMode = state.mode;
-  try {
-    // Kích hoạt các task nền chạy song song
     if (asyncBackgroundTasks.length > 0) {
       Promise.all(asyncBackgroundTasks).catch(err => console.error('Lỗi task nền:', err));
     }
 
     if (currentMode === 'add') {
-      const { data: insertedData, error } = await supabaseClient.from(tableName).insert([supabasePayload]).select();
-      if (error) throw error;
+      let insertedData = null;
+      let lastError = null;
+
+      // Thử tối đa 3 lần nếu xảy ra xung đột đồng thời (race condition) mã lỗi 23505
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const res = await supabaseClient.from(tableName).insert([supabasePayload]).select();
+        if (!res.error) {
+          insertedData = res.data;
+          lastError = null;
+          break;
+        }
+
+        lastError = res.error;
+        const isDuplicateKey = res.error.code === '23505' || String(res.error.message || '').includes('duplicate key');
+        if (isDuplicateKey) {
+          const nextId = await fetchFreshNextId(tableName, supabasePayload.id);
+          if (nextId && nextId !== supabasePayload.id) {
+            supabasePayload.id = nextId;
+            dbPayload.id = nextId;
+            if (module === 'warehouses') {
+              supabasePayload.code = nextId;
+              dbPayload.code = nextId;
+            }
+            if (state.formData) state.formData.id = nextId;
+            continue;
+          }
+        }
+        break;
+      }
+
+      if (lastError) throw lastError;
       if (insertedData && insertedData[0]) {
         dbPayload = { ...dbPayload, ...insertedData[0] };
       }
     } else {
-      const { error } = await supabaseClient.from(tableName).update(supabasePayload).eq('id', dbPayload.id);
+      // Chế độ chỉnh sửa: Loại bỏ trường `id` khỏi object update để không bao giờ gây lỗi trùng khóa chính
+      const updatePayload = { ...supabasePayload };
+      delete updatePayload.id;
+
+      const { error } = await supabaseClient.from(tableName).update(updatePayload).eq('id', dbPayload.id);
       if (error) throw error;
     }
 
@@ -1169,6 +1213,8 @@ async function saveForm(module) {
     if (!db[targetKey]) db[targetKey] = [];
 
     if (currentMode === 'add') {
+      // Loại bỏ bản ghi trùng ID nếu Realtime vừa đẩy về trước đó
+      db[targetKey] = db[targetKey].filter(item => String(item.id) !== String(dbPayload.id));
       db[targetKey].unshift(dbPayload);
     } else {
       const idx = db[targetKey].findIndex(item => String(item.id) === String(dbPayload.id));
@@ -1212,6 +1258,8 @@ async function saveForm(module) {
     if (typeof showAlert === 'function') {
       showAlert('Lưu thất bại: ' + (error.message || error), 'Lỗi DB');
     }
+  } finally {
+    _isSavingForm = false;
   }
 }
 
