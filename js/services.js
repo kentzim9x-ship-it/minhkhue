@@ -714,116 +714,100 @@ function normalizeRealtimeRecord(tableName, record) {
   return item;
 }
 
-function subscribeAppRealtimeChanges() {
-  const tableMap = {
-    'materials': 'materials',
-    'customers': 'customers',
-    'warehouses': 'warehouses',
-    'quotations': 'quotations',
-    'orders': 'orders',
-    'returns': 'returns',
-    'grns': 'grns',
-    'userinfo': 'userinfo'
-  };
+// ==========================================
+// ĐỒNG BỘ REALTIME DỮ LIỆU ĐA TAB & THÔNG BÁO
+// ==========================================
 
-  // 1. Đồng bộ qua BroadcastChannel cho các tab trên CÙNG trình duyệt
-  if (typeof BroadcastChannel !== 'undefined') {
-    const appChannel = new BroadcastChannel('app_data_sync_channel');
-    appChannel.onmessage = (event) => {
+let _appBroadcastChannel = null;
+let _notificationsRealtimeChannel = null;
+
+function subscribeAppRealtimeChanges() {
+  // 1. Đồng bộ qua BroadcastChannel cho các tab trên CÙNG trình duyệt (không tốn tài nguyên Supabase)
+  if (typeof BroadcastChannel !== 'undefined' && !_appBroadcastChannel) {
+    _appBroadcastChannel = new BroadcastChannel('app_data_sync_channel');
+    _appBroadcastChannel.onmessage = (event) => {
       if (event.data === 'REFRESH_DATA') {
         if (typeof invalidateStockCache === 'function') invalidateStockCache();
         if (state.mode === 'list') {
-          render();
+          if (typeof SERVER_PAGINATED_VIEWS !== 'undefined' && SERVER_PAGINATED_VIEWS.includes(state.view)) {
+            loadTablePageREST(state.view, state.page || 1);
+          } else {
+            render();
+          }
         }
       }
     };
   }
 
-  // 2. Lắng nghe sự kiện Realtime trực tiếp từ SUPABASE (Khác trình duyệt / Khác thiết bị)
-  Object.keys(tableMap).forEach(tbl => {
-    const targetKey = tableMap[tbl];
+  // 2. Chỉ lắng nghe Realtime duy nhất cho bảng `notifications` từ Supabase
+  if (!supabaseClient) return;
 
-    supabaseClient
-      .channel(`public:${tbl}-changes-global`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: tbl }, (payload) => {
-        if (!Array.isArray(db[targetKey])) {
-          db[targetKey] = [];
+  if (_notificationsRealtimeChannel) {
+    supabaseClient.removeChannel(_notificationsRealtimeChannel);
+    _notificationsRealtimeChannel = null;
+  }
+
+  _notificationsRealtimeChannel = supabaseClient
+    .channel('public:notifications')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, async (payload) => {
+      const eventType = payload.eventType; // 'INSERT', 'UPDATE', 'DELETE'
+      const newNotif = payload.new;
+      const oldNotif = payload.old;
+
+      if (!Array.isArray(db.notifications)) db.notifications = [];
+
+      if (eventType === 'INSERT' && newNotif) {
+        const existIdx = db.notifications.findIndex(n => String(n.id) === String(newNotif.id));
+        if (existIdx !== -1) {
+          db.notifications[existIdx] = { ...db.notifications[existIdx], ...newNotif };
+        } else {
+          db.notifications.unshift(newNotif);
         }
 
-        const eventType = payload.eventType; // 'INSERT', 'UPDATE', 'DELETE'
-        const newRecord = payload.new;
-        const oldRecord = payload.old;
-
-        // --- A. XỬ LÝ INSERT (THÊM MỚI) ---
-        if (eventType === 'INSERT' && newRecord) {
-          const normalizedRecord = normalizeRealtimeRecord(tbl, newRecord);
-          const idx = db[targetKey].findIndex(x => String(x.id) === String(normalizedRecord.id));
-          if (idx !== -1) {
-            db[targetKey][idx] = { ...db[targetKey][idx], ...normalizedRecord };
-          } else {
-            db[targetKey].unshift(normalizedRecord);
+        // Bắn thông báo Banner trên ứng dụng iOS (Capacitor) nếu đúng user nhận
+        const currentUser = getAuthSession()?.currentUser;
+        if (!newNotif.user_id || newNotif.user_id === currentUser?.id) {
+          if (typeof triggerIOSBannerNotification === 'function') {
+            triggerIOSBannerNotification(newNotif);
           }
         }
 
-        // --- B. XỬ LÝ UPDATE (SỬA) ---
-        else if (eventType === 'UPDATE' && newRecord) {
-          const normalizedRecord = normalizeRealtimeRecord(tbl, newRecord);
-          const idx = db[targetKey].findIndex(x => String(x.id) === String(normalizedRecord.id));
-          if (idx !== -1) {
-            db[targetKey][idx] = { ...db[targetKey][idx], ...normalizedRecord };
-          } else {
-            db[targetKey].unshift(normalizedRecord);
+        // Tự động làm mới dữ liệu trang hiện tại nếu người dùng đang đứng ở Dashboard hoặc đúng module của thông báo
+        if (state.mode === 'list') {
+          const targetView = newNotif.targetview || '';
+          if (state.view === 'dashboard') {
+            state.dashboardData = null;
+            render();
+          } else if (
+            targetView &&
+            typeof SERVER_PAGINATED_VIEWS !== 'undefined' &&
+            SERVER_PAGINATED_VIEWS.includes(state.view) &&
+            (targetView === state.view ||
+              (targetView === 'orders' && state.view === 'sales-orders') ||
+              (targetView === 'grns' && state.view === 'grn'))
+          ) {
+            await loadTablePageREST(state.view, state.page || 1);
           }
         }
-
-        // --- C. XỬ LÝ DELETE (XÓA) ---
-        else if (eventType === 'DELETE' && oldRecord) {
-          const deletedId = String(oldRecord.id);
-
-          db[targetKey] = db[targetKey].filter(x => String(x.id) !== deletedId);
-
-          // KIỂM TRA: Chỉ hiển thị alert cho trình duyệt B (đang xem) nếu ID bị xóa KHÔNG PHẢI do trình duyệt này chủ động bấm xóa
-          if (window.isLocalDeletingId !== deletedId) {
-            if (state.mode !== 'list' && state.formData && String(state.formData.id) === deletedId) {
-              showAlert('Bản ghi bạn đang mở đã bị xóa bởi người dùng khác!', 'Thông báo');
-              state.formData = null;
-              navigate(state.view, 'list');
-              return;
-            }
-          }
+      } else if (eventType === 'UPDATE' && newNotif) {
+        const existIdx = db.notifications.findIndex(n => String(n.id) === String(newNotif.id));
+        if (existIdx !== -1) {
+          db.notifications[existIdx] = { ...db.notifications[existIdx], ...newNotif };
         }
+      } else if (eventType === 'DELETE' && oldNotif) {
+        db.notifications = db.notifications.filter(n => String(n.id) !== String(oldNotif.id));
+      }
 
-        // --- D. SẮP XẾP LẠI THEO ID GIẢM DẦN CHO CÁC PHIẾU ---
-        if (['quotations', 'orders', 'returns', 'grns'].includes(targetKey)) {
-          if (typeof sortDescById === 'function') {
-            db[targetKey].sort(sortDescById);
-          }
-        }
-
-        // --- E. XÓA CACHE VÀ RE-RENDER MÀN HÌNH B TỰ ĐỘNG ---
-        if (typeof invalidateStockCache === 'function') invalidateStockCache();
-
-        // Kiểm tra xem module hiện tại có khớp với bảng vừa thay đổi không
-        const currentViewModuleMap = {
-          'materials': 'materials',
-          'customers': 'customers',
-          'warehouses': 'warehouses',
-          'quotations': 'quotations',
-          'sales-orders': 'orders',
-          'returns': 'returns',
-          'grn': 'grns'
-        };
-
-        if (state.mode === 'list' && currentViewModuleMap[state.view] === targetKey) {
-          render(); // Làm mới danh sách tức thì trên trình duyệt B
-        }
-      })
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log(`Đã kết nối Realtime thành công cho bảng: ${tbl}`);
-        }
-      });
-  });
+      // Cập nhật lại chấm đỏ & rung chuông trên Header
+      if (typeof updateNotificationUI === 'function') {
+        updateNotificationUI();
+      }
+    })
+    .subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('Đã kết nối Realtime thành công cho bảng: notifications');
+      }
+    });
 }
 
 // ==========================================

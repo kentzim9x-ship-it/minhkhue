@@ -6,6 +6,32 @@ if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
+const SERVER_PAGINATED_VIEWS = ['materials', 'customers', 'quotations', 'sales-orders', 'returns', 'grn'];
+
+// Đảm bảo bản ghi chi tiết luôn có sẵn trong RAM trước khi mở form View/Edit
+async function ensureRecordLoaded(view, itemId) {
+  if (!itemId) return;
+  const keyMap = { 'sales-orders': 'orders', 'grn': 'grns' };
+  const tableMap = { 'sales-orders': 'orders', 'grn': 'grns' };
+  const targetKey = keyMap[view] || view;
+  const dbTable = tableMap[view] || view;
+
+  if (!Array.isArray(db[targetKey])) db[targetKey] = [];
+  const exists = db[targetKey].find(x => String(x.id) === String(itemId));
+
+  // Nếu chưa có trong bộ nhớ local (do phân trang) -> Tải trực tiếp 1 bản ghi từ Server
+  if (!exists && typeof RestAPI !== 'undefined' && typeof RestAPI.fetchById === 'function') {
+    try {
+      const fullRecord = await RestAPI.fetchById(dbTable, itemId);
+      if (fullRecord) {
+        db[targetKey].unshift(fullRecord);
+      }
+    } catch (err) {
+      console.warn(`Không thể tải chi tiết ${dbTable}/${itemId}:`, err);
+    }
+  }
+}
+
 async function navigate(view, mode = 'list', itemId = null, extraState = null) {
   if (hasUnsavedFormData() && (view !== state.view || mode === 'list')) {
     const confirmLeave = await showConfirm(
@@ -13,25 +39,20 @@ async function navigate(view, mode = 'list', itemId = null, extraState = null) {
       'Cảnh báo mất dữ liệu'
     );
     if (!confirmLeave) {
-      return; // Người dùng chọn "Hủy bỏ" -> Giữ nguyên ở màn hình nhập liệu
+      return;
     }
   }
 
-  // --- LƯU VỊ TRÍ CUỘN HIỆN TẠI TRƯỚC KHITHAY ĐỔI STATE ---
   const contentBox = document.getElementById('app-content');
   const currentWindowScrollY = window.scrollY;
   const currentContentScrollTop = contentBox ? contentBox.scrollTop : 0;
 
-  // Kiểm tra xem có phải thao tác chuyển đổi View <-> Edit trên cùng một Form/ID hay không
   const isSameModule = state.view === view;
   const isSwitchingBetweenViewAndEdit = isSameModule &&
     (state.mode === 'view' || state.mode === 'edit') &&
     (mode === 'view' || mode === 'edit');
 
-  // --- BỔ SUNG: Lưu vị trí cuộn và trạng thái danh sách trước khi rời đi ---
   if (state.mode === 'list') {
-    const contentBox = document.getElementById('app-content');
-    // Lấy vị trí cuộn lớn hơn giữa container và window
     const scrollPos = (contentBox && contentBox.scrollTop > 0)
       ? contentBox.scrollTop
       : window.scrollY;
@@ -67,7 +88,7 @@ async function navigate(view, mode = 'list', itemId = null, extraState = null) {
     state.page = 1;
   }
 
-  // --- BỔ SUNG: ƯU TIÊN GHI ĐÈ BỞI EXTRA STATE (NẾU ĐƯỢC TRUYỀN VÀO) ---
+  // Ghi đè từ extraState nếu có truyền vào (ví dụ click từ Top Khách Hàng hoặc Lịch sử)
   if (extraState && typeof extraState === 'object') {
     if (extraState.search !== undefined) state.search = extraState.search;
     if (extraState.filter !== undefined) state.filter = extraState.filter;
@@ -78,24 +99,29 @@ async function navigate(view, mode = 'list', itemId = null, extraState = null) {
 
   state.view = view;
   state.mode = mode;
-  // state.filter = 'all';
-  // state.search = '';
-  // state.page = 1;
 
   const meta = viewMeta[view] || { tag: 'HỆ THỐNG', title: 'NEXSTOCK' };
   const tagEl = document.getElementById('view-tag');
   const titleEl = document.getElementById('view-title');
 
   if (tagEl) tagEl.innerText = meta.tag;
-  if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
+  if (titleEl) {
+    titleEl.innerText = mode === 'list'
+      ? meta.title
+      : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
+  }
 
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-view') === view);
   });
 
-  if (mode !== 'list') initFormData(view, itemId);
+  if (mode !== 'list') {
+    if ((mode === 'view' || mode === 'edit') && itemId) {
+      await ensureRecordLoaded(view, itemId);
+    }
+    initFormData(view, itemId);
+  }
 
-  // Tạo URL dạng /minhkhue/view/mode/id
   let targetPath = `${BASE_PATH}/${view}`;
   if (mode === 'add') targetPath += '/add';
   if (mode === 'edit' && itemId) targetPath += `/edit/${itemId}`;
@@ -109,21 +135,22 @@ async function navigate(view, mode = 'list', itemId = null, extraState = null) {
     window.history.pushState({ view, mode, itemId }, '', targetPath);
   }
 
-  render();
+  // Nếu chuyển sang màn hình danh sách dùng phân trang Server -> gọi API đúng trang & bộ lọc
+  if (mode === 'list' && SERVER_PAGINATED_VIEWS.includes(view)) {
+    await loadTablePageREST(view, state.page || 1);
+  } else {
+    render();
+  }
 
-  // --- XỬ LÝ KHÔI PHỤC VỊ TRÍ CUỘN MÀN HÌNH ---
   if (isSwitchingBetweenViewAndEdit) {
-    // Nếu chuyển View <-> Edit: Giữ nguyên vị trí cuộn hiện tại của người dùng
     requestAnimationFrame(() => {
       window.scrollTo({ top: currentWindowScrollY, behavior: 'instant' });
       const activeContentBox = document.getElementById('app-content');
       if (activeContentBox) activeContentBox.scrollTop = currentContentScrollTop;
     });
   } else if (mode === 'list') {
-    // Nếu quay về danh sách: Khôi phục vị trí cuộn đã lưu trước đó của danh sách
     restoreScrollPosition(view);
   } else {
-    // Nếu chuyển sang tạo mới (add) hoặc chuyển module khác: Cuộn về đầu trang
     window.scrollTo({ top: 0, behavior: 'instant' });
     const activeContentBox = document.getElementById('app-content');
     if (activeContentBox) activeContentBox.scrollTop = 0;
@@ -143,7 +170,6 @@ async function handleRouteChange() {
       'Cảnh báo mất dữ liệu'
     );
     if (!confirmLeave) {
-      // Đẩy lại URL hiện tại để giữ người dùng ở lại trang
       let currentPath = `${BASE_PATH}/${state.view}`;
       if (state.mode === 'add') currentPath += '/add';
       if (state.mode === 'edit' && state.formData?.id) currentPath += `/edit/${state.formData.id}`;
@@ -158,15 +184,14 @@ async function handleRouteChange() {
   }
   pathname = pathname.replace(/^\/+|\/+$/g, '');
 
-  // Nếu URL là /minhkhue/login hoặc trống
   if (pathname === 'login') {
-    localStorage.removeItem('app_session'); // Mặc định đăng xuất khi truy cập URL /login
+    localStorage.removeItem('app_session');
     render();
     return;
   }
 
   if (!pathname) {
-    navigate('dashboard', 'list');
+    await navigate('dashboard', 'list');
     return;
   }
 
@@ -187,7 +212,6 @@ async function handleRouteChange() {
     state.search = '';
     state.page = 1;
 
-    // Phục hồi phân trang & từ khóa tìm kiếm nếu quay lại danh sách
     if (mode === 'list') {
       const savedStateRaw = sessionStorage.getItem(`list_state_${view}`);
       if (savedStateRaw) {
@@ -203,17 +227,27 @@ async function handleRouteChange() {
     const titleEl = document.getElementById('view-title');
 
     if (tagEl) tagEl.innerText = meta.tag;
-    if (titleEl) titleEl.innerText = mode === 'list' ? meta.title : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
+    if (titleEl) {
+      titleEl.innerText = mode === 'list'
+        ? meta.title
+        : (mode === 'add' ? `Thêm ${meta.title} Mới` : (mode === 'view' ? `Xem ${meta.title}` : `Chỉnh Sửa Mục`));
+    }
 
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-view') === view);
     });
 
     if (mode !== 'list') {
+      if ((mode === 'view' || mode === 'edit') && itemId) {
+        await ensureRecordLoaded(view, itemId);
+      }
       initFormData(view, itemId);
+      render();
+    } else if (SERVER_PAGINATED_VIEWS.includes(view)) {
+      await loadTablePageREST(view, state.page || 1);
+    } else {
+      render();
     }
-
-    render();
 
     if (mode === 'list') {
       restoreScrollPosition(view);
@@ -223,6 +257,16 @@ async function handleRouteChange() {
       if (contentBox) contentBox.scrollTop = 0;
     }
   }
+}
+
+let _searchDebounceTimer = null;
+function onServerSearchInput(tableName, value) {
+  state.search = value;
+  state.page = 1;
+  clearTimeout(_searchDebounceTimer);
+  _searchDebounceTimer = setTimeout(() => {
+    loadTablePageREST(tableName, 1);
+  }, 350);
 }
 
 function handleCustomerInputChange(inputEl, moduleName) {
@@ -1345,15 +1389,6 @@ function initFormData(module, id) {
       };
     }
   }
-}
-
-let _searchDebounceTimer = null;
-function onServerSearchInput(tableName, value) {
-  state.search = value;
-  clearTimeout(_searchDebounceTimer);
-  _searchDebounceTimer = setTimeout(() => {
-    loadTablePageREST(tableName, 1); // Quay về trang 1 và lọc trên Server
-  }, 350);
 }
 
 async function openEditOrderModal(orderId) {

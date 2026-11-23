@@ -4,19 +4,62 @@
 
 const BASE_PATH = '/minhkhue'; // Đường dẫn gốc trên GitHub Pages
 
-function getResponsivePageSize() {
-  return window.innerWidth <= 768 ? 7 : 15;
+function getDevicePageSize() {
+  return window.innerWidth <= 768 ? 8 : 20;
 }
 
-// STATE MANAGEMENT
+// Giữ alias tương thích ngược nếu file khác còn gọi tên cũ
+const getResponsivePageSize = getDevicePageSize;
+
+const _initPageSize = getDevicePageSize();
+
+// STATE MANAGEMENT (ĐÃ ĐỒNG BỘ HÓA TOÀN BỘ BIẾN LỌC & PHÂN TRANG)
 let state = {
   view: 'dashboard',
   mode: 'list',
   filter: 'all',
   search: '',
   formData: null,
-  page: 1,        // Trang hiện tại
-  pageSize: getResponsivePageSize()    // Số lượng bản ghi trên mỗi trang
+  page: 1,
+  pageSize: _initPageSize,
+
+  // Khoảng ngày mặc định cho các chứng từ
+  quotationsFromDate: '',
+  quotationsToDate: '',
+  ordersFromDate: '',
+  ordersToDate: '',
+  returnsFromDate: '',
+  returnsToDate: '',
+  grnFromDate: '',
+  grnToDate: '',
+
+  // State riêng cho Báo cáo bán hàng & tồn kho
+  reportType: 'detail',
+  reportSalesCustomer: '',
+  reportSalesFromDate: '',
+  reportSalesToDate: '',
+  reportSalesLimit: 40,
+  reportInvSearch: '',
+
+  // Cache & Cờ trạng thái API
+  dashboardData: null,
+  isLoadingDashboard: false,
+  isLoadingList: false,
+  isLoadingSalesReport: false,
+  salesReportLoadedKey: '',
+  salesReportOrders: [],
+  salesReportSummaryRows: [],
+  salesReportTopCustomers: [],
+  kpiCounts: {},
+
+  pagination: {
+    materials: { page: 1, pageSize: _initPageSize, total: 0 },
+    customers: { page: 1, pageSize: _initPageSize, total: 0 },
+    orders: { page: 1, pageSize: _initPageSize, total: 0 },
+    quotations: { page: 1, pageSize: _initPageSize, total: 0 },
+    grns: { page: 1, pageSize: _initPageSize, total: 0 },
+    returns: { page: 1, pageSize: _initPageSize, total: 0 }
+  }
 };
 
 const viewMeta = {

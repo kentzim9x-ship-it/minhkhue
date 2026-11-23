@@ -3318,18 +3318,13 @@ function renderReportSales(c) {
   const customersHtml = topCustomersReal.slice(0, 5).map((cus, i) => `
     <tr style="border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-row" 
         onclick="
-          state.search = '${cus.name.replace(/'/g, "\\'")}';
-          state.statusFilter = 'ALL';
-          state.ordersFromDate = '${selectedFromDate}';
-          state.ordersToDate = '${selectedToDate}';
           navigate('sales-orders', 'list', null, {
             search: '${cus.name.replace(/'/g, "\\'")}',
-            statusFilter: 'ALL',
+            filter: 'all',
             ordersFromDate: '${selectedFromDate}',
             ordersToDate: '${selectedToDate}',
             page: 1
           });
-          loadTablePageREST('sales-orders', 1);
         " 
         title="Click để xem danh sách đơn hàng của ${cus.name}">
       <td style="padding: 9px 14px; font-family: var(--font-dm-mono); font-size: 11px; color: var(--muted-foreground); width: 28px;">${String(i + 1)}.</td>
