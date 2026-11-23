@@ -1193,6 +1193,11 @@ async function saveForm(module) {
       invalidateStockCache();
     }
 
+    // Phát tín hiệu đồng bộ tức thì sang các tab & trình duyệt/tài khoản khác
+    if (typeof broadcastDataChange === 'function') {
+      broadcastDataChange(module, 'upsert', String(dbPayload.id || ''));
+    }
+
     showToast(currentMode === 'add' ? 'Thêm mới dữ liệu thành công!' : 'Cập nhật dữ liệu thành công!', 'success');
 
     if (currentMode === 'add') {
@@ -1260,19 +1265,22 @@ async function deleteItem(module, id) {
       // 5. Thông báo xóa thành công và chuyển hướng về danh sách nếu đang ở màn hình khác
       showToast('Đã xóa bản ghi thành công!', 'success');
 
+      // 6. Đồng bộ Realtime cho các Tab cùng trình duyệt & Trình duyệt/Tài khoản khác
+      if (typeof broadcastDataChange === 'function') {
+        broadcastDataChange(module, 'delete', targetDeleteId);
+      }
+
       if (state.mode !== 'list') {
         state.formData = null;
         navigate(module, 'list');
       } else {
-        render();
+        // Nếu đang ở danh sách phân trang Server -> gọi lại loadTablePageREST để cập nhật tổng số bản ghi & trang
+        if (typeof SERVER_PAGINATED_VIEWS !== 'undefined' && SERVER_PAGINATED_VIEWS.includes(module)) {
+          await loadTablePageREST(module, state.page || 1);
+        } else {
+          render();
+        }
       }
-
-      // 6. Đồng bộ Realtime cho các Tab/Cửa sổ khác (nếu dùng BroadcastChannel)
-      if (typeof BroadcastChannel !== 'undefined') {
-        const appChannel = new BroadcastChannel('app_data_sync_channel');
-        appChannel.postMessage('REFRESH_DATA');
-      }
-
     } catch (error) {
       console.error('Lỗi khi xóa bản ghi:', error);
       await showAlert('Xóa trên CSDL thất bại: ' + (error.message || error), 'Lỗi kết nối');
