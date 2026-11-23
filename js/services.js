@@ -375,30 +375,10 @@ async function addNotification(type, title, detail, targetView, itemId, actorNam
 }
 
 function subscribeRealtimeNotifications() {
-  supabaseClient
-    .channel('public:notifications')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
-      if (payload.new) {
-        const newNotif = payload.new;
-        if (!Array.isArray(db.notifications)) db.notifications = [];
-
-        // Kiểm tra nếu ID đã tồn tại thì cập nhật, chưa có mới unshift
-        const existIdx = db.notifications.findIndex(n => String(n.id) === String(newNotif.id));
-        if (existIdx !== -1) {
-          db.notifications[existIdx] = { ...db.notifications[existIdx], ...newNotif };
-        } else {
-          db.notifications.unshift(newNotif);
-        }
-
-        updateNotificationUI();
-
-        const currentUser = getAuthSession()?.currentUser;
-        if (!newNotif.user_id || newNotif.user_id === currentUser?.id) {
-          triggerIOSBannerNotification(newNotif);
-        }
-      }
-    })
-    .subscribe();
+  // Đã được gộp chung vào subscribeAppRealtimeChanges() để tránh trùng kênh 'public:notifications'
+  if (!_notificationsRealtimeChannel) {
+    subscribeAppRealtimeChanges();
+  }
 }
 
 function isWithinDays(dateStr, days) {
