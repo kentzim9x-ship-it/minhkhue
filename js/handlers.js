@@ -2088,7 +2088,7 @@ async function exportQuotationToPDF() {
       </tr>
     </table>
 
-    <div style="border: 1.5px solid #000000; box-sizing: border-box;">
+    <div style="box-sizing: border-box;">
       <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
         <thead>
           <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 24px;">
@@ -2227,7 +2227,7 @@ async function exportSalesOrderToPDF() {
       </tr>
     </table>
 
-    <div style="border: 1.5px solid #000000; box-sizing: border-box;">
+    <div style="box-sizing: border-box;">
       <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
         <thead>
           <tr style="background-color: #8db4e2; font-weight: bold; text-align: center; height: 24px;">
@@ -2295,10 +2295,10 @@ async function exportSalesReportToPDF() {
     let summaryRows = (state.salesReportLoadedKey === currentKey && Array.isArray(state.salesReportSummaryRows))
       ? state.salesReportSummaryRows
       : await RestAPI.rpc('get_sales_report_summary', {
-          p_from: fromDateInput,
-          p_to: toDateInput,
-          p_customer: selectedCustomer
-        });
+        p_from: fromDateInput,
+        p_to: toDateInput,
+        p_customer: selectedCustomer
+      });
 
     if (!summaryRows || summaryRows.length === 0) {
       showAlert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`, 'Thông báo');
@@ -2522,7 +2522,7 @@ async function exportSalesReportToPDF() {
       </tr>
     </table>
 
-    <div style="border: 1.5px solid #000000; box-sizing: border-box;">
+    <div style="box-sizing: border-box;">
       <table style="width: 100%; border-collapse: collapse; font-size: 10pt;">
         <thead>
           ${tableHeaderHtml}
@@ -2586,10 +2586,10 @@ async function exportSalesReportToExcel() {
     let summaryRows = (state.salesReportLoadedKey === currentKey && Array.isArray(state.salesReportSummaryRows))
       ? state.salesReportSummaryRows
       : await RestAPI.rpc('get_sales_report_summary', {
-          p_from: fromDateInput,
-          p_to: toDateInput,
-          p_customer: selectedCustomer
-        });
+        p_from: fromDateInput,
+        p_to: toDateInput,
+        p_customer: selectedCustomer
+      });
 
     if (!summaryRows || summaryRows.length === 0) {
       showAlert(`Không có dữ liệu đơn bán hàng trong khoảng thời gian từ ${fmtDateStr(fromDateInput)} đến ${fmtDateStr(toDateInput)}!`, 'Thông báo');
