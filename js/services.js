@@ -702,15 +702,15 @@ let _appBroadcastChannel = null;
 let _notificationsRealtimeChannel = null;
 
 function subscribeAppRealtimeChanges() {
-  // 1. Đồng bộ qua BroadcastChannel cho các tab trên CÙNG trình duyệt (không tốn tài nguyên Supabase)
+  // 1. Đồng bộ qua BroadcastChannel cho các tab trên CÙNG trình duyệt
   if (typeof BroadcastChannel !== 'undefined' && !_appBroadcastChannel) {
     _appBroadcastChannel = new BroadcastChannel('app_data_sync_channel');
-    _appBroadcastChannel.onmessage = (event) => {
+    _appBroadcastChannel.onmessage = async (event) => {
       if (event.data === 'REFRESH_DATA') {
         if (typeof invalidateStockCache === 'function') invalidateStockCache();
         if (state.mode === 'list') {
           if (typeof SERVER_PAGINATED_VIEWS !== 'undefined' && SERVER_PAGINATED_VIEWS.includes(state.view)) {
-            loadTablePageREST(state.view, state.page || 1);
+            await loadTablePageREST(state.view, state.page || 1);
           } else {
             render();
           }
@@ -719,7 +719,7 @@ function subscribeAppRealtimeChanges() {
     };
   }
 
-  // 2. Chỉ lắng nghe Realtime duy nhất cho bảng `notifications` từ Supabase
+  // 2. Dùng Realtime của bảng `notifications` làm tín hiệu đồng bộ cho các User / Thiết bị khác
   if (!supabaseClient) return;
 
   if (_notificationsRealtimeChannel) {
@@ -752,21 +752,65 @@ function subscribeAppRealtimeChanges() {
           }
         }
 
-        // Tự động làm mới dữ liệu trang hiện tại nếu người dùng đang đứng ở Dashboard hoặc đúng module của thông báo
+        // --- TỰ ĐỘNG ĐỒNG BỘ DỮ LIỆU CHO USER KHÁC DỰA VÀO THÔNG BÁO ---
+        const rawTarget = (newNotif.targetview || newNotif.target_view || '').trim();
+        const itemId = String(newNotif.itemid || newNotif.item_id || '').trim();
+        const titleLower = (newNotif.title || '').toLowerCase();
+
+        // Chuẩn hóa tên view (phòng trường hợp lưu 'orders' thay vì 'sales-orders' hoặc 'grns' thay vì 'grn')
+        const viewAliasMap = {
+          'orders': 'sales-orders',
+          'grns': 'grn'
+        };
+        const targetView = viewAliasMap[rawTarget] || rawTarget;
+
+        // Xóa cache tồn kho để số liệu tồn luôn mới nhất
+        if (typeof invalidateStockCache === 'function') invalidateStockCache();
+
+        // Nếu thay đổi thuộc danh mục dùng chung (Vật tư, Khách hàng, Kho) -> Tải lại master data ngầm
+        if (['materials', 'customers', 'warehouses'].includes(targetView) && typeof fetchDataFromSupabase === 'function') {
+          await fetchDataFromSupabase();
+        }
+
+        // Trường hợp A: User khác đang đứng ở màn hình DANH SÁCH (list)
         if (state.mode === 'list') {
-          const targetView = newNotif.targetview || '';
           if (state.view === 'dashboard') {
             state.dashboardData = null;
             render();
-          } else if (
-            targetView &&
-            typeof SERVER_PAGINATED_VIEWS !== 'undefined' &&
-            SERVER_PAGINATED_VIEWS.includes(state.view) &&
-            (targetView === state.view ||
-              (targetView === 'orders' && state.view === 'sales-orders') ||
-              (targetView === 'grns' && state.view === 'grn'))
-          ) {
-            await loadTablePageREST(state.view, state.page || 1);
+          } else if (state.view === 'report-inventory' || state.view === 'report-sales') {
+            if (state.view === 'report-sales' && typeof fetchSalesReportDataREST === 'function') {
+              await fetchSalesReportDataREST();
+            } else {
+              render();
+            }
+          } else if (targetView && state.view === targetView) {
+            if (typeof SERVER_PAGINATED_VIEWS !== 'undefined' && SERVER_PAGINATED_VIEWS.includes(state.view)) {
+              await loadTablePageREST(state.view, state.page || 1);
+            } else {
+              render();
+            }
+          }
+        }
+        // Trường hợp B: User khác đang mở XEM CHI TIẾT (view) đúng bản ghi vừa bị Sửa hoặc Xóa
+        else if (state.mode === 'view' && state.view === targetView && itemId && String(state.formData?.id) === itemId) {
+          if (titleLower.includes('xóa')) {
+            showAlert('Bản ghi bạn đang xem vừa bị xóa bởi người dùng khác!', 'Thông báo');
+            state.formData = null;
+            await navigate(state.view, 'list');
+          } else {
+            // Nếu bản ghi vừa được cập nhật -> Xóa bản cũ trong RAM và tải lại chi tiết mới nhất
+            const keyMap = { 'sales-orders': 'orders', 'grn': 'grns' };
+            const targetKey = keyMap[targetView] || targetView;
+            if (Array.isArray(db[targetKey])) {
+              db[targetKey] = db[targetKey].filter(x => String(x.id) !== itemId);
+            }
+            if (typeof ensureRecordLoaded === 'function') {
+              await ensureRecordLoaded(targetView, itemId);
+            }
+            if (typeof initFormData === 'function') {
+              initFormData(targetView, itemId);
+            }
+            render();
           }
         }
       } else if (eventType === 'UPDATE' && newNotif) {
