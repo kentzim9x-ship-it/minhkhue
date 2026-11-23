@@ -774,7 +774,7 @@ async function saveForm(module) {
   const tableName = tableMap[module];
   const targetKey = module === 'sales-orders' ? 'orders' : (module === 'grn' ? 'grns' : module);
 
-  // Hàm bổ trợ: Truy vấn trực tiếp Supabase để lấy mã ID lớn nhất hiện có + 1 (tránh trùng tuyệt đối)
+  // Hàm bổ trợ: Truy vấn toàn bộ cột id từ Supabase để tìm số lớn nhất + 1 (chính xác tuyệt đối)
   const fetchFreshNextId = async (tbl, currentId) => {
     const prefixMatch = String(currentId || '').trim().match(/^([A-Za-z-]+)(\d+)$/);
     if (!prefixMatch) return currentId;
@@ -785,20 +785,20 @@ async function saveForm(module) {
     const { data: rows, error } = await supabaseClient
       .from(tbl)
       .select('id')
-      .ilike('id', `${prefix}%`)
-      .order('id', { ascending: false })
-      .limit(10);
+      .ilike('id', `${prefix}%`);
 
     if (!error && Array.isArray(rows) && rows.length > 0) {
-      let maxNum = parseInt(prefixMatch[2], 10) - 1;
+      let maxNum = 0;
       rows.forEach(r => {
-        const m = String(r.id || '').match(/^([A-Za-z-]+)(\d+)$/);
+        const m = String(r.id || '').trim().match(/^([A-Za-z-]+)(\d+)$/);
         if (m && m[1].toUpperCase() === prefix.toUpperCase()) {
           const num = parseInt(m[2], 10);
           if (!isNaN(num) && num > maxNum) maxNum = num;
         }
       });
-      return `${prefix}${String(maxNum + 1).padStart(padLen, '0')}`;
+      if (maxNum > 0) {
+        return `${prefix}${String(maxNum + 1).padStart(padLen, '0')}`;
+      }
     }
     return currentId;
   };
@@ -952,7 +952,15 @@ async function saveForm(module) {
       const isNewStatusAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes((rawData.status || '').toLowerCase());
       const targetCustomer = (rawData.customer || '').trim();
 
-      if (isNewStatusAccepted && targetCustomer) {
+      // Kiểm tra xem khách hàng hiện tại có phải là CUS-0008 (Khách Lẻ) hay không
+      const retailCust = (db.customers || []).find(c => String(c.id || '').trim().toUpperCase() === 'CUS-0008');
+      const isCus0008 =
+        targetCustomer.toUpperCase().includes('CUS-0008') ||
+        (retailCust && targetCustomer.toLowerCase() === (retailCust.name || '').trim().toLowerCase()) ||
+        (!retailCust && targetCustomer.toLowerCase() === 'khách lẻ');
+
+
+      if (isNewStatusAccepted && targetCustomer && !isCus0008) {
         const currentCust = targetCustomer.toLowerCase();
 
         (db.quotations || []).forEach(q => {

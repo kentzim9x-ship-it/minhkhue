@@ -1067,6 +1067,11 @@ async function submitWebQuotationRequest(e) {
 
   closeWebQuotationRequestDrawer();
 
+  // Nếu db.quotations chưa có dữ liệu trên RAM -> tải nhanh trang 1 trước khi mở form
+  if ((!Array.isArray(db.quotations) || db.quotations.length === 0) && typeof loadTablePageREST === 'function') {
+    await loadTablePageREST('quotations', 1);
+  }
+
   // Điều hướng sang form thêm mới bảng báo giá
   await navigate('quotations', 'add');
 
