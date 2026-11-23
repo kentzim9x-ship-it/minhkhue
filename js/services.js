@@ -374,10 +374,12 @@ async function addNotification(type, title, detail, targetView, itemId, actorNam
   }
 }
 
+let notificationsRealtimeChannel = null;
+
 function subscribeRealtimeNotifications() {
   // Đã được gộp chung vào subscribeAppRealtimeChanges() để tránh trùng kênh 'public:notifications'
-  if (!_notificationsRealtimeChannel) {
-    subscribeAppRealtimeChanges();
+  if (notificationsRealtimeChannel) {
+    supabaseClient.removeChannel(notificationsRealtimeChannel);
   }
 }
 
