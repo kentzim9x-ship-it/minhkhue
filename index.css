@@ -1765,6 +1765,17 @@ div[style*="overflow: auto"],
     padding-bottom: 0 !important;
   }
   */
+
+  #toast-container .toast-item {
+    min-height: 18px;
+    /* Đặt chiều cao tối thiểu mong muốn (VD: 36px, 40px...) */
+    padding: 6px 12px;
+    /* Giảm khoảng cách đệm trên/dưới để hộp gọn hơn */
+    font-size: 13px;
+    /* Cỡ chữ vừa vặn trên màn hình điện thoại */
+    line-height: 1.3;
+    /* Khoảng cách dòng gọn gàng */
+  }
 }
 
 /* CHỈ ÁP DỤNG CHO IPAD / TABLET & DESKTOP (MÀN HÌNH >= 768px) - KHÔNG ẢNH HƯỞNG ĐIỆN THOẠI */
