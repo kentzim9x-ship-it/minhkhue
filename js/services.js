@@ -305,6 +305,34 @@ function showAlert(message, title = 'Thông báo hệ thống') {
   });
 }
 
+function positionToastBelowBell(container) {
+  if (!container) return;
+  const bellBtn = document.getElementById('notif-bell-btn');
+
+  container.style.position = 'fixed';
+  container.style.bottom = 'auto'; // Ghi đè nếu CSS cũ đang đặt bottom
+  container.style.zIndex = '10000';
+  container.style.display = 'flex';
+  container.style.flexDirection = 'column';
+  container.style.alignItems = 'flex-end';
+  container.style.gap = '8px';
+
+  if (bellBtn && bellBtn.offsetParent !== null) {
+    const rect = bellBtn.getBoundingClientRect();
+    // Cách đáy nút chuông 10px
+    container.style.top = `${Math.round(rect.bottom + 10)}px`;
+    // Căn thẳng mép phải của thông báo với mép phải của nút chuông
+    const rightOffset = Math.max(12, Math.round(window.innerWidth - rect.right));
+    container.style.right = `${rightOffset}px`;
+    container.style.left = 'auto';
+  } else {
+    // Dự phòng khi đang ở màn hình Login (chưa có nút chuông)
+    container.style.top = '64px';
+    container.style.right = '16px';
+    container.style.left = 'auto';
+  }
+}
+
 function showToast(message, type = 'success', duration = 3000) {
   let container = document.getElementById('toast-container');
   if (!container) {
@@ -312,6 +340,9 @@ function showToast(message, type = 'success', duration = 3000) {
     container.id = 'toast-container';
     document.body.appendChild(container);
   }
+
+  // Luôn tính lại tọa độ ngay dưới icon chuông mỗi lần gọi
+  positionToastBelowBell(container);
 
   const toast = document.createElement('div');
   toast.className = `toast-item toast-${type}`;
