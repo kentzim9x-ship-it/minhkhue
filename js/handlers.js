@@ -1636,7 +1636,7 @@ async function handleCustomerSelectInQuotation(customerName) {
       .select('*')
       .ilike('customer', safeCustomer)
       .order('date', { ascending: false })
-      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(5);
 
     if (!error && Array.isArray(prevQuotes) && prevQuotes.length > 0) {
