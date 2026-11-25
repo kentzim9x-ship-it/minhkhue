@@ -1623,14 +1623,29 @@ async function handleCustomerSelectInQuotation(customerName) {
   const safeCustomer = String(customerName || '').trim();
   state.formData.customer = safeCustomer;
 
-  // Chỉ tự động kế thừa báo giá cũ khi đang Thêm mới và có nhập tên khách hàng
+  // 1. Chỉ xử lý khi đang Thêm mới và có nhập tên khách hàng
   if (!safeCustomer || state.mode !== 'add') {
     render();
     return;
   }
 
+  // 2. Kiểm tra nếu khách hàng có mã là CUS-0008 thì bỏ qua, không lấy báo giá cũ
+  const matchedCustomer = (db.customers || []).find(c =>
+    (c.name && c.name.trim().toLowerCase() === safeCustomer.toLowerCase()) ||
+    (c.code && c.code.trim().toLowerCase() === safeCustomer.toLowerCase())
+  );
+
+  const isExcludedCustomer =
+    safeCustomer.toUpperCase().includes('CUS-0008') ||
+    (matchedCustomer && String(matchedCustomer.code || '').trim().toUpperCase() === 'CUS-0008');
+
+  if (isExcludedCustomer) {
+    render();
+    return;
+  }
+
   try {
-    // 1. Truy vấn trực tiếp Supabase lấy báo giá gần nhất của khách hàng này
+    // 3. Truy vấn trực tiếp Supabase lấy báo giá gần nhất của khách hàng này
     const { data: prevQuotes, error } = await supabaseClient
       .from('quotations')
       .select('*')
@@ -1640,7 +1655,6 @@ async function handleCustomerSelectInQuotation(customerName) {
       .limit(5);
 
     if (!error && Array.isArray(prevQuotes) && prevQuotes.length > 0) {
-      // Đồng bộ ngược lại vào db.quotations trên RAM
       if (!Array.isArray(db.quotations)) db.quotations = [];
       prevQuotes.forEach(pq => {
         pq.lineItems = pq.lineItems || pq.lineitems || [];
@@ -1649,7 +1663,6 @@ async function handleCustomerSelectInQuotation(customerName) {
         else db.quotations.unshift(pq);
       });
 
-      // 2. Lấy báo giá gần nhất có chứa danh sách mặt hàng
       const latestValidQuote = prevQuotes.find(q => {
         const items = q.lineItems || q.lineitems || [];
         return Array.isArray(items) && items.length > 0;
@@ -1657,13 +1670,13 @@ async function handleCustomerSelectInQuotation(customerName) {
 
       if (latestValidQuote) {
         const sourceItems = latestValidQuote.lineItems || latestValidQuote.lineitems || [];
+        const quoteCode = latestValidQuote.code || latestValidQuote.id;
+        const quoteDate = typeof formatDateVN === 'function' ? formatDateVN(latestValidQuote.date) : latestValidQuote.date;
 
-        // Hỏi xác nhận hoặc nạp trực tiếp (nếu muốn nạp thẳng không cần hỏi, bỏ đoạn if confirm)
-        const shouldCopy = confirm(
-          `Khách hàng "${safeCustomer}" đã có báo giá cũ (${latestValidQuote.code || latestValidQuote.id} - ngày ${formatDateVN ? formatDateVN(latestValidQuote.date) : latestValidQuote.date}).\nBạn có muốn lấy lại chi tiết mặt hàng và đơn giá từ báo giá này không?`
-        );
+        // 4. Dùng hộp thoại xác nhận của hệ thống (thay thế confirm() của trình duyệt)
+        const confirmMsg = `Khách hàng "${safeCustomer}" đã có báo giá cũ (${quoteCode} - ngày ${quoteDate}). Bạn có muốn lấy lại chi tiết mặt hàng và đơn giá từ báo giá này không?`;
 
-        if (shouldCopy) {
+        const applyOldQuotation = () => {
           state.formData.lineItems = sourceItems.map(item => ({
             sku: item.sku || '',
             name: item.name || '',
@@ -1675,13 +1688,33 @@ async function handleCustomerSelectInQuotation(customerName) {
             note: item.note || ''
           }));
 
-          // Kế thừa luôn điều khoản/ghi chú chung nếu form mới đang trống
           if (!state.formData.notes && latestValidQuote.notes) {
             state.formData.notes = latestValidQuote.notes;
           }
           if (!state.formData.paymentTerms && (latestValidQuote.paymentTerms || latestValidQuote.paymentterms)) {
             state.formData.paymentTerms = latestValidQuote.paymentTerms || latestValidQuote.paymentterms;
           }
+          render();
+        };
+
+        // Gọi modal xác nhận của hệ thống (hỗ trợ cả dạng callback hoặc Promise)
+        if (typeof showConfirmModal === 'function') {
+          showConfirmModal({
+            title: 'Kế thừa báo giá cũ',
+            message: confirmMsg,
+            confirmText: 'Lấy chi tiết',
+            cancelText: 'Bỏ qua',
+            onConfirm: applyOldQuotation,
+            onCancel: () => render()
+          });
+          return;
+        } else if (typeof openConfirmModal === 'function') {
+          openConfirmModal('Kế thừa báo giá cũ', confirmMsg, applyOldQuotation);
+          return;
+        } else {
+          // Trường hợp bạn dùng hàm confirm custom khác (hãy kiểm tra tên hàm trong handleCustomerSelectInOrder)
+          applyOldQuotation();
+          return;
         }
       }
     }
