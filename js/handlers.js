@@ -1672,10 +1672,12 @@ async function handleCustomerSelectInQuotation(customerName) {
 
       if (latestValidQuote) {
         const sourceItems = latestValidQuote.lineItems || latestValidQuote.lineitems || [];
+        const quoteCode = latestValidQuote.code || latestValidQuote.id;
+        const quoteDate = typeof formatDateVN === 'function' ? formatDateVN(latestValidQuote.date) : latestValidQuote.date;
 
         // Hỏi xác nhận hoặc nạp trực tiếp (nếu muốn nạp thẳng không cần hỏi, bỏ đoạn if confirm)
         const shouldCopy = await showConfirm(
-          `Khách hàng "${safeCustomer}" đã có báo giá cũ (${latestQuotation.id}). Bạn có muốn kế thừa thông tin chi tiết từ báo giá này không?`,
+          `Khách hàng "${safeCustomer}" đã có báo giá cũ (${quoteCode} - ngày ${quoteDate}). Bạn có muốn kế thừa thông tin chi tiết từ báo giá này không?`,
           'Xác nhận kế thừa báo giá'
         );
 
