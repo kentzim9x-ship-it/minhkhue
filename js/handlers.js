@@ -1629,15 +1629,15 @@ async function handleCustomerSelectInQuotation(customerName) {
     return;
   }
 
-  // 2. Kiểm tra nếu khách hàng có mã là CUS-0008 thì bỏ qua, không lấy báo giá cũ
+  // 2. Kiểm tra nếu khách hàng có mã là CUS-0008 (Khách Lẻ) thì bỏ qua, không lấy báo giá cũ
   const matchedCustomer = (db.customers || []).find(c =>
     (c.name && c.name.trim().toLowerCase() === safeCustomer.toLowerCase()) ||
-    (c.code && c.code.trim().toLowerCase() === safeCustomer.toLowerCase())
+    (c.id && c.id.trim().toLowerCase() === safeCustomer.toLowerCase())
   );
 
   const isExcludedCustomer =
     safeCustomer.toUpperCase().includes('CUS-0008') ||
-    (matchedCustomer && String(matchedCustomer.code || '').trim().toUpperCase() === 'CUS-0008');
+    (matchedCustomer && String(matchedCustomer.id || '').trim().toUpperCase() === 'CUS-0008');
 
   if (isExcludedCustomer) {
     render();
