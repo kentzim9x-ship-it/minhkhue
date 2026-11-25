@@ -279,8 +279,7 @@ function handleCustomerInputChange(inputEl, moduleName) {
     } else if (moduleName === 'sales-orders') {
       handleCustomerSelectInOrder('');
     } else if (moduleName === 'returns') {
-      updateField('customer', '');
-      render();
+      handleCustomerSelectInReturn('');
     }
     return;
   }
@@ -302,8 +301,7 @@ function handleCustomerInputChange(inputEl, moduleName) {
     } else if (moduleName === 'sales-orders') {
       handleCustomerSelectInOrder('');
     } else if (moduleName === 'returns') {
-      updateField('customer', '');
-      render();
+      handleCustomerSelectInReturn('');
     }
     setTimeout(() => {
       const el = document.getElementById(inputEl.id);
@@ -320,8 +318,7 @@ function handleCustomerInputChange(inputEl, moduleName) {
   } else if (moduleName === 'sales-orders') {
     handleCustomerSelectInOrder(matched.name);
   } else if (moduleName === 'returns') {
-    updateField('customer', matched.name);
-    render();
+    handleCustomerSelectInReturn('');
   }
 }
 
@@ -1683,6 +1680,7 @@ async function handleCustomerSelectInQuotation(customerName) {
 
         if (shouldCopy) {
           state.formData.lineItems = sourceItems.map(item => ({
+            lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
             sku: item.sku || '',
             name: item.name || '',
             unit: item.unit || '',
@@ -1794,6 +1792,87 @@ async function handleCustomerSelectInOrder(customerName) {
     }
   } else {
     state.formData.quotationId = null;
+  }
+
+  render();
+}
+
+async function handleCustomerSelectInReturn(customerName) {
+  if (!state.formData || state.mode === 'view') return;
+  const safeCustomer = String(customerName || '').trim();
+  state.formData.customer = safeCustomer;
+
+  if (!safeCustomer) {
+    state.formData.lineItems = [{
+      lineId: Date.now().toString(),
+      sku: '',
+      name: '',
+      qtyReturned: 1,
+      unitPrice: 0
+    }];
+    render();
+    return;
+  }
+
+  // 1. Tải bổ sung các báo giá của khách hàng này từ Supabase về RAM để đảm bảo không bị thiếu do phân trang
+  try {
+    const { data: custQuotes } = await supabaseClient
+      .from('quotations')
+      .select('*')
+      .ilike('customer', safeCustomer);
+
+    if (Array.isArray(custQuotes) && custQuotes.length > 0) {
+      if (!Array.isArray(db.quotations)) db.quotations = [];
+      custQuotes.forEach(cq => {
+        cq.lineItems = cq.lineItems || cq.lineitems || [];
+        const idx = db.quotations.findIndex(x => String(x.id) === String(cq.id));
+        if (idx > -1) db.quotations[idx] = cq;
+        else db.quotations.unshift(cq);
+      });
+    }
+  } catch (err) {
+    console.warn('Không thể tải báo giá của khách hàng:', err);
+  }
+
+  const returnDate = String(state.formData.date || getTodayDateStr()).substring(0, 10);
+
+  // 2. Tìm báo giá đã duyệt & còn hiệu lực của khách hàng (giống logic bên Đơn bán hàng)
+  const activeQuotation = (db.quotations || [])
+    .filter(q => {
+      if (!q || !q.customer) return false;
+      if (q.customer.trim().toLowerCase() !== safeCustomer.toLowerCase()) return false;
+      if (!q.apply_yn) return false;
+      if ((q.status || '').toLowerCase() !== 'accepted') return false;
+
+      const vBegin = String(q.validbegin || q.validBegin || q.date || '').substring(0, 10);
+      const vUntil = String(q.validUntil || q.validuntil || '').substring(0, 10);
+
+      if (vBegin && vUntil) {
+        return returnDate >= vBegin && returnDate <= vUntil;
+      }
+      return false;
+    })
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
+
+  // 3. Nếu có báo giá áp dụng -> Hỏi xác nhận nhập toàn bộ mặt hàng & đơn giá báo giá vào phiếu trả hàng
+  if (activeQuotation) {
+    const confirmImport = await showConfirm(
+      "Bạn có muốn nhập toàn bộ mã hàng, đơn giá theo Bảng báo giá không?",
+      "Áp dụng báo giá"
+    );
+
+    if (confirmImport) {
+      const qLines = activeQuotation.lineItems || activeQuotation.lineitems || [];
+      if (Array.isArray(qLines) && qLines.length > 0) {
+        state.formData.lineItems = qLines.map(item => ({
+          lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+          sku: item.sku || '',
+          name: item.name || '',
+          qtyReturned: item.qty ?? 1,
+          unitPrice: item.unitPrice ?? 0
+        }));
+      }
+    }
   }
 
   render();

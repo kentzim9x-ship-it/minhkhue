@@ -414,12 +414,12 @@ async function loadTablePageREST(tableName, page = 1) {
   };
 
   const orderMap = {
-    materials: 'id.asc',
-    customers: 'id.asc',
-    orders: 'date.desc,id.desc',
-    quotations: 'date.desc,id.desc',
-    grns: 'date.desc,id.desc',
-    returns: 'date.desc,id.desc'
+    materials: 'id.desc',
+    customers: 'id.desc',
+    orders: 'id.desc',
+    quotations: 'id.desc',
+    grns: 'id.desc',
+    returns: 'id.desc'
   };
 
   const dateStateMap = {

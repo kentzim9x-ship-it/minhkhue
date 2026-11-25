@@ -2391,11 +2391,74 @@ function renderReturnForm(c) {
     d.warehouseCode = db.warehouses[0].code || db.warehouses[0].id;
   }
 
-  let datalistEl = document.getElementById('global-materials-list');
-  if (!datalistEl) {
-    datalistEl = document.createElement('datalist');
-    datalistEl.id = 'global-materials-list';
-    document.body.appendChild(datalistEl);
+  // Sắp xếp ưu tiên mặt hàng trong báo giá lên đầu danh sách gợi ý (mục 02)
+  const currentCustomer = (d.customer || '').trim();
+  const returnDate = String(d.date || getTodayDateStr()).substring(0, 10);
+
+  let activeQuotation = null;
+  if (currentCustomer && !isView) {
+    activeQuotation = (db.quotations || [])
+      .filter(q => {
+        if (!q || !q.customer) return false;
+        if (q.customer.trim().toLowerCase() !== currentCustomer.toLowerCase()) return false;
+
+        const status = (q.status || '').toLowerCase();
+        const isAccepted = ['accepted', 'approved', 'duyệt', 'đã duyệt'].includes(status);
+        if (!isAccepted) return false;
+
+        const vBegin = String(q.validbegin || q.validBegin || q.date || '').substring(0, 10);
+        const vUntil = String(q.validUntil || q.validuntil || '').substring(0, 10);
+
+        if (vBegin && vUntil) {
+          return returnDate >= vBegin && returnDate <= vUntil;
+        }
+        return true;
+      })
+      .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
+  }
+
+  const qLines = activeQuotation ? (activeQuotation.lineItems || activeQuotation.lineitems || []) : [];
+  const datalistEl = document.getElementById('global-materials-list');
+
+  if (datalistEl && !isView) {
+    if (activeQuotation && Array.isArray(qLines) && qLines.length > 0) {
+      const matchedSkusAndNames = new Set();
+
+      qLines.forEach(qItem => {
+        const qSku = (qItem.sku || '').trim();
+        const qName = (qItem.name || '').trim();
+        if (qSku) matchedSkusAndNames.add(qSku.toLowerCase());
+        if (qName) matchedSkusAndNames.add(qName.toLowerCase());
+      });
+
+      const quoteOptionsHtml = qLines.map(qItem => {
+        const qSku = (qItem.sku || '').trim();
+        const qName = (qItem.name || '').trim();
+        const mat = (db.materials || []).find(m =>
+          (qSku && m.id && m.id.toLowerCase() === qSku.toLowerCase()) ||
+          (qName && m.name && m.name.toLowerCase() === qName.toLowerCase())
+        );
+
+        const displayName = mat ? mat.name : qName;
+        const displayId = mat ? mat.id : qSku;
+        const displayPrice = Number(qItem.unitPrice) || (mat ? Number(mat.cost) : 0);
+
+        return `<option value="${displayName}">${displayId} - ${displayName} (${fmtUSD(displayPrice)} - Báo giá)</option>`;
+      }).join('');
+
+      const otherMaterialsHtml = (db.materials || [])
+        .filter(m => {
+          const mSku = (m.id || '').trim().toLowerCase();
+          const mName = (m.name || '').trim().toLowerCase();
+          return !matchedSkusAndNames.has(mSku) && !matchedSkusAndNames.has(mName);
+        })
+        .map(m => `<option value="${m.name || ''}">${m.id || ''} - ${m.name || ''} (${fmtUSD(m.cost || 0)})</option>`)
+        .join('');
+
+      datalistEl.innerHTML = quoteOptionsHtml + otherMaterialsHtml;
+    } else {
+      updateGlobalMaterialDatalist();
+    }
   }
 
   const sortedMaterials = JSON.parse(JSON.stringify(db.materials || [])).sort((a, b) =>
