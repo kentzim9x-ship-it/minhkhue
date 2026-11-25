@@ -2467,41 +2467,40 @@ function renderReturnForm(c) {
         .join('');
     }
   }
-}
 
-const warehouseOptions = (db.warehouses || []).map(w => {
-  const wCode = w.code || w.id;
-  return `<option value="${wCode}" ${d.warehouseCode === wCode ? 'selected' : ''}>${wCode} - ${w.name}</option>`;
-}).join('');
+  const warehouseOptions = (db.warehouses || []).map(w => {
+    const wCode = w.code || w.id;
+    return `<option value="${wCode}" ${d.warehouseCode === wCode ? 'selected' : ''}>${wCode} - ${w.name}</option>`;
+  }).join('');
 
-const customerDatalistOptions = (db.customers || []).map(cust =>
-  `<option value="${cust.id} - ${cust.name}">${cust.name}</option>`
-).join('');
+  const customerDatalistOptions = (db.customers || []).map(cust =>
+    `<option value="${cust.id} - ${cust.name}">${cust.name}</option>`
+  ).join('');
 
-const matchedReturnCust = (db.customers || []).find(cust => cust.name === d.customer);
-const returnCustomerDisplay = matchedReturnCust
-  ? `${matchedReturnCust.id} - ${matchedReturnCust.name}`
-  : (d.customer || '');
+  const matchedReturnCust = (db.customers || []).find(cust => cust.name === d.customer);
+  const returnCustomerDisplay = matchedReturnCust
+    ? `${matchedReturnCust.id} - ${matchedReturnCust.name}`
+    : (d.customer || '');
 
-// Lọc danh sách Đơn Hàng Bán: Nếu đã chọn Khách Hàng -> Chỉ lấy các đơn của KH đó
-const filteredOrders = (db.orders || []).filter(o => {
-  if (!d.customer) return true; // Nếu chưa chọn Khách Hàng -> Hiển thị tất cả đơn hàng
-  return o.customer && String(o.customer).trim().toLowerCase() === String(d.customer).trim().toLowerCase();
-});
+  // Lọc danh sách Đơn Hàng Bán: Nếu đã chọn Khách Hàng -> Chỉ lấy các đơn của KH đó
+  const filteredOrders = (db.orders || []).filter(o => {
+    if (!d.customer) return true; // Nếu chưa chọn Khách Hàng -> Hiển thị tất cả đơn hàng
+    return o.customer && String(o.customer).trim().toLowerCase() === String(d.customer).trim().toLowerCase();
+  });
 
-// Tạo các thẻ <option> từ danh sách đã lọc
-const orderOptions = filteredOrders.map(o =>
-  `<option value="${o.id}" ${d.orderId === o.id ? 'selected' : ''}>${o.id} - ${o.customer || 'Khách không tên'}</option>`
-).join('');
+  // Tạo các thẻ <option> từ danh sách đã lọc
+  const orderOptions = filteredOrders.map(o =>
+    `<option value="${o.id}" ${d.orderId === o.id ? 'selected' : ''}>${o.id} - ${o.customer || 'Khách không tên'}</option>`
+  ).join('');
 
-const gridLayout = isView ? "10px 100px 1fr 60px 70px 65px 65px 100px 100px" : "10px 100px 1fr 60px 70px 65px 65px 100px 100px 32px";
+  const gridLayout = isView ? "10px 100px 1fr 60px 70px 65px 65px 100px 100px" : "10px 100px 1fr 60px 70px 65px 65px 100px 100px 32px";
 
-const linesHtml = d.lineItems.map((l, idx) => {
-  const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
-  const unitName = mat ? (mat.unit || '—') : '—';
-  const stockQty = getStockFromView(l.sku, d.warehouseCode);
+  const linesHtml = d.lineItems.map((l, idx) => {
+    const mat = (db.materials || []).find(m => m.id === l.sku || m.name === l.name);
+    const unitName = mat ? (mat.unit || '—') : '—';
+    const stockQty = getStockFromView(l.sku, d.warehouseCode);
 
-  return `
+    return `
       <div style="display: grid; grid-template-columns: ${gridLayout}; gap: 6px; padding: 10px 16px 10px 10px; border-bottom: 1px solid var(--border); align-items: center; ${isDetailsDisabled ? 'opacity: 0.5; pointer-events: none;' : ''}">
         <span style="font-family: var(--font-dm-mono, monospace); font-size: 10px; font-weight: 400; color: var(--muted-foreground); min-width: 14px; text-align: right; user-select: none;">
           ${idx + 1}.
@@ -2537,9 +2536,9 @@ const linesHtml = d.lineItems.map((l, idx) => {
         ${(!isView && !isDetailsDisabled) ? `<button type="button" style="background: none; border: none; cursor: pointer; color: var(--muted-foreground); display: flex; align-items: center; justify-content: center;" onclick="removeLineItem('${l.lineId}')">${Icons.trash}</button>` : ''}
       </div>
     `;
-}).join('');
+  }).join('');
 
-c.innerHTML = `
+  c.innerHTML = `
     <div style="max-width: 1050px;">
       ${getBreadcrumb('Đổi trả hàng bán', isView ? `Xem ${d.id}` : (isEdit ? `Chỉnh sửa ${d.id}` : 'Tạo phiếu đổi trả mới'), 'returns')}
       <form onsubmit="event.preventDefault(); saveForm('returns');">
@@ -2563,9 +2562,9 @@ c.innerHTML = `
                 class="form-input" 
                 value="${returnCustomerDisplay}" 
                 ${(isView || isEdit || hasOrder)
-    ? 'readonly style="background: var(--muted); cursor: not-allowed;"'
-    : 'onkeydown="handleSec1Enter(event, \'ret-warehouse\')" onchange="handleCustomerInputChange(this, \'returns\')"'
-  } 
+      ? 'readonly style="background: var(--muted); cursor: not-allowed;"'
+      : 'onkeydown="handleSec1Enter(event, \'ret-warehouse\')" onchange="handleCustomerInputChange(this, \'returns\')"'
+    } 
                 placeholder="-- Chọn hoặc gõ mã / tên khách hàng --" 
                 required
               >
