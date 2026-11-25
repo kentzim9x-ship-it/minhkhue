@@ -2452,6 +2452,7 @@ function renderReturnForm(c) {
           const mName = (m.name || '').trim().toLowerCase();
           return !matchedSkusAndNames.has(mSku) && !matchedSkusAndNames.has(mName);
         })
+        .sort((a, b) => (a.id || '').localeCompare(b.id || '', undefined, { numeric: true, sensitivity: 'base' }))
         .map(m => `<option value="${m.name || ''}">${m.id || ''} - ${m.name || ''} (${fmtUSD(m.cost || 0)})</option>`)
         .join('');
 
