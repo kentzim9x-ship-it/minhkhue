@@ -318,7 +318,7 @@ function handleCustomerInputChange(inputEl, moduleName) {
   } else if (moduleName === 'sales-orders') {
     handleCustomerSelectInOrder(matched.name);
   } else if (moduleName === 'returns') {
-    handleCustomerSelectInReturn('');
+    handleCustomerSelectInReturn(matched.name);
   }
 }
 

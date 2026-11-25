@@ -2461,14 +2461,6 @@ function renderReturnForm(c) {
     }
   }
 
-  const sortedMaterials = JSON.parse(JSON.stringify(db.materials || [])).sort((a, b) =>
-    (a.id || '').localeCompare(b.id || '', undefined, { numeric: true, sensitivity: 'base' })
-  );
-
-  datalistEl.innerHTML = sortedMaterials.map(m =>
-    `<option value="${m.name}">${m.id} - ${m.name} (${fmtUSD(m.cost || 0)})</option>`
-  ).join('');
-
   const warehouseOptions = (db.warehouses || []).map(w => {
     const wCode = w.code || w.id;
     return `<option value="${wCode}" ${d.warehouseCode === wCode ? 'selected' : ''}>${wCode} - ${w.name}</option>`;
