@@ -1687,26 +1687,6 @@ async function handleCustomerSelectInOrder(customerName) {
     return;
   }
 
-  // Tải bổ sung các báo giá của khách hàng này từ Supabase về RAM để đảm bảo không bị thiếu do phân trang
-  try {
-    const { data: custQuotes } = await supabaseClient
-      .from('quotations')
-      .select('*')
-      .ilike('customer', safeCustomer);
-
-    if (Array.isArray(custQuotes) && custQuotes.length > 0) {
-      if (!Array.isArray(db.quotations)) db.quotations = [];
-      custQuotes.forEach(cq => {
-        cq.lineItems = cq.lineItems || cq.lineitems || [];
-        const idx = db.quotations.findIndex(x => String(x.id) === String(cq.id));
-        if (idx > -1) db.quotations[idx] = cq;
-        else db.quotations.unshift(cq);
-      });
-    }
-  } catch (err) {
-    console.warn('Không thể tải báo giá của khách hàng:', err);
-  }
-
   const orderDate = state.formData.date || getTodayDateStr();
 
   const activeQuotation = (db.quotations || [])
