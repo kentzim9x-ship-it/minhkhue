@@ -774,9 +774,9 @@ async function saveForm(module) {
   const tableName = tableMap[module];
   const targetKey = module === 'sales-orders' ? 'orders' : (module === 'grn' ? 'grns' : module);
 
-  // Hàm bổ trợ: Truy vấn toàn bộ cột id từ Supabase để tìm số lớn nhất + 1 (chính xác tuyệt đối)
   const fetchFreshNextId = async (tbl, currentId) => {
-    const prefixMatch = String(currentId || '').trim().match(/^([A-Za-z-]+)(\d+)$/);
+    // Tách phần tiền tố bất kỳ ở đầu và cụm chữ số ở cuối cùng
+    const prefixMatch = String(currentId || '').trim().match(/^(.*?)(\d+)$/);
     if (!prefixMatch) return currentId;
 
     const prefix = prefixMatch[1];
@@ -790,10 +790,13 @@ async function saveForm(module) {
     if (!error && Array.isArray(rows) && rows.length > 0) {
       let maxNum = 0;
       rows.forEach(r => {
-        const m = String(r.id || '').trim().match(/^([A-Za-z-]+)(\d+)$/);
-        if (m && m[1].toUpperCase() === prefix.toUpperCase()) {
-          const num = parseInt(m[2], 10);
-          if (!isNaN(num) && num > maxNum) maxNum = num;
+        const val = String(r.id || '').trim();
+        if (val.toUpperCase().startsWith(prefix.toUpperCase())) {
+          const suffix = val.slice(prefix.length);
+          if (/^\d+$/.test(suffix)) {
+            const num = parseInt(suffix, 10);
+            if (!isNaN(num) && num > maxNum) maxNum = num;
+          }
         }
       });
       if (maxNum > 0) {
@@ -1620,54 +1623,72 @@ async function handleCustomerSelectInQuotation(customerName) {
   const safeCustomer = String(customerName || '').trim();
   state.formData.customer = safeCustomer;
 
-  // Nếu bỏ chọn khách hàng (về ô trống)
-  if (!safeCustomer) {
-    state.formData.lineItems = [{
-      lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
-    }];
+  // Chỉ tự động kế thừa báo giá cũ khi đang Thêm mới và có nhập tên khách hàng
+  if (!safeCustomer || state.mode !== 'add') {
     render();
     return;
   }
 
-  // Tìm báo giá gần nhất của khách hàng này
-  const latestQuotation = (db.quotations || [])
-    .filter(q => q && q.customer === safeCustomer)
-    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))[0];
+  try {
+    // 1. Truy vấn trực tiếp Supabase lấy báo giá gần nhất của khách hàng này
+    const { data: prevQuotes, error } = await supabaseClient
+      .from('quotations')
+      .select('*')
+      .ilike('customer', safeCustomer)
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(5);
 
-  // Nếu tìm thấy báo giá cũ có chi tiết mặt hàng
-  if (latestQuotation && Array.isArray(latestQuotation.lineItems) && latestQuotation.lineItems.length > 0) {
+    if (!error && Array.isArray(prevQuotes) && prevQuotes.length > 0) {
+      // Đồng bộ ngược lại vào db.quotations trên RAM
+      if (!Array.isArray(db.quotations)) db.quotations = [];
+      prevQuotes.forEach(pq => {
+        pq.lineItems = pq.lineItems || pq.lineitems || [];
+        const idx = db.quotations.findIndex(x => String(x.id) === String(pq.id));
+        if (idx > -1) db.quotations[idx] = pq;
+        else db.quotations.unshift(pq);
+      });
 
-    // Hiển thị hộp thoại cảnh báo / hỏi ý kiến người dùng
-    const confirmInherit = await showConfirm(
-      `Khách hàng "${safeCustomer}" đã có báo giá cũ (${latestQuotation.id}). Bạn có muốn kế thừa thông tin chi tiết từ báo giá này không?`,
-      'Xác nhận kế thừa báo giá'
-    );
+      // 2. Lấy báo giá gần nhất có chứa danh sách mặt hàng
+      const latestValidQuote = prevQuotes.find(q => {
+        const items = q.lineItems || q.lineitems || [];
+        return Array.isArray(items) && items.length > 0;
+      });
 
-    if (confirmInherit) {
-      // Người dùng chọn ĐỒNG Ý -> Sao chép danh sách dòng sản phẩm từ báo giá cũ
-      state.formData.lineItems = latestQuotation.lineItems.map(item => ({
-        lineId: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-        sku: item.sku || '',
-        name: item.name || '',
-        qty: item.qty ?? 1,
-        unitPrice: item.unitPrice ?? 0,
-        discount: item.discount ?? 0,
-        tax: item.tax ?? 0
-      }));
-    } else {
-      // Người dùng chọn HỦY BỎ -> Tạo 1 dòng trống sạch sẽ để nhập mới từ đầu
-      state.formData.lineItems = [{
-        lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
-      }];
+      if (latestValidQuote) {
+        const sourceItems = latestValidQuote.lineItems || latestValidQuote.lineitems || [];
+
+        // Hỏi xác nhận hoặc nạp trực tiếp (nếu muốn nạp thẳng không cần hỏi, bỏ đoạn if confirm)
+        const shouldCopy = confirm(
+          `Khách hàng "${safeCustomer}" đã có báo giá cũ (${latestValidQuote.code || latestValidQuote.id} - ngày ${formatDateVN ? formatDateVN(latestValidQuote.date) : latestValidQuote.date}).\nBạn có muốn lấy lại chi tiết mặt hàng và đơn giá từ báo giá này không?`
+        );
+
+        if (shouldCopy) {
+          state.formData.lineItems = sourceItems.map(item => ({
+            sku: item.sku || '',
+            name: item.name || '',
+            unit: item.unit || '',
+            qty: Number(item.qty) || 1,
+            price: Number(item.price) || 0,
+            discount: Number(item.discount) || 0,
+            tax: Number(item.tax) || 0,
+            note: item.note || ''
+          }));
+
+          // Kế thừa luôn điều khoản/ghi chú chung nếu form mới đang trống
+          if (!state.formData.notes && latestValidQuote.notes) {
+            state.formData.notes = latestValidQuote.notes;
+          }
+          if (!state.formData.paymentTerms && (latestValidQuote.paymentTerms || latestValidQuote.paymentterms)) {
+            state.formData.paymentTerms = latestValidQuote.paymentTerms || latestValidQuote.paymentterms;
+          }
+        }
+      }
     }
-  } else {
-    // Trường hợp Khách hàng chưa từng có báo giá nào trước đó
-    state.formData.lineItems = [{
-      lineId: Date.now().toString(), sku: '', name: '', qty: 1, unitPrice: 0, discount: 0, tax: 0
-    }];
+  } catch (err) {
+    console.warn('Lỗi khi tìm báo giá cũ của khách hàng:', err);
   }
 
-  // Render lại giao diện (Đồng thời mở khóa vùng nhập chi tiết sản phẩm bên dưới)
   render();
 }
 
@@ -1685,6 +1706,26 @@ async function handleCustomerSelectInOrder(customerName) {
     }];
     render();
     return;
+  }
+
+  // Tải bổ sung các báo giá của khách hàng này từ Supabase về RAM để đảm bảo không bị thiếu do phân trang
+  try {
+    const { data: custQuotes } = await supabaseClient
+      .from('quotations')
+      .select('*')
+      .ilike('customer', safeCustomer);
+
+    if (Array.isArray(custQuotes) && custQuotes.length > 0) {
+      if (!Array.isArray(db.quotations)) db.quotations = [];
+      custQuotes.forEach(cq => {
+        cq.lineItems = cq.lineItems || cq.lineitems || [];
+        const idx = db.quotations.findIndex(x => String(x.id) === String(cq.id));
+        if (idx > -1) db.quotations[idx] = cq;
+        else db.quotations.unshift(cq);
+      });
+    }
+  } catch (err) {
+    console.warn('Không thể tải báo giá của khách hàng:', err);
   }
 
   const orderDate = state.formData.date || getTodayDateStr();
