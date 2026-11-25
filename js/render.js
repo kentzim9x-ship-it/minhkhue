@@ -2443,7 +2443,7 @@ function renderReturnForm(c) {
         const displayId = mat ? mat.id : qSku;
         const displayPrice = Number(qItem.unitPrice) || (mat ? Number(mat.cost) : 0);
 
-        return `<option value="${displayName}">${displayId} - ${displayName} (${fmtUSD(displayPrice)} - Báo giá)</option>`;
+        return `<option value="${displayName}">${displayId} - ${displayName} (${fmtUSD(displayPrice)}) ★ Báo giá</option>`;
       }).join('');
 
       const otherMaterialsHtml = (db.materials || [])

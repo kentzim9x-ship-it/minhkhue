@@ -1649,7 +1649,7 @@ async function handleCustomerSelectInQuotation(customerName) {
       .ilike('customer', safeCustomer)
       .order('date', { ascending: false })
       .order('id', { ascending: false })
-      .limit(5);
+      .limit(1);
 
     if (!error && Array.isArray(prevQuotes) && prevQuotes.length > 0) {
       // Đồng bộ ngược lại vào db.quotations trên RAM
@@ -1734,7 +1734,11 @@ async function handleCustomerSelectInOrder(customerName) {
     const { data: custQuotes } = await supabaseClient
       .from('quotations')
       .select('*')
-      .ilike('customer', safeCustomer);
+      .ilike('customer', safeCustomer)
+      .eq('status', 'accepted')
+      .order('date', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(1);
 
     if (Array.isArray(custQuotes) && custQuotes.length > 0) {
       if (!Array.isArray(db.quotations)) db.quotations = [];
@@ -1819,7 +1823,11 @@ async function handleCustomerSelectInReturn(customerName) {
     const { data: custQuotes } = await supabaseClient
       .from('quotations')
       .select('*')
-      .ilike('customer', safeCustomer);
+      .ilike('customer', safeCustomer)
+      .eq('status', 'accepted')
+      .order('date', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(1);
 
     if (Array.isArray(custQuotes) && custQuotes.length > 0) {
       if (!Array.isArray(db.quotations)) db.quotations = [];
