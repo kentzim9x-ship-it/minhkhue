@@ -2458,7 +2458,11 @@ function renderReturnForm(c) {
 
       datalistEl.innerHTML = quoteOptionsHtml + otherMaterialsHtml;
     } else {
-      updateGlobalMaterialDatalist();
+      // Khi không có báo giá: sắp xếp toàn bộ danh mục mặt hàng tăng dần theo mã SKU
+      const sortedAllMaterials = [...(db.materials || [])].sort(sortBySkuAsc);
+      datalistEl.innerHTML = sortedAllMaterials
+        .map(m => `<option value="${m.name || ''}">${m.id || ''} - ${m.name || ''} (${fmtUSD(m.cost || 0)})</option>`)
+        .join('');
     }
   }
 
